@@ -1,0 +1,16 @@
+build
+.coverage_*
+coverage
+.circleci/src
+.circleci/config.template.yml
+.circleci/config.yml
+codecov.yml
+.openzeppelin/*
+scripts/abi/*
+hints.txt
+
+# husky hooks
+.husky/
+.prettierignore
+
+.openzeppelin/

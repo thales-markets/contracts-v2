@@ -1,0 +1,24 @@
+{
+	"name": "contracts-v2",
+	"version": "0.0.1",
+	"license": "MIT",
+	"author": "Thales",
+	"description": "The smart contracts which make up the Thales system.",
+	"main": "index.js",
+	"devDependencies": {
+		"@nomicfoundation/hardhat-toolbox": "^4.0.0",
+		"hardhat": "^2.19.1",
+		"hardhat-contract-sizer": "^2.10.0",
+		"husky": "^8.0.3",
+		"prettier": "^3.1.0",
+		"prettier-plugin-solidity": "^1.2.0",
+		"solc": "^0.8.23-fixed"
+	},
+	"keywords": [
+		"thales"
+	],
+	"dependencies": {
+		"@openzeppelin/contracts": "^5.0.0",
+		"@openzeppelin/contracts-upgradeable": "^5.0.0"
+	}
+}
