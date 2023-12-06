@@ -5,14 +5,19 @@
 	"author": "Thales",
 	"description": "The smart contracts which make up the Thales system.",
 	"main": "index.js",
+	"scripts": {
+		"format": "prettier --write \"contracts/**/*.sol\" \"**/*.js\" \"**/*.md\" \"**/*.yml\" \"**/*.json\"",
+		"prepare": "husky install",
+		"clean-install": "rm -rf build && rm ./package-lock.json && rm -rf node_modules/* && npm install",
+		"compile": "hardhat compile"
+	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-toolbox": "^4.0.0",
 		"@openzeppelin/hardhat-upgrades": "^2.5.0",
-		"eslint": "^8.55.0",
 		"hardhat": "^2.19.1",
 		"hardhat-contract-sizer": "^2.10.0",
 		"husky": "^8.0.3",
-		"prettier": "^2.7.1",
+		"prettier": "^3.1.0",
 		"prettier-plugin-solidity": "^1.2.0",
 		"solc": "^0.8.23-fixed",
 		"solhint": "^4.0.0"
