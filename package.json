@@ -21,5 +21,10 @@
 	"dependencies": {
 		"@openzeppelin/contracts": "^5.0.0",
 		"@openzeppelin/contracts-upgradeable": "^5.0.0"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "pretty-quick --staged"
+		}
 	}
 }
