@@ -1,5 +1,6 @@
 require('@nomicfoundation/hardhat-toolbox');
 require('hardhat-contract-sizer');
+require('hardhat-abi-exporter');
 require('@openzeppelin/hardhat-upgrades');
 
 const path = require('path');
@@ -57,5 +58,13 @@ module.exports = {
 		tests: './test',
 		artifacts: path.join('build', 'artifacts'),
 		cache: path.join('build', 'cache'),
+	},
+	abiExporter: {
+		path: './scripts/abi',
+		runOnCompile: true,
+		clear: true,
+		flat: true,
+		only: [],
+		spacing: 2,
 	},
 };

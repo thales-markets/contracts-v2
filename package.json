@@ -15,6 +15,7 @@
 		"@nomicfoundation/hardhat-toolbox": "^4.0.0",
 		"@openzeppelin/hardhat-upgrades": "^2.5.0",
 		"hardhat": "^2.19.1",
+		"hardhat-abi-exporter": "^2.10.1",
 		"hardhat-contract-sizer": "^2.10.0",
 		"husky": "^8.0.3",
 		"prettier": "^3.1.0",
