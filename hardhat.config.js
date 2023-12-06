@@ -1,5 +1,8 @@
 require('@nomicfoundation/hardhat-toolbox');
 require('hardhat-contract-sizer');
+require('@openzeppelin/hardhat-upgrades');
+
+const path = require('path');
 
 /** @type import('hardhat/config').HardhatUserConfig */
 
@@ -10,7 +13,7 @@ const REPORT_GAS = vars.get('REPORT_GAS');
 
 module.exports = {
 	solidity: {
-		version: '0.8.19',
+		version: '0.8.20',
 		settings: {
 			optimizer: {
 				enabled: true,
@@ -48,5 +51,11 @@ module.exports = {
 	},
 	sourcify: {
 		enabled: false,
+	},
+	paths: {
+		sources: './contracts',
+		tests: './test',
+		artifacts: path.join('build', 'artifacts'),
+		cache: path.join('build', 'cache'),
 	},
 };
