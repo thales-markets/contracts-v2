@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 // Clone of syntetix contract without constructor
 contract ProxyOwned {
@@ -37,7 +37,7 @@ contract ProxyOwned {
         emit OwnerChanged(owner, proxyAddress);
     }
 
-    modifier onlyOwner {
+    modifier onlyOwner() {
         _onlyOwner();
         _;
     }

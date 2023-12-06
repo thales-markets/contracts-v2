@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 // Inheritance
 import "./ProxyOwned.sol";
@@ -10,8 +10,6 @@ import "./ProxyOwned.sol";
 contract ProxyPausable is ProxyOwned {
     uint public lastPauseTime;
     bool public paused;
-
-    
 
     /**
      * @notice Change the paused state of the contract
@@ -37,7 +35,7 @@ contract ProxyPausable is ProxyOwned {
 
     event PauseChanged(bool isPaused);
 
-    modifier notPaused {
+    modifier notPaused() {
         require(!paused, "This action cannot be performed while the contract is paused");
         _;
     }
