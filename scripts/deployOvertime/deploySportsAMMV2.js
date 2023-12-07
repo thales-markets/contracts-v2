@@ -1,7 +1,7 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
 
-const { setTargetAddress } = require('../helpers');
+const { setTargetAddress, getTargetAddress } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -14,17 +14,21 @@ async function main() {
 	// 	network = 'optimisticGoerli';
 	// }
 
-	console.log(`Owner is: ${owner.address}`);
-	console.log(`Network: ${network}`);
+	console.log('Owner is:', owner.address);
+	console.log('Network:', network);
 
+	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 
-	const sportsAMMV2Deployed = await upgrades.deployProxy(sportsAMMV2, [owner.address]);
+	const sportsAMMV2Deployed = await upgrades.deployProxy(sportsAMMV2, [
+		owner.address,
+		defaultPaymentTokenAddress,
+	]);
 	await sportsAMMV2Deployed.waitForDeployment();
 
 	const sportsAMMV2Address = await sportsAMMV2Deployed.getAddress();
 
-	console.log(`SportsAMMV2 deployed on: ${sportsAMMV2Address}`);
+	console.log('SportsAMMV2 deployed on:', sportsAMMV2Address);
 	setTargetAddress('SportsAMMV2', network, sportsAMMV2Address);
 	await delay(5000);
 
@@ -33,7 +37,7 @@ async function main() {
 		sportsAMMV2Address
 	);
 
-	console.log(`SportsAMMV2 Implementation: ${sportsAMMV2ImplementationAddress}`);
+	console.log('SportsAMMV2 Implementation:', sportsAMMV2ImplementationAddress);
 	setTargetAddress('SportsAMMV2Implementation', network, sportsAMMV2ImplementationAddress);
 	await delay(5000);
 

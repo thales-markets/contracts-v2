@@ -24,6 +24,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "contract IERC20",
+        "name": "_defaultPaymentToken",
+        "type": "address"
+      }
+    ],
+    "name": "AddressesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -146,6 +159,19 @@
   },
   {
     "inputs": [],
+    "name": "defaultPaymentToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "initNonReentrant",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -156,6 +182,11 @@
       {
         "internalType": "address",
         "name": "_owner",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "_defaultPaymentToken",
         "type": "address"
       }
     ],
@@ -227,6 +258,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "_defaultPaymentToken",
+        "type": "address"
+      }
+    ],
+    "name": "setAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

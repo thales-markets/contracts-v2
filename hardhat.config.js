@@ -2,6 +2,7 @@ require('@nomicfoundation/hardhat-toolbox');
 require('hardhat-contract-sizer');
 require('hardhat-abi-exporter');
 require('@openzeppelin/hardhat-upgrades');
+require('@nomiclabs/hardhat-web3');
 
 const path = require('path');
 

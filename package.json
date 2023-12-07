@@ -4,7 +4,6 @@
 	"license": "MIT",
 	"author": "Thales",
 	"description": "The smart contracts which make up the Thales system.",
-	"main": "index.js",
 	"scripts": {
 		"format": "prettier --write \"contracts/**/*.sol\" \"**/*.js\" \"**/*.md\" \"**/*.yml\" \"**/*.json\"",
 		"prepare": "husky install",
@@ -13,11 +12,14 @@
 	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-toolbox": "^4.0.0",
+		"@nomiclabs/hardhat-web3": "^2.0.0",
 		"@openzeppelin/hardhat-upgrades": "^2.5.0",
 		"hardhat": "^2.19.1",
 		"hardhat-abi-exporter": "^2.10.1",
 		"hardhat-contract-sizer": "^2.10.0",
 		"husky": "^8.0.3",
+		"keccak256": "^1.0.6",
+		"merkletreejs": "^0.3.11",
 		"prettier": "^3.1.0",
 		"prettier-plugin-solidity": "^1.2.0",
 		"solc": "^0.8.23-fixed",
