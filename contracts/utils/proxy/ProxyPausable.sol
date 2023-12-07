@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.20;
 
 // Inheritance
 import "./ProxyOwned.sol";
 
 // Clone of syntetix contract without constructor
-
 contract ProxyPausable is ProxyOwned {
     uint public lastPauseTime;
     bool public paused;
