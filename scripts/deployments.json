@@ -1,7 +1,7 @@
 {
 	"optimisticGoerli": {
 		"DefaultPaymentToken": "0xe1ceaa829525a08c1d39a5cebe4b42af58d77198",
-		"SportsAMMV2": "0x977D5b93250404B61DD82FFBe459674E02275C1B",
-		"SportsAMMV2Implementation": "0xa0832CF2B9b63e91A20D9DD129465F8909720119"
+		"SportsAMMV2": "0x35fDE2704779F02bDC2E59F191250a51Bc625bC3",
+		"SportsAMMV2Implementation": "0x10e6170329cddc80e717e92DdcBfD23AeDc2F5c9"
 	}
 }

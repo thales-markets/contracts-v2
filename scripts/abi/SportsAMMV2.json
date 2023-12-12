@@ -124,40 +124,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "market",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sportId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "allBaseOdds",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "merkleProof",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "buyFromAmmQuote",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "_quote",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "defaultPaymentToken",
     "outputs": [
@@ -297,6 +263,107 @@
     "name": "setRoot",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sportId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "typeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playerPropsTypeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturityDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "status",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "line",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playerId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "position",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SportsAMMV2.TradeData[]",
+        "name": "tradeData",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "buyInAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "tradeQuote",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "buyInAmountAfterFees",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalQuote",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "finalQuotes",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amountsToBuy",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -1,20 +1,170 @@
 [
 	{
-		"marketAddress": "0x525f517f0c8fbc65238795ee6f5875e134defd85",
-		"market": 9006,
-		"odds": ["360000000000000000", "640000000000000000"],
-		"proof": [
-			"0xf9901eb76998d6f322f13db346bbded992c403716ae91ee198bce32854aa55a4"
+		"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+		"sportId": 9004,
+		"typeId": 0,
+		"playerPropsTypeId": 0,
+		"maturityDate": 1701986400,
+		"homeTeam": "Milwaukee Bucks",
+		"awayTeam": "Indiana Pacers",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": ["660000000000000000", "340000000000000000", "0"],
+		"childMarkets": [
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 10001,
+				"playerPropsTypeId": 0,
+				"maturityDate": 1701986400,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": -550,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": ["500000000000000000", "500000000000000000", "0"],
+				"proof": [
+					"0x511f0442424a4ade024c67a2d585d6ab59a777e7591c5aa4c807b8ce01473f84",
+					"0x59aa7aad476a608fd7a58400e49132a8c0b98beb83f43e9f2e69535157b948f5",
+					"0x643932d08d9ecf1c1ce59afc63c8e526f00e9c137bfc3369e37a9ea76f7324fe"
+				]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 10001,
+				"playerPropsTypeId": 0,
+				"maturityDate": 1701986400,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 1,
+				"spread": -450,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": ["0", "0", "0"],
+				"proof": [
+					"0x7e33015b3b0b515ba00e5f39d2f958a3f349b53fb86caa16f07f66ef0ed51d8d",
+					"0x84c5c3ab971328436b68fd66aaa15071bcf2f45568e065610263da85674c243c",
+					"0x643932d08d9ecf1c1ce59afc63c8e526f00e9c137bfc3369e37a9ea76f7324fe"
+				]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 10002,
+				"playerPropsTypeId": 0,
+				"maturityDate": 1701986400,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 25650,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": ["500000000000000000", "500000000000000000", "0"],
+				"proof": [
+					"0x854f25c1337a6cb23cca1d73123ee238a10b62f1aaa16f496d41fd0b4411d584",
+					"0x84c5c3ab971328436b68fd66aaa15071bcf2f45568e065610263da85674c243c",
+					"0x643932d08d9ecf1c1ce59afc63c8e526f00e9c137bfc3369e37a9ea76f7324fe"
+				]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 10010,
+				"playerPropsTypeId": 11029,
+				"maturityDate": 1701986400,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 0,
+				"playerProps": {
+					"playerId": 16429,
+					"playerName": "Giannis Antetokounmpo",
+					"line": 3350,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": ["520000000000000000", "480000000000000000", "0"],
+				"proof": [
+					"0xd9a0d3c32988900ec3694e1cdef014bb14352b5a3eabdcc0efa03a6f1cbf6af8",
+					"0xfff61d4c3703b5892e626f904027cc0643e25ac200f8ddd40f8a13dfdc19730d"
+				]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 10010,
+				"playerPropsTypeId": 11087,
+				"maturityDate": 1701986400,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 0,
+				"playerProps": {
+					"playerId": 16735,
+					"playerName": "Damian Lillard",
+					"line": 50,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": ["500000000000000000", "500000000000000000", "0"],
+				"proof": [
+					"0x020454dc5ee50cdcbb1db507e7aad91fcb09e96340a80cd57b00fb3f249f10b6",
+					"0x59aa7aad476a608fd7a58400e49132a8c0b98beb83f43e9f2e69535157b948f5",
+					"0x643932d08d9ecf1c1ce59afc63c8e526f00e9c137bfc3369e37a9ea76f7324fe"
+				]
+			}
 		],
-		"index": 0
-	},
-	{
-		"marketAddress": "0xa6f1394344ff61f1325ab0a43d4d42471e41fee0",
-		"market": 9004,
-		"odds": ["540000000000000000", "200000000000000000", "260000000000000000"],
 		"proof": [
-			"0x0be39460c25b09cbd6601af771b20234c1a2662e3325e9929e851529efdaa1d1"
-		],
-		"index": 1
+			"0xf93f2ab82001ef44b553c5e0178693d23047e8c7963ad8d2289889b2bfbd7e73",
+			"0xfff61d4c3703b5892e626f904027cc0643e25ac200f8ddd40f8a13dfdc19730d"
+		]
 	}
 ]

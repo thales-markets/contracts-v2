@@ -23,34 +23,55 @@ async function updateMerkleTree() {
 	let treeMarketsHashes = [];
 	let treeMarketsAndHashes = [];
 
-	markets.forEach((market, index) => {
-		console.log('Market:', market);
-
+	const getLeaf = (market, isParent) => {
 		let hash = keccak256(
-			market.odds.length > 2
-				? web3.utils.encodePacked(
-						market.marketAddress,
-						market.sportId,
-						ethers.parseEther(market.odds[0].toString()).toString(),
-						ethers.parseEther(market.odds[1].toString()).toString(),
-						ethers.parseEther(market.odds[2].toString()).toString()
-				  )
-				: web3.utils.encodePacked(
-						market.marketAddress,
-						market.sportId,
-						ethers.parseEther(market.odds[0].toString()).toString(),
-						ethers.parseEther(market.odds[1].toString()).toString()
-				  )
+			web3.utils.encodePacked(
+				market.gameId,
+				market.sportId,
+				market.typeId,
+				market.playerPropsTypeId,
+				market.maturityDate,
+				market.status,
+				market.typeId === 10001
+					? market.spread
+					: market.typeId === 10002
+					  ? market.total
+					  : market.typeId === 10010
+					    ? market.playerProps.line
+					    : 0,
+				market.playerProps.playerId,
+				ethers.parseEther(market.odds[0].toString()).toString(),
+				ethers.parseEther(market.odds[1].toString()).toString(),
+				ethers.parseEther(market.odds[2].toString()).toString()
+			)
 		);
+
 		let marketLeaf = {
-			marketAddress: market.marketAddress,
-			market: market.sportId,
+			...market,
 			odds: market.odds.map((o) => ethers.parseEther(o.toString()).toString()),
 			hash,
 			proof: '',
-			index: index,
 		};
-		treeMarketsHashes.push(hash);
+		if (isParent) {
+			marketLeaf.childMarkets = [];
+		}
+
+		return marketLeaf;
+	};
+
+	markets.forEach((market) => {
+		console.log('Market:', market);
+
+		let marketLeaf = getLeaf(market, true);
+		treeMarketsHashes.push(marketLeaf.hash);
+		market.childMarkets.forEach((childMarket) => {
+			console.log('Child market:', childMarket);
+
+			let childMarketLeaf = getLeaf(childMarket);
+			marketLeaf.childMarkets.push(childMarketLeaf);
+			treeMarketsHashes.push(childMarketLeaf.hash);
+		});
+
 		treeMarketsAndHashes.push(marketLeaf);
 	});
 
@@ -64,10 +85,14 @@ async function updateMerkleTree() {
 	const root = merkleTree.getHexRoot();
 	console.log('Merkle Tree root:', root);
 
-	for (let toh in treeMarketsAndHashes) {
-		treeMarketsAndHashes[toh].proof = merkleTree.getHexProof(treeMarketsAndHashes[toh].hash);
-		delete treeMarketsAndHashes[toh].hash;
-	}
+	treeMarketsAndHashes.forEach((tmh) => {
+		tmh.proof = merkleTree.getHexProof(tmh.hash);
+		delete tmh.hash;
+		tmh.childMarkets.forEach((tmhcm) => {
+			tmhcm.proof = merkleTree.getHexProof(tmhcm.hash);
+			delete tmhcm.hash;
+		});
+	});
 
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	console.log('Found SportsAMMV2 at:', sportsAMMV2Address);
