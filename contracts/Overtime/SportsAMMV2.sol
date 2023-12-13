@@ -46,13 +46,40 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     address public safeBox;
     address public referrals;
 
+    uint public lpFee;
+    uint public safeBoxFee;
+
+    uint public minBuyInAmount;
+    uint public maxTicketSize;
+    uint public maxSupportedAmount;
+    uint public maxSupportedOdds;
+
     /// @notice Initialize the storage in the proxy contract with the parameters.
     /// @param _owner Owner for using the onlyOwner functions
     /// @param _defaultPaymentToken The address of default token used for payment
-    function initialize(address _owner, IERC20 _defaultPaymentToken) public initializer {
+    function initialize(
+        address _owner,
+        IERC20 _defaultPaymentToken,
+        address _safeBox,
+        address _referrals,
+        uint _minBuyInAmount,
+        uint _maxTicketSize,
+        uint _maxSupportedAmount,
+        uint _maxSupportedOdds,
+        uint _lpFee,
+        uint _safeBoxFee
+    ) public initializer {
         setOwner(_owner);
         initNonReentrant();
         defaultPaymentToken = _defaultPaymentToken;
+        safeBox = _safeBox;
+        referrals = _referrals;
+        minBuyInAmount = _minBuyInAmount;
+        maxTicketSize = _maxTicketSize;
+        maxSupportedAmount = _maxSupportedAmount;
+        maxSupportedOdds = _maxSupportedOdds;
+        lpFee = _lpFee;
+        safeBoxFee = _safeBoxFee;
     }
 
     function tradeQuote(
@@ -87,13 +114,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
 
         // apply all checks
-        // require(_sUSDPaid >= minUSDAmount, "Low sUSD buy");
-        // require(totalQuote >= maxSupportedOdds, "Can not create parlay market!");
-        // require((totalAmount - _sUSDPaid) <= maxSupportedAmount, "Amount exceeds MaxSupportedAmount");
+        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
+        require(totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
+        require((payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
         require(((ONE * _expectedPayout) / payout) <= (ONE + _additionalSlippage), "Slippage too high");
 
-        // clone a ticket
+        if (_differentRecipient == address(0)) {
+            _differentRecipient = msg.sender;
+        }
 
+        defaultPaymentToken.safeTransferFrom(msg.sender, address(this), _buyInAmount);
+
+        // clone a ticket
         Ticket.GameData[] memory gameData = new Ticket.GameData[](_tradeData.length);
 
         for (uint i = 0; i < _tradeData.length; i++) {
@@ -115,6 +147,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
         ticket.initialize(gameData, buyInAmountAfterFees, payout, totalQuote, address(this), _differentRecipient);
+
+        defaultPaymentToken.safeTransfer(address(ticket), payout);
 
         emit TicketCreated(
             gameData,
@@ -144,7 +178,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint numOfPositions = tradeData.length;
         finalQuotes = new uint[](numOfPositions);
         amountsToBuy = new uint[](numOfPositions);
-        buyInAmountAfterFees = ((ONE - ((1e16 + 1e16))) * buyInAmount) / ONE;
+        buyInAmountAfterFees = ((ONE - ((safeBoxFee + lpFee))) * buyInAmount) / ONE;
 
         for (uint i = 0; i < numOfPositions; i++) {
             TradeData memory tradeDataItem = tradeData[i];
@@ -190,6 +224,23 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit NewRoot(_root);
     }
 
+    function setAmounts(
+        uint _minBuyInAmount,
+        uint _maxTicketSize,
+        uint _maxSupportedAmount,
+        uint _maxSupportedOdds,
+        uint _lpFee,
+        uint _safeBoxFee
+    ) external onlyOwner {
+        minBuyInAmount = _minBuyInAmount;
+        maxTicketSize = _maxTicketSize;
+        maxSupportedAmount = _maxSupportedAmount;
+        maxSupportedOdds = _maxSupportedOdds;
+        lpFee = _lpFee;
+        safeBoxFee = _safeBoxFee;
+        emit SetAmounts(_minBuyInAmount, _maxTicketSize, _maxSupportedAmount, _maxSupportedOdds, _lpFee, _safeBoxFee);
+    }
+
     /// @notice Setting the main addresses for SportsAMMV2
     /// @param _defaultPaymentToken Address of the default payment token
     function setAddresses(IERC20 _defaultPaymentToken, address _safeBox, address _referrals) external onlyOwner {
@@ -206,6 +257,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     event NewRoot(bytes32 root);
+    event SetAmounts(
+        uint minBuyInAmount,
+        uint maxTicketSize,
+        uint maxSupportedAmount,
+        uint maxSupportedOdds,
+        uint lpFee,
+        uint safeBoxFee
+    );
     event AddressesUpdated(IERC20 defaultPaymentToken, address safeBox, address referrals);
     event NewTicketMastercopy(address ticketMastercopy);
     event TicketCreated(

@@ -18,11 +18,28 @@ async function main() {
 	console.log('Network:', network);
 
 	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
-	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
+	const safeBoxAddress = getTargetAddress('SafeBox', network);
+	const referralsAddress = getTargetAddress('Referrals', network);
 
+	const minBuyInAmount = ethers.parseEther('3');
+	const maxTicketSize = 10;
+	const maxSupportedAmount = ethers.parseEther('20000');
+	const maxSupportedOdds = ethers.parseEther('0.01');
+	const lpFee = ethers.parseEther('0.03');
+	const safeBoxFee = ethers.parseEther('0.02');
+
+	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2Deployed = await upgrades.deployProxy(sportsAMMV2, [
 		owner.address,
 		defaultPaymentTokenAddress,
+		safeBoxAddress,
+		referralsAddress,
+		minBuyInAmount,
+		maxTicketSize,
+		maxSupportedAmount,
+		maxSupportedOdds,
+		lpFee,
+		safeBoxFee,
 	]);
 	await sportsAMMV2Deployed.waitForDeployment();
 
