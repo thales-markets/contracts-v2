@@ -1,12 +1,7 @@
 [
   {
     "inputs": [],
-    "name": "EnforcedPause",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ExpectedPause",
+    "name": "ERC1167FailedCreateClone",
     "type": "error"
   },
   {
@@ -25,7 +20,19 @@
       {
         "indexed": false,
         "internalType": "contract IERC20",
-        "name": "_defaultPaymentToken",
+        "name": "defaultPaymentToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "safeBox",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "referrals",
         "type": "address"
       }
     ],
@@ -56,6 +63,19 @@
       }
     ],
     "name": "NewRoot",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "ticketMastercopy",
+        "type": "address"
+      }
+    ],
+    "name": "NewTicketMastercopy",
     "type": "event"
   },
   {
@@ -95,25 +115,113 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
+        "internalType": "bool",
+        "name": "isPaused",
+        "type": "bool"
       }
     ],
-    "name": "Paused",
+    "name": "PauseChanged",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sportId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "typeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playerPropsTypeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturityDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "status",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "line",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playerId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "position",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "odd",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Ticket.GameData[]",
+        "name": "tradeData",
+        "type": "tuple[]"
+      },
+      {
         "indexed": false,
         "internalType": "address",
-        "name": "account",
+        "name": "ticket",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "differentRecipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "buyInAmountAfterFees",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "payout",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalQuote",
+        "type": "uint256"
       }
     ],
-    "name": "Unpaused",
+    "name": "TicketCreated",
     "type": "event"
   },
   {
@@ -159,6 +267,19 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lastPauseTime",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -215,6 +336,19 @@
   },
   {
     "inputs": [],
+    "name": "referrals",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "root",
     "outputs": [
       {
@@ -227,10 +361,33 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "safeBox",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "contract IERC20",
         "name": "_defaultPaymentToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_safeBox",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_referrals",
         "type": "address"
       }
     ],
@@ -255,12 +412,141 @@
   {
     "inputs": [
       {
+        "internalType": "bool",
+        "name": "_paused",
+        "type": "bool"
+      }
+    ],
+    "name": "setPaused",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "_root",
         "type": "bytes32"
       }
     ],
     "name": "setRoot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ticketMastercopy",
+        "type": "address"
+      }
+    ],
+    "name": "setTicketMastercopy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ticketMastercopy",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sportId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "typeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playerPropsTypeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturityDate",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "status",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "line",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playerId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "position",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SportsAMMV2.TradeData[]",
+        "name": "_tradeData",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_expectedPayout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_additionalSlippage",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_differentRecipient",
+        "type": "address"
+      }
+    ],
+    "name": "trade",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

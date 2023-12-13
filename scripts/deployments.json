@@ -1,7 +1,8 @@
 {
 	"optimisticGoerli": {
 		"DefaultPaymentToken": "0xe1ceaa829525a08c1d39a5cebe4b42af58d77198",
-		"SportsAMMV2": "0x35fDE2704779F02bDC2E59F191250a51Bc625bC3",
-		"SportsAMMV2Implementation": "0x10e6170329cddc80e717e92DdcBfD23AeDc2F5c9"
+		"SportsAMMV2": "0xe7B33B1F91B94C31A99a2CC68E53037c51d21E24",
+		"SportsAMMV2Implementation": "0x70eb3248d03185990CdB05C6A293DB6a14477B73",
+		"TicketMastercopy": "0xccD42C1B485342a37Fab1c5F8962040ec741f8ec"
 	}
 }
