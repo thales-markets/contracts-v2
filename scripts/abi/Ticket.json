@@ -37,7 +37,7 @@
       {
         "indexed": false,
         "internalType": "bool",
-        "name": "_paused",
+        "name": "paused",
         "type": "bool"
       }
     ],
@@ -66,6 +66,19 @@
   },
   {
     "inputs": [],
+    "name": "areAllPositionsResolved",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "buyInAmount",
     "outputs": [
       {
@@ -75,6 +88,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "exercise",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -207,11 +227,6 @@
       },
       {
         "internalType": "uint256",
-        "name": "_payout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "_totalQuote",
         "type": "uint256"
       },
@@ -238,6 +253,45 @@
       {
         "internalType": "bool",
         "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isTicketExercisable",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isExercisable",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isTicketLost",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isUserTheWinner",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "hasUserWon",
         "type": "bool"
       }
     ],
@@ -298,38 +352,12 @@
   },
   {
     "inputs": [],
-    "name": "parlayAlreadyLost",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "paused",
     "outputs": [
       {
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "payout",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -366,7 +394,7 @@
     "name": "sportsAMM",
     "outputs": [
       {
-        "internalType": "contract SportsAMMV2",
+        "internalType": "contract ISportsAMMV2",
         "name": "",
         "type": "address"
       }

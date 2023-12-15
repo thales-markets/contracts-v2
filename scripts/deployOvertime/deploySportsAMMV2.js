@@ -60,7 +60,7 @@ async function main() {
 
 	try {
 		await hre.run('verify:verify', {
-			address: sportsAMMV2ImplementationAddress,
+			address: sportsAMMV2Address,
 		});
 	} catch (e) {
 		console.log(e);
