@@ -10,14 +10,14 @@ contract Ticket is OwnedWithInit {
 
     struct GameData {
         bytes32 gameId;
-        uint sportId;
-        uint typeId;
-        uint playerPropsTypeId;
+        uint16 sportId;
+        uint16 typeId;
+        uint16 playerPropsTypeId;
         uint maturityDate;
-        uint status;
-        uint line;
-        uint playerId;
-        uint position;
+        uint8 status;
+        int24 line;
+        uint16 playerId;
+        uint8 position;
         uint odd;
     }
 

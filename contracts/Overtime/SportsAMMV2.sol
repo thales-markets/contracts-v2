@@ -30,16 +30,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     struct TradeData {
         bytes32 gameId;
-        uint sportId;
-        uint typeId;
-        uint playerPropsTypeId;
+        uint16 sportId;
+        uint16 typeId;
+        uint16 playerPropsTypeId;
         uint maturityDate;
-        uint status;
-        uint line;
-        uint playerId;
+        uint8 status;
+        int24 line;
+        uint16 playerId;
         uint[] odds;
         bytes32[] merkleProof;
-        uint position;
+        uint8 position;
     }
 
     /// Merkle tree root
@@ -364,13 +364,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bytes32 leaf = keccak256(
             abi.encodePacked(
                 tradeDataItem.gameId,
-                tradeDataItem.sportId,
-                tradeDataItem.typeId,
-                tradeDataItem.playerPropsTypeId,
+                uint(tradeDataItem.sportId),
+                uint(tradeDataItem.typeId),
+                uint(tradeDataItem.playerPropsTypeId),
                 tradeDataItem.maturityDate,
-                tradeDataItem.status,
-                tradeDataItem.line,
-                tradeDataItem.playerId,
+                uint(tradeDataItem.status),
+                int(tradeDataItem.line),
+                uint(tradeDataItem.playerId),
                 tradeDataItem.odds[0],
                 tradeDataItem.odds[1],
                 tradeDataItem.odds[2]

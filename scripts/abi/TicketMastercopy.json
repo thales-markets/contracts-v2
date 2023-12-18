@@ -118,19 +118,19 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "sportId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "typeId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "playerPropsTypeId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
         "internalType": "uint256",
@@ -138,24 +138,24 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "status",
-        "type": "uint256"
+        "type": "uint8"
       },
       {
-        "internalType": "uint256",
+        "internalType": "int24",
         "name": "line",
-        "type": "uint256"
+        "type": "int24"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "playerId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "position",
-        "type": "uint256"
+        "type": "uint8"
       },
       {
         "internalType": "uint256",
@@ -176,19 +176,19 @@
             "type": "bytes32"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint16",
             "name": "sportId",
-            "type": "uint256"
+            "type": "uint16"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint16",
             "name": "typeId",
-            "type": "uint256"
+            "type": "uint16"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint16",
             "name": "playerPropsTypeId",
-            "type": "uint256"
+            "type": "uint16"
           },
           {
             "internalType": "uint256",
@@ -196,24 +196,24 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint8",
             "name": "status",
-            "type": "uint256"
+            "type": "uint8"
           },
           {
-            "internalType": "uint256",
+            "internalType": "int24",
             "name": "line",
-            "type": "uint256"
+            "type": "int24"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint16",
             "name": "playerId",
-            "type": "uint256"
+            "type": "uint16"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint8",
             "name": "position",
-            "type": "uint256"
+            "type": "uint8"
           },
           {
             "internalType": "uint256",
