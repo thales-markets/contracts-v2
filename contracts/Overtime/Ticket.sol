@@ -56,7 +56,7 @@ contract Ticket is OwnedWithInit {
         ticketOwner = _ticketOwner;
     }
 
-    //===================== VIEWS ===========================
+    /* ========== EXTERNAL READ FUNCTIONS ========== */
 
     function isTicketLost() public view returns (bool) {
         bool gameWinning;
@@ -89,15 +89,7 @@ contract Ticket is OwnedWithInit {
         isExercisable = !resolved && (areAllPositionsResolved() || isTicketLost());
     }
 
-    //============================== UPDATE PARAMETERS ===========================
-
-    function setPaused(bool _paused) external onlyAMM {
-        require(paused != _paused, "State not changed");
-        paused = _paused;
-        emit PauseUpdated(_paused);
-    }
-
-    //============================== EXERCISE ===================================
+    /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     function exercise() external onlyAMM {
         require(!paused, "Market paused");
@@ -132,7 +124,7 @@ contract Ticket is OwnedWithInit {
         _resolve(!isTicketLost());
     }
 
-    //============================== INTERNAL FUNCTIONS ===================================
+    /* ========== INTERNAL FUNCTIONS ========== */
 
     function _resolve(bool _hasUserWon) internal {
         resolved = true;
@@ -149,12 +141,22 @@ contract Ticket is OwnedWithInit {
         }
     }
 
-    //============================== MODIFIERS ===================================
+    /* ========== SETTERS ========== */
+
+    function setPaused(bool _paused) external onlyAMM {
+        require(paused != _paused, "State not changed");
+        paused = _paused;
+        emit PauseUpdated(_paused);
+    }
+
+    /* ========== MODIFIERS ========== */
 
     modifier onlyAMM() {
         require(msg.sender == address(sportsAMM), "Only the AMM may perform these methods");
         _;
     }
+
+    /* ========== EVENTS ========== */
 
     event Resolved(bool isUserTheWinner);
     event PauseUpdated(bool paused);

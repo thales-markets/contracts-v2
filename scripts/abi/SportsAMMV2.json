@@ -361,6 +361,25 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "onOffRamper",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "SetMultiCollateralOnOffRamp",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "ticket",
         "type": "address"
       },
@@ -1013,6 +1032,24 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_onOffRamper",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "setMultiCollateralOnOffRamp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_owner",
         "type": "address"
       }
@@ -1183,12 +1220,12 @@
       },
       {
         "internalType": "address",
-        "name": "collateral",
+        "name": "_collateral",
         "type": "address"
       },
       {
         "internalType": "bool",
-        "name": "isEth",
+        "name": "_isEth",
         "type": "bool"
       }
     ],
@@ -1258,12 +1295,12 @@
           }
         ],
         "internalType": "struct SportsAMMV2.TradeData[]",
-        "name": "tradeData",
+        "name": "_tradeData",
         "type": "tuple[]"
       },
       {
         "internalType": "uint256",
-        "name": "buyInAmount",
+        "name": "_buyInAmount",
         "type": "uint256"
       }
     ],

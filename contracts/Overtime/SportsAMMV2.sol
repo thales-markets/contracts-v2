@@ -26,6 +26,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     using AddressSetLib for AddressSetLib.AddressSet;
 
     uint private constant ONE = 1e18;
+    uint private constant MAX_APPROVAL = type(uint256).max;
 
     struct TradeData {
         bytes32 gameId;
@@ -103,8 +104,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
     function tradeQuote(
-        TradeData[] calldata tradeData,
-        uint buyInAmount
+        TradeData[] calldata _tradeData,
+        uint _buyInAmount
     )
         external
         view
@@ -116,7 +117,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint[] memory amountsToBuy
         )
     {
-        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(tradeData, buyInAmount);
+        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
     }
 
     function isActiveTicket(address _ticket) external view returns (bool) {
@@ -140,8 +141,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
-        address collateral,
-        bool isEth
+        address _collateral,
+        bool _isEth
     ) external payable nonReentrant notPaused {
         if (_referrer != address(0)) {
             IReferrals(referrals).setReferrer(_referrer, msg.sender);
@@ -151,8 +152,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _differentRecipient = msg.sender;
         }
 
-        if (collateral != address(0)) {
-            _handleDifferentCollateral(_buyInAmount, collateral, isEth);
+        if (_collateral != address(0)) {
+            _handleDifferentCollateral(_buyInAmount, _collateral, _isEth);
         }
 
         _trade(
@@ -161,7 +162,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _expectedPayout,
             _additionalSlippage,
             _differentRecipient,
-            collateral == address(0)
+            _collateral == address(0)
         );
     }
 
@@ -196,8 +197,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _tradeQuote(
-        TradeData[] memory tradeData,
-        uint buyInAmount
+        TradeData[] memory _tradeData,
+        uint _buyInAmount
     )
         internal
         view
@@ -209,13 +210,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint[] memory amountsToBuy
         )
     {
-        uint numOfPositions = tradeData.length;
+        uint numOfPositions = _tradeData.length;
         finalQuotes = new uint[](numOfPositions);
         amountsToBuy = new uint[](numOfPositions);
-        buyInAmountAfterFees = ((ONE - ((safeBoxFee + lpFee))) * buyInAmount) / ONE;
+        buyInAmountAfterFees = ((ONE - ((safeBoxFee + lpFee))) * _buyInAmount) / ONE;
 
         for (uint i = 0; i < numOfPositions; i++) {
-            TradeData memory tradeDataItem = tradeData[i];
+            TradeData memory tradeDataItem = _tradeData[i];
 
             _verifyMerkleTree(tradeDataItem);
 
@@ -230,19 +231,24 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleDifferentCollateral(uint _buyInAmount, address collateral, bool isEth) internal nonReentrant notPaused {
-        uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(collateral, _buyInAmount);
+    function _handleDifferentCollateral(
+        uint _buyInAmount,
+        address _collateral,
+        bool _isEth
+    ) internal nonReentrant notPaused {
+        require(multicollateralEnabled, "Multi collateral not enabled");
+        uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
 
         uint exactReceived;
 
-        if (isEth) {
-            require(collateral == multiCollateralOnOffRamp.WETH9(), "Wrong collateral sent");
+        if (_isEth) {
+            require(_collateral == multiCollateralOnOffRamp.WETH9(), "Wrong collateral sent");
             require(msg.value >= collateralQuote, "Not enough ETH sent");
             exactReceived = multiCollateralOnOffRamp.onrampWithEth{value: msg.value}(msg.value);
         } else {
-            IERC20(collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
-            IERC20(collateral).approve(address(multiCollateralOnOffRamp), collateralQuote);
-            exactReceived = multiCollateralOnOffRamp.onramp(collateral, collateralQuote);
+            IERC20(_collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
+            IERC20(_collateral).approve(address(multiCollateralOnOffRamp), collateralQuote);
+            exactReceived = multiCollateralOnOffRamp.onramp(_collateral, collateralQuote);
         }
 
         require(exactReceived >= _buyInAmount, "Not enough default payment token received");
@@ -259,7 +265,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout,
         uint _additionalSlippage,
         address _differentRecipient,
-        bool sendDefaultPaymentToken
+        bool _sendDefaultPaymentToken
     ) internal {
         uint payout;
         uint totalQuote;
@@ -274,7 +280,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         require((payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
         require(((ONE * _expectedPayout) / payout) <= (ONE + _additionalSlippage), "Slippage too high");
 
-        if (sendDefaultPaymentToken) {
+        if (_sendDefaultPaymentToken) {
             defaultPaymentToken.safeTransferFrom(msg.sender, address(this), _buyInAmount);
         }
 
@@ -425,6 +431,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit NewTicketMastercopy(_ticketMastercopy);
     }
 
+    function setMultiCollateralOnOffRamp(address _onOffRamper, bool _enabled) external onlyOwner {
+        if (address(multiCollateralOnOffRamp) != address(0)) {
+            defaultPaymentToken.approve(address(multiCollateralOnOffRamp), 0);
+        }
+        multiCollateralOnOffRamp = IMultiCollateralOnOffRamp(_onOffRamper);
+        multicollateralEnabled = _enabled;
+        defaultPaymentToken.approve(_onOffRamper, MAX_APPROVAL);
+        emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
+    }
+
     /* ========== MODIFIERS ========== */
 
     modifier onlyKnownTickets(address _ticket) {
@@ -458,4 +474,5 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
     event ReferrerPaid(address refferer, address trader, uint amount, uint volume);
     event GameResolved(bytes32 gameId, uint sportId, uint typeId, uint playerPropsTypeId, uint result);
+    event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
 }
