@@ -15,6 +15,7 @@ import "../utils/proxy/ProxyPausable.sol";
 import "../utils/libraries/AddressSetLib.sol";
 
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
+import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 
 import "./Ticket.sol";
 
@@ -65,6 +66,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => bool)))) public isGameResolved;
 
     AddressSetLib.AddressSet internal knownTickets;
+
+    IMultiCollateralOnOffRamp public multiCollateralOnOffRamp;
+    bool public multicollateralEnabled;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -134,49 +138,30 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmount,
         uint _expectedPayout,
         uint _additionalSlippage,
-        address _differentRecipient
-    ) external nonReentrant notPaused {
-        uint payout;
-        uint totalQuote;
-        uint[] memory amountsToBuy = new uint[](_tradeData.length);
-        uint[] memory finalQuotes = new uint[](_tradeData.length);
-        uint buyInAmountAfterFees;
-        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
-
-        // apply all checks
-        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
-        require(totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
-        require((payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
-        require(((ONE * _expectedPayout) / payout) <= (ONE + _additionalSlippage), "Slippage too high");
+        address _differentRecipient,
+        address _referrer,
+        address collateral,
+        bool isEth
+    ) external payable nonReentrant notPaused {
+        if (_referrer != address(0)) {
+            IReferrals(referrals).setReferrer(_referrer, msg.sender);
+        }
 
         if (_differentRecipient == address(0)) {
             _differentRecipient = msg.sender;
         }
 
-        defaultPaymentToken.safeTransferFrom(msg.sender, address(this), _buyInAmount);
+        if (collateral != address(0)) {
+            _handleDifferentCollateral(_buyInAmount, collateral, isEth);
+        }
 
-        uint safeBoxAmount = _handleReferrerAndSB(_buyInAmount, buyInAmountAfterFees);
-
-        // clone a ticket
-        Ticket.GameData[] memory gameData = _getTicketData(_tradeData);
-
-        Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
-
-        knownTickets.add(address(ticket));
-
-        ticket.initialize(gameData, buyInAmountAfterFees, totalQuote, address(this), _differentRecipient);
-
-        defaultPaymentToken.safeTransfer(address(ticket), payout);
-
-        emit NewTicket(gameData, address(ticket), buyInAmountAfterFees, payout);
-        emit TicketCreated(
-            address(ticket),
-            _differentRecipient,
+        _trade(
+            _tradeData,
             _buyInAmount,
-            buyInAmountAfterFees,
-            payout,
-            totalQuote,
-            safeBoxAmount
+            _expectedPayout,
+            _additionalSlippage,
+            _differentRecipient,
+            collateral == address(0)
         );
     }
 
@@ -243,6 +228,76 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (totalQuote != 0) {
             payout = (buyInAmountAfterFees * ONE) / totalQuote;
         }
+    }
+
+    function _handleDifferentCollateral(uint _buyInAmount, address collateral, bool isEth) internal nonReentrant notPaused {
+        uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(collateral, _buyInAmount);
+
+        uint exactReceived;
+
+        if (isEth) {
+            require(collateral == multiCollateralOnOffRamp.WETH9(), "Wrong collateral sent");
+            require(msg.value >= collateralQuote, "Not enough ETH sent");
+            exactReceived = multiCollateralOnOffRamp.onrampWithEth{value: msg.value}(msg.value);
+        } else {
+            IERC20(collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
+            IERC20(collateral).approve(address(multiCollateralOnOffRamp), collateralQuote);
+            exactReceived = multiCollateralOnOffRamp.onramp(collateral, collateralQuote);
+        }
+
+        require(exactReceived >= _buyInAmount, "Not enough default payment token received");
+
+        //send the surplus to SB
+        if (exactReceived > _buyInAmount) {
+            defaultPaymentToken.safeTransfer(safeBox, exactReceived - _buyInAmount);
+        }
+    }
+
+    function _trade(
+        TradeData[] memory _tradeData,
+        uint _buyInAmount,
+        uint _expectedPayout,
+        uint _additionalSlippage,
+        address _differentRecipient,
+        bool sendDefaultPaymentToken
+    ) internal {
+        uint payout;
+        uint totalQuote;
+        uint[] memory amountsToBuy = new uint[](_tradeData.length);
+        uint[] memory finalQuotes = new uint[](_tradeData.length);
+        uint buyInAmountAfterFees;
+        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
+
+        // apply all checks
+        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
+        require(totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
+        require((payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
+        require(((ONE * _expectedPayout) / payout) <= (ONE + _additionalSlippage), "Slippage too high");
+
+        if (sendDefaultPaymentToken) {
+            defaultPaymentToken.safeTransferFrom(msg.sender, address(this), _buyInAmount);
+        }
+
+        uint safeBoxAmount = _handleReferrerAndSB(_buyInAmount, buyInAmountAfterFees);
+
+        // clone a ticket
+        Ticket.GameData[] memory gameData = _getTicketData(_tradeData);
+        Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
+        ticket.initialize(gameData, buyInAmountAfterFees, totalQuote, address(this), _differentRecipient);
+        knownTickets.add(address(ticket));
+
+        defaultPaymentToken.safeTransfer(address(ticket), payout);
+
+        emit NewTicket(gameData, address(ticket), buyInAmountAfterFees, payout);
+        emit TicketCreated(
+            address(ticket),
+            _differentRecipient,
+            _buyInAmount,
+            buyInAmountAfterFees,
+            payout,
+            totalQuote,
+            safeBoxAmount
+        );
     }
 
     function _getTicketData(TradeData[] memory _tradeData) internal pure returns (Ticket.GameData[] memory gameData) {
