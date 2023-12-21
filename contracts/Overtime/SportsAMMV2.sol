@@ -18,6 +18,7 @@ import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 
 import "./Ticket.sol";
+import "../interfaces/ISportsAMMV2.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -43,7 +44,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     /// Merkle tree root
-    bytes32 public root;
+    mapping(bytes32 => bytes32) public rootPerGame;
 
     /// The default token used for payment
     IERC20 public defaultPaymentToken;
@@ -63,8 +64,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     mapping(address => uint) public lpFeePerAddress;
     mapping(address => uint) public safeBoxFeePerAddress;
 
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => uint)))) public gameResults;
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => bool)))) public isGameResolved;
+    mapping(bytes32 => mapping(uint => mapping(uint => ISportsAMMV2.GameScore))) public gameScores;
+    mapping(bytes32 => mapping(uint => mapping(uint => bool))) public isScoreSetForGame;
+
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => bool))))) public isGameCanceled;
 
     AddressSetLib.AddressSet internal knownTickets;
 
@@ -132,6 +135,50 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         return knownTickets.elements.length;
     }
 
+    function isGameResolved(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint16 _typeId,
+        uint16 _playerPropsTypeId,
+        uint16 _playerId
+    ) external view returns (bool) {
+        return
+            isScoreSetForGame[_gameId][_playerPropsTypeId][_playerId] ||
+            isGameCanceled[_gameId][_sportId][_typeId][_playerPropsTypeId][_playerId];
+    }
+
+    function getGameResult(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint16 _typeId,
+        uint16 _playerPropsTypeId,
+        uint16 _playerId,
+        int24 _line
+    ) external view returns (uint result) {
+        if (isGameCanceled[_gameId][_sportId][_typeId][_playerPropsTypeId][_playerId]) {
+            return result;
+        }
+
+        ISportsAMMV2.GameScore memory gameScore = gameScores[_gameId][_playerPropsTypeId][_playerId];
+
+        if (_typeId == 0) {
+            if (gameScore.homeScore == gameScore.awayScore) {
+                result = 0;
+            }
+            result = gameScore.homeScore > gameScore.awayScore ? 1 : 2;
+        } else {
+            if (_playerPropsTypeId == 0) {
+                if (_typeId == 10001) {
+                    result = _getResultSpread(int24(gameScore.homeScore), int24(gameScore.awayScore), _line);
+                } else {
+                    result = _getResultTotal(int24(gameScore.homeScore), int24(gameScore.awayScore), _line);
+                }
+            } else {
+                result = _getResultPlayerProps(int24(gameScore.homeScore), _line);
+            }
+        }
+    }
+
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     function trade(
@@ -166,17 +213,29 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    function resolveGame(
+    function setScoreForGame(
         bytes32 _gameId,
-        uint _sportId,
-        uint _typeId,
-        uint _playerPropsTypeId,
-        uint _result
+        uint16 _playerPropsTypeId,
+        uint16 _playerId,
+        uint24 _homeScore,
+        uint24 _awayScore
     ) external onlyOwner {
-        require(!isGameResolved[_gameId][_sportId][_typeId][_playerPropsTypeId], "Game already resolved");
-        gameResults[_gameId][_sportId][_typeId][_playerPropsTypeId] = _result;
-        isGameResolved[_gameId][_sportId][_typeId][_playerPropsTypeId] = true;
-        emit GameResolved(_gameId, _sportId, _typeId, _playerPropsTypeId, _result);
+        require(!isScoreSetForGame[_gameId][_playerPropsTypeId][_playerId], "Score already set for the game");
+        gameScores[_gameId][_playerPropsTypeId][_playerId] = ISportsAMMV2.GameScore(_homeScore, _awayScore);
+        isScoreSetForGame[_gameId][_playerPropsTypeId][_playerId] = true;
+        emit ScoreSetForGame(_gameId, _playerPropsTypeId, _playerId, _homeScore, _awayScore);
+    }
+
+    function cancelGame(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint16 _typeId,
+        uint16 _playerPropsTypeId,
+        uint16 _playerId
+    ) external onlyOwner {
+        require(!isGameCanceled[_gameId][_sportId][_typeId][_playerPropsTypeId][_playerId], "Game already canceled");
+        isGameCanceled[_gameId][_sportId][_typeId][_playerPropsTypeId][_playerId] = true;
+        emit GameCanceled(_gameId, _sportId, _typeId, _playerPropsTypeId, _playerId);
     }
 
     function exerciseTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
@@ -377,7 +436,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             )
         );
         // verify the proof is valid
-        require(MerkleProof.verify(tradeDataItem.merkleProof, root, leaf), "Proof is not valid");
+        require(
+            MerkleProof.verify(tradeDataItem.merkleProof, rootPerGame[tradeDataItem.gameId], leaf),
+            "Proof is not valid"
+        );
     }
 
     function _exerciseTicket(address _ticket) internal {
@@ -390,13 +452,29 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // }
     }
 
+    function _getResultTotal(int24 _homeScore, int24 _awayScore, int24 _line) internal pure returns (uint) {
+        return (_homeScore + _awayScore) * 100 > _line ? 1 : (_homeScore + _awayScore) * 100 < _line ? 2 : 0;
+    }
+
+    function _getResultSpread(int24 _homeScore, int24 _awayScore, int24 _line) internal pure returns (uint) {
+        int24 homeScoreWithSpread = _homeScore * 100 + _line;
+        int24 newAwayScore = _awayScore * 100;
+
+        return homeScoreWithSpread > newAwayScore ? 1 : homeScoreWithSpread < newAwayScore ? 2 : 0;
+    }
+
+    function _getResultPlayerProps(int24 _score, int24 _line) internal pure returns (uint) {
+        return _score * 100 > _line ? 1 : _score * 100 < _line ? 2 : 0;
+    }
+
     /* ========== SETTERS ========== */
 
     /// @notice Set root of merkle tree
+    /// @param _game Game ID
     /// @param _root New root
-    function setRoot(bytes32 _root) public onlyOwner {
-        root = _root;
-        emit NewRoot(_root);
+    function setRootPerGame(bytes32 _game, bytes32 _root) public onlyOwner {
+        rootPerGame[_game] = _root;
+        emit NewRoot(_game, _root);
     }
 
     function setAmounts(
@@ -450,7 +528,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EVENTS ========== */
 
-    event NewRoot(bytes32 root);
+    event NewRoot(bytes32 game, bytes32 root);
     event SetAmounts(
         uint minBuyInAmount,
         uint maxTicketSize,
@@ -473,6 +551,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     );
     event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
     event ReferrerPaid(address refferer, address trader, uint amount, uint volume);
-    event GameResolved(bytes32 gameId, uint sportId, uint typeId, uint playerPropsTypeId, uint result);
+    event ScoreSetForGame(bytes32 gameId, uint16 playerPropsTypeId, uint16 playerId, uint24 homeScore, uint24 awayScore);
+    event GameCanceled(bytes32 gameId, uint16 sportId, uint16 typeId, uint16 playerPropsTypeId, uint16 playerId);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
 }

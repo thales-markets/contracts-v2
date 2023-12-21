@@ -101,7 +101,10 @@ async function updateMerkleTree() {
 	const sportsAMMV2 = sportsAMMV2Contract.attach(sportsAMMV2Address);
 
 	// set new root on contract
-	const tx = await sportsAMMV2.setRoot(root);
+	const tx = await sportsAMMV2.setRootPerGame(
+		'0x3063613139613935343563616437636230393634613865623435363366336666',
+		root
+	);
 	await tx.wait().then(() => {
 		console.log('New root set');
 	});

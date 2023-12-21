@@ -88,30 +88,30 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "sportId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "typeId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "playerPropsTypeId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "result",
-        "type": "uint256"
+        "internalType": "uint16",
+        "name": "playerId",
+        "type": "uint16"
       }
     ],
-    "name": "GameResolved",
+    "name": "GameCanceled",
     "type": "event"
   },
   {
@@ -130,6 +130,12 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "game",
+        "type": "bytes32"
+      },
       {
         "indexed": false,
         "internalType": "bytes32",
@@ -317,6 +323,43 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "gameId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "playerPropsTypeId",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "playerId",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint24",
+        "name": "homeScore",
+        "type": "uint24"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint24",
+        "name": "awayScore",
+        "type": "uint24"
+      }
+    ],
+    "name": "ScoreSetForGame",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "minBuyInAmount",
         "type": "uint256"
@@ -456,6 +499,39 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_sportId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerPropsTypeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      }
+    ],
+    "name": "cancelGame",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "defaultPaymentToken",
     "outputs": [
@@ -497,19 +573,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
-    "name": "gameResults",
+    "name": "gameScores",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "internalType": "uint24",
+        "name": "homeScore",
+        "type": "uint24"
+      },
+      {
+        "internalType": "uint24",
+        "name": "awayScore",
+        "type": "uint24"
       }
     ],
     "stateMutability": "view",
@@ -534,6 +610,50 @@
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_sportId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerPropsTypeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      }
+    ],
+    "name": "getGameResult",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "result",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -644,9 +764,82 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isGameCanceled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_sportId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerPropsTypeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
       }
     ],
     "name": "isGameResolved",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isScoreSetForGame",
     "outputs": [
       {
         "internalType": "bool",
@@ -861,39 +1054,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_sportId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_typeId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_playerPropsTypeId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_result",
-        "type": "uint256"
-      }
-    ],
-    "name": "resolveGame",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_account",
         "type": "address"
@@ -910,8 +1070,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "root",
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "rootPerGame",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -1094,11 +1260,49 @@
     "inputs": [
       {
         "internalType": "bytes32",
+        "name": "_game",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
         "name": "_root",
         "type": "bytes32"
       }
     ],
-    "name": "setRoot",
+    "name": "setRootPerGame",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerPropsTypeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint24",
+        "name": "_homeScore",
+        "type": "uint24"
+      },
+      {
+        "internalType": "uint24",
+        "name": "_awayScore",
+        "type": "uint24"
+      }
+    ],
+    "name": "setScoreForGame",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -72,7 +72,15 @@ contract Ticket is OwnedWithInit {
 
     function areAllPositionsResolved() public view returns (bool) {
         for (uint i = 0; i < numOfGames; i++) {
-            if (!sportsAMM.isGameResolved(games[i].gameId, games[i].sportId, games[i].typeId, games[i].playerPropsTypeId)) {
+            if (
+                !sportsAMM.isGameResolved(
+                    games[i].gameId,
+                    games[i].sportId,
+                    games[i].typeId,
+                    games[i].playerPropsTypeId,
+                    games[i].playerId
+                )
+            ) {
                 return false;
             }
         }
@@ -103,11 +111,13 @@ contract Ticket is OwnedWithInit {
         } else {
             uint finalPayout = payout;
             for (uint i = 0; i < numOfGames; i++) {
-                uint result = sportsAMM.gameResults(
+                uint result = sportsAMM.getGameResult(
                     games[i].gameId,
                     games[i].sportId,
                     games[i].typeId,
-                    games[i].playerPropsTypeId
+                    games[i].playerPropsTypeId,
+                    games[i].playerId,
+                    games[i].line
                 );
                 // TODO: add constant for Canceled
                 if (result == 0) {
@@ -133,8 +143,15 @@ contract Ticket is OwnedWithInit {
     }
 
     function _isWinningPosition(GameData memory game) internal view returns (bool isWinning, bool isResolved) {
-        isResolved = sportsAMM.isGameResolved(game.gameId, game.sportId, game.typeId, game.playerPropsTypeId);
-        uint result = sportsAMM.gameResults(game.gameId, game.sportId, game.typeId, game.playerPropsTypeId);
+        isResolved = sportsAMM.isGameResolved(game.gameId, game.sportId, game.typeId, game.playerPropsTypeId, game.playerId);
+        uint result = sportsAMM.getGameResult(
+            game.gameId,
+            game.sportId,
+            game.typeId,
+            game.playerPropsTypeId,
+            game.playerId,
+            game.line
+        );
         // TODO: add constant for Canceled
         if (isResolved && (result == (game.position + 1) || result == 0)) {
             isWinning = true;

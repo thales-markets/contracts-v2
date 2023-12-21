@@ -20,22 +20,32 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "_sportId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "_typeId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
-        "internalType": "uint256",
-        "name": "playerPropsTypeId",
-        "type": "uint256"
+        "internalType": "uint16",
+        "name": "_playerPropsTypeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
       }
     ],
-    "name": "gameResults",
+    "name": "getGameResult",
     "outputs": [
       {
         "internalType": "uint256",
@@ -54,19 +64,24 @@
         "type": "bytes32"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "_sportId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint16",
         "name": "_typeId",
-        "type": "uint256"
+        "type": "uint16"
       },
       {
-        "internalType": "uint256",
-        "name": "playerPropsTypeId",
-        "type": "uint256"
+        "internalType": "uint16",
+        "name": "_playerPropsTypeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
       }
     ],
     "name": "isGameResolved",
