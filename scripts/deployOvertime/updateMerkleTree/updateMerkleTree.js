@@ -28,15 +28,15 @@ async function updateMerkleTree() {
 			web3.utils.encodePacked(
 				market.gameId,
 				market.sportId,
-				market.typeId,
-				market.playerPropsTypeId,
+				market.childId,
+				market.playerPropsId,
 				market.maturityDate,
 				market.status,
-				market.typeId === 10001
+				market.childId === 10001
 					? market.spread
-					: market.typeId === 10002
+					: market.childId === 10002
 					  ? market.total
-					  : market.typeId === 10010
+					  : market.childId === 10010
 					    ? market.playerProps.line
 					    : 0,
 				market.playerProps.playerId,

@@ -26,12 +26,12 @@
       },
       {
         "internalType": "uint16",
-        "name": "_typeId",
+        "name": "_childId",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "_playerPropsTypeId",
+        "name": "_playerPropsId",
         "type": "uint16"
       },
       {
@@ -70,12 +70,12 @@
       },
       {
         "internalType": "uint16",
-        "name": "_typeId",
+        "name": "_childId",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "_playerPropsTypeId",
+        "name": "_playerPropsId",
         "type": "uint16"
       },
       {

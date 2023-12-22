@@ -14,8 +14,8 @@ interface ISportsAMMV2 {
     function getGameResult(
         bytes32 _gameId,
         uint16 _sportId,
-        uint16 _typeId,
-        uint16 _playerPropsTypeId,
+        uint16 _childId,
+        uint16 _playerPropsId,
         uint16 _playerId,
         int24 _line
     ) external view returns (uint);
@@ -23,8 +23,8 @@ interface ISportsAMMV2 {
     function isGameResolved(
         bytes32 _gameId,
         uint16 _sportId,
-        uint16 _typeId,
-        uint16 _playerPropsTypeId,
+        uint16 _childId,
+        uint16 _playerPropsId,
         uint16 _playerId
     ) external view returns (bool);
 

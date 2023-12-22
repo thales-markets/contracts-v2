@@ -11,8 +11,8 @@ contract Ticket is OwnedWithInit {
     struct GameData {
         bytes32 gameId;
         uint16 sportId;
-        uint16 typeId;
-        uint16 playerPropsTypeId;
+        uint16 childId;
+        uint16 playerPropsId;
         uint maturityDate;
         uint8 status;
         int24 line;
@@ -76,8 +76,8 @@ contract Ticket is OwnedWithInit {
                 !sportsAMM.isGameResolved(
                     games[i].gameId,
                     games[i].sportId,
-                    games[i].typeId,
-                    games[i].playerPropsTypeId,
+                    games[i].childId,
+                    games[i].playerPropsId,
                     games[i].playerId
                 )
             ) {
@@ -114,8 +114,8 @@ contract Ticket is OwnedWithInit {
                 uint result = sportsAMM.getGameResult(
                     games[i].gameId,
                     games[i].sportId,
-                    games[i].typeId,
-                    games[i].playerPropsTypeId,
+                    games[i].childId,
+                    games[i].playerPropsId,
                     games[i].playerId,
                     games[i].line
                 );
@@ -143,12 +143,12 @@ contract Ticket is OwnedWithInit {
     }
 
     function _isWinningPosition(GameData memory game) internal view returns (bool isWinning, bool isResolved) {
-        isResolved = sportsAMM.isGameResolved(game.gameId, game.sportId, game.typeId, game.playerPropsTypeId, game.playerId);
+        isResolved = sportsAMM.isGameResolved(game.gameId, game.sportId, game.childId, game.playerPropsId, game.playerId);
         uint result = sportsAMM.getGameResult(
             game.gameId,
             game.sportId,
-            game.typeId,
-            game.playerPropsTypeId,
+            game.childId,
+            game.playerPropsId,
             game.playerId,
             game.line
         );

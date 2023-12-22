@@ -72,6 +72,12 @@
         "internalType": "address",
         "name": "referrals",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "riskManager",
+        "type": "address"
       }
     ],
     "name": "AddressesUpdated",
@@ -95,13 +101,13 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "typeId",
+        "name": "childId",
         "type": "uint16"
       },
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "playerPropsTypeId",
+        "name": "playerPropsId",
         "type": "uint16"
       },
       {
@@ -163,12 +169,12 @@
           },
           {
             "internalType": "uint16",
-            "name": "typeId",
+            "name": "childId",
             "type": "uint16"
           },
           {
             "internalType": "uint16",
-            "name": "playerPropsTypeId",
+            "name": "playerPropsId",
             "type": "uint16"
           },
           {
@@ -330,7 +336,7 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "playerPropsTypeId",
+        "name": "playerPropsId",
         "type": "uint16"
       },
       {
@@ -512,12 +518,12 @@
       },
       {
         "internalType": "uint16",
-        "name": "_typeId",
+        "name": "_childId",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "_playerPropsTypeId",
+        "name": "_playerPropsId",
         "type": "uint16"
       },
       {
@@ -629,12 +635,12 @@
       },
       {
         "internalType": "uint16",
-        "name": "_typeId",
+        "name": "_childId",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "_playerPropsTypeId",
+        "name": "_playerPropsId",
         "type": "uint16"
       },
       {
@@ -796,12 +802,12 @@
       },
       {
         "internalType": "uint16",
-        "name": "_typeId",
+        "name": "_childId",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "_playerPropsTypeId",
+        "name": "_playerPropsId",
         "type": "uint16"
       },
       {
@@ -1070,6 +1076,58 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "riskManager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "riskPerGameAndPosition",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -1148,6 +1206,11 @@
       {
         "internalType": "address",
         "name": "_referrals",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_riskManager",
         "type": "address"
       }
     ],
@@ -1283,7 +1346,7 @@
       },
       {
         "internalType": "uint16",
-        "name": "_playerPropsTypeId",
+        "name": "_playerPropsId",
         "type": "uint16"
       },
       {
@@ -1349,12 +1412,12 @@
           },
           {
             "internalType": "uint16",
-            "name": "typeId",
+            "name": "childId",
             "type": "uint16"
           },
           {
             "internalType": "uint16",
-            "name": "playerPropsTypeId",
+            "name": "playerPropsId",
             "type": "uint16"
           },
           {
@@ -1454,12 +1517,12 @@
           },
           {
             "internalType": "uint16",
-            "name": "typeId",
+            "name": "childId",
             "type": "uint16"
           },
           {
             "internalType": "uint16",
-            "name": "playerPropsTypeId",
+            "name": "playerPropsId",
             "type": "uint16"
           },
           {

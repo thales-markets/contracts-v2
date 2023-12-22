@@ -1,0 +1,46 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_sportId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_childId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerPropsId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maturity",
+        "type": "uint256"
+      }
+    ],
+    "name": "calculateCapToBeUsed",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "cap",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
