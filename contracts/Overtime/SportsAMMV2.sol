@@ -18,6 +18,7 @@ import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol
 
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
+import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 
 /// @title Sports AMM V2 contract
@@ -26,8 +27,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     using SafeERC20 for IERC20;
     using AddressSetLib for AddressSetLib.AddressSet;
 
+    /* ========== CONST VARIABLES ========== */
+
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
+
+    uint public constant CHILD_ID_SPREAD = 10001;
+    uint public constant CHILD_ID_TOTAL = 10002;
+    uint public constant CHILD_ID_PLAYER_PROPS = 10010;
+
+    /* ========== STRUCT DEFINITION ========== */
 
     struct TradeData {
         bytes32 gameId;
@@ -43,74 +52,111 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint8 position;
     }
 
-    /// Merkle tree root
+    /* ========== STATE VARIABLES ========== */
+
+    // merkle tree root per game
     mapping(bytes32 => bytes32) public rootPerGame;
 
-    /// The default token used for payment
+    // the default token used for payment
     IERC20 public defaultPaymentToken;
 
-    address public ticketMastercopy;
-    address public safeBox;
-    address public referrals;
+    // manager address
+    ISportsAMMV2Manager public manager;
 
-    uint public lpFee;
-    uint public safeBoxFee;
-
-    uint public minBuyInAmount;
-    uint public maxTicketSize;
-    uint public maxSupportedAmount;
-    uint public maxSupportedOdds;
-
-    mapping(address => uint) public lpFeePerAddress;
-    mapping(address => uint) public safeBoxFeePerAddress;
-
-    mapping(bytes32 => mapping(uint => mapping(uint => ISportsAMMV2.GameScore))) public gameScores;
-    mapping(bytes32 => mapping(uint => mapping(uint => bool))) public isScoreSetForGame;
-
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => bool))))) public isGameCanceled;
-
-    AddressSetLib.AddressSet internal knownTickets;
-
-    IMultiCollateralOnOffRamp public multiCollateralOnOffRamp;
-    bool public multicollateralEnabled;
-
+    // risk manager address
     ISportsAMMV2RiskManager public riskManager;
 
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => uint)))))
+    // referrals address
+    IReferrals public referrals;
+
+    // ticket mastercopy address
+    address public ticketMastercopy;
+
+    // safe box address
+    address public safeBox;
+
+    // safe box fee paid on each trade
+    uint public safeBoxFee;
+
+    // safe box fee per specific address paid on each trade
+    mapping(address => uint) public safeBoxFeePerAddress;
+
+    // minimum ticket buy-in amount
+    uint public minBuyInAmount;
+
+    // maximum ticket size
+    uint public maxTicketSize;
+
+    // maximum supported payout amount
+    uint public maxSupportedAmount;
+
+    // maximum supported ticket odds
+    uint public maxSupportedOdds;
+
+    // stores game scores, game defined with gameId -> playerPropsId -> playerId
+    mapping(bytes32 => mapping(uint => mapping(uint => ISportsAMMV2.GameScore))) public gameScores;
+
+    // indicates is score set for game, game defined with gameId -> playerPropsId -> playerId
+    mapping(bytes32 => mapping(uint => mapping(uint => bool))) public isScoreSetForGame;
+
+    // indicates is game explicitly cancelled, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => bool))))) public isGameCancelled;
+
+    // stores active tickets
+    AddressSetLib.AddressSet internal knownTickets;
+
+    // multi-collateral on/off ramp address
+    IMultiCollateralOnOffRamp public multiCollateralOnOffRamp;
+
+    // is multi-collateral enabled
+    bool public multicollateralEnabled;
+
+    // stores current risk per game and position, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => mapping(uint => uint))))))
         public riskPerGameAndPosition;
+
+    // the period of time in seconds before a game is matured and begins to be restricted for AMM trading
+    uint public minimalTimeLeftToMaturity;
+
+    // the period of time in seconds after mauturity when ticket expires
+    uint public expiryDuration;
 
     /* ========== CONSTRUCTOR ========== */
 
-    /// @notice Initialize the storage in the proxy contract with the parameters.
-    /// @param _owner Owner for using the onlyOwner functions
-    /// @param _defaultPaymentToken The address of default token used for payment
+    /// @notice initialize the storage in the proxy contract with the parameters.
+    /// @param _owner owner for using the onlyOwner functions
+    /// @param _defaultPaymentToken the address of default token used for payment
+    /// @param _manager the address of manager
+    /// @param _riskManager the address of risk manager
+    /// @param _referrals the address of referrals
+    /// @param _safeBox the address of safe box
     function initialize(
         address _owner,
         IERC20 _defaultPaymentToken,
-        address _safeBox,
-        address _referrals,
-        uint _minBuyInAmount,
-        uint _maxTicketSize,
-        uint _maxSupportedAmount,
-        uint _maxSupportedOdds,
-        uint _lpFee,
-        uint _safeBoxFee
+        ISportsAMMV2Manager _manager,
+        ISportsAMMV2RiskManager _riskManager,
+        IReferrals _referrals,
+        address _safeBox
     ) public initializer {
         setOwner(_owner);
         initNonReentrant();
         defaultPaymentToken = _defaultPaymentToken;
-        safeBox = _safeBox;
+        manager = _manager;
+        riskManager = _riskManager;
         referrals = _referrals;
-        minBuyInAmount = _minBuyInAmount;
-        maxTicketSize = _maxTicketSize;
-        maxSupportedAmount = _maxSupportedAmount;
-        maxSupportedOdds = _maxSupportedOdds;
-        lpFee = _lpFee;
-        safeBoxFee = _safeBoxFee;
+        safeBox = _safeBox;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
+    /// @notice gets trade quote
+    /// @param _tradeData trade data with all game info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @return buyInAmountAfterFees ticket buy-in amount without fees
+    /// @return payout expected payout
+    /// @return totalQuote total ticket quote
+    /// @return finalQuotes final quotes per game
+    /// @return amountsToBuy amounts per game
     function tradeQuote(
         TradeData[] calldata _tradeData,
         uint _buyInAmount
@@ -128,18 +174,34 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
     }
 
+    /// @notice is provided ticket active
+    /// @param _ticket ticket address
+    /// @return isActiveTicket true/false
     function isActiveTicket(address _ticket) external view returns (bool) {
         return knownTickets.contains(_ticket);
     }
 
+    /// @notice gets batch of active tickets
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @return activeTickets
     function getActiveTickets(uint _index, uint _pageSize) external view returns (address[] memory) {
         return knownTickets.getPage(_index, _pageSize);
     }
 
+    /// @notice gets number of active tickets
+    /// @return numOfActiveTickets
     function numOfActiveTickets() external view returns (uint) {
         return knownTickets.elements.length;
     }
 
+    /// @notice is specific game resolved
+    /// @param _gameId game ID
+    /// @param _sportId game ID
+    /// @param _childId child ID (total, spread, player props)
+    /// @param _playerPropsId player props ID (0 if not player props game)
+    /// @param _playerId player ID (0 if not player props game)
+    /// @return isGameResolved true/false
     function isGameResolved(
         bytes32 _gameId,
         uint16 _sportId,
@@ -149,7 +211,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) external view returns (bool) {
         return
             isScoreSetForGame[_gameId][_playerPropsId][_playerId] ||
-            isGameCanceled[_gameId][_sportId][_childId][_playerPropsId][_playerId];
+            isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId];
     }
 
     function getGameResult(
@@ -159,33 +221,35 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint16 _playerPropsId,
         uint16 _playerId,
         int24 _line
-    ) external view returns (uint result) {
-        if (isGameCanceled[_gameId][_sportId][_childId][_playerPropsId][_playerId]) {
+    ) external view returns (ISportsAMMV2.GameResult result) {
+        if (isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId]) {
             return result;
         }
 
         ISportsAMMV2.GameScore memory gameScore = gameScores[_gameId][_playerPropsId][_playerId];
 
-        if (_childId == 0) {
-            if (gameScore.homeScore == gameScore.awayScore) {
-                result = 0;
-            }
-            result = gameScore.homeScore > gameScore.awayScore ? 1 : 2;
+        if (_childId == CHILD_ID_SPREAD) {
+            result = _getResultSpread(int24(gameScore.homeScore), int24(gameScore.awayScore), _line);
+        } else if (_childId == CHILD_ID_TOTAL) {
+            result = _getResultTotal(int24(gameScore.homeScore), int24(gameScore.awayScore), _line);
+        } else if (_childId == CHILD_ID_PLAYER_PROPS) {
+            result = _getResultPlayerProps(int24(gameScore.homeScore), _line);
         } else {
-            if (_playerPropsId == 0) {
-                if (_childId == 10001) {
-                    result = _getResultSpread(int24(gameScore.homeScore), int24(gameScore.awayScore), _line);
-                } else {
-                    result = _getResultTotal(int24(gameScore.homeScore), int24(gameScore.awayScore), _line);
-                }
-            } else {
-                result = _getResultPlayerProps(int24(gameScore.homeScore), _line);
-            }
+            result = _getResultMoneyline(int24(gameScore.homeScore), int24(gameScore.awayScore));
         }
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
+    /// @notice make a trade and create a ticket
+    /// @param _tradeData trade data with all game info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _expectedPayout expected payout got from quote method
+    /// @param _additionalSlippage slippage tolerance
+    /// @param _differentRecipient different recipent of the ticket
+    /// @param _referrer referrer to get referral fee
+    /// @param _collateral different collateral used for payment
+    /// @param _isEth pay with ETH
     function trade(
         TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -197,7 +261,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _isEth
     ) external payable nonReentrant notPaused {
         if (_referrer != address(0)) {
-            IReferrals(referrals).setReferrer(_referrer, msg.sender);
+            referrals.setReferrer(_referrer, msg.sender);
         }
 
         if (_differentRecipient == address(0)) {
@@ -218,6 +282,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
+    /// @notice set score for specific game
+    /// @param _gameId game ID
+    /// @param _playerPropsId player props ID (0 if not player props game)
+    /// @param _playerId player ID (0 if not player props game)
+    /// @param _homeScore home (first) team score
+    /// @param _awayScore away (second) team score (0 if player props or game with one side)
     function setScoreForGame(
         bytes32 _gameId,
         uint16 _playerPropsId,
@@ -231,6 +301,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit ScoreSetForGame(_gameId, _playerPropsId, _playerId, _homeScore, _awayScore);
     }
 
+    /// @notice cancel specific game
+    /// @param _gameId game ID
+    /// @param _sportId sport ID
+    /// @param _childId child ID (total, spread, player props)
+    /// @param _playerPropsId player props ID (0 if not player props game)
+    /// @param _playerId player ID (0 if not player props game)
     function cancelGame(
         bytes32 _gameId,
         uint16 _sportId,
@@ -238,23 +314,45 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint16 _playerPropsId,
         uint16 _playerId
     ) external onlyOwner {
-        require(!isGameCanceled[_gameId][_sportId][_childId][_playerPropsId][_playerId], "Game already canceled");
-        isGameCanceled[_gameId][_sportId][_childId][_playerPropsId][_playerId] = true;
-        emit GameCanceled(_gameId, _sportId, _childId, _playerPropsId, _playerId);
+        require(!isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId], "Game already cancelled");
+        isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId] = true;
+        emit GameCancelled(_gameId, _sportId, _childId, _playerPropsId, _playerId);
     }
 
+    /// @notice exercise specific ticket
+    /// @param _ticket ticket address
     function exerciseTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
         _exerciseTicket(_ticket);
     }
 
+    /// @notice additional logic for ticket resolve (called only from ticket contact)
+    /// @param _account ticket owner
+    /// @param _hasUserWon is winning ticket
     function resolveTicket(address _account, bool _hasUserWon) external notPaused onlyKnownTickets(msg.sender) {
+        Ticket ticket = Ticket(msg.sender);
+        if (!ticket.cancelled()) {
+            _handleReferrerAndSB(ticket.buyInAmount());
+        }
         knownTickets.remove(msg.sender);
         emit TicketResolved(msg.sender, _account, _hasUserWon);
     }
 
+    /// @notice pause/unapause provided tickets
+    /// @param _tickets array of tickets to be paused/unpaused
+    /// @param _paused pause/unpause
     function setPausedTickets(address[] calldata _tickets, bool _paused) external onlyOwner {
         for (uint i = 0; i < _tickets.length; i++) {
             Ticket(_tickets[i]).setPaused(_paused);
+        }
+    }
+
+    /// @notice expire provided tickets
+    /// @param _tickets array of tickets to be expired
+    function expireTickets(address[] calldata _tickets) external onlyOwner {
+        for (uint i = 0; i < _tickets.length; i++) {
+            if (Ticket(_tickets[i]).phase() == Ticket.Phase.Expiry) {
+                Ticket(_tickets[i]).expire(payable(safeBox));
+            }
         }
     }
 
@@ -277,7 +375,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint numOfPositions = _tradeData.length;
         finalQuotes = new uint[](numOfPositions);
         amountsToBuy = new uint[](numOfPositions);
-        buyInAmountAfterFees = ((ONE - ((safeBoxFee + lpFee))) * _buyInAmount) / ONE;
+        buyInAmountAfterFees = ((ONE - safeBoxFee) * _buyInAmount) / ONE;
 
         for (uint i = 0; i < numOfPositions; i++) {
             TradeData memory tradeDataItem = _tradeData[i];
@@ -299,7 +397,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (
                 riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                     _tradeData[i].playerPropsId
-                ][_tradeData[i].playerId] >
+                ][_tradeData[i].playerId][_tradeData[i].position] +
+                    amountsToBuy[i] >
                 riskManager.calculateCapToBeUsed(
                     _tradeData[i].gameId,
                     _tradeData[i].sportId,
@@ -370,26 +469,24 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             defaultPaymentToken.safeTransferFrom(msg.sender, address(this), _buyInAmount);
         }
 
-        uint safeBoxAmount = _handleReferrerAndSB(_buyInAmount, buyInAmountAfterFees);
-
         // clone a ticket
         Ticket.GameData[] memory gameData = _getTicketData(_tradeData);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
-        ticket.initialize(gameData, buyInAmountAfterFees, totalQuote, address(this), _differentRecipient);
+        ticket.initialize(
+            gameData,
+            _buyInAmount,
+            buyInAmountAfterFees,
+            totalQuote,
+            address(this),
+            _differentRecipient,
+            (block.timestamp + expiryDuration)
+        );
         knownTickets.add(address(ticket));
 
         defaultPaymentToken.safeTransfer(address(ticket), payout);
 
         emit NewTicket(gameData, address(ticket), buyInAmountAfterFees, payout);
-        emit TicketCreated(
-            address(ticket),
-            _differentRecipient,
-            _buyInAmount,
-            buyInAmountAfterFees,
-            payout,
-            totalQuote,
-            safeBoxAmount
-        );
+        emit TicketCreated(address(ticket), _differentRecipient, _buyInAmount, buyInAmountAfterFees, payout, totalQuote);
     }
 
     function _getTicketData(TradeData[] memory _tradeData) internal pure returns (Ticket.GameData[] memory gameData) {
@@ -415,13 +512,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _checkRisk(TradeData[] memory _tradeData, uint[] memory _amountsToBuy) internal {
         for (uint i = 0; i < _tradeData.length; i++) {
+            require(_isGameInAMMTrading(_tradeData[i]), "Not trading");
+
             riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                 _tradeData[i].playerPropsId
-            ][_tradeData[i].playerId] += _amountsToBuy[i];
+            ][_tradeData[i].playerId][_tradeData[i].position] += _amountsToBuy[i];
             require(
                 riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                     _tradeData[i].playerPropsId
-                ][_tradeData[i].playerId] <
+                ][_tradeData[i].playerId][_tradeData[i].position] <
                     riskManager.calculateCapToBeUsed(
                         _tradeData[i].gameId,
                         _tradeData[i].sportId,
@@ -435,36 +534,36 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleReferrerAndSB(uint _buyInAmount, uint _buyInAmountAfterFees) internal returns (uint safeBoxAmount) {
+    function _isGameInAMMTrading(TradeData memory tradeData) internal view returns (bool isTrading) {
+        if (tradeData.status == 0) {
+            if (tradeData.maturityDate >= block.timestamp) {
+                isTrading = (tradeData.maturityDate - block.timestamp) > minimalTimeLeftToMaturity;
+            }
+        }
+    }
+
+    function _handleReferrerAndSB(uint _buyInAmount) internal returns (uint safeBoxAmount) {
         uint referrerShare;
-        address referrer = IReferrals(referrals).sportReferrals(msg.sender);
+        address referrer = referrals.sportReferrals(msg.sender);
         if (referrer != address(0)) {
-            uint referrerFeeByTier = IReferrals(referrals).getReferrerFee(referrer);
+            uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
                 defaultPaymentToken.safeTransfer(referrer, referrerShare);
                 emit ReferrerPaid(referrer, msg.sender, referrerShare, _buyInAmount);
             }
         }
-        safeBoxAmount = _getSafeBoxAmount(_buyInAmount, _buyInAmountAfterFees, msg.sender);
+        safeBoxAmount = _getSafeBoxAmount(_buyInAmount, msg.sender);
         defaultPaymentToken.safeTransfer(safeBox, safeBoxAmount - referrerShare);
     }
 
-    function _getSafeBoxAmount(
-        uint _buyInAmount,
-        uint _buyInAmountAfterFees,
-        address _toCheck
-    ) internal view returns (uint safeBoxAmount) {
+    function _getSafeBoxAmount(uint _buyInAmount, address _toCheck) internal view returns (uint safeBoxAmount) {
         uint sbFee = _getSafeBoxFeePerAddress(_toCheck);
-        safeBoxAmount = ((_buyInAmount - _buyInAmountAfterFees) * sbFee) / (sbFee + _getLpFeePerAddress(_toCheck));
+        safeBoxAmount = (_buyInAmount * sbFee) / ONE;
     }
 
     function _getSafeBoxFeePerAddress(address _toCheck) internal view returns (uint toReturn) {
         return safeBoxFeePerAddress[_toCheck] > 0 ? safeBoxFeePerAddress[_toCheck] : safeBoxFee;
-    }
-
-    function _getLpFeePerAddress(address _toCheck) internal view returns (uint toReturn) {
-        return lpFeePerAddress[_toCheck] > 0 ? lpFeePerAddress[_toCheck] : lpFee;
     }
 
     function _verifyMerkleTree(TradeData memory tradeDataItem) internal view {
@@ -501,69 +600,117 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // }
     }
 
-    function _getResultTotal(int24 _homeScore, int24 _awayScore, int24 _line) internal pure returns (uint) {
-        return (_homeScore + _awayScore) * 100 > _line ? 1 : (_homeScore + _awayScore) * 100 < _line ? 2 : 0;
+    function _getResultMoneyline(int24 _homeScore, int24 _awayScore) internal pure returns (ISportsAMMV2.GameResult) {
+        return
+            _homeScore == _awayScore ? ISportsAMMV2.GameResult.Draw : _homeScore > _awayScore
+                ? ISportsAMMV2.GameResult.Home
+                : ISportsAMMV2.GameResult.Away;
     }
 
-    function _getResultSpread(int24 _homeScore, int24 _awayScore, int24 _line) internal pure returns (uint) {
+    function _getResultTotal(
+        int24 _homeScore,
+        int24 _awayScore,
+        int24 _line
+    ) internal pure returns (ISportsAMMV2.GameResult) {
+        return
+            (_homeScore + _awayScore) * 100 > _line ? ISportsAMMV2.GameResult.Home : (_homeScore + _awayScore) * 100 < _line
+                ? ISportsAMMV2.GameResult.Away
+                : ISportsAMMV2.GameResult.Cancelled;
+    }
+
+    function _getResultSpread(
+        int24 _homeScore,
+        int24 _awayScore,
+        int24 _line
+    ) internal pure returns (ISportsAMMV2.GameResult) {
         int24 homeScoreWithSpread = _homeScore * 100 + _line;
         int24 newAwayScore = _awayScore * 100;
 
-        return homeScoreWithSpread > newAwayScore ? 1 : homeScoreWithSpread < newAwayScore ? 2 : 0;
+        return
+            homeScoreWithSpread > newAwayScore ? ISportsAMMV2.GameResult.Home : homeScoreWithSpread < newAwayScore
+                ? ISportsAMMV2.GameResult.Away
+                : ISportsAMMV2.GameResult.Cancelled;
     }
 
-    function _getResultPlayerProps(int24 _score, int24 _line) internal pure returns (uint) {
-        return _score * 100 > _line ? 1 : _score * 100 < _line ? 2 : 0;
+    function _getResultPlayerProps(int24 _score, int24 _line) internal pure returns (ISportsAMMV2.GameResult) {
+        return
+            _score * 100 > _line ? ISportsAMMV2.GameResult.Home : _score * 100 < _line
+                ? ISportsAMMV2.GameResult.Away
+                : ISportsAMMV2.GameResult.Cancelled;
     }
 
     /* ========== SETTERS ========== */
 
-    /// @notice Set root of merkle tree
-    /// @param _game Game ID
-    /// @param _root New root
+    /// @notice sets root of merkle tree
+    /// @param _game game ID
+    /// @param _root new root
     function setRootPerGame(bytes32 _game, bytes32 _root) public onlyOwner {
         rootPerGame[_game] = _root;
-        emit NewRoot(_game, _root);
+        emit GameRootUpdated(_game, _root);
     }
 
+    /// @notice sets different amounts
+    /// @param _safeBoxFee safe box fee paid on each trade
+    /// @param _minBuyInAmount minimum ticket buy-in amount
+    /// @param _maxTicketSize maximum ticket size
+    /// @param _maxSupportedAmount maximum supported payout amount
+    /// @param _maxSupportedOdds  maximum supported ticket odds
     function setAmounts(
+        uint _safeBoxFee,
         uint _minBuyInAmount,
         uint _maxTicketSize,
         uint _maxSupportedAmount,
-        uint _maxSupportedOdds,
-        uint _lpFee,
-        uint _safeBoxFee
+        uint _maxSupportedOdds
     ) external onlyOwner {
+        safeBoxFee = _safeBoxFee;
         minBuyInAmount = _minBuyInAmount;
         maxTicketSize = _maxTicketSize;
         maxSupportedAmount = _maxSupportedAmount;
         maxSupportedOdds = _maxSupportedOdds;
-        lpFee = _lpFee;
-        safeBoxFee = _safeBoxFee;
-        emit SetAmounts(_minBuyInAmount, _maxTicketSize, _maxSupportedAmount, _maxSupportedOdds, _lpFee, _safeBoxFee);
+        emit AmountsUpdated(_safeBoxFee, _minBuyInAmount, _maxTicketSize, _maxSupportedAmount, _maxSupportedOdds);
     }
 
-    /// @notice Setting the main addresses for SportsAMMV2
-    /// @param _defaultPaymentToken Address of the default payment token
+    /// @notice sets main addresses
+    /// @param _defaultPaymentToken the default token used for payment
+    /// @param _manager manager address
+    /// @param _riskManager risk manager address
+    /// @param _referrals referrals address
+    /// @param _safeBox safeBox address
     function setAddresses(
         IERC20 _defaultPaymentToken,
-        address _safeBox,
+        address _manager,
+        address _riskManager,
         address _referrals,
-        address _riskManager
+        address _safeBox
     ) external onlyOwner {
         defaultPaymentToken = _defaultPaymentToken;
-        safeBox = _safeBox;
-        referrals = _referrals;
+        manager = ISportsAMMV2Manager(_manager);
         riskManager = ISportsAMMV2RiskManager(_riskManager);
+        referrals = IReferrals(_referrals);
+        safeBox = _safeBox;
 
-        emit AddressesUpdated(_defaultPaymentToken, _safeBox, _referrals, _riskManager);
+        emit AddressesUpdated(_defaultPaymentToken, _manager, _riskManager, _referrals, _safeBox);
     }
 
+    /// @notice sets different times/periods
+    /// @param _minimalTimeLeftToMaturity  the period of time in seconds before a game is matured and begins to be restricted for AMM trading
+    /// @param _expiryDuration the period of time in seconds after mauturity when ticket expires
+    function setTimes(uint _minimalTimeLeftToMaturity, uint _expiryDuration) external onlyOwner {
+        minimalTimeLeftToMaturity = _minimalTimeLeftToMaturity;
+        expiryDuration = _expiryDuration;
+        emit TimesUpdated(_minimalTimeLeftToMaturity, _expiryDuration);
+    }
+
+    /// @notice sets new Ticket Mastercopy address
+    /// @param _ticketMastercopy new Ticket Mastercopy address
     function setTicketMastercopy(address _ticketMastercopy) external onlyOwner {
         ticketMastercopy = _ticketMastercopy;
-        emit NewTicketMastercopy(_ticketMastercopy);
+        emit TicketMastercopyUpdated(_ticketMastercopy);
     }
 
+    /// @notice sets multi-collateral on/off ramp contract and enable/disable
+    /// @param _onOffRamper new multi-collateral on/off ramp address
+    /// @param _enabled enable/disable multi-collateral on/off ramp
     function setMultiCollateralOnOffRamp(address _onOffRamper, bool _enabled) external onlyOwner {
         if (address(multiCollateralOnOffRamp) != address(0)) {
             defaultPaymentToken.approve(address(multiCollateralOnOffRamp), 0);
@@ -583,17 +730,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EVENTS ========== */
 
-    event NewRoot(bytes32 game, bytes32 root);
-    event SetAmounts(
-        uint minBuyInAmount,
-        uint maxTicketSize,
-        uint maxSupportedAmount,
-        uint maxSupportedOdds,
-        uint lpFee,
-        uint safeBoxFee
-    );
-    event AddressesUpdated(IERC20 defaultPaymentToken, address safeBox, address referrals, address riskManager);
-    event NewTicketMastercopy(address ticketMastercopy);
     event NewTicket(Ticket.GameData[] tradeData, address ticket, uint buyInAmountAfterFees, uint payout);
     event TicketCreated(
         address ticket,
@@ -601,12 +737,31 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint buyInAmount,
         uint buyInAmountAfterFees,
         uint payout,
-        uint totalQuote,
-        uint safeBoxAmount
+        uint totalQuote
     );
+
+    event ScoreSetForGame(bytes32 gameId, uint16 playerPropsId, uint16 playerId, uint24 homeScore, uint24 awayScore);
+    event GameCancelled(bytes32 gameId, uint16 sportId, uint16 childId, uint16 playerPropsId, uint16 playerId);
+
     event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
     event ReferrerPaid(address refferer, address trader, uint amount, uint volume);
-    event ScoreSetForGame(bytes32 gameId, uint16 playerPropsId, uint16 playerId, uint24 homeScore, uint24 awayScore);
-    event GameCanceled(bytes32 gameId, uint16 sportId, uint16 childId, uint16 playerPropsId, uint16 playerId);
+
+    event GameRootUpdated(bytes32 game, bytes32 root);
+    event AmountsUpdated(
+        uint safeBoxFee,
+        uint minBuyInAmount,
+        uint maxTicketSize,
+        uint maxSupportedAmount,
+        uint maxSupportedOdds
+    );
+    event AddressesUpdated(
+        IERC20 defaultPaymentToken,
+        address manager,
+        address riskManager,
+        address referrals,
+        address safeBox
+    );
+    event TimesUpdated(uint minimalTimeLeftToMaturity, uint expiryDuration);
+    event TicketMastercopyUpdated(address ticketMastercopy);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
 }

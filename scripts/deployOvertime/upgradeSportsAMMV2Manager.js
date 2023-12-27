@@ -1,7 +1,7 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
 
-const { setTargetAddress } = require('../helpers');
+const { setTargetAddress, getTargetAddress } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -17,26 +17,28 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const needsTransformingCollateral = false;
-
 	const sportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
-	const sportsAMMV2ManagerDeployed = await upgrades.deployProxy(sportsAMMV2Manager, [
-		owner.address,
-		needsTransformingCollateral,
-	]);
-	await sportsAMMV2ManagerDeployed.waitForDeployment();
+	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 
-	const sportsAMMV2ManagerAddress = await sportsAMMV2ManagerDeployed.getAddress();
+	let sportsAMMV2ManagerImplementationAddress;
+	if (networkObj.chainId == 10) {
+		sportsAMMV2ManagerImplementationAddress = await upgrades.prepareUpgrade(
+			sportsAMMV2ManagerAddress,
+			sportsAMMV2Manager
+		);
+	}
 
-	console.log('SportsAMMV2Manager deployed on:', sportsAMMV2ManagerAddress);
-	setTargetAddress('SportsAMMV2Manager', network, sportsAMMV2ManagerAddress);
-	await delay(5000);
+	// upgrade if test networks
+	if (networkObj.chainId == 420) {
+		await upgrades.upgradeProxy(sportsAMMV2ManagerAddress, sportsAMMV2Manager);
 
-	const sportsAMMV2ManagerImplementationAddress = await getImplementationAddress(
-		ethers.provider,
-		sportsAMMV2ManagerAddress
-	);
+		sportsAMMV2ManagerImplementationAddress = await getImplementationAddress(
+			ethers.provider,
+			sportsAMMV2ManagerAddress
+		);
+	}
 
+	console.log('SportsAMMV2Manager upgraded');
 	console.log('SportsAMMV2Manager Implementation:', sportsAMMV2ManagerImplementationAddress);
 	setTargetAddress(
 		'SportsAMMV2ManagerImplementation',
@@ -47,7 +49,7 @@ async function main() {
 
 	try {
 		await hre.run('verify:verify', {
-			address: sportsAMMV2ManagerAddress,
+			address: sportsAMMV2ManagerImplementationAddress,
 		});
 	} catch (e) {
 		console.log(e);

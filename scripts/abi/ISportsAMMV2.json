@@ -48,9 +48,9 @@
     "name": "getGameResult",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "enum ISportsAMMV2.GameResult",
         "name": "",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",

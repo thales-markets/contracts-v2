@@ -64,7 +64,13 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "safeBox",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "riskManager",
         "type": "address"
       },
       {
@@ -76,11 +82,48 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "riskManager",
+        "name": "safeBox",
         "type": "address"
       }
     ],
     "name": "AddressesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "safeBoxFee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minBuyInAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxTicketSize",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSupportedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSupportedOdds",
+        "type": "uint256"
+      }
+    ],
+    "name": "AmountsUpdated",
     "type": "event"
   },
   {
@@ -117,20 +160,7 @@
         "type": "uint16"
       }
     ],
-    "name": "GameCanceled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "version",
-        "type": "uint64"
-      }
-    ],
-    "name": "Initialized",
+    "name": "GameCancelled",
     "type": "event"
   },
   {
@@ -149,7 +179,20 @@
         "type": "bytes32"
       }
     ],
-    "name": "NewRoot",
+    "name": "GameRootUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "Initialized",
     "type": "event"
   },
   {
@@ -233,19 +276,6 @@
       }
     ],
     "name": "NewTicket",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "ticketMastercopy",
-        "type": "address"
-      }
-    ],
-    "name": "NewTicketMastercopy",
     "type": "event"
   },
   {
@@ -366,49 +396,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "minBuyInAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxTicketSize",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxSupportedAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxSupportedOdds",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "lpFee",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "safeBoxFee",
-        "type": "uint256"
-      }
-    ],
-    "name": "SetAmounts",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "onOffRamper",
         "type": "address"
@@ -461,15 +448,22 @@
         "internalType": "uint256",
         "name": "totalQuote",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "safeBoxAmount",
-        "type": "uint256"
       }
     ],
     "name": "TicketCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "ticketMastercopy",
+        "type": "address"
+      }
+    ],
+    "name": "TicketMastercopyUpdated",
     "type": "event"
   },
   {
@@ -496,6 +490,64 @@
     ],
     "name": "TicketResolved",
     "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minimalTimeLeftToMaturity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "expiryDuration",
+        "type": "uint256"
+      }
+    ],
+    "name": "TimesUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "CHILD_ID_PLAYER_PROPS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CHILD_ID_SPREAD",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CHILD_ID_TOTAL",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -561,6 +613,32 @@
     "name": "exerciseTicket",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "_tickets",
+        "type": "address[]"
+      }
+    ],
+    "name": "expireTickets",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "expiryDuration",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -657,9 +735,9 @@
     "name": "getGameResult",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "enum ISportsAMMV2.GameResult",
         "name": "result",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -685,44 +763,24 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_safeBox",
+        "internalType": "contract ISportsAMMV2Manager",
+        "name": "_manager",
         "type": "address"
       },
       {
-        "internalType": "address",
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "_riskManager",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IReferrals",
         "name": "_referrals",
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_minBuyInAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxTicketSize",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxSupportedAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxSupportedOdds",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_lpFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_safeBoxFee",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_safeBox",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -777,7 +835,7 @@
         "type": "uint256"
       }
     ],
-    "name": "isGameCanceled",
+    "name": "isGameCancelled",
     "outputs": [
       {
         "internalType": "bool",
@@ -871,31 +929,12 @@
   },
   {
     "inputs": [],
-    "name": "lpFee",
+    "name": "manager",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
+        "internalType": "contract ISportsAMMV2Manager",
         "name": "",
         "type": "address"
-      }
-    ],
-    "name": "lpFeePerAddress",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -943,6 +982,19 @@
   {
     "inputs": [],
     "name": "minBuyInAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minimalTimeLeftToMaturity",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1049,7 +1101,7 @@
     "name": "referrals",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IReferrals",
         "name": "",
         "type": "address"
       }
@@ -1094,6 +1146,11 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",
@@ -1200,7 +1257,12 @@
       },
       {
         "internalType": "address",
-        "name": "_safeBox",
+        "name": "_manager",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_riskManager",
         "type": "address"
       },
       {
@@ -1210,7 +1272,7 @@
       },
       {
         "internalType": "address",
-        "name": "_riskManager",
+        "name": "_safeBox",
         "type": "address"
       }
     ],
@@ -1221,6 +1283,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_safeBoxFee",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "_minBuyInAmount",
@@ -1239,16 +1306,6 @@
       {
         "internalType": "uint256",
         "name": "_maxSupportedOdds",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_lpFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_safeBoxFee",
         "type": "uint256"
       }
     ],
@@ -1379,6 +1436,24 @@
       }
     ],
     "name": "setTicketMastercopy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_minimalTimeLeftToMaturity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_expiryDuration",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTimes",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -13,7 +13,7 @@ import "../interfaces/ISportsAMMV2Manager.sol";
 /// @title Sports AMM V2 Risk Manager contract
 /// @author vladan
 contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
-    /* ========== RISK MANAGER CONST VARIABLES ========== */
+    /* ========== CONST VARIABLES ========== */
 
     uint public constant MIN_SPORT_NUMBER = 9000;
     uint public constant MIN_CHILD_NUMBER = 10000;
@@ -21,7 +21,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     uint public constant DEFAULT_DYNAMIC_LIQUIDITY_CUTOFF_DIVIDER = 2e18;
     uint private constant ONE = 1e18;
 
-    /* ========== RISK MANAGER STATE VARIABLES ========== */
+    /* ========== STATE VARIABLES ========== */
 
     ISportsAMMV2Manager public manager;
     uint public defaultCap;

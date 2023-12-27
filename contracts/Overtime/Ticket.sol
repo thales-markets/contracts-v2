@@ -8,6 +8,12 @@ import "../interfaces/ISportsAMMV2.sol";
 contract Ticket is OwnedWithInit {
     uint private constant ONE = 1e18;
 
+    enum Phase {
+        Trading,
+        Maturity,
+        Expiry
+    }
+
     struct GameData {
         bytes32 gameId;
         uint16 sportId;
@@ -25,12 +31,15 @@ contract Ticket is OwnedWithInit {
     address public ticketOwner;
 
     uint public buyInAmount;
+    uint public buyInAmountAfterFees;
     uint public totalQuote;
     uint public numOfGames;
+    uint public expiry;
 
     bool public resolved;
     bool public paused;
     bool public initialized;
+    bool public cancelled;
 
     mapping(uint => GameData) public games;
 
@@ -39,9 +48,11 @@ contract Ticket is OwnedWithInit {
     function initialize(
         GameData[] calldata _parameters,
         uint _buyInAmount,
+        uint _buyInAmountAfterFees,
         uint _totalQuote,
         address _sportsAMM,
-        address _ticketOwner
+        address _ticketOwner,
+        uint _expiry
     ) external {
         require(!initialized, "Ticket already initialized");
         initialized = true;
@@ -52,8 +63,10 @@ contract Ticket is OwnedWithInit {
             games[i] = _parameters[i];
         }
         buyInAmount = _buyInAmount;
+        buyInAmountAfterFees = _buyInAmountAfterFees;
         totalQuote = _totalQuote;
         ticketOwner = _ticketOwner;
+        expiry = _expiry;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -97,21 +110,37 @@ contract Ticket is OwnedWithInit {
         isExercisable = !resolved && (areAllPositionsResolved() || isTicketLost());
     }
 
+    function phase() public view returns (Phase) {
+        if (resolved) {
+            if (resolved && expiry < block.timestamp) {
+                return Phase.Expiry;
+            } else {
+                return Phase.Maturity;
+            }
+        } else {
+            return Phase.Trading;
+        }
+    }
+
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     function exercise() external onlyAMM {
         require(!paused, "Market paused");
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
+
         uint payout = sportsAMM.defaultPaymentToken().balanceOf(address(this));
+        bool isCancelled = false;
+
         if (isTicketLost()) {
             if (payout > 0) {
                 sportsAMM.defaultPaymentToken().transfer(address(sportsAMM), payout);
             }
         } else {
             uint finalPayout = payout;
+            isCancelled = true;
             for (uint i = 0; i < numOfGames; i++) {
-                uint result = sportsAMM.getGameResult(
+                ISportsAMMV2.GameResult result = sportsAMM.getGameResult(
                     games[i].gameId,
                     games[i].sportId,
                     games[i].childId,
@@ -119,32 +148,49 @@ contract Ticket is OwnedWithInit {
                     games[i].playerId,
                     games[i].line
                 );
-                // TODO: add constant for Canceled
-                if (result == 0) {
+                if (result == ISportsAMMV2.GameResult.Cancelled) {
                     finalPayout = (finalPayout * games[i].odd) / ONE;
+                } else {
+                    isCancelled = false;
                 }
             }
-            sportsAMM.defaultPaymentToken().transfer(address(ticketOwner), finalPayout);
-            sportsAMM.defaultPaymentToken().transfer(
-                address(sportsAMM),
-                sportsAMM.defaultPaymentToken().balanceOf(address(this))
-            );
+            sportsAMM.defaultPaymentToken().transfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
+
+            uint balance = sportsAMM.defaultPaymentToken().balanceOf(address(this));
+            if (balance != 0) {
+                sportsAMM.defaultPaymentToken().transfer(
+                    address(sportsAMM),
+                    sportsAMM.defaultPaymentToken().balanceOf(address(this))
+                );
+            }
         }
 
-        _resolve(!isTicketLost());
+        _resolve(!isTicketLost(), isCancelled);
+    }
+
+    function expire(address payable beneficiary) external onlyAMM {
+        require(phase() == Phase.Expiry, "Ticket expired");
+        require(!resolved, "Can't expire resolved parlay.");
+        emit Expired(beneficiary);
+        _selfDestruct(beneficiary);
+    }
+
+    function withdrawCollateral(address recipient) external onlyAMM {
+        sportsAMM.defaultPaymentToken().transfer(recipient, sportsAMM.defaultPaymentToken().balanceOf(address(this)));
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
 
-    function _resolve(bool _hasUserWon) internal {
+    function _resolve(bool _hasUserWon, bool _cancelled) internal {
         resolved = true;
+        cancelled = _cancelled;
         sportsAMM.resolveTicket(ticketOwner, _hasUserWon);
         emit Resolved(_hasUserWon);
     }
 
     function _isWinningPosition(GameData memory game) internal view returns (bool isWinning, bool isResolved) {
         isResolved = sportsAMM.isGameResolved(game.gameId, game.sportId, game.childId, game.playerPropsId, game.playerId);
-        uint result = sportsAMM.getGameResult(
+        ISportsAMMV2.GameResult result = sportsAMM.getGameResult(
             game.gameId,
             game.sportId,
             game.childId,
@@ -152,9 +198,15 @@ contract Ticket is OwnedWithInit {
             game.playerId,
             game.line
         );
-        // TODO: add constant for Canceled
-        if (isResolved && (result == (game.position + 1) || result == 0)) {
+        if (isResolved && (uint(result) == (game.position + 1) || result == ISportsAMMV2.GameResult.Cancelled)) {
             isWinning = true;
+        }
+    }
+
+    function _selfDestruct(address payable beneficiary) internal {
+        uint balance = sportsAMM.defaultPaymentToken().balanceOf(address(this));
+        if (balance != 0) {
+            sportsAMM.defaultPaymentToken().transfer(beneficiary, balance);
         }
     }
 
@@ -176,5 +228,6 @@ contract Ticket is OwnedWithInit {
     /* ========== EVENTS ========== */
 
     event Resolved(bool isUserTheWinner);
+    event Expired(address beneficiary);
     event PauseUpdated(bool paused);
 }

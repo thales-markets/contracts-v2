@@ -106,7 +106,9 @@ async function updateMerkleTree() {
 		root
 	);
 	await tx.wait().then(() => {
-		console.log('New root set');
+		console.log(
+			'New root set for game 0x3063613139613935343563616437636230393634613865623435363366336666'
+		);
 	});
 
 	fs.writeFileSync(

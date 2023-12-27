@@ -18,28 +18,28 @@ async function main() {
 	console.log('Network:', network);
 
 	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
-	const safeBoxAddress = getTargetAddress('SafeBox', network);
+	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
+	const sportsAMMV2RiskManagerAddress = getTargetAddress('SportsAMMV2RiskManager', network);
 	const referralsAddress = getTargetAddress('Referrals', network);
+	const safeBoxAddress = getTargetAddress('SafeBox', network);
 
+	const safeBoxFee = ethers.parseEther('0.02');
 	const minBuyInAmount = ethers.parseEther('3');
 	const maxTicketSize = 10;
 	const maxSupportedAmount = ethers.parseEther('20000');
 	const maxSupportedOdds = ethers.parseEther('0.01');
-	const lpFee = ethers.parseEther('0.03');
-	const safeBoxFee = ethers.parseEther('0.02');
+
+	const minimalTimeLeftToMaturity = 10;
+	const expiryDuration = 7776000;
 
 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2Deployed = await upgrades.deployProxy(sportsAMMV2, [
 		owner.address,
 		defaultPaymentTokenAddress,
-		safeBoxAddress,
+		sportsAMMV2ManagerAddress,
+		sportsAMMV2RiskManagerAddress,
 		referralsAddress,
-		minBuyInAmount,
-		maxTicketSize,
-		maxSupportedAmount,
-		maxSupportedOdds,
-		lpFee,
-		safeBoxFee,
+		safeBoxAddress,
 	]);
 	await sportsAMMV2Deployed.waitForDeployment();
 
@@ -48,6 +48,23 @@ async function main() {
 	console.log('SportsAMMV2 deployed on:', sportsAMMV2Address);
 	setTargetAddress('SportsAMMV2', network, sportsAMMV2Address);
 	await delay(5000);
+
+	await sportsAMMV2Deployed.setAmounts(
+		safeBoxFee,
+		minBuyInAmount,
+		maxTicketSize,
+		maxSupportedAmount,
+		maxSupportedOdds,
+		{
+			from: owner.address,
+		}
+	);
+	console.log('Amounts set in SportsAMMV2');
+
+	await sportsAMMV2Deployed.setTimes(minimalTimeLeftToMaturity, expiryDuration, {
+		from: owner.address,
+	});
+	console.log('Times set in SportsAMMV2');
 
 	const sportsAMMV2ImplementationAddress = await getImplementationAddress(
 		ethers.provider,
