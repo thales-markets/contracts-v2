@@ -70,6 +70,12 @@
         "internalType": "bool",
         "name": "isUserTheWinner",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "cancelled",
+        "type": "bool"
       }
     ],
     "name": "Resolved",
@@ -287,7 +293,7 @@
           }
         ],
         "internalType": "struct Ticket.GameData[]",
-        "name": "_parameters",
+        "name": "_gameData",
         "type": "tuple[]"
       },
       {
@@ -313,6 +319,11 @@
       {
         "internalType": "address",
         "name": "_ticketOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ticketCreator",
         "type": "address"
       },
       {
@@ -488,6 +499,19 @@
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ticketCreator",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }

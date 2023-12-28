@@ -326,15 +326,23 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     /// @notice additional logic for ticket resolve (called only from ticket contact)
-    /// @param _account ticket owner
+    /// @param _ticketOwner ticket owner
     /// @param _hasUserWon is winning ticket
-    function resolveTicket(address _account, bool _hasUserWon) external notPaused onlyKnownTickets(msg.sender) {
-        Ticket ticket = Ticket(msg.sender);
-        if (!ticket.cancelled()) {
-            _handleReferrerAndSB(ticket.buyInAmount());
+    /// @param _cancelled is ticket cancelled (needed for referral and safe box fee)
+    /// @param _buyInAmount ticket buy-in amount (needed for referral and safe box fee)
+    /// @param _ticketCreator ticket creator (needed for referral and safe box fee)
+    function resolveTicket(
+        address _ticketOwner,
+        bool _hasUserWon,
+        bool _cancelled,
+        uint _buyInAmount,
+        address _ticketCreator
+    ) external notPaused onlyKnownTickets(msg.sender) {
+        if (_cancelled) {
+            _handleReferrerAndSB(_buyInAmount, _ticketCreator);
         }
         knownTickets.remove(msg.sender);
-        emit TicketResolved(msg.sender, _account, _hasUserWon);
+        emit TicketResolved(msg.sender, _ticketOwner, _hasUserWon);
     }
 
     /// @notice pause/unapause provided tickets
@@ -479,6 +487,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             totalQuote,
             address(this),
             _differentRecipient,
+            msg.sender,
             (block.timestamp + expiryDuration)
         );
         knownTickets.add(address(ticket));
@@ -542,19 +551,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleReferrerAndSB(uint _buyInAmount) internal returns (uint safeBoxAmount) {
+    function _handleReferrerAndSB(uint _buyInAmount, address _tickerCreator) internal returns (uint safeBoxAmount) {
         uint referrerShare;
-        address referrer = referrals.sportReferrals(msg.sender);
+        address referrer = referrals.sportReferrals(_tickerCreator);
         if (referrer != address(0)) {
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
                 defaultPaymentToken.safeTransfer(referrer, referrerShare);
-                emit ReferrerPaid(referrer, msg.sender, referrerShare, _buyInAmount);
+                emit ReferrerPaid(referrer, _tickerCreator, referrerShare, _buyInAmount);
             }
         }
-        safeBoxAmount = _getSafeBoxAmount(_buyInAmount, msg.sender);
+        safeBoxAmount = _getSafeBoxAmount(_buyInAmount, _tickerCreator);
         defaultPaymentToken.safeTransfer(safeBox, safeBoxAmount - referrerShare);
+        emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
     }
 
     function _getSafeBoxAmount(uint _buyInAmount, address _toCheck) internal view returns (uint safeBoxAmount) {
@@ -745,6 +755,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
     event ReferrerPaid(address refferer, address trader, uint amount, uint volume);
+    event SafeBoxFeePaid(uint safeBoxFee, uint safeBoxAmount);
 
     event GameRootUpdated(bytes32 game, bytes32 root);
     event AmountsUpdated(

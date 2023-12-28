@@ -359,6 +359,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "safeBoxFee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "safeBoxAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SafeBoxFeePaid",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "bytes32",
         "name": "gameId",
         "type": "bytes32"
@@ -1113,13 +1132,28 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_account",
+        "name": "_ticketOwner",
         "type": "address"
       },
       {
         "internalType": "bool",
         "name": "_hasUserWon",
         "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "_cancelled",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_ticketCreator",
+        "type": "address"
       }
     ],
     "name": "resolveTicket",

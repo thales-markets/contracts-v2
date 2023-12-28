@@ -35,5 +35,11 @@ interface ISportsAMMV2 {
         uint16 _playerId
     ) external view returns (bool);
 
-    function resolveTicket(address _account, bool _hasUserWon) external;
+    function resolveTicket(
+        address _ticketOwner,
+        bool _hasUserWon,
+        bool _cancelled,
+        uint _buyInAmount,
+        address _ticketCreator
+    ) external;
 }
