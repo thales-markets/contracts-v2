@@ -15,6 +15,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      }
+    ],
+    "name": "exerciseTicket",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "_gameId",
         "type": "bytes32"

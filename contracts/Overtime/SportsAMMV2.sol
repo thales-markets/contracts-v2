@@ -15,15 +15,19 @@ import "../utils/libraries/AddressSetLib.sol";
 
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
+import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
+import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
 contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
+    /* ========== LIBRARIES ========== */
+
     using SafeERC20 for IERC20;
     using AddressSetLib for AddressSetLib.AddressSet;
 
@@ -43,7 +47,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint16 sportId;
         uint16 childId;
         uint16 playerPropsId;
-        uint maturityDate;
+        uint maturity;
         uint8 status;
         int24 line;
         uint16 playerId;
@@ -121,14 +125,21 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // the period of time in seconds after mauturity when ticket expires
     uint public expiryDuration;
 
+    // liquidity pool address
+    ISportsAMMV2LiquidityPool public liquidityPool;
+
+    // staking thales address
+    IStakingThales public stakingThales;
+
     /* ========== CONSTRUCTOR ========== */
 
-    /// @notice initialize the storage in the proxy contract with the parameters.
+    /// @notice initialize the storage in the proxy contract with the parameters
     /// @param _owner owner for using the onlyOwner functions
     /// @param _defaultPaymentToken the address of default token used for payment
     /// @param _manager the address of manager
     /// @param _riskManager the address of risk manager
     /// @param _referrals the address of referrals
+    /// @param _stakingThales the address of staking thales
     /// @param _safeBox the address of safe box
     function initialize(
         address _owner,
@@ -136,6 +147,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2Manager _manager,
         ISportsAMMV2RiskManager _riskManager,
         IReferrals _referrals,
+        IStakingThales _stakingThales,
         address _safeBox
     ) public initializer {
         setOwner(_owner);
@@ -144,6 +156,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         manager = _manager;
         riskManager = _riskManager;
         referrals = _referrals;
+        stakingThales = _stakingThales;
         safeBox = _safeBox;
     }
 
@@ -413,7 +426,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _tradeData[i].childId,
                     _tradeData[i].playerPropsId,
                     _tradeData[i].playerId,
-                    _tradeData[i].maturityDate
+                    _tradeData[i].maturity
                 )
             ) {
                 finalQuotes[i] = 0;
@@ -492,6 +505,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
         knownTickets.add(address(ticket));
 
+        if (address(stakingThales) != address(0)) {
+            stakingThales.updateVolume(_differentRecipient, _buyInAmount);
+        }
+
+        liquidityPool.commitTrade(address(ticket), payout - buyInAmountAfterFees);
         defaultPaymentToken.safeTransfer(address(ticket), payout);
 
         emit NewTicket(gameData, address(ticket), buyInAmountAfterFees, payout);
@@ -509,7 +527,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 tradeDataItem.sportId,
                 tradeDataItem.childId,
                 tradeDataItem.playerPropsId,
-                tradeDataItem.maturityDate,
+                tradeDataItem.maturity,
                 tradeDataItem.status,
                 tradeDataItem.line,
                 tradeDataItem.playerId,
@@ -536,7 +554,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                         _tradeData[i].childId,
                         _tradeData[i].playerPropsId,
                         _tradeData[i].playerId,
-                        _tradeData[i].maturityDate
+                        _tradeData[i].maturity
                     ),
                 "Risk per individual market and position exceeded"
             );
@@ -545,8 +563,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _isGameInAMMTrading(TradeData memory tradeData) internal view returns (bool isTrading) {
         if (tradeData.status == 0) {
-            if (tradeData.maturityDate >= block.timestamp) {
-                isTrading = (tradeData.maturityDate - block.timestamp) > minimalTimeLeftToMaturity;
+            if (tradeData.maturity >= block.timestamp) {
+                isTrading = (tradeData.maturity - block.timestamp) > minimalTimeLeftToMaturity;
             }
         }
     }
@@ -584,7 +602,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 uint(tradeDataItem.sportId),
                 uint(tradeDataItem.childId),
                 uint(tradeDataItem.playerPropsId),
-                tradeDataItem.maturityDate,
+                tradeDataItem.maturity,
                 uint(tradeDataItem.status),
                 int(tradeDataItem.line),
                 uint(tradeDataItem.playerId),
@@ -603,11 +621,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _exerciseTicket(address _ticket) internal {
         Ticket ticket = Ticket(_ticket);
         ticket.exercise();
-        // TODO: LP
-        // uint amount = sUSD.balanceOf(address(this));
-        // if (amount > 0) {
-        //     IParlayAMMLiquidityPool(parlayLP).transferToPool(_parlayMarket, amount);
-        // }
+        uint amount = defaultPaymentToken.balanceOf(address(this));
+        if (amount > 0) {
+            liquidityPool.transferToPool(_ticket, amount);
+        }
     }
 
     function _getResultMoneyline(int24 _homeScore, int24 _awayScore) internal pure returns (ISportsAMMV2.GameResult) {
@@ -685,21 +702,24 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _manager manager address
     /// @param _riskManager risk manager address
     /// @param _referrals referrals address
+    /// @param _stakingThales staking thales address
     /// @param _safeBox safeBox address
     function setAddresses(
         IERC20 _defaultPaymentToken,
         address _manager,
         address _riskManager,
         address _referrals,
+        address _stakingThales,
         address _safeBox
     ) external onlyOwner {
         defaultPaymentToken = _defaultPaymentToken;
         manager = ISportsAMMV2Manager(_manager);
         riskManager = ISportsAMMV2RiskManager(_riskManager);
         referrals = IReferrals(_referrals);
+        stakingThales = IStakingThales(_stakingThales);
         safeBox = _safeBox;
 
-        emit AddressesUpdated(_defaultPaymentToken, _manager, _riskManager, _referrals, _safeBox);
+        emit AddressesUpdated(_defaultPaymentToken, _manager, _riskManager, _referrals, _stakingThales, _safeBox);
     }
 
     /// @notice sets different times/periods
@@ -716,6 +736,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function setTicketMastercopy(address _ticketMastercopy) external onlyOwner {
         ticketMastercopy = _ticketMastercopy;
         emit TicketMastercopyUpdated(_ticketMastercopy);
+    }
+
+    /// @notice sets new LP address
+    /// @param _liquidityPool new LP address
+    function setLiquidityPool(address _liquidityPool) external onlyOwner {
+        if (address(liquidityPool) != address(0)) {
+            defaultPaymentToken.approve(address(liquidityPool), 0);
+        }
+        liquidityPool = ISportsAMMV2LiquidityPool(_liquidityPool);
+        defaultPaymentToken.approve(_liquidityPool, MAX_APPROVAL);
+        emit SetLiquidityPool(_liquidityPool);
     }
 
     /// @notice sets multi-collateral on/off ramp contract and enable/disable
@@ -770,9 +801,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address manager,
         address riskManager,
         address referrals,
+        address stakingThales,
         address safeBox
     );
     event TimesUpdated(uint minimalTimeLeftToMaturity, uint expiryDuration);
     event TicketMastercopyUpdated(address ticketMastercopy);
+    event SetLiquidityPool(address liquidityPool);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
 }

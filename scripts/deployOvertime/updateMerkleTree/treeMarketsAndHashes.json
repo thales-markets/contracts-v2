@@ -4,7 +4,7 @@
 		"sportId": 9004,
 		"childId": 0,
 		"playerPropsId": 0,
-		"maturityDate": 1706393267,
+		"maturity": 1703932795,
 		"homeTeam": "Milwaukee Bucks",
 		"awayTeam": "Indiana Pacers",
 		"homeScore": 0,
@@ -27,7 +27,7 @@
 				"sportId": 9004,
 				"childId": 10001,
 				"playerPropsId": 0,
-				"maturityDate": 1706393267,
+				"maturity": 1703932795,
 				"homeTeam": "Milwaukee Bucks",
 				"awayTeam": "Indiana Pacers",
 				"homeScore": 0,
@@ -45,9 +45,9 @@
 				},
 				"odds": ["500000000000000000", "500000000000000000", "0"],
 				"proof": [
-					"0x0389c6286c8b07bdbc19b2b8857e1ce94b3833d475c4ed77f18eca296657629d",
-					"0x861dfb83cbea6a2028d3876b8512b25dc6045b3342d02555fa751d34d8b6230a",
-					"0x2a12157e12a2773eec8ccfd0cd1104dbd20e901118eafa824e878ffa37aa0cc2"
+					"0x47d4eba054c7b0c681386692cd4439d95aeefd200fe6ca63052dfdbc87d9be83",
+					"0x14efde2447c435a8ddaf43cb5569ba6b31cad1a82d20aa255cedc6753e55a202",
+					"0xe76b90ed903ad3e4d87746b41b2e82f81246447c790d7e2509c2a9c329153cf5"
 				]
 			},
 			{
@@ -55,7 +55,7 @@
 				"sportId": 9004,
 				"childId": 10001,
 				"playerPropsId": 0,
-				"maturityDate": 1706393267,
+				"maturity": 1703932795,
 				"homeTeam": "Milwaukee Bucks",
 				"awayTeam": "Indiana Pacers",
 				"homeScore": 0,
@@ -73,8 +73,9 @@
 				},
 				"odds": ["0", "0", "0"],
 				"proof": [
-					"0xea19d70e2fb3d7690d98c4be242662b728ab20f0386eff0e4b50dbe32206936d",
-					"0x28f8b219fe378ecdd4ef099adfae696ed6467c511836fbab0edd36686cb960c9"
+					"0x4e8e47c85447530304f78ca5c68036faeccdaec096308175d536585a16786ac3",
+					"0x14efde2447c435a8ddaf43cb5569ba6b31cad1a82d20aa255cedc6753e55a202",
+					"0xe76b90ed903ad3e4d87746b41b2e82f81246447c790d7e2509c2a9c329153cf5"
 				]
 			},
 			{
@@ -82,7 +83,7 @@
 				"sportId": 9004,
 				"childId": 10002,
 				"playerPropsId": 0,
-				"maturityDate": 1706393267,
+				"maturity": 1703932795,
 				"homeTeam": "Milwaukee Bucks",
 				"awayTeam": "Indiana Pacers",
 				"homeScore": 0,
@@ -100,8 +101,8 @@
 				},
 				"odds": ["500000000000000000", "500000000000000000", "0"],
 				"proof": [
-					"0x956a5e0683a4eff6bddb8be638a123d8bbbf861a09cf01d1181adfacbb1b4ce4",
-					"0x28f8b219fe378ecdd4ef099adfae696ed6467c511836fbab0edd36686cb960c9"
+					"0x692ccc14e2285911150c667029edce91411afffe843723603d57f6321732e592",
+					"0x5597296d62545a245b7e8db0aa21908426324997a0babb2ae92cc4b8dc6d1f97"
 				]
 			},
 			{
@@ -109,7 +110,7 @@
 				"sportId": 9004,
 				"childId": 10010,
 				"playerPropsId": 11029,
-				"maturityDate": 1706393267,
+				"maturity": 1703932795,
 				"homeTeam": "Milwaukee Bucks",
 				"awayTeam": "Indiana Pacers",
 				"homeScore": 0,
@@ -127,9 +128,9 @@
 				},
 				"odds": ["520000000000000000", "480000000000000000", "0"],
 				"proof": [
-					"0x372c4adde4e78cd57e7ce32fbdf930f328156569582b7276e193be32c457cfe6",
-					"0x4b519c690518bdad3a3199d2d066fd441876192773d88ab87876b7c088cb82fc",
-					"0x2a12157e12a2773eec8ccfd0cd1104dbd20e901118eafa824e878ffa37aa0cc2"
+					"0x307e5a3ea1093e23da9fe4097562346c63d447e7a649067c140d47dbe90973e0",
+					"0x435690650d139f80c9cc7c791fd2fb9dac0d6915e49113f1fa596a0ff2f93da6",
+					"0xe76b90ed903ad3e4d87746b41b2e82f81246447c790d7e2509c2a9c329153cf5"
 				]
 			},
 			{
@@ -137,7 +138,7 @@
 				"sportId": 9004,
 				"childId": 10010,
 				"playerPropsId": 11087,
-				"maturityDate": 1706393267,
+				"maturity": 1703932795,
 				"homeTeam": "Milwaukee Bucks",
 				"awayTeam": "Indiana Pacers",
 				"homeScore": 0,
@@ -155,16 +156,15 @@
 				},
 				"odds": ["500000000000000000", "500000000000000000", "0"],
 				"proof": [
-					"0x10f21ad293e29104fff65ad015bcd3e43cfabf760c7041ab16e747463cdd4db8",
-					"0x861dfb83cbea6a2028d3876b8512b25dc6045b3342d02555fa751d34d8b6230a",
-					"0x2a12157e12a2773eec8ccfd0cd1104dbd20e901118eafa824e878ffa37aa0cc2"
+					"0x1e9f4f2dd1a3f3149e4d6be7db14ba87c96316b429b702e0dfd83850bec5caee",
+					"0x435690650d139f80c9cc7c791fd2fb9dac0d6915e49113f1fa596a0ff2f93da6",
+					"0xe76b90ed903ad3e4d87746b41b2e82f81246447c790d7e2509c2a9c329153cf5"
 				]
 			}
 		],
 		"proof": [
-			"0x311c146e82f5bba35fcb9480fe63e678e9d4ced9fe13e20b23d789dd9fad6d92",
-			"0x4b519c690518bdad3a3199d2d066fd441876192773d88ab87876b7c088cb82fc",
-			"0x2a12157e12a2773eec8ccfd0cd1104dbd20e901118eafa824e878ffa37aa0cc2"
+			"0xc4ae38d6eaf5971ce2075735aa2c98dc9224607e2a48ff17886cca80c2dbca9b",
+			"0x5597296d62545a245b7e8db0aa21908426324997a0babb2ae92cc4b8dc6d1f97"
 		]
 	}
 ]

@@ -20,6 +20,7 @@ async function main() {
 	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 	const sportsAMMV2RiskManagerAddress = getTargetAddress('SportsAMMV2RiskManager', network);
+	const stakingThalesAddress = getTargetAddress('StakingThales', network);
 	const referralsAddress = getTargetAddress('Referrals', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
 
@@ -39,6 +40,7 @@ async function main() {
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
 		referralsAddress,
+		stakingThalesAddress,
 		safeBoxAddress,
 	]);
 	await sportsAMMV2Deployed.waitForDeployment();

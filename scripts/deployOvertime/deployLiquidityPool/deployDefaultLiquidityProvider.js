@@ -1,0 +1,89 @@
+const { ethers, upgrades } = require('hardhat');
+const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
+
+const { setTargetAddress, getTargetAddress } = require('../../helpers');
+
+async function main() {
+	let accounts = await ethers.getSigners();
+	let owner = accounts[0];
+	let networkObj = await ethers.provider.getNetwork();
+	let network = networkObj.name;
+
+	// if (networkObj.chainId == 420) {
+	// 	networkObj.name = 'optimisticGoerli';
+	// 	network = 'optimisticGoerli';
+	// }
+
+	console.log('Owner is:', owner.address);
+	console.log('Network:', network);
+
+	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
+	const sportsAMMV2LiquidityPoolAddress = getTargetAddress('SportsAMMV2LiquidityPool', network);
+
+	const defaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
+	const defaultLiquidityProviderDeployed = await upgrades.deployProxy(defaultLiquidityProvider, [
+		owner.address,
+		sportsAMMV2LiquidityPoolAddress,
+		defaultPaymentTokenAddress,
+	]);
+	await defaultLiquidityProviderDeployed.waitForDeployment();
+
+	const defaultLiquidityProviderAddress = await defaultLiquidityProviderDeployed.getAddress();
+
+	console.log('DefaultLiquidityProvider deployed on:', defaultLiquidityProviderAddress);
+	setTargetAddress('DefaultLiquidityProvider', network, defaultLiquidityProviderAddress);
+	await delay(5000);
+
+	const defaultLiquidityProviderImplementationAddress = await getImplementationAddress(
+		ethers.provider,
+		defaultLiquidityProviderAddress
+	);
+
+	console.log(
+		'DefaultLiquidityProvider Implementation:',
+		defaultLiquidityProviderImplementationAddress
+	);
+	setTargetAddress(
+		'DefaultLiquidityProviderImplementation',
+		network,
+		defaultLiquidityProviderImplementationAddress
+	);
+	await delay(5000);
+
+	if (networkObj.chainId == 420) {
+		const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
+		const sportsAMMV2LiquidityPoolDeployed = sportsAMMV2LiquidityPool.attach(
+			sportsAMMV2LiquidityPoolAddress
+		);
+		await sportsAMMV2LiquidityPoolDeployed.setDefaultLiquidityProvider(
+			defaultLiquidityProviderAddress,
+			{
+				from: owner.address,
+			}
+		);
+		console.log('DefaultLiquidityProvider set in SportsAMMV2LiquidityPool');
+	}
+
+	await delay(5000);
+
+	try {
+		await hre.run('verify:verify', {
+			address: defaultLiquidityProviderAddress,
+		});
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+main()
+	.then(() => process.exit(0))
+	.catch((error) => {
+		console.error(error);
+		process.exit(1);
+	});
+
+function delay(time) {
+	return new Promise(function (resolve) {
+		setTimeout(resolve, time);
+	});
+}

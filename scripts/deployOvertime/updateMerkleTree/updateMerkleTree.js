@@ -30,7 +30,7 @@ async function updateMerkleTree() {
 				market.sportId,
 				market.childId,
 				market.playerPropsId,
-				market.maturityDate,
+				market.maturity,
 				market.status,
 				market.childId === 10001
 					? market.spread

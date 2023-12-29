@@ -3,6 +3,9 @@
 	"plugins": [],
 	"rules": {
 		"compiler-version": ["error", "^0.8.0"],
-		"no-global-import": "off"
+		"no-global-import": "off",
+		"reason-string": "off",
+		"max-states-count": "off",
+		"not-rely-on-time": "off"
 	}
 }

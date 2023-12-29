@@ -42,4 +42,6 @@ interface ISportsAMMV2 {
         uint _buyInAmount,
         address _ticketCreator
     ) external;
+
+    function exerciseTicket(address _ticket) external;
 }

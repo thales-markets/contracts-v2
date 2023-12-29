@@ -200,7 +200,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "maturityDate",
+        "name": "maturity",
         "type": "uint256"
       },
       {
@@ -258,7 +258,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "maturityDate",
+            "name": "maturity",
             "type": "uint256"
           },
           {

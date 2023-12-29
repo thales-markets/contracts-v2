@@ -19,7 +19,7 @@ contract Ticket is OwnedWithInit {
         uint16 sportId;
         uint16 childId;
         uint16 playerPropsId;
-        uint maturityDate;
+        uint maturity;
         uint8 status;
         int24 line;
         uint16 playerId;
