@@ -222,9 +222,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint16 _playerPropsId,
         uint16 _playerId
     ) external view returns (bool) {
-        return
-            isScoreSetForGame[_gameId][_playerPropsId][_playerId] ||
-            isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId];
+        return _isGameResolved(_gameId, _sportId, _childId, _playerPropsId, _playerId);
     }
 
     function getGameResult(
@@ -562,11 +560,30 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     function _isGameInAMMTrading(TradeData memory tradeData) internal view returns (bool isTrading) {
-        if (tradeData.status == 0) {
+        bool isResolved = _isGameResolved(
+            tradeData.gameId,
+            tradeData.sportId,
+            tradeData.childId,
+            tradeData.playerPropsId,
+            tradeData.playerId
+        );
+        if (tradeData.status == 0 && !isResolved) {
             if (tradeData.maturity >= block.timestamp) {
                 isTrading = (tradeData.maturity - block.timestamp) > minimalTimeLeftToMaturity;
             }
         }
+    }
+
+    function _isGameResolved(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint16 _childId,
+        uint16 _playerPropsId,
+        uint16 _playerId
+    ) internal view returns (bool) {
+        return
+            isScoreSetForGame[_gameId][_playerPropsId][_playerId] ||
+            isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId];
     }
 
     function _handleReferrerAndSB(uint _buyInAmount, address _tickerCreator) internal returns (uint safeBoxAmount) {
