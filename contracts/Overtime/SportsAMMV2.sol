@@ -131,6 +131,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // staking thales address
     IStakingThales public stakingThales;
 
+    // spent on parent market together with all children markets
+    mapping(bytes32 => uint) public spentPerParent;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the storage in the proxy contract with the parameters
@@ -413,18 +416,28 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         // check if any game breaches cap
         for (uint i = 0; i < _tradeData.length; i++) {
+            TradeData memory tradeDataItem = _tradeData[i];
             if (
-                riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
-                    _tradeData[i].playerPropsId
-                ][_tradeData[i].playerId][_tradeData[i].position] +
+                riskPerGameAndPosition[tradeDataItem.gameId][tradeDataItem.sportId][tradeDataItem.childId][
+                    tradeDataItem.playerPropsId
+                ][tradeDataItem.playerId][tradeDataItem.position] +
                     amountsToBuy[i] >
                 riskManager.calculateCapToBeUsed(
-                    _tradeData[i].gameId,
-                    _tradeData[i].sportId,
-                    _tradeData[i].childId,
-                    _tradeData[i].playerPropsId,
-                    _tradeData[i].playerId,
-                    _tradeData[i].maturity
+                    tradeDataItem.gameId,
+                    tradeDataItem.sportId,
+                    tradeDataItem.childId,
+                    tradeDataItem.playerPropsId,
+                    tradeDataItem.playerId,
+                    tradeDataItem.maturity
+                ) ||
+                !riskManager.isTotalSpendingLessThanTotalRisk(
+                    spentPerParent[tradeDataItem.gameId] + amountsToBuy[i],
+                    tradeDataItem.gameId,
+                    tradeDataItem.sportId,
+                    tradeDataItem.childId,
+                    tradeDataItem.playerPropsId,
+                    tradeDataItem.playerId,
+                    tradeDataItem.maturity
                 )
             ) {
                 finalQuotes[i] = 0;
@@ -542,6 +555,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                 _tradeData[i].playerPropsId
             ][_tradeData[i].playerId][_tradeData[i].position] += _amountsToBuy[i];
+            spentPerParent[_tradeData[i].gameId] += _amountsToBuy[i];
             require(
                 riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                     _tradeData[i].playerPropsId
@@ -555,6 +569,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                         _tradeData[i].maturity
                     ),
                 "Risk per individual market and position exceeded"
+            );
+            require(
+                riskManager.isTotalSpendingLessThanTotalRisk(
+                    spentPerParent[_tradeData[i].gameId],
+                    _tradeData[i].gameId,
+                    _tradeData[i].sportId,
+                    _tradeData[i].childId,
+                    _tradeData[i].playerPropsId,
+                    _tradeData[i].playerId,
+                    _tradeData[i].maturity
+                ),
+                "Risk is to high"
             );
         }
     }

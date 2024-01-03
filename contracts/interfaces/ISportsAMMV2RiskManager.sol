@@ -10,4 +10,14 @@ interface ISportsAMMV2RiskManager {
         uint16 _playerId,
         uint _maturity
     ) external view returns (uint cap);
+
+    function isTotalSpendingLessThanTotalRisk(
+        uint _totalSpent,
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint16 _childId,
+        uint16 _playerPropsId,
+        uint16 _playerId,
+        uint _maturity
+    ) external view returns (bool);
 }
