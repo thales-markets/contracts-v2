@@ -649,9 +649,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 uint(tradeDataItem.status),
                 int(tradeDataItem.line),
                 uint(tradeDataItem.playerId),
-                tradeDataItem.odds[0],
-                tradeDataItem.odds[1],
-                tradeDataItem.odds[2]
+                tradeDataItem.odds
             )
         );
         // verify the proof is valid

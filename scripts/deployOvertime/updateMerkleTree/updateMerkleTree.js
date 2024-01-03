@@ -24,27 +24,31 @@ async function updateMerkleTree() {
 	let treeMarketsAndHashes = [];
 
 	const getLeaf = (market, isParent) => {
-		let hash = keccak256(
-			web3.utils.encodePacked(
-				market.gameId,
-				market.sportId,
-				market.childId,
-				market.playerPropsId,
-				market.maturity,
-				market.status,
-				market.childId === 10001
-					? market.spread
-					: market.childId === 10002
-					  ? market.total
-					  : market.childId === 10010
-					    ? market.playerProps.line
-					    : 0,
-				market.playerProps.playerId,
-				ethers.parseEther(market.odds[0].toString()).toString(),
-				ethers.parseEther(market.odds[1].toString()).toString(),
-				ethers.parseEther(market.odds[2].toString()).toString()
-			)
+		let encodePackedOutput = web3.utils.encodePacked(
+			market.gameId,
+			market.sportId,
+			market.childId,
+			market.playerPropsId,
+			market.maturity,
+			market.status,
+			market.childId === 10001
+				? market.spread
+				: market.childId === 10002
+				  ? market.total
+				  : market.childId === 10010
+				    ? market.playerProps.line
+				    : 0,
+			market.playerProps.playerId
 		);
+
+		for (i = 0; i < market.odds.length; i++) {
+			encodePackedOutput = web3.utils.encodePacked(
+				encodePackedOutput,
+				ethers.parseEther(market.odds[i].toString()).toString()
+			);
+		}
+
+		let hash = keccak256(encodePackedOutput);
 
 		let marketLeaf = {
 			...market,
