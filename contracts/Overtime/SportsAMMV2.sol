@@ -404,7 +404,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             _verifyMerkleTree(tradeDataItem);
 
-            finalQuotes[i] = tradeDataItem.odds[tradeDataItem.position];
+            if (tradeDataItem.odds.length > tradeDataItem.position) {
+                finalQuotes[i] = tradeDataItem.odds[tradeDataItem.position];
+            }
             if (finalQuotes[i] > 0) {
                 amountsToBuy[i] = (ONE * buyInAmountAfterFees) / finalQuotes[i];
             }
@@ -551,6 +553,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _checkRisk(TradeData[] memory _tradeData, uint[] memory _amountsToBuy) internal {
         for (uint i = 0; i < _tradeData.length; i++) {
             require(_isGameInAMMTrading(_tradeData[i]), "Not trading");
+            require(_tradeData[i].odds.length > _tradeData[i].position, "Invalid position");
 
             riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                 _tradeData[i].playerPropsId
