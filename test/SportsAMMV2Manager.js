@@ -15,7 +15,7 @@ describe('SportsAMMV2Manager', function () {
 		const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
 		const sportsAMMV2Manager = await upgrades.deployProxy(SportsAMMV2Manager, [
 			owner.address,
-			false,
+			needsTransformingCollateral,
 		]);
 
 		return {
