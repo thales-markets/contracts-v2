@@ -673,9 +673,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _getResultMoneyline(int24 _homeScore, int24 _awayScore) internal pure returns (ISportsAMMV2.GameResult) {
         return
-            _homeScore == _awayScore ? ISportsAMMV2.GameResult.Draw : _homeScore > _awayScore
-                ? ISportsAMMV2.GameResult.Home
-                : ISportsAMMV2.GameResult.Away;
+            _homeScore == _awayScore
+                ? ISportsAMMV2.GameResult.Draw
+                : (_homeScore > _awayScore ? ISportsAMMV2.GameResult.Home : ISportsAMMV2.GameResult.Away);
     }
 
     function _getResultTotal(
@@ -684,9 +684,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         int24 _line
     ) internal pure returns (ISportsAMMV2.GameResult) {
         return
-            (_homeScore + _awayScore) * 100 > _line ? ISportsAMMV2.GameResult.Home : (_homeScore + _awayScore) * 100 < _line
-                ? ISportsAMMV2.GameResult.Away
-                : ISportsAMMV2.GameResult.Cancelled;
+            (_homeScore + _awayScore) * 100 > _line
+                ? ISportsAMMV2.GameResult.Home
+                : (
+                    (_homeScore + _awayScore) * 100 < _line
+                        ? ISportsAMMV2.GameResult.Away
+                        : ISportsAMMV2.GameResult.Cancelled
+                );
     }
 
     function _getResultSpread(
@@ -698,16 +702,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         int24 newAwayScore = _awayScore * 100;
 
         return
-            homeScoreWithSpread > newAwayScore ? ISportsAMMV2.GameResult.Home : homeScoreWithSpread < newAwayScore
-                ? ISportsAMMV2.GameResult.Away
-                : ISportsAMMV2.GameResult.Cancelled;
+            homeScoreWithSpread > newAwayScore
+                ? ISportsAMMV2.GameResult.Home
+                : (homeScoreWithSpread < newAwayScore ? ISportsAMMV2.GameResult.Away : ISportsAMMV2.GameResult.Cancelled);
     }
 
     function _getResultPlayerProps(int24 _score, int24 _line) internal pure returns (ISportsAMMV2.GameResult) {
         return
-            _score * 100 > _line ? ISportsAMMV2.GameResult.Home : _score * 100 < _line
-                ? ISportsAMMV2.GameResult.Away
-                : ISportsAMMV2.GameResult.Cancelled;
+            _score * 100 > _line
+                ? ISportsAMMV2.GameResult.Home
+                : (_score * 100 < _line ? ISportsAMMV2.GameResult.Away : ISportsAMMV2.GameResult.Cancelled);
     }
 
     /* ========== SETTERS ========== */

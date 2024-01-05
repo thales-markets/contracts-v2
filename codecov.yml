@@ -15,4 +15,4 @@ coverage:
         target: 70%  
 
 ignore:
-  - "utils"
+  - "contracts/utils"
