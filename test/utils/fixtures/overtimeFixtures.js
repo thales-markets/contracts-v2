@@ -1,4 +1,5 @@
 const { upgrades } = require('hardhat');
+const { RISK_MANAGER_INITAL_PARAMS } = require('../../constants/overtime');
 
 // We define a fixture to reuse the same setup in every test.
 // We use loadFixture to run this setup once, snapshot that state,
@@ -38,10 +39,8 @@ async function deploySportsAMMV2RiskManagerFixture() {
 	const { sportsAMMV2Manager } = await deploySportsAMMV2ManagerFixture();
 
 	const sportsAMMV2RiskManagerAddress = await sportsAMMV2Manager.getAddress();
-	const defaultCap = ethers.parseEther('1000');
-	const defaultRiskMultiplier = 3;
-	const maxCap = ethers.parseEther('20000');
-	const maxRiskMultiplier = 5;
+	const { defaultCap, defaultRiskMultiplier, maxCap, maxRiskMultiplier } =
+		RISK_MANAGER_INITAL_PARAMS;
 
 	const SportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
 	const sportsAMMV2RiskManager = await upgrades.deployProxy(SportsAMMV2RiskManager, [

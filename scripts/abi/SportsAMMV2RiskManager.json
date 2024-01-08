@@ -560,22 +560,22 @@
     "outputs": [
       {
         "internalType": "uint256[]",
-        "name": "_capsPerSport",
+        "name": "capsPerSport",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_capsPerSportH",
+        "name": "capsPerSportH",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_capsPerSportT",
+        "name": "capsPerSportT",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_capsPerSportPP",
+        "name": "capsPerSportPP",
         "type": "uint256[]"
       }
     ],

@@ -1,4 +1,4 @@
-const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const {
 	deploySportsAMMV2RiskManagerFixture,
@@ -15,65 +15,85 @@ const {
 	PLAYER_ID_1,
 	SPORT_ID_EPL,
 	ZERO_ADDRESS,
+	RISK_MANAGER_PARAMS,
+	CHILD_ID_SPREAD,
+	ONE_DAY_IN_SECS,
 } = require('./constants/overtime');
 
-describe('SportsAMMV2RiskManager', function () {
-	describe('Deployment', function () {
-		it('Should set the right owner', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { owner } = await loadFixture(deployAccountsFixture);
+describe('SportsAMMV2RiskManager', () => {
+	let sportsAMMV2RiskManager,
+		sportsAMMV2Manager,
+		defaultCap,
+		defaultRiskMultiplier,
+		maxCap,
+		maxRiskMultiplier,
+		owner,
+		secondAccount,
+		thirdAccount;
 
+	const {
+		invalidCap,
+		newDefaultCap,
+		invalidMaxCap,
+		newMaxCap,
+		newCapForSport,
+		newCapForSportAndChild,
+		newCapForGame,
+		invalidRiskMultiplier,
+		newDefaultRiskMultiplier,
+		invalidMaxRiskMultiplier,
+		newMaxRiskMultiplier,
+		newRiskMultiplierForSport,
+		newRiskMultiplierForGame,
+		newDynamicLiquidityCutoffTime,
+		newDynamicLiquidityCutoffDivider,
+	} = RISK_MANAGER_PARAMS;
+
+	beforeEach(async () => {
+		const sportsAMMV2ManagerFixture = await loadFixture(deploySportsAMMV2RiskManagerFixture);
+		const accountsFixture = await loadFixture(deployAccountsFixture);
+
+		sportsAMMV2RiskManager = sportsAMMV2ManagerFixture.sportsAMMV2RiskManager;
+		sportsAMMV2Manager = sportsAMMV2ManagerFixture.sportsAMMV2Manager;
+		defaultCap = sportsAMMV2ManagerFixture.defaultCap;
+		defaultRiskMultiplier = sportsAMMV2ManagerFixture.defaultRiskMultiplier;
+		maxCap = sportsAMMV2ManagerFixture.maxCap;
+		maxRiskMultiplier = sportsAMMV2ManagerFixture.maxRiskMultiplier;
+		owner = accountsFixture.owner;
+		secondAccount = accountsFixture.secondAccount;
+		thirdAccount = accountsFixture.thirdAccount;
+	});
+
+	describe('Deployment', () => {
+		it('Should set the right owner', async () => {
 			expect(await sportsAMMV2RiskManager.owner()).to.equal(owner.address);
 		});
 
-		it('Should set the right manager', async function () {
-			const { sportsAMMV2RiskManager, sportsAMMV2Manager } = await loadFixture(
-				deploySportsAMMV2RiskManagerFixture
-			);
-
+		it('Should set the right manager', async () => {
 			expect(await sportsAMMV2RiskManager.manager()).to.equal(
 				await sportsAMMV2Manager.getAddress()
 			);
 		});
 
-		it('Should set the right default cap', async function () {
-			const { sportsAMMV2RiskManager, defaultCap } = await loadFixture(
-				deploySportsAMMV2RiskManagerFixture
-			);
-
+		it('Should set the right default cap', async () => {
 			expect(await sportsAMMV2RiskManager.defaultCap()).to.equal(defaultCap);
 		});
 
-		it('Should set the right default risk multiplier', async function () {
-			const { sportsAMMV2RiskManager, defaultRiskMultiplier } = await loadFixture(
-				deploySportsAMMV2RiskManagerFixture
-			);
-
+		it('Should set the right default risk multiplier', async () => {
 			expect(await sportsAMMV2RiskManager.defaultRiskMultiplier()).to.equal(defaultRiskMultiplier);
 		});
 
-		it('Should set the right max cap', async function () {
-			const { sportsAMMV2RiskManager, maxCap } = await loadFixture(
-				deploySportsAMMV2RiskManagerFixture
-			);
-
+		it('Should set the right max cap', async () => {
 			expect(await sportsAMMV2RiskManager.maxCap()).to.equal(maxCap);
 		});
 
-		it('Should set the right max risk multiplier', async function () {
-			const { sportsAMMV2RiskManager, maxRiskMultiplier } = await loadFixture(
-				deploySportsAMMV2RiskManagerFixture
-			);
-
+		it('Should set the right max risk multiplier', async () => {
 			expect(await sportsAMMV2RiskManager.maxRiskMultiplier()).to.equal(maxRiskMultiplier);
 		});
 	});
 
-	describe('Setters - caps', function () {
-		it('Should set the new manager', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount, thirdAccount } = await loadFixture(deployAccountsFixture);
-
+	describe('Setters', () => {
+		it('Should set the new manager', async () => {
 			await expect(
 				sportsAMMV2RiskManager.connect(secondAccount).setSportsManager(thirdAccount)
 			).to.be.revertedWith('Only the contract owner may perform this action');
@@ -89,20 +109,13 @@ describe('SportsAMMV2RiskManager', function () {
 				.withArgs(thirdAccount.address);
 		});
 
-		it('Should set the new default cap', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newDefaultCap = ethers.parseEther('30000');
-
+		it('Should set the new default cap', async () => {
 			await expect(
 				sportsAMMV2RiskManager.connect(secondAccount).setDefaultCap(newDefaultCap)
 			).to.be.revertedWith('Only the contract owner may perform this action');
-			await expect(sportsAMMV2RiskManager.setDefaultCap(newDefaultCap)).to.be.revertedWith(
+			await expect(sportsAMMV2RiskManager.setDefaultCap(invalidCap)).to.be.revertedWith(
 				'Invalid cap'
 			);
-
-			newDefaultCap = ethers.parseEther('10000');
 
 			await sportsAMMV2RiskManager.setDefaultCap(newDefaultCap);
 			expect(await sportsAMMV2RiskManager.defaultCap()).to.equal(newDefaultCap);
@@ -112,22 +125,15 @@ describe('SportsAMMV2RiskManager', function () {
 				.withArgs(newDefaultCap);
 		});
 
-		it('Should set the new default risk multiplier', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newDefaultRiskMultiplier = 6;
-
+		it('Should set the new default risk multiplier', async () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
 					.setDefaultRiskMultiplier(newDefaultRiskMultiplier)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
-				sportsAMMV2RiskManager.setDefaultRiskMultiplier(newDefaultRiskMultiplier)
+				sportsAMMV2RiskManager.setDefaultRiskMultiplier(invalidRiskMultiplier)
 			).to.be.revertedWith('Invalid multiplier');
-
-			newDefaultRiskMultiplier = 4;
 
 			await sportsAMMV2RiskManager.setDefaultRiskMultiplier(newDefaultRiskMultiplier);
 			expect(await sportsAMMV2RiskManager.defaultRiskMultiplier()).to.equal(
@@ -139,24 +145,15 @@ describe('SportsAMMV2RiskManager', function () {
 				.withArgs(newDefaultRiskMultiplier);
 		});
 
-		it('Should set the new max cap and max risk multiplier', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newMaxCap = ethers.parseEther('900');
-			let newMaxRiskMultiplier = 2;
-
+		it('Should set the new max cap and max risk multiplier', async () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
 					.setMaxCapAndRisk(newMaxCap, newMaxRiskMultiplier)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
-				sportsAMMV2RiskManager.setMaxCapAndRisk(newMaxCap, newMaxRiskMultiplier)
+				sportsAMMV2RiskManager.setMaxCapAndRisk(invalidMaxCap, invalidMaxRiskMultiplier)
 			).to.be.revertedWith('Invalid input');
-
-			newMaxCap = ethers.parseEther('2000');
-			newMaxRiskMultiplier = 4;
 
 			await sportsAMMV2RiskManager.setMaxCapAndRisk(newMaxCap, newMaxRiskMultiplier);
 			expect(await sportsAMMV2RiskManager.maxCap()).to.equal(newMaxCap);
@@ -167,96 +164,71 @@ describe('SportsAMMV2RiskManager', function () {
 				.withArgs(newMaxCap, newMaxRiskMultiplier);
 		});
 
-		it('Should set the new cap per sport (NBA - ID 9004)', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newCapForNba = ethers.parseEther('30000');
-
+		it('Should set the new cap per sport (NBA)', async () => {
 			await expect(
-				sportsAMMV2RiskManager.connect(secondAccount).setCapPerSport(SPORT_ID_NBA, newCapForNba)
+				sportsAMMV2RiskManager.connect(secondAccount).setCapPerSport(SPORT_ID_NBA, newCapForSport)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
-				sportsAMMV2RiskManager.setCapPerSport(INVALID_SPORT_ID, newCapForNba)
+				sportsAMMV2RiskManager.setCapPerSport(INVALID_SPORT_ID, newCapForSport)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
-				sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForNba)
+				sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, invalidCap)
 			).to.be.revertedWith('Invalid cap');
 
-			newCapForNba = ethers.parseEther('10000');
+			await sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForSport);
+			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(newCapForSport);
 
-			await sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForNba);
-			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(newCapForNba);
-
-			await expect(sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForNba))
+			await expect(sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForSport))
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSport')
-				.withArgs(SPORT_ID_NBA, newCapForNba);
+				.withArgs(SPORT_ID_NBA, newCapForSport);
 		});
 
-		it('Should set the new cap per sport and child (NBA - ID 9004, TOTAL - ID 10002)', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newCapForNbaTotal = ethers.parseEther('3000');
-
+		it('Should set the new cap per sport and child (NBA, TOTAL)', async () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
-					.setCapPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForNbaTotal)
+					.setCapPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForSportAndChild)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
-				sportsAMMV2RiskManager.setCapPerSportAndChild(
-					SPORT_ID_NBA,
-					CHILD_ID_TOTAL,
-					newCapForNbaTotal
-				)
+				sportsAMMV2RiskManager.setCapPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL, invalidCap)
 			).to.be.revertedWith('Invalid cap');
-
-			newCapForNbaTotal = ethers.parseEther('900');
 
 			await expect(
 				sportsAMMV2RiskManager.setCapPerSportAndChild(
 					INVALID_SPORT_ID,
 					CHILD_ID_TOTAL,
-					newCapForNbaTotal
+					newCapForSportAndChild
 				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
 				sportsAMMV2RiskManager.setCapPerSportAndChild(
 					SPORT_ID_NBA,
 					INVALID_CHILD_ID,
-					newCapForNbaTotal
+					newCapForSportAndChild
 				)
 			).to.be.revertedWith('Invalid ID for child');
 
 			await sportsAMMV2RiskManager.setCapPerSportAndChild(
 				SPORT_ID_NBA,
 				CHILD_ID_TOTAL,
-				newCapForNbaTotal
+				newCapForSportAndChild
 			);
 			expect(
 				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
-			).to.equal(newCapForNbaTotal);
+			).to.equal(newCapForSportAndChild);
 
 			await expect(
 				sportsAMMV2RiskManager.setCapPerSportAndChild(
 					SPORT_ID_NBA,
 					CHILD_ID_TOTAL,
-					newCapForNbaTotal
+					newCapForSportAndChild
 				)
 			)
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndChild')
-				.withArgs(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForNbaTotal);
+				.withArgs(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForSportAndChild);
 		});
 
-		it('Should set the new cap per game (Giannis Antetokounmpo - points 33.5)', async function () {
-			const { sportsAMMV2RiskManager, sportsAMMV2Manager } = await loadFixture(
-				deploySportsAMMV2RiskManagerFixture
-			);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newCapForGame = ethers.parseEther('30000');
-
+		it('Should set the new cap per game (Giannis Antetokounmpo - points 33.5)', async () => {
 			const sportsAMMV2RiskManagerWithSecondAccount = sportsAMMV2RiskManager.connect(secondAccount);
 
 			await expect(
@@ -281,11 +253,9 @@ describe('SportsAMMV2RiskManager', function () {
 					[CHILD_ID_PLAYER_PROPS],
 					[PLAYER_PROPS_ID_POINTS],
 					[PLAYER_ID_1],
-					newCapForGame
+					invalidCap
 				)
 			).to.be.revertedWith('Invalid cap');
-
-			newCapForGame = ethers.parseEther('10000');
 
 			await sportsAMMV2RiskManagerWithSecondAccount.setCapPerGame(
 				[GAME_ID_1],
@@ -306,7 +276,7 @@ describe('SportsAMMV2RiskManager', function () {
 			).to.equal(newCapForGame);
 
 			await expect(
-				sportsAMMV2RiskManagerWithSecondAccount.setCapPerGame(
+				sportsAMMV2RiskManager.setCapPerGame(
 					[GAME_ID_1],
 					[SPORT_ID_NBA],
 					[CHILD_ID_PLAYER_PROPS],
@@ -326,150 +296,131 @@ describe('SportsAMMV2RiskManager', function () {
 				);
 		});
 
-		it('Should set the new caps - batch (NBA - ID 9004,EPL - ID 9011; TOTAL - ID 10002)', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newCapForNba = ethers.parseEther('10000');
-			let newCapForEpl = ethers.parseEther('10000');
-
-			let newCapForNbaTotal = ethers.parseEther('800');
-			let newCapForEplTotal = ethers.parseEther('800');
-
-			let invalidCap = ethers.parseEther('30000');
-
+		it('Should set the new caps - batch ([NBA, EPL], [TOTAL, TOTAL])', async () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
 					.setCaps(
 						[SPORT_ID_NBA, SPORT_ID_EPL],
-						[newCapForNba, newCapForEpl],
+						[newCapForSport, newCapForSport],
 						[SPORT_ID_NBA, SPORT_ID_EPL],
 						[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-						[newCapForNbaTotal, newCapForEplTotal]
+						[newCapForSportAndChild, newCapForSportAndChild]
 					)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[invalidCap, newCapForEpl],
+					[newCapForSport, invalidCap],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForNbaTotal, newCapForEplTotal]
+					[newCapForSportAndChild, newCapForSportAndChild]
 				)
 			).to.be.revertedWith('Invalid cap');
 			await expect(
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[newCapForNba, newCapForEpl],
+					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[invalidCap, newCapForEplTotal]
+					[invalidCap, newCapForSportAndChild]
 				)
 			).to.be.revertedWith('Invalid cap');
 			await expect(
 				sportsAMMV2RiskManager.setCaps(
 					[INVALID_SPORT_ID, SPORT_ID_EPL],
-					[newCapForNba, newCapForEpl],
+					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForNbaTotal, newCapForEplTotal]
+					[newCapForSportAndChild, newCapForSportAndChild]
 				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[newCapForNba, newCapForEpl],
+					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, INVALID_SPORT_ID],
 					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForNbaTotal, newCapForEplTotal]
+					[newCapForSportAndChild, newCapForSportAndChild]
 				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[newCapForNba, newCapForEpl],
+					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[CHILD_ID_TOTAL, INVALID_CHILD_ID],
-					[newCapForNbaTotal, newCapForEplTotal]
+					[newCapForSportAndChild, newCapForSportAndChild]
 				)
 			).to.be.revertedWith('Invalid ID for child');
 
 			await sportsAMMV2RiskManager.setCaps(
 				[SPORT_ID_NBA, SPORT_ID_EPL],
-				[newCapForNba, newCapForEpl],
+				[newCapForSport, newCapForSport],
 				[SPORT_ID_NBA, SPORT_ID_EPL],
 				[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-				[newCapForNbaTotal, newCapForEplTotal]
+				[newCapForSportAndChild, newCapForSportAndChild]
 			);
-			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(newCapForNba);
-			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_EPL)).to.equal(newCapForEpl);
+			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(newCapForSport);
+			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_EPL)).to.equal(newCapForSport);
 			expect(
 				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
-			).to.equal(newCapForNbaTotal);
+			).to.equal(newCapForSportAndChild);
 			expect(
 				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_EPL, CHILD_ID_TOTAL)
-			).to.equal(newCapForEplTotal);
+			).to.equal(newCapForSportAndChild);
 
 			await expect(
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[newCapForNba, newCapForEpl],
+					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForNbaTotal, newCapForEplTotal]
+					[newCapForSportAndChild, newCapForSportAndChild]
 				)
 			)
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSport')
-				.withArgs(SPORT_ID_NBA, newCapForNba)
+				.withArgs(SPORT_ID_NBA, newCapForSport)
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSport')
-				.withArgs(SPORT_ID_EPL, newCapForEpl)
+				.withArgs(SPORT_ID_EPL, newCapForSport)
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndChild')
-				.withArgs(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForNbaTotal)
+				.withArgs(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForSportAndChild)
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndChild')
-				.withArgs(SPORT_ID_EPL, CHILD_ID_TOTAL, newCapForEplTotal);
+				.withArgs(SPORT_ID_EPL, CHILD_ID_TOTAL, newCapForSportAndChild);
 		});
 
-		it('Should set the new risk multiplier per sport (NBA - ID 9004)', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newRiskMultiplierForNba = 6;
-
+		it('Should set the new risk multiplier per sport (NBA)', async () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
-					.setRiskMultiplierPerSport(SPORT_ID_NBA, newRiskMultiplierForNba)
+					.setRiskMultiplierPerSport(SPORT_ID_NBA, newRiskMultiplierForSport)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
-				sportsAMMV2RiskManager.setRiskMultiplierPerSport(INVALID_SPORT_ID, newRiskMultiplierForNba)
+				sportsAMMV2RiskManager.setRiskMultiplierPerSport(
+					INVALID_SPORT_ID,
+					newRiskMultiplierForSport
+				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
-				sportsAMMV2RiskManager.setRiskMultiplierPerSport(SPORT_ID_NBA, newRiskMultiplierForNba)
+				sportsAMMV2RiskManager.setRiskMultiplierPerSport(SPORT_ID_NBA, invalidRiskMultiplier)
 			).to.be.revertedWith('Invalid multiplier');
 
-			newRiskMultiplierForNba = 4;
-
-			await sportsAMMV2RiskManager.setRiskMultiplierPerSport(SPORT_ID_NBA, newRiskMultiplierForNba);
+			await sportsAMMV2RiskManager.setRiskMultiplierPerSport(
+				SPORT_ID_NBA,
+				newRiskMultiplierForSport
+			);
 			expect(await sportsAMMV2RiskManager.riskMultiplierPerSport(SPORT_ID_NBA)).to.equal(
-				newRiskMultiplierForNba
+				newRiskMultiplierForSport
 			);
 
 			await expect(
-				sportsAMMV2RiskManager.setRiskMultiplierPerSport(SPORT_ID_NBA, newRiskMultiplierForNba)
+				sportsAMMV2RiskManager.setRiskMultiplierPerSport(SPORT_ID_NBA, newRiskMultiplierForSport)
 			)
 				.to.emit(sportsAMMV2RiskManager, 'SetRiskMultiplierPerSport')
-				.withArgs(SPORT_ID_NBA, newRiskMultiplierForNba);
+				.withArgs(SPORT_ID_NBA, newRiskMultiplierForSport);
 		});
 
-		it('Should set the new risk multiplier per game (Giannis Antetokounmpo - points 33.5)', async function () {
-			const { sportsAMMV2RiskManager, sportsAMMV2Manager } = await loadFixture(
-				deploySportsAMMV2RiskManagerFixture
-			);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newRiskMultiplierForGame = 6;
-
+		it('Should set the new risk multiplier per game (Giannis Antetokounmpo - points 33.5)', async () => {
 			const sportsAMMV2RiskManagerWithSecondAccount = sportsAMMV2RiskManager.connect(secondAccount);
 
 			await expect(
@@ -494,11 +445,9 @@ describe('SportsAMMV2RiskManager', function () {
 					[CHILD_ID_PLAYER_PROPS],
 					[PLAYER_PROPS_ID_POINTS],
 					[PLAYER_ID_1],
-					newRiskMultiplierForGame
+					invalidRiskMultiplier
 				)
 			).to.be.revertedWith('Invalid multiplier');
-
-			newRiskMultiplierForGame = 4;
 
 			await sportsAMMV2RiskManagerWithSecondAccount.setRiskMultiplierPerGame(
 				[GAME_ID_1],
@@ -519,7 +468,7 @@ describe('SportsAMMV2RiskManager', function () {
 			).to.equal(newRiskMultiplierForGame);
 
 			await expect(
-				sportsAMMV2RiskManagerWithSecondAccount.setRiskMultiplierPerGame(
+				sportsAMMV2RiskManager.setRiskMultiplierPerGame(
 					[GAME_ID_1],
 					[SPORT_ID_NBA],
 					[CHILD_ID_PLAYER_PROPS],
@@ -539,57 +488,325 @@ describe('SportsAMMV2RiskManager', function () {
 				);
 		});
 
-		it('Should set the new risk multipliers - batch (NBA - ID 9004, EPL - ID 9011)', async function () {
-			const { sportsAMMV2RiskManager } = await loadFixture(deploySportsAMMV2RiskManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
-			let newRiskMultiplierForNba = 4;
-			let newRiskMultiplierForEpl = 4;
-
-			let invalidRiskMultiplier = 6;
-
+		it('Should set the new risk multipliers - batch ([NBA, EPL])', async () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
 					.setRiskMultipliers(
 						[SPORT_ID_NBA, SPORT_ID_EPL],
-						[newRiskMultiplierForNba, newRiskMultiplierForEpl]
+						[newRiskMultiplierForSport, newRiskMultiplierForSport]
 					)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
 				sportsAMMV2RiskManager.setRiskMultipliers(
 					[INVALID_SPORT_ID, SPORT_ID_EPL],
-					[newRiskMultiplierForNba, newRiskMultiplierForEpl]
+					[newRiskMultiplierForSport, newRiskMultiplierForSport]
 				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
 				sportsAMMV2RiskManager.setRiskMultipliers(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[invalidRiskMultiplier, newRiskMultiplierForEpl]
+					[invalidRiskMultiplier, newRiskMultiplierForSport]
 				)
 			).to.be.revertedWith('Invalid multiplier');
 
 			await sportsAMMV2RiskManager.setRiskMultipliers(
 				[SPORT_ID_NBA, SPORT_ID_EPL],
-				[newRiskMultiplierForNba, newRiskMultiplierForEpl]
+				[newRiskMultiplierForSport, newRiskMultiplierForSport]
 			);
 			expect(await sportsAMMV2RiskManager.riskMultiplierPerSport(SPORT_ID_NBA)).to.equal(
-				newRiskMultiplierForNba
+				newRiskMultiplierForSport
 			);
 			expect(await sportsAMMV2RiskManager.riskMultiplierPerSport(SPORT_ID_EPL)).to.equal(
-				newRiskMultiplierForEpl
+				newRiskMultiplierForSport
 			);
 
 			await expect(
 				sportsAMMV2RiskManager.setRiskMultipliers(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[newRiskMultiplierForNba, newRiskMultiplierForEpl]
+					[newRiskMultiplierForSport, newRiskMultiplierForSport]
 				)
 			)
 				.to.emit(sportsAMMV2RiskManager, 'SetRiskMultiplierPerSport')
-				.withArgs(SPORT_ID_NBA, newRiskMultiplierForNba)
+				.withArgs(SPORT_ID_NBA, newRiskMultiplierForSport)
 				.to.emit(sportsAMMV2RiskManager, 'SetRiskMultiplierPerSport')
-				.withArgs(SPORT_ID_EPL, newRiskMultiplierForEpl);
+				.withArgs(SPORT_ID_EPL, newRiskMultiplierForSport);
+		});
+
+		it('Should set the new dynamic liquidity params per sport (NBA)', async () => {
+			await expect(
+				sportsAMMV2RiskManager
+					.connect(secondAccount)
+					.setDynamicLiquidityParamsPerSport(
+						SPORT_ID_NBA,
+						newDynamicLiquidityCutoffTime,
+						newDynamicLiquidityCutoffDivider
+					)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+			await expect(
+				sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(
+					INVALID_SPORT_ID,
+					newDynamicLiquidityCutoffTime,
+					newDynamicLiquidityCutoffDivider
+				)
+			).to.be.revertedWith('Invalid ID for sport');
+
+			await sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(
+				SPORT_ID_NBA,
+				newDynamicLiquidityCutoffTime,
+				newDynamicLiquidityCutoffTime
+			);
+			expect(
+				await sportsAMMV2RiskManager.dynamicLiquidityCutoffTimePerSport(SPORT_ID_NBA)
+			).to.equal(newDynamicLiquidityCutoffTime);
+			expect(
+				await sportsAMMV2RiskManager.dynamicLiquidityCutoffDividerPerSport(SPORT_ID_NBA)
+			).to.equal(newDynamicLiquidityCutoffTime);
+
+			await expect(
+				sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(
+					SPORT_ID_NBA,
+					newDynamicLiquidityCutoffTime,
+					newDynamicLiquidityCutoffDivider
+				)
+			)
+				.to.emit(sportsAMMV2RiskManager, 'SetDynamicLiquidityParams')
+				.withArgs(SPORT_ID_NBA, newDynamicLiquidityCutoffTime, newDynamicLiquidityCutoffDivider);
+		});
+	});
+
+	describe('Get data', () => {
+		it('Should get all data for sports', async () => {
+			await sportsAMMV2RiskManager.setCaps(
+				[SPORT_ID_NBA],
+				[newCapForSport],
+				[SPORT_ID_EPL, SPORT_ID_EPL, SPORT_ID_NBA],
+				[CHILD_ID_SPREAD, CHILD_ID_TOTAL, CHILD_ID_PLAYER_PROPS],
+				[newCapForSportAndChild, newCapForSportAndChild, newCapForSportAndChild]
+			);
+
+			const allDataForSports = await sportsAMMV2RiskManager.getAllDataForSports([
+				SPORT_ID_NBA,
+				SPORT_ID_EPL,
+			]);
+
+			// NBA
+			expect(allDataForSports.capsPerSport[0]).to.equal(newCapForSport);
+			expect(allDataForSports.capsPerSportH[0]).to.equal(0);
+			expect(allDataForSports.capsPerSportT[0]).to.equal(0);
+			expect(allDataForSports.capsPerSportPP[0]).to.equal(newCapForSportAndChild);
+
+			// EPL
+			expect(allDataForSports.capsPerSport[1]).to.equal(0);
+			expect(allDataForSports.capsPerSportH[1]).to.equal(newCapForSportAndChild);
+			expect(allDataForSports.capsPerSportT[1]).to.equal(newCapForSportAndChild);
+			expect(allDataForSports.capsPerSportPP[1]).to.equal(0);
+		});
+	});
+
+	describe('Get cap', () => {
+		let maturity;
+
+		beforeEach(async () => {
+			maturity = (await time.latest()) + ONE_DAY_IN_SECS;
+		});
+
+		it('Should get cap for game (MONEYLINE) - default cap', async () => {
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+
+			expect(cap).to.equal(defaultCap);
+		});
+
+		it('Should get cap for child game (TOTAL) - default cap / 2', async () => {
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				CHILD_ID_TOTAL,
+				0,
+				0,
+				maturity
+			);
+
+			expect(cap).to.equal(ethers.parseEther((ethers.formatEther(defaultCap) / 2).toString()));
+		});
+
+		it('Should get cap for game (MONEYLINE) - cap per sport', async () => {
+			await sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForSport);
+
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+
+			expect(cap).to.equal(newCapForSport);
+		});
+
+		it('Should get cap for child game (TOTAL) - cap per sport / 2', async () => {
+			await sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForSport);
+
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				CHILD_ID_TOTAL,
+				0,
+				0,
+				maturity
+			);
+
+			expect(cap).to.equal(ethers.parseEther((ethers.formatEther(newCapForSport) / 2).toString()));
+		});
+
+		it('Should get cap for child game (TOTAL) - cap per sport and child', async () => {
+			await sportsAMMV2RiskManager.setCapPerSportAndChild(
+				SPORT_ID_NBA,
+				CHILD_ID_TOTAL,
+				newCapForSportAndChild
+			);
+
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				CHILD_ID_TOTAL,
+				0,
+				0,
+				maturity
+			);
+
+			expect(cap).to.equal(newCapForSportAndChild);
+		});
+
+		it('Should get cap for child game (TOTAL) - cap per game', async () => {
+			await sportsAMMV2RiskManager.setCapPerGame(
+				[GAME_ID_1],
+				[SPORT_ID_NBA],
+				[CHILD_ID_TOTAL],
+				[0],
+				[0],
+				newCapForGame
+			);
+
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				CHILD_ID_TOTAL,
+				0,
+				0,
+				maturity
+			);
+
+			expect(cap).to.equal(newCapForGame);
+		});
+
+		it('Should get cap for game (MONEYLINE) - dynamic liquidity', async () => {
+			const formattedDefaultCap = ethers.formatEther(defaultCap);
+
+			// default cap
+			let cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+			expect(cap).to.equal(defaultCap);
+
+			// set dynamic liquidity params: 6 hours cut off time, 4 divider
+			await sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(
+				SPORT_ID_NBA,
+				newDynamicLiquidityCutoffTime,
+				newDynamicLiquidityCutoffDivider
+			);
+
+			// divider is 4, cap should be 1/4 of default
+			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 4).toString()));
+
+			// set dynamic liquidity params: 6 hours cut off time, 0 divider (2 is by default)
+			await sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(
+				SPORT_ID_NBA,
+				newDynamicLiquidityCutoffTime,
+				0
+			);
+
+			// divider is by default 2, cap should be 1/2 of default
+			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 2).toString()));
+
+			// 3 hours before maturity, 1/2 of newDynamicLiquidityCutoffTime
+			await time.increaseTo(maturity - 3 * 60 * 60);
+
+			// divider is by default 2, time is 1/2 of newDynamicLiquidityCutoffTime, cap should be 3/4 of default (1/2 + 1/2*1/2)
+			// due to linear increase of liquidity cap will be ~3/4 of default
+			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+			expect(cap).to.greaterThan(ethers.parseEther(((formattedDefaultCap * 3) / 4 - 1).toString()));
+			expect(cap).to.lessThan(ethers.parseEther(((formattedDefaultCap * 3) / 4 + 1).toString()));
+
+			// set dynamic liquidity params: 6 hours cut off time, 4 divider
+			await sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(
+				SPORT_ID_NBA,
+				newDynamicLiquidityCutoffTime,
+				newDynamicLiquidityCutoffDivider
+			);
+
+			// divider is 4, time is 1/2 of newDynamicLiquidityCutoffTime, cap should be 5/8 of default (1/4 + 1/2*3/4)
+			// due to linear increase of liquidity cap will be ~5/8 of default
+			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+			expect(cap).to.greaterThan(ethers.parseEther(((formattedDefaultCap * 5) / 8 - 1).toString()));
+			expect(cap).to.lessThan(ethers.parseEther(((formattedDefaultCap * 5) / 8 + 1).toString()));
+
+			// reset dynamic liquidity params
+			await sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(SPORT_ID_NBA, 0, 0);
+
+			// cap should be reset to default
+			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				maturity
+			);
+			expect(cap).to.equal(defaultCap);
 		});
 	});
 });

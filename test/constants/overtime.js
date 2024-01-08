@@ -1,3 +1,5 @@
+const { time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+
 const INVALID_SPORT_ID = 8999;
 const SPORT_ID_NBA = 9004;
 const SPORT_ID_EPL = 9011;
@@ -12,14 +14,36 @@ const PLAYER_PROPS_ID_POINTS = 11029; // points
 const PLAYER_ID_1 = 16429; // Giannis Antetokounmpo
 const PLAYER_PROPS_LINE_1 = 3350; // 33.5 points
 
-const RISK_MANAGER_PARAMS = {
+const RISK_MANAGER_INITAL_PARAMS = {
 	defaultCap: ethers.parseEther('1000'),
 	defaultRiskMultiplier: 3,
 	maxCap: ethers.parseEther('20000'),
 	maxRiskMultiplier: 5,
 };
 
+const RISK_MANAGER_PARAMS = {
+	invalidCap: ethers.parseEther('30000'),
+	newDefaultCap: ethers.parseEther('2000'),
+	invalidMaxCap: ethers.parseEther('900'),
+	newMaxCap: ethers.parseEther('10000'),
+	newCapForSport: ethers.parseEther('10000'),
+	newCapForSportAndChild: ethers.parseEther('900'),
+	newCapForGame: ethers.parseEther('5000'),
+
+	invalidRiskMultiplier: 6,
+	newDefaultRiskMultiplier: 4,
+	invalidMaxRiskMultiplier: 3,
+	newMaxRiskMultiplier: 5,
+	newRiskMultiplierForSport: 5,
+	newRiskMultiplierForGame: 3,
+
+	newDynamicLiquidityCutoffTime: 6 * 60 * 60, // 6 hours
+	newDynamicLiquidityCutoffDivider: ethers.parseEther('4'),
+};
+
 const ZERO_ADDRESS = '0x' + '0'.repeat(40);
+
+const ONE_DAY_IN_SECS = 24 * 60 * 60;
 
 module.exports = {
 	INVALID_SPORT_ID,
@@ -33,6 +57,8 @@ module.exports = {
 	PLAYER_PROPS_ID_POINTS,
 	PLAYER_ID_1,
 	PLAYER_PROPS_LINE_1,
+	RISK_MANAGER_INITAL_PARAMS,
 	RISK_MANAGER_PARAMS,
 	ZERO_ADDRESS,
+	ONE_DAY_IN_SECS,
 };

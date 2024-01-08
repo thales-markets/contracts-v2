@@ -105,32 +105,32 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     /// @notice returns all data (caps) for given sports
     /// @param _sportIds sport ids
-    /// @return _capsPerSport caps per sport
-    /// @return _capsPerSportH caps per child Handicap
-    /// @return _capsPerSportT caps per child Total
-    /// @return _capsPerSportPP caps per child Player Props
+    /// @return capsPerSport caps per sport
+    /// @return capsPerSportH caps per child Handicap
+    /// @return capsPerSportT caps per child Total
+    /// @return capsPerSportPP caps per child Player Props
     function getAllDataForSports(
         uint[] memory _sportIds
     )
         external
         view
         returns (
-            uint[] memory _capsPerSport,
-            uint[] memory _capsPerSportH,
-            uint[] memory _capsPerSportT,
-            uint[] memory _capsPerSportPP
+            uint[] memory capsPerSport,
+            uint[] memory capsPerSportH,
+            uint[] memory capsPerSportT,
+            uint[] memory capsPerSportPP
         )
     {
-        _capsPerSport = new uint[](_sportIds.length);
-        _capsPerSportH = new uint[](_sportIds.length);
-        _capsPerSportT = new uint[](_sportIds.length);
-        _capsPerSportPP = new uint[](_sportIds.length);
+        capsPerSport = new uint[](_sportIds.length);
+        capsPerSportH = new uint[](_sportIds.length);
+        capsPerSportT = new uint[](_sportIds.length);
+        capsPerSportPP = new uint[](_sportIds.length);
 
         for (uint i = 0; i < _sportIds.length; i++) {
-            _capsPerSport[i] = capPerSport[_sportIds[i]];
-            _capsPerSportH[i] = capPerSportAndChild[_sportIds[i]][MIN_CHILD_NUMBER + 1];
-            _capsPerSportT[i] = capPerSportAndChild[_sportIds[i]][MIN_CHILD_NUMBER + 2];
-            _capsPerSportPP[i] = capPerSportAndChild[_sportIds[i]][MIN_CHILD_NUMBER + 10];
+            capsPerSport[i] = capPerSport[_sportIds[i]];
+            capsPerSportH[i] = capPerSportAndChild[_sportIds[i]][MIN_CHILD_NUMBER + 1];
+            capsPerSportT[i] = capPerSportAndChild[_sportIds[i]][MIN_CHILD_NUMBER + 2];
+            capsPerSportPP[i] = capPerSportAndChild[_sportIds[i]][MIN_CHILD_NUMBER + 10];
         }
     }
 
@@ -205,10 +205,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _sportId The ID used for sport
     /// @param _capPerSport The cap amount used for the Sport ID
     function setCapPerSport(uint _sportId, uint _capPerSport) external onlyOwner {
-        require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
-        require(_capPerSport <= maxCap, "Invalid cap");
-        capPerSport[_sportId] = _capPerSport;
-        emit SetCapPerSport(_sportId, _capPerSport);
+        _setCapPerSport(_sportId, _capPerSport);
     }
 
     /// @notice Setting the Cap per Sport and Child
@@ -216,12 +213,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _childId The ID used for child
     /// @param _capPerChild The cap amount used for the Sport ID and Child ID
     function setCapPerSportAndChild(uint _sportId, uint _childId, uint _capPerChild) external onlyOwner {
-        uint currentCapPerSport = capPerSport[_sportId] > 0 ? capPerSport[_sportId] : defaultCap;
-        require(_capPerChild <= currentCapPerSport, "Invalid cap");
-        require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
-        require(_childId > MIN_CHILD_NUMBER, "Invalid ID for child");
-        capPerSportAndChild[_sportId][_childId] = _capPerChild;
-        emit SetCapPerSportAndChild(_sportId, _childId, _capPerChild);
+        _setCapPerSportAndChild(_sportId, _childId, _capPerChild);
     }
 
     /// @notice Setting the Cap per spec. games
@@ -261,20 +253,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _capsPerSportAndChild
     ) external onlyOwner {
         for (uint i; i < _sportIds.length; i++) {
-            require(_sportIds[i] > MIN_SPORT_NUMBER, "Invalid ID for sport");
-            require(_capsPerSport[i] <= maxCap, "Invalid cap");
-            capPerSport[_sportIds[i]] = _capsPerSport[i];
-            emit SetCapPerSport(_sportIds[i], _capsPerSport[i]);
+            _setCapPerSport(_sportIds[i], _capsPerSport[i]);
         }
         for (uint i; i < _sportIdsForChildren.length; i++) {
-            uint currentCapPerSport = capPerSport[_sportIdsForChildren[i]] > 0
-                ? capPerSport[_sportIdsForChildren[i]]
-                : defaultCap;
-            require(_capsPerSportAndChild[i] <= currentCapPerSport, "Invalid cap");
-            require(_sportIdsForChildren[i] > MIN_SPORT_NUMBER, "Invalid ID for sport");
-            require(_childIds[i] > MIN_CHILD_NUMBER, "Invalid ID for child");
-            capPerSportAndChild[_sportIdsForChildren[i]][_childIds[i]] = _capsPerSportAndChild[i];
-            emit SetCapPerSportAndChild(_sportIdsForChildren[i], _childIds[i], _capsPerSportAndChild[i]);
+            _setCapPerSportAndChild(_sportIdsForChildren[i], _childIds[i], _capsPerSportAndChild[i]);
         }
     }
 
@@ -348,6 +330,22 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         maxCap = _maxCap;
         maxRiskMultiplier = _maxRisk;
         emit SetMaxCapAndRisk(_maxCap, _maxRisk);
+    }
+
+    function _setCapPerSport(uint _sportId, uint _capPerSport) internal {
+        require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
+        require(_capPerSport <= maxCap, "Invalid cap");
+        capPerSport[_sportId] = _capPerSport;
+        emit SetCapPerSport(_sportId, _capPerSport);
+    }
+
+    function _setCapPerSportAndChild(uint _sportId, uint _childId, uint _capPerChild) internal {
+        uint currentCapPerSport = capPerSport[_sportId] > 0 ? capPerSport[_sportId] : defaultCap;
+        require(_capPerChild <= currentCapPerSport, "Invalid cap");
+        require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
+        require(_childId > MIN_CHILD_NUMBER, "Invalid ID for child");
+        capPerSportAndChild[_sportId][_childId] = _capPerChild;
+        emit SetCapPerSportAndChild(_sportId, _childId, _capPerChild);
     }
 
     /// @notice Setting the dynamic liquidity params

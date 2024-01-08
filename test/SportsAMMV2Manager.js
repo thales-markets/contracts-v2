@@ -1,36 +1,44 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
-const { upgrades } = require('hardhat');
 const {
 	deploySportsAMMV2ManagerFixture,
 	deployAccountsFixture,
 } = require('./utils/fixtures/overtimeFixtures');
 
-describe('SportsAMMV2Manager', function () {
-	describe('Deployment', function () {
-		it('Should set the right owner', async function () {
-			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
-			const { owner } = await loadFixture(deployAccountsFixture);
+describe('SportsAMMV2Manager', () => {
+	let sportsAMMV2Manager,
+		needsTransformingCollateral,
+		owner,
+		secondAccount,
+		thirdAccount,
+		fourthAccount;
 
+	beforeEach(async () => {
+		const sportsAMMV2ManagerFixture = await loadFixture(deploySportsAMMV2ManagerFixture);
+		const accountsFixture = await loadFixture(deployAccountsFixture);
+
+		sportsAMMV2Manager = sportsAMMV2ManagerFixture.sportsAMMV2Manager;
+		needsTransformingCollateral = sportsAMMV2ManagerFixture.needsTransformingCollateral;
+		owner = accountsFixture.owner;
+		secondAccount = accountsFixture.secondAccount;
+		thirdAccount = accountsFixture.thirdAccount;
+		fourthAccount = accountsFixture.fourthAccount;
+	});
+
+	describe('Deployment', () => {
+		it('Should set the right owner', async () => {
 			expect(await sportsAMMV2Manager.owner()).to.equal(owner.address);
 		});
 
-		it('Should set the right needsTransformingCollateral', async function () {
-			const { sportsAMMV2Manager, needsTransformingCollateral } = await loadFixture(
-				deploySportsAMMV2ManagerFixture
-			);
-
+		it('Should set the right needsTransformingCollateral', async () => {
 			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
 				needsTransformingCollateral
 			);
 		});
 	});
 
-	describe('Setters', function () {
-		it('Should set the new needsTransformingCollateral', async function () {
-			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
-			const { secondAccount } = await loadFixture(deployAccountsFixture);
-
+	describe('Setters', () => {
+		it('Should set the new needsTransformingCollateral', async () => {
 			const newNeedsTransformingCollateral = true;
 
 			await expect(
@@ -51,11 +59,7 @@ describe('SportsAMMV2Manager', function () {
 				.withArgs(!newNeedsTransformingCollateral);
 		});
 
-		it('Should set the new whitelisted addresses', async function () {
-			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
-			const { secondAccount, thirdAccount, fourthAccount } =
-				await loadFixture(deployAccountsFixture);
-
+		it('Should set the new whitelisted addresses', async () => {
 			let whitelistedAddresses = [];
 			const isWhitelisted = true;
 
@@ -83,8 +87,8 @@ describe('SportsAMMV2Manager', function () {
 		});
 	});
 
-	describe('Transform collateral methods', function () {
-		it('Transform collateral disabled', async function () {
+	describe('Transform collateral methods', () => {
+		it('Transform collateral disabled', async () => {
 			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
 
 			const INITIAL_VALUE = 1_000_000_000_000;
@@ -96,7 +100,7 @@ describe('SportsAMMV2Manager', function () {
 			expect(transformedValue).to.equal(INITIAL_VALUE);
 		});
 
-		it('Transform collateral enabled', async function () {
+		it('Transform collateral enabled', async () => {
 			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
 
 			await sportsAMMV2Manager.setNeedsTransformingCollateral(true);
