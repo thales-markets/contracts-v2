@@ -165,6 +165,8 @@ describe('SportsAMMV2RiskManager', () => {
 		});
 
 		it('Should set the new cap per sport (NBA)', async () => {
+			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(0);
+
 			await expect(
 				sportsAMMV2RiskManager.connect(secondAccount).setCapPerSport(SPORT_ID_NBA, newCapForSport)
 			).to.be.revertedWith('Only the contract owner may perform this action');
@@ -184,6 +186,10 @@ describe('SportsAMMV2RiskManager', () => {
 		});
 
 		it('Should set the new cap per sport and child (NBA, TOTAL)', async () => {
+			expect(
+				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
+			).to.equal(0);
+
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
@@ -230,6 +236,16 @@ describe('SportsAMMV2RiskManager', () => {
 
 		it('Should set the new cap per game (Giannis Antetokounmpo - points 33.5)', async () => {
 			const sportsAMMV2RiskManagerWithSecondAccount = sportsAMMV2RiskManager.connect(secondAccount);
+
+			expect(
+				await sportsAMMV2RiskManagerWithSecondAccount.capPerGame(
+					GAME_ID_1,
+					SPORT_ID_NBA,
+					CHILD_ID_PLAYER_PROPS,
+					PLAYER_PROPS_ID_POINTS,
+					PLAYER_ID_1
+				)
+			).to.equal(0);
 
 			await expect(
 				sportsAMMV2RiskManager
@@ -297,6 +313,15 @@ describe('SportsAMMV2RiskManager', () => {
 		});
 
 		it('Should set the new caps - batch ([NBA, EPL], [TOTAL, TOTAL])', async () => {
+			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(0);
+			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_EPL)).to.equal(0);
+			expect(
+				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
+			).to.equal(0);
+			expect(
+				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_EPL, CHILD_ID_TOTAL)
+			).to.equal(0);
+
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
@@ -390,6 +415,8 @@ describe('SportsAMMV2RiskManager', () => {
 		});
 
 		it('Should set the new risk multiplier per sport (NBA)', async () => {
+			expect(await sportsAMMV2RiskManager.riskMultiplierPerSport(SPORT_ID_NBA)).to.equal(0);
+
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
@@ -422,6 +449,16 @@ describe('SportsAMMV2RiskManager', () => {
 
 		it('Should set the new risk multiplier per game (Giannis Antetokounmpo - points 33.5)', async () => {
 			const sportsAMMV2RiskManagerWithSecondAccount = sportsAMMV2RiskManager.connect(secondAccount);
+
+			expect(
+				await sportsAMMV2RiskManagerWithSecondAccount.riskMultiplierPerGame(
+					GAME_ID_1,
+					SPORT_ID_NBA,
+					CHILD_ID_PLAYER_PROPS,
+					PLAYER_PROPS_ID_POINTS,
+					PLAYER_ID_1
+				)
+			).to.equal(0);
 
 			await expect(
 				sportsAMMV2RiskManager
@@ -489,6 +526,9 @@ describe('SportsAMMV2RiskManager', () => {
 		});
 
 		it('Should set the new risk multipliers - batch ([NBA, EPL])', async () => {
+			expect(await sportsAMMV2RiskManager.riskMultiplierPerSport(SPORT_ID_NBA)).to.equal(0);
+			expect(await sportsAMMV2RiskManager.riskMultiplierPerSport(SPORT_ID_EPL)).to.equal(0);
+
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
@@ -534,6 +574,13 @@ describe('SportsAMMV2RiskManager', () => {
 		});
 
 		it('Should set the new dynamic liquidity params per sport (NBA)', async () => {
+			expect(
+				await sportsAMMV2RiskManager.dynamicLiquidityCutoffTimePerSport(SPORT_ID_NBA)
+			).to.equal(0);
+			expect(
+				await sportsAMMV2RiskManager.dynamicLiquidityCutoffDividerPerSport(SPORT_ID_NBA)
+			).to.equal(0);
+
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)

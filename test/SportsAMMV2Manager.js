@@ -59,6 +59,22 @@ describe('SportsAMMV2Manager', () => {
 				.withArgs(!newNeedsTransformingCollateral);
 		});
 
+		it('Should not change the needsTransformingCollateral', async () => {
+			const newNeedsTransformingCollateral = false;
+
+			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
+				newNeedsTransformingCollateral
+			);
+			await sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral);
+			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
+				newNeedsTransformingCollateral
+			);
+
+			await expect(
+				sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral)
+			).to.not.emit(sportsAMMV2Manager, 'NeedsTransformingCollateralUpdated');
+		});
+
 		it('Should set the new whitelisted addresses', async () => {
 			let whitelistedAddresses = [];
 			const isWhitelisted = true;
@@ -84,6 +100,25 @@ describe('SportsAMMV2Manager', () => {
 				.withArgs(thirdAccount.address, !isWhitelisted)
 				.to.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
 				.withArgs(fourthAccount.address, !isWhitelisted);
+		});
+
+		it('Should not change the whitelisted addresses', async () => {
+			const isWhitelisted = false;
+			let whitelistedAddresses = [thirdAccount, fourthAccount];
+
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount)).to.equal(isWhitelisted);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount)).to.equal(isWhitelisted);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount)).to.equal(isWhitelisted);
+
+			await sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted);
+
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount)).to.equal(isWhitelisted);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount)).to.equal(isWhitelisted);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount)).to.equal(isWhitelisted);
+
+			await expect(sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted))
+				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
+				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist');
 		});
 	});
 
