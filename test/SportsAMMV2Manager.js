@@ -1,36 +1,16 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const { upgrades } = require('hardhat');
+const {
+	deploySportsAMMV2ManagerFixture,
+	deployAccountsFixture,
+} = require('./utils/fixtures/overtimeFixtures');
 
 describe('SportsAMMV2Manager', function () {
-	// We define a fixture to reuse the same setup in every test.
-	// We use loadFixture to run this setup once, snapshot that state,
-	// and reset Hardhat Network to that snapshot in every test.
-	async function deploySportsAMMV2ManagerFixture() {
-		const needsTransformingCollateral = false;
-
-		// Contracts are deployed using the first signer/account by default
-		const [owner, otherAccount, thirdAccount, fourthAccount] = await ethers.getSigners();
-
-		const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
-		const sportsAMMV2Manager = await upgrades.deployProxy(SportsAMMV2Manager, [
-			owner.address,
-			needsTransformingCollateral,
-		]);
-
-		return {
-			sportsAMMV2Manager,
-			needsTransformingCollateral,
-			owner,
-			otherAccount,
-			thirdAccount,
-			fourthAccount,
-		};
-	}
-
 	describe('Deployment', function () {
 		it('Should set the right owner', async function () {
-			const { sportsAMMV2Manager, owner } = await loadFixture(deploySportsAMMV2ManagerFixture);
+			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
+			const { owner } = await loadFixture(deployAccountsFixture);
 
 			expect(await sportsAMMV2Manager.owner()).to.equal(owner.address);
 		});
@@ -48,16 +28,15 @@ describe('SportsAMMV2Manager', function () {
 
 	describe('Setters', function () {
 		it('Should set the new needsTransformingCollateral', async function () {
-			const { sportsAMMV2Manager, otherAccount } = await loadFixture(
-				deploySportsAMMV2ManagerFixture
-			);
+			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
+			const { secondAccount } = await loadFixture(deployAccountsFixture);
 
 			const newNeedsTransformingCollateral = true;
 
-			expect(
-				sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral, {
-					from: otherAccount,
-				})
+			await expect(
+				sportsAMMV2Manager
+					.connect(secondAccount)
+					.setNeedsTransformingCollateral(newNeedsTransformingCollateral)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
 			await sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral);
@@ -65,41 +44,42 @@ describe('SportsAMMV2Manager', function () {
 				newNeedsTransformingCollateral
 			);
 
-			expect(sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral))
+			await expect(
+				sportsAMMV2Manager.setNeedsTransformingCollateral(!newNeedsTransformingCollateral)
+			)
 				.to.emit(sportsAMMV2Manager, 'NeedsTransformingCollateralUpdated')
-				.withArgs(newNeedsTransformingCollateral);
+				.withArgs(!newNeedsTransformingCollateral);
 		});
 
 		it('Should set the new whitelisted addresses', async function () {
-			const { sportsAMMV2Manager, otherAccount, thirdAccount, fourthAccount } = await loadFixture(
-				deploySportsAMMV2ManagerFixture
-			);
+			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
+			const { secondAccount, thirdAccount, fourthAccount } =
+				await loadFixture(deployAccountsFixture);
 
 			let whitelistedAddresses = [];
 			const isWhitelisted = true;
 
-			expect(
-				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted, {
-					from: otherAccount,
-				})
+			await expect(
+				sportsAMMV2Manager
+					.connect(secondAccount)
+					.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted)
 			).to.be.revertedWith('Only the contract owner may perform this action');
-			expect(
+			await expect(
 				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted)
 			).to.be.revertedWith('Whitelisted addresses cannot be empty');
 
 			whitelistedAddresses = [thirdAccount, fourthAccount];
 
 			await sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(otherAccount)).to.equal(false);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount)).to.equal(false);
 			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount)).to.equal(isWhitelisted);
 			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount)).to.equal(isWhitelisted);
 
-			expect(sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted))
+			await expect(sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, !isWhitelisted))
 				.to.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
-				.withArgs(thirdAccount, isWhitelisted);
-			expect(sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted))
+				.withArgs(thirdAccount.address, !isWhitelisted)
 				.to.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
-				.withArgs(fourthAccount, isWhitelisted);
+				.withArgs(fourthAccount.address, !isWhitelisted);
 		});
 	});
 

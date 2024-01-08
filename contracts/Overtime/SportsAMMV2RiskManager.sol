@@ -205,7 +205,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _sportId The ID used for sport
     /// @param _capPerSport The cap amount used for the Sport ID
     function setCapPerSport(uint _sportId, uint _capPerSport) external onlyOwner {
-        require(_sportId > MIN_SPORT_NUMBER, "Invalid tag for sport");
+        require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
         require(_capPerSport <= maxCap, "Invalid cap");
         capPerSport[_sportId] = _capPerSport;
         emit SetCapPerSport(_sportId, _capPerSport);
@@ -218,8 +218,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     function setCapPerSportAndChild(uint _sportId, uint _childId, uint _capPerChild) external onlyOwner {
         uint currentCapPerSport = capPerSport[_sportId] > 0 ? capPerSport[_sportId] : defaultCap;
         require(_capPerChild <= currentCapPerSport, "Invalid cap");
-        require(_sportId > MIN_SPORT_NUMBER, "Invalid tag for sport");
-        require(_childId > MIN_CHILD_NUMBER, "Invalid tag for child");
+        require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
+        require(_childId > MIN_CHILD_NUMBER, "Invalid ID for child");
         capPerSportAndChild[_sportId][_childId] = _capPerChild;
         emit SetCapPerSportAndChild(_sportId, _childId, _capPerChild);
     }
@@ -331,7 +331,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice Setting the risk multiplier per Sport (batch)
     /// @param _sportIds sport Ids to set risk multiplier for
     /// @param _riskMultiplierPerSport the risk multiplier amounts used for the Sport IDs
-    function setRiskMultipliers(uint[] memory _sportIds, uint[] memory _riskMultiplierPerSport) public initializer {
+    function setRiskMultipliers(uint[] memory _sportIds, uint[] memory _riskMultiplierPerSport) external onlyOwner {
         for (uint i; i < _sportIds.length; i++) {
             require(_sportIds[i] > MIN_SPORT_NUMBER, "Invalid ID for sport");
             require(_riskMultiplierPerSport[i] <= maxRiskMultiplier, "Invalid multiplier");

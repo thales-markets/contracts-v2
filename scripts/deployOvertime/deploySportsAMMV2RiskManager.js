@@ -22,7 +22,7 @@ async function main() {
 	let defaultCap = ethers.parseEther('1000');
 	let defaultRiskMultiplier = 3;
 	let maxCap = ethers.parseEther('20000');
-	let maxRisk = 5;
+	let maxRiskMultiplier = 5;
 
 	const sportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
 	const sportsAMMV2RiskManagerDeployed = await upgrades.deployProxy(sportsAMMV2RiskManager, [
@@ -31,7 +31,7 @@ async function main() {
 		defaultCap,
 		defaultRiskMultiplier,
 		maxCap,
-		maxRisk,
+		maxRiskMultiplier,
 	]);
 	await sportsAMMV2RiskManagerDeployed.waitForDeployment();
 
