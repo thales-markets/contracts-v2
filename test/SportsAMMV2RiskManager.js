@@ -856,4 +856,93 @@ describe('SportsAMMV2RiskManager', () => {
 			expect(cap).to.equal(defaultCap);
 		});
 	});
+
+	describe('Get risk', () => {
+		let maturity, totalSpent;
+
+		beforeEach(async () => {
+			maturity = (await time.latest()) + ONE_DAY_IN_SECS;
+			totalSpent = ethers.parseEther('4000');
+		});
+
+		it('Should get total spending is more than total risk - default cap, default risk', async () => {
+			const isTotalSpendingLessThanTotalRisk =
+				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
+					totalSpent,
+					GAME_ID_1,
+					SPORT_ID_NBA,
+					0,
+					0,
+					0,
+					maturity
+				);
+
+			expect(isTotalSpendingLessThanTotalRisk).to.equal(false);
+		});
+
+		it('Should get total spending is less than total risk - cap per sport, default risk', async () => {
+			await sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForSport);
+
+			const isTotalSpendingLessThanTotalRisk =
+				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
+					totalSpent,
+					GAME_ID_1,
+					SPORT_ID_NBA,
+					0,
+					0,
+					0,
+					maturity
+				);
+
+			expect(isTotalSpendingLessThanTotalRisk).to.equal(true);
+		});
+
+		it('Should get total spending is less than total risk - default cap, risk per sport', async () => {
+			await sportsAMMV2RiskManager.setRiskMultiplierPerSport(
+				SPORT_ID_NBA,
+				newRiskMultiplierForSport
+			);
+
+			const isTotalSpendingLessThanTotalRisk =
+				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
+					totalSpent,
+					GAME_ID_1,
+					SPORT_ID_NBA,
+					0,
+					0,
+					0,
+					maturity
+				);
+
+			expect(isTotalSpendingLessThanTotalRisk).to.equal(true);
+		});
+
+		it('Should get total spending is more than total risk - default cap, risk per sport, risk per game', async () => {
+			await sportsAMMV2RiskManager.setRiskMultiplierPerSport(
+				SPORT_ID_NBA,
+				newRiskMultiplierForSport
+			);
+			await sportsAMMV2RiskManager.setRiskMultiplierPerGame(
+				[GAME_ID_1],
+				[SPORT_ID_NBA],
+				[0],
+				[0],
+				[0],
+				newRiskMultiplierForGame
+			);
+
+			const isTotalSpendingLessThanTotalRisk =
+				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
+					totalSpent,
+					GAME_ID_1,
+					SPORT_ID_NBA,
+					0,
+					0,
+					0,
+					maturity
+				);
+
+			expect(isTotalSpendingLessThanTotalRisk).to.equal(false);
+		});
+	});
 });
