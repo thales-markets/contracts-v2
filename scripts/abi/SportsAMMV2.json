@@ -58,7 +58,7 @@
       {
         "indexed": false,
         "internalType": "contract IERC20",
-        "name": "defaultPaymentToken",
+        "name": "defaultCollateral",
         "type": "address"
       },
       {
@@ -629,7 +629,7 @@
   },
   {
     "inputs": [],
-    "name": "defaultPaymentToken",
+    "name": "defaultCollateral",
     "outputs": [
       {
         "internalType": "contract IERC20",
@@ -797,7 +797,7 @@
       },
       {
         "internalType": "contract IERC20",
-        "name": "_defaultPaymentToken",
+        "name": "_defaultCollateral",
         "type": "address"
       },
       {
@@ -1323,7 +1323,7 @@
     "inputs": [
       {
         "internalType": "contract IERC20",
-        "name": "_defaultPaymentToken",
+        "name": "_defaultCollateral",
         "type": "address"
       },
       {

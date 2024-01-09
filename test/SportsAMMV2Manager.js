@@ -1,25 +1,21 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const {
-	deploySportsAMMV2ManagerFixture,
+	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('./utils/fixtures/overtimeFixtures');
+const { MANAGER_INITAL_PARAMS } = require('./constants/overtime');
 
 describe('SportsAMMV2Manager', () => {
-	let sportsAMMV2Manager,
-		needsTransformingCollateral,
-		owner,
-		secondAccount,
-		thirdAccount,
-		fourthAccount;
+	let sportsAMMV2Manager, owner, secondAccount, thirdAccount, fourthAccount;
 
 	beforeEach(async () => {
-		const sportsAMMV2ManagerFixture = await loadFixture(deploySportsAMMV2ManagerFixture);
+		const sportsAMMV2ManagerFixture = await loadFixture(deploySportsAMMV2Fixture);
 		const accountsFixture = await loadFixture(deployAccountsFixture);
 
 		sportsAMMV2Manager = sportsAMMV2ManagerFixture.sportsAMMV2Manager;
-		needsTransformingCollateral = sportsAMMV2ManagerFixture.needsTransformingCollateral;
-		owner = accountsFixture.owner;
+		owner = sportsAMMV2ManagerFixture.owner;
+
 		secondAccount = accountsFixture.secondAccount;
 		thirdAccount = accountsFixture.thirdAccount;
 		fourthAccount = accountsFixture.fourthAccount;
@@ -32,7 +28,7 @@ describe('SportsAMMV2Manager', () => {
 
 		it('Should set the right needsTransformingCollateral', async () => {
 			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
-				needsTransformingCollateral
+				MANAGER_INITAL_PARAMS.needsTransformingCollateral
 			);
 		});
 	});
@@ -124,8 +120,6 @@ describe('SportsAMMV2Manager', () => {
 
 	describe('Transform collateral methods', () => {
 		it('Transform collateral disabled', async () => {
-			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
-
 			const INITIAL_VALUE = 1_000_000_000_000;
 
 			let transformedValue = await sportsAMMV2Manager.transformCollateral(INITIAL_VALUE);
@@ -136,8 +130,6 @@ describe('SportsAMMV2Manager', () => {
 		});
 
 		it('Transform collateral enabled', async () => {
-			const { sportsAMMV2Manager } = await loadFixture(deploySportsAMMV2ManagerFixture);
-
 			await sportsAMMV2Manager.setNeedsTransformingCollateral(true);
 
 			const INITIAL_VALUE = 1_000_000_000_000;

@@ -1,7 +1,7 @@
 const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const {
-	deploySportsAMMV2RiskManagerFixture,
+	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('./utils/fixtures/overtimeFixtures');
 const {
@@ -18,18 +18,11 @@ const {
 	RISK_MANAGER_PARAMS,
 	CHILD_ID_SPREAD,
 	ONE_DAY_IN_SECS,
+	RISK_MANAGER_INITAL_PARAMS,
 } = require('./constants/overtime');
 
 describe('SportsAMMV2RiskManager', () => {
-	let sportsAMMV2RiskManager,
-		sportsAMMV2Manager,
-		defaultCap,
-		defaultRiskMultiplier,
-		maxCap,
-		maxRiskMultiplier,
-		owner,
-		secondAccount,
-		thirdAccount;
+	let sportsAMMV2RiskManager, sportsAMMV2Manager, owner, secondAccount, thirdAccount;
 
 	const {
 		invalidCap,
@@ -50,16 +43,13 @@ describe('SportsAMMV2RiskManager', () => {
 	} = RISK_MANAGER_PARAMS;
 
 	beforeEach(async () => {
-		const sportsAMMV2ManagerFixture = await loadFixture(deploySportsAMMV2RiskManagerFixture);
+		const sportsAMMV2ManagerFixture = await loadFixture(deploySportsAMMV2Fixture);
 		const accountsFixture = await loadFixture(deployAccountsFixture);
 
 		sportsAMMV2RiskManager = sportsAMMV2ManagerFixture.sportsAMMV2RiskManager;
 		sportsAMMV2Manager = sportsAMMV2ManagerFixture.sportsAMMV2Manager;
-		defaultCap = sportsAMMV2ManagerFixture.defaultCap;
-		defaultRiskMultiplier = sportsAMMV2ManagerFixture.defaultRiskMultiplier;
-		maxCap = sportsAMMV2ManagerFixture.maxCap;
-		maxRiskMultiplier = sportsAMMV2ManagerFixture.maxRiskMultiplier;
-		owner = accountsFixture.owner;
+		owner = sportsAMMV2ManagerFixture.owner;
+
 		secondAccount = accountsFixture.secondAccount;
 		thirdAccount = accountsFixture.thirdAccount;
 	});
@@ -76,19 +66,25 @@ describe('SportsAMMV2RiskManager', () => {
 		});
 
 		it('Should set the right default cap', async () => {
-			expect(await sportsAMMV2RiskManager.defaultCap()).to.equal(defaultCap);
+			expect(await sportsAMMV2RiskManager.defaultCap()).to.equal(
+				RISK_MANAGER_INITAL_PARAMS.defaultCap
+			);
 		});
 
 		it('Should set the right default risk multiplier', async () => {
-			expect(await sportsAMMV2RiskManager.defaultRiskMultiplier()).to.equal(defaultRiskMultiplier);
+			expect(await sportsAMMV2RiskManager.defaultRiskMultiplier()).to.equal(
+				RISK_MANAGER_INITAL_PARAMS.defaultRiskMultiplier
+			);
 		});
 
 		it('Should set the right max cap', async () => {
-			expect(await sportsAMMV2RiskManager.maxCap()).to.equal(maxCap);
+			expect(await sportsAMMV2RiskManager.maxCap()).to.equal(RISK_MANAGER_INITAL_PARAMS.maxCap);
 		});
 
 		it('Should set the right max risk multiplier', async () => {
-			expect(await sportsAMMV2RiskManager.maxRiskMultiplier()).to.equal(maxRiskMultiplier);
+			expect(await sportsAMMV2RiskManager.maxRiskMultiplier()).to.equal(
+				RISK_MANAGER_INITAL_PARAMS.maxRiskMultiplier
+			);
 		});
 	});
 
@@ -652,10 +648,11 @@ describe('SportsAMMV2RiskManager', () => {
 	});
 
 	describe('Get cap', () => {
-		let maturity;
+		let maturity, defaultCap;
 
 		beforeEach(async () => {
 			maturity = (await time.latest()) + ONE_DAY_IN_SECS;
+			defaultCap = await sportsAMMV2RiskManager.defaultCap();
 		});
 
 		it('Should get cap for game (MONEYLINE) - default cap', async () => {

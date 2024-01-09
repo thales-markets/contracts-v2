@@ -17,7 +17,7 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
+	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const stakingThalesAddress = getTargetAddress('StakingThales', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
@@ -35,7 +35,7 @@ async function main() {
 			_owner: owner.address,
 			_sportsAMM: sportsAMMV2Address,
 			_stakingThales: stakingThalesAddress,
-			_collateral: defaultPaymentTokenAddress,
+			_collateral: defaultCollateralAddress,
 			_roundLength: week,
 			_maxAllowedDeposit: maxAllowedDeposit,
 			_maxAllowedDepositForUser: maxAllowedDepositForUser,

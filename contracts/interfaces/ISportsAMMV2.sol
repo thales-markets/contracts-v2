@@ -16,7 +16,7 @@ interface ISportsAMMV2 {
         uint24 awayScore;
     }
 
-    function defaultPaymentToken() external view returns (IERC20);
+    function defaultCollateral() external view returns (IERC20);
 
     function getGameResult(
         bytes32 _gameId,

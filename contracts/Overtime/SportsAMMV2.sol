@@ -62,7 +62,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     mapping(bytes32 => bytes32) public rootPerGame;
 
     // the default token used for payment
-    IERC20 public defaultPaymentToken;
+    IERC20 public defaultCollateral;
 
     // manager address
     ISportsAMMV2Manager public manager;
@@ -138,7 +138,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice initialize the storage in the proxy contract with the parameters
     /// @param _owner owner for using the onlyOwner functions
-    /// @param _defaultPaymentToken the address of default token used for payment
+    /// @param _defaultCollateral the address of default token used for payment
     /// @param _manager the address of manager
     /// @param _riskManager the address of risk manager
     /// @param _referrals the address of referrals
@@ -146,7 +146,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _safeBox the address of safe box
     function initialize(
         address _owner,
-        IERC20 _defaultPaymentToken,
+        IERC20 _defaultCollateral,
         ISportsAMMV2Manager _manager,
         ISportsAMMV2RiskManager _riskManager,
         IReferrals _referrals,
@@ -155,7 +155,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) public initializer {
         setOwner(_owner);
         initNonReentrant();
-        defaultPaymentToken = _defaultPaymentToken;
+        defaultCollateral = _defaultCollateral;
         manager = _manager;
         riskManager = _riskManager;
         referrals = _referrals;
@@ -472,7 +472,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         //send the surplus to SB
         if (exactReceived > _buyInAmount) {
-            defaultPaymentToken.safeTransfer(safeBox, exactReceived - _buyInAmount);
+            defaultCollateral.safeTransfer(safeBox, exactReceived - _buyInAmount);
         }
     }
 
@@ -482,7 +482,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout,
         uint _additionalSlippage,
         address _differentRecipient,
-        bool _sendDefaultPaymentToken
+        bool _sendDefaultCollateral
     ) internal {
         uint payout;
         uint totalQuote;
@@ -499,8 +499,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         _checkRisk(_tradeData, amountsToBuy);
 
-        if (_sendDefaultPaymentToken) {
-            defaultPaymentToken.safeTransferFrom(msg.sender, address(this), _buyInAmount);
+        if (_sendDefaultCollateral) {
+            defaultCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
         }
 
         // clone a ticket
@@ -523,7 +523,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         liquidityPool.commitTrade(address(ticket), payout - buyInAmountAfterFees);
-        defaultPaymentToken.safeTransfer(address(ticket), payout);
+        defaultCollateral.safeTransfer(address(ticket), payout);
 
         emit NewTicket(gameData, address(ticket), buyInAmountAfterFees, payout);
         emit TicketCreated(address(ticket), _differentRecipient, _buyInAmount, buyInAmountAfterFees, payout, totalQuote);
@@ -622,12 +622,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
-                defaultPaymentToken.safeTransfer(referrer, referrerShare);
+                defaultCollateral.safeTransfer(referrer, referrerShare);
                 emit ReferrerPaid(referrer, _tickerCreator, referrerShare, _buyInAmount);
             }
         }
         safeBoxAmount = _getSafeBoxAmount(_buyInAmount, _tickerCreator);
-        defaultPaymentToken.safeTransfer(safeBox, safeBoxAmount - referrerShare);
+        defaultCollateral.safeTransfer(safeBox, safeBoxAmount - referrerShare);
         emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
     }
 
@@ -665,7 +665,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _exerciseTicket(address _ticket) internal {
         Ticket ticket = Ticket(_ticket);
         ticket.exercise();
-        uint amount = defaultPaymentToken.balanceOf(address(this));
+        uint amount = defaultCollateral.balanceOf(address(this));
         if (amount > 0) {
             liquidityPool.transferToPool(_ticket, amount);
         }
@@ -746,28 +746,28 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     /// @notice sets main addresses
-    /// @param _defaultPaymentToken the default token used for payment
+    /// @param _defaultCollateral the default token used for payment
     /// @param _manager manager address
     /// @param _riskManager risk manager address
     /// @param _referrals referrals address
     /// @param _stakingThales staking thales address
     /// @param _safeBox safeBox address
     function setAddresses(
-        IERC20 _defaultPaymentToken,
+        IERC20 _defaultCollateral,
         address _manager,
         address _riskManager,
         address _referrals,
         address _stakingThales,
         address _safeBox
     ) external onlyOwner {
-        defaultPaymentToken = _defaultPaymentToken;
+        defaultCollateral = _defaultCollateral;
         manager = ISportsAMMV2Manager(_manager);
         riskManager = ISportsAMMV2RiskManager(_riskManager);
         referrals = IReferrals(_referrals);
         stakingThales = IStakingThales(_stakingThales);
         safeBox = _safeBox;
 
-        emit AddressesUpdated(_defaultPaymentToken, _manager, _riskManager, _referrals, _stakingThales, _safeBox);
+        emit AddressesUpdated(_defaultCollateral, _manager, _riskManager, _referrals, _stakingThales, _safeBox);
     }
 
     /// @notice sets different times/periods
@@ -790,10 +790,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _liquidityPool new LP address
     function setLiquidityPool(address _liquidityPool) external onlyOwner {
         if (address(liquidityPool) != address(0)) {
-            defaultPaymentToken.approve(address(liquidityPool), 0);
+            defaultCollateral.approve(address(liquidityPool), 0);
         }
         liquidityPool = ISportsAMMV2LiquidityPool(_liquidityPool);
-        defaultPaymentToken.approve(_liquidityPool, MAX_APPROVAL);
+        defaultCollateral.approve(_liquidityPool, MAX_APPROVAL);
         emit SetLiquidityPool(_liquidityPool);
     }
 
@@ -802,11 +802,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _enabled enable/disable multi-collateral on/off ramp
     function setMultiCollateralOnOffRamp(address _onOffRamper, bool _enabled) external onlyOwner {
         if (address(multiCollateralOnOffRamp) != address(0)) {
-            defaultPaymentToken.approve(address(multiCollateralOnOffRamp), 0);
+            defaultCollateral.approve(address(multiCollateralOnOffRamp), 0);
         }
         multiCollateralOnOffRamp = IMultiCollateralOnOffRamp(_onOffRamper);
         multicollateralEnabled = _enabled;
-        defaultPaymentToken.approve(_onOffRamper, MAX_APPROVAL);
+        defaultCollateral.approve(_onOffRamper, MAX_APPROVAL);
         emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
     }
 
@@ -845,7 +845,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint maxSupportedOdds
     );
     event AddressesUpdated(
-        IERC20 defaultPaymentToken,
+        IERC20 defaultCollateral,
         address manager,
         address riskManager,
         address referrals,

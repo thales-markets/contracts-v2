@@ -1,6 +1,6 @@
 {
 	"optimisticGoerli": {
-		"DefaultPaymentToken": "0xe1ceaa829525a08c1d39a5cebe4b42af58d77198",
+		"DefaultCollateral": "0xe1ceaa829525a08c1d39a5cebe4b42af58d77198",
 		"SafeBox": "0xd866b2332d4383c1bf719732177e2d9109c99dbc",
 		"Referrals": "0xB2947FC03d8Ee002726F4e28C42D513f7B6D6788",
 		"StakingThales": "0x28d25990f7dec7c606551c28a7a82b9d116dcb67",
@@ -15,6 +15,8 @@
 		"SportsAMMV2LiquidityPoolImplementation": "0x1620445C93A46E3A63CDb462D047a83f531906D6",
 		"SportsAMMV2LiquidityPoolRoundMastercopy": "0xE3c920104a15685CA68b72a18fBBB7C1F9E3AD19",
 		"DefaultLiquidityProvider": "0xb5F05F83F281561d8cD5Fd51B6Fdc5d82F976490",
-		"DefaultLiquidityProviderImplementation": "0x5079C376E5eDc88Db4cFC1A71f79B334892eeBb3"
+		"DefaultLiquidityProviderImplementation": "0x5079C376E5eDc88Db4cFC1A71f79B334892eeBb3",
+		"ExoticUSD": "0xe1ceaa829525a08c1d39a5cebe4b42af58d77198",
+		"ExoticUSDC": "0x6e342b93cedbb6fd3545bedd4f54471dc70ef890"
 	}
 }

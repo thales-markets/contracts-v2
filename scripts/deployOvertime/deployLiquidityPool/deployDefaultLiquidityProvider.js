@@ -17,14 +17,14 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
+	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 	const sportsAMMV2LiquidityPoolAddress = getTargetAddress('SportsAMMV2LiquidityPool', network);
 
 	const defaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
 	const defaultLiquidityProviderDeployed = await upgrades.deployProxy(defaultLiquidityProvider, [
 		owner.address,
 		sportsAMMV2LiquidityPoolAddress,
-		defaultPaymentTokenAddress,
+		defaultCollateralAddress,
 	]);
 	await defaultLiquidityProviderDeployed.waitForDeployment();
 

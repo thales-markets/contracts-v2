@@ -144,12 +144,12 @@ contract Ticket is OwnedWithInit {
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
 
-        uint payout = sportsAMM.defaultPaymentToken().balanceOf(address(this));
+        uint payout = sportsAMM.defaultCollateral().balanceOf(address(this));
         bool isCancelled = false;
 
         if (isTicketLost()) {
             if (payout > 0) {
-                sportsAMM.defaultPaymentToken().transfer(address(sportsAMM), payout);
+                sportsAMM.defaultCollateral().transfer(address(sportsAMM), payout);
             }
         } else {
             uint finalPayout = payout;
@@ -169,13 +169,13 @@ contract Ticket is OwnedWithInit {
                     isCancelled = false;
                 }
             }
-            sportsAMM.defaultPaymentToken().transfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
+            sportsAMM.defaultCollateral().transfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
 
-            uint balance = sportsAMM.defaultPaymentToken().balanceOf(address(this));
+            uint balance = sportsAMM.defaultCollateral().balanceOf(address(this));
             if (balance != 0) {
-                sportsAMM.defaultPaymentToken().transfer(
+                sportsAMM.defaultCollateral().transfer(
                     address(sportsAMM),
-                    sportsAMM.defaultPaymentToken().balanceOf(address(this))
+                    sportsAMM.defaultCollateral().balanceOf(address(this))
                 );
             }
         }
@@ -193,7 +193,7 @@ contract Ticket is OwnedWithInit {
 
     /// @notice withdraw collateral from the ticket
     function withdrawCollateral(address recipient) external onlyAMM {
-        sportsAMM.defaultPaymentToken().transfer(recipient, sportsAMM.defaultPaymentToken().balanceOf(address(this)));
+        sportsAMM.defaultCollateral().transfer(recipient, sportsAMM.defaultCollateral().balanceOf(address(this)));
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -221,9 +221,9 @@ contract Ticket is OwnedWithInit {
     }
 
     function _selfDestruct(address payable beneficiary) internal {
-        uint balance = sportsAMM.defaultPaymentToken().balanceOf(address(this));
+        uint balance = sportsAMM.defaultCollateral().balanceOf(address(this));
         if (balance != 0) {
-            sportsAMM.defaultPaymentToken().transfer(beneficiary, balance);
+            sportsAMM.defaultCollateral().transfer(beneficiary, balance);
         }
     }
 

@@ -12,6 +12,10 @@ const PLAYER_PROPS_ID_POINTS = 11029; // points
 const PLAYER_ID_1 = 16429; // Giannis Antetokounmpo
 const PLAYER_PROPS_LINE_1 = 3350; // 33.5 points
 
+const MANAGER_INITAL_PARAMS = {
+	needsTransformingCollateral: false,
+};
+
 const RISK_MANAGER_INITAL_PARAMS = {
 	defaultCap: ethers.parseEther('1000'),
 	defaultRiskMultiplier: 3,
@@ -39,6 +43,17 @@ const RISK_MANAGER_PARAMS = {
 	newDynamicLiquidityCutoffDivider: ethers.parseEther('4'),
 };
 
+const SPORTS_AMM_INITAL_PARAMS = {
+	safeBoxFee: ethers.parseEther('0.02'),
+	minBuyInAmount: ethers.parseEther('3'),
+	maxTicketSize: 10,
+	maxSupportedAmount: ethers.parseEther('20000'),
+	maxSupportedOdds: ethers.parseEther('0.01'),
+
+	minimalTimeLeftToMaturity: 10,
+	expiryDuration: 7776000,
+};
+
 const ZERO_ADDRESS = '0x' + '0'.repeat(40);
 
 const ONE_DAY_IN_SECS = 24 * 60 * 60;
@@ -59,4 +74,6 @@ module.exports = {
 	RISK_MANAGER_PARAMS,
 	ZERO_ADDRESS,
 	ONE_DAY_IN_SECS,
+	SPORTS_AMM_INITAL_PARAMS,
+	MANAGER_INITAL_PARAMS,
 };

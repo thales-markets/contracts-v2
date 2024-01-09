@@ -17,7 +17,7 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const defaultPaymentTokenAddress = getTargetAddress('DefaultPaymentToken', network);
+	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 	const sportsAMMV2RiskManagerAddress = getTargetAddress('SportsAMMV2RiskManager', network);
 	const stakingThalesAddress = getTargetAddress('StakingThales', network);
@@ -36,7 +36,7 @@ async function main() {
 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2Deployed = await upgrades.deployProxy(sportsAMMV2, [
 		owner.address,
-		defaultPaymentTokenAddress,
+		defaultCollateralAddress,
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
 		referralsAddress,
