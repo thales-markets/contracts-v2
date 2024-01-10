@@ -1,3 +1,8 @@
+const ZERO_ADDRESS = '0x' + '0'.repeat(40);
+
+const ONE_DAY_IN_SECS = 24 * 60 * 60;
+const ONE_WEEK_IN_SECS = 7 * ONE_DAY_IN_SECS;
+
 const INVALID_SPORT_ID = 8999;
 const SPORT_ID_NBA = 9004;
 const SPORT_ID_EPL = 9011;
@@ -54,9 +59,15 @@ const SPORTS_AMM_INITAL_PARAMS = {
 	expiryDuration: 7776000,
 };
 
-const ZERO_ADDRESS = '0x' + '0'.repeat(40);
-
-const ONE_DAY_IN_SECS = 24 * 60 * 60;
+const SPORTS_AMM_LP_INITAL_PARAMS = {
+	maxAllowedDeposit: ethers.parseEther('20000'),
+	maxAllowedDepositForUser: ethers.parseEther('20000'),
+	minDepositAmount: ethers.parseEther('20'),
+	maxAllowedUsers: 100,
+	roundLength: ONE_WEEK_IN_SECS,
+	utilizationRate: ethers.parseEther('0.2'),
+	safeBoxImpact: ethers.parseEther('0.2'),
+};
 
 module.exports = {
 	INVALID_SPORT_ID,
@@ -76,4 +87,5 @@ module.exports = {
 	ONE_DAY_IN_SECS,
 	SPORTS_AMM_INITAL_PARAMS,
 	MANAGER_INITAL_PARAMS,
+	SPORTS_AMM_LP_INITAL_PARAMS,
 };

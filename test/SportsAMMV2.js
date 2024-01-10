@@ -7,9 +7,11 @@ const {
 const { SPORTS_AMM_INITAL_PARAMS } = require('./constants/overtime');
 
 describe('SportsAMMV2', () => {
-	let sportsAMMV2,
-		sportsAMMV2Manager,
+	let sportsAMMV2Manager,
 		sportsAMMV2RiskManager,
+		sportsAMMV2,
+		ticketMastercopy,
+		sportsAMMV2LiquidityPool,
 		collateral,
 		referrals,
 		stakingThales,
@@ -23,9 +25,11 @@ describe('SportsAMMV2', () => {
 		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
 		const accountsFixture = await loadFixture(deployAccountsFixture);
 
-		sportsAMMV2 = sportsAMMV2Fixture.sportsAMMV2;
 		sportsAMMV2Manager = sportsAMMV2Fixture.sportsAMMV2Manager;
 		sportsAMMV2RiskManager = sportsAMMV2Fixture.sportsAMMV2RiskManager;
+		sportsAMMV2 = sportsAMMV2Fixture.sportsAMMV2;
+		ticketMastercopy = sportsAMMV2Fixture.ticketMastercopy;
+		sportsAMMV2LiquidityPool = sportsAMMV2Fixture.sportsAMMV2LiquidityPool;
 		collateral = sportsAMMV2Fixture.collateral;
 		referrals = sportsAMMV2Fixture.referrals;
 		stakingThales = sportsAMMV2Fixture.stakingThales;
@@ -67,6 +71,15 @@ describe('SportsAMMV2', () => {
 				SPORTS_AMM_INITAL_PARAMS.minimalTimeLeftToMaturity
 			);
 			expect(await sportsAMMV2.expiryDuration()).to.equal(SPORTS_AMM_INITAL_PARAMS.expiryDuration);
+		});
+
+		it('Should set the right ticket mastercopy', async () => {
+			expect(await sportsAMMV2.ticketMastercopy()).to.equal(await ticketMastercopy.getAddress());
+		});
+		it('Should set the right liquidity pool', async () => {
+			expect(await sportsAMMV2.liquidityPool()).to.equal(
+				await sportsAMMV2LiquidityPool.getAddress()
+			);
 		});
 	});
 });
