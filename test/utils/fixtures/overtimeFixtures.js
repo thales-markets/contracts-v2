@@ -161,7 +161,7 @@ async function deploySportsAMMV2Fixture() {
 		ticketMastercopy,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolRoundMastercopy,
-		defaultLiquidityProviderAddress,
+		defaultLiquidityProvider,
 		collateral,
 		referrals,
 		stakingThales,
