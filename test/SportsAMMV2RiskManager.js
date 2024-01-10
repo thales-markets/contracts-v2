@@ -4,22 +4,23 @@ const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('./utils/fixtures/overtimeFixtures');
+const { ZERO_ADDRESS, ONE_DAY_IN_SECS } = require('./constants/general');
 const {
 	INVALID_SPORT_ID,
 	SPORT_ID_NBA,
-	CHILD_ID_TOTAL,
+	SPORT_ID_EPL,
 	INVALID_CHILD_ID,
-	GAME_ID_1,
+	CHILD_ID_SPREAD,
+	CHILD_ID_TOTAL,
 	CHILD_ID_PLAYER_PROPS,
+	GAME_ID_1,
 	PLAYER_PROPS_ID_POINTS,
 	PLAYER_ID_1,
-	SPORT_ID_EPL,
-	ZERO_ADDRESS,
-	RISK_MANAGER_PARAMS,
-	CHILD_ID_SPREAD,
-	ONE_DAY_IN_SECS,
-	RISK_MANAGER_INITAL_PARAMS,
 } = require('./constants/overtime');
+const {
+	RISK_MANAGER_PARAMS,
+	RISK_MANAGER_INITAL_PARAMS,
+} = require('./constants/overtimeContractParams');
 
 describe('SportsAMMV2RiskManager', () => {
 	let sportsAMMV2RiskManager, sportsAMMV2Manager, owner, secondAccount, thirdAccount;

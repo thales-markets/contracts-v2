@@ -4,7 +4,7 @@ const {
 	SPORTS_AMM_INITAL_PARAMS,
 	MANAGER_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
-} = require('../../constants/overtime');
+} = require('../../constants/overtimeContractParams');
 
 // We define a fixture to reuse the same setup in every test.
 // We use loadFixture to run this setup once, snapshot that state,

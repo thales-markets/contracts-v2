@@ -4,7 +4,7 @@ const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('./utils/fixtures/overtimeFixtures');
-const { SPORTS_AMM_LP_INITAL_PARAMS } = require('./constants/overtime');
+const { SPORTS_AMM_LP_INITAL_PARAMS } = require('./constants/overtimeContractParams');
 
 describe('SportsAMMV2LiquidityPool', () => {
 	let sportsAMMV2,

@@ -4,7 +4,7 @@ const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('./utils/fixtures/overtimeFixtures');
-const { MANAGER_INITAL_PARAMS } = require('./constants/overtime');
+const { MANAGER_INITAL_PARAMS } = require('./constants/overtimeContractParams');
 
 describe('SportsAMMV2Manager', () => {
 	let sportsAMMV2Manager, owner, secondAccount, thirdAccount, fourthAccount;
