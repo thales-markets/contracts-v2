@@ -159,34 +159,36 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16 _playerId,
         uint _maturity
     ) internal view returns (uint cap) {
-        cap = capPerGame[_gameId][_sportId][_childId][_playerPropsId][_playerId];
-        if (cap == 0) {
-            uint sportCap = capPerSport[_sportId];
-            sportCap = sportCap > 0 ? sportCap : defaultCap;
-            cap = sportCap;
+        if (_maturity > block.timestamp) {
+            cap = capPerGame[_gameId][_sportId][_childId][_playerPropsId][_playerId];
+            if (cap == 0) {
+                uint sportCap = capPerSport[_sportId];
+                sportCap = sportCap > 0 ? sportCap : defaultCap;
+                cap = sportCap;
 
-            if (_childId > 0) {
-                uint childCap = capPerSportAndChild[_sportId][_childId];
-                cap = childCap > 0 ? childCap : sportCap / 2;
+                if (_childId > 0) {
+                    uint childCap = capPerSportAndChild[_sportId][_childId];
+                    cap = childCap > 0 ? childCap : sportCap / 2;
+                }
             }
-        }
 
-        uint dynamicLiquidityCutoffTime = dynamicLiquidityCutoffTimePerSport[_sportId];
-        if (dynamicLiquidityCutoffTime > 0) {
-            uint timeToStart = _maturity - block.timestamp;
-            uint cutOffLiquidity = (cap * ONE) /
-                (
-                    dynamicLiquidityCutoffDividerPerSport[_sportId] > 0
-                        ? dynamicLiquidityCutoffDividerPerSport[_sportId]
-                        : DEFAULT_DYNAMIC_LIQUIDITY_CUTOFF_DIVIDER
-                );
-            if (timeToStart >= dynamicLiquidityCutoffTime) {
-                cap = cutOffLiquidity;
-            } else {
-                uint remainingFromCutOff = cap - cutOffLiquidity;
-                cap =
-                    cutOffLiquidity +
-                    (((dynamicLiquidityCutoffTime - timeToStart) * remainingFromCutOff) / dynamicLiquidityCutoffTime);
+            uint dynamicLiquidityCutoffTime = dynamicLiquidityCutoffTimePerSport[_sportId];
+            if (dynamicLiquidityCutoffTime > 0) {
+                uint timeToStart = _maturity - block.timestamp;
+                uint cutOffLiquidity = (cap * ONE) /
+                    (
+                        dynamicLiquidityCutoffDividerPerSport[_sportId] > 0
+                            ? dynamicLiquidityCutoffDividerPerSport[_sportId]
+                            : DEFAULT_DYNAMIC_LIQUIDITY_CUTOFF_DIVIDER
+                    );
+                if (timeToStart >= dynamicLiquidityCutoffTime) {
+                    cap = cutOffLiquidity;
+                } else {
+                    uint remainingFromCutOff = cap - cutOffLiquidity;
+                    cap =
+                        cutOffLiquidity +
+                        (((dynamicLiquidityCutoffTime - timeToStart) * remainingFromCutOff) / dynamicLiquidityCutoffTime);
+                }
             }
         }
     }

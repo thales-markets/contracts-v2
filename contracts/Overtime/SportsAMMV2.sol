@@ -407,9 +407,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (tradeDataItem.odds.length > tradeDataItem.position) {
                 finalQuotes[i] = tradeDataItem.odds[tradeDataItem.position];
             }
-            if (finalQuotes[i] > 0) {
-                amountsToBuy[i] = (ONE * buyInAmountAfterFees) / finalQuotes[i];
+            if (finalQuotes[i] == 0) {
+                totalQuote = 0;
+                break;
             }
+            amountsToBuy[i] = (ONE * buyInAmountAfterFees) / finalQuotes[i];
             totalQuote = totalQuote == 0 ? finalQuotes[i] : (totalQuote * finalQuotes[i]) / ONE;
         }
         if (totalQuote != 0) {
@@ -806,7 +808,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
         multiCollateralOnOffRamp = IMultiCollateralOnOffRamp(_onOffRamper);
         multicollateralEnabled = _enabled;
-        defaultCollateral.approve(_onOffRamper, MAX_APPROVAL);
+        if (_enabled) {
+            defaultCollateral.approve(_onOffRamper, MAX_APPROVAL);
+        }
         emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
     }
 
