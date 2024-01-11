@@ -5,6 +5,10 @@ const {
 	MANAGER_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
+const {
+	getMerkleTreeRoot,
+} = require('../../../scripts/deployOvertime/updateMerkleTree/merkleTree');
+const { GAME_ID_1 } = require('../../constants/overtime');
 
 // We define a fixture to reuse the same setup in every test.
 // We use loadFixture to run this setup once, snapshot that state,
@@ -152,6 +156,11 @@ async function deploySportsAMMV2Fixture() {
 
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
+
+	const root = await getMerkleTreeRoot();
+
+	// set new root on Sports AMM contract
+	await sportsAMMV2.setRootPerGame(GAME_ID_1, root);
 
 	return {
 		owner,

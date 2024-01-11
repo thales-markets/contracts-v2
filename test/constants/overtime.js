@@ -1,3 +1,7 @@
+const marketsTree = require(
+	`../../scripts/deployOvertime/updateMerkleTree/treeMarketsAndHashes.json`
+);
+
 const INVALID_SPORT_ID = 8999;
 const SPORT_ID_NBA = 9004;
 const SPORT_ID_EPL = 9011;
@@ -12,6 +16,17 @@ const PLAYER_PROPS_ID_POINTS = 11029; // points
 const PLAYER_ID_1 = 16429; // Giannis Antetokounmpo
 const PLAYER_PROPS_LINE_1 = 3350; // 33.5 points
 
+const GAMES = {
+	nbaMoneyline: marketsTree[0],
+	nbaSpread: marketsTree[0].childMarkets[0],
+	nbaSpreadNotActive: marketsTree[0].childMarkets[1],
+	nbaTotal: marketsTree[0].childMarkets[2],
+	nbaPlayerPropsPoints: marketsTree[0].childMarkets[3],
+	nbaPlayerPropsDoubleDouble: marketsTree[0].childMarkets[4],
+};
+
+const BUY_IN_AMOUNT = ethers.parseEther('10');
+
 module.exports = {
 	INVALID_SPORT_ID,
 	SPORT_ID_NBA,
@@ -24,4 +39,6 @@ module.exports = {
 	PLAYER_PROPS_ID_POINTS,
 	PLAYER_ID_1,
 	PLAYER_PROPS_LINE_1,
+	GAMES,
+	BUY_IN_AMOUNT,
 };

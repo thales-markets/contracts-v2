@@ -816,8 +816,7 @@ describe('SportsAMMV2RiskManager', () => {
 				0,
 				maturity
 			);
-			expect(cap).to.greaterThan(ethers.parseEther(((formattedDefaultCap * 3) / 4 - 1).toString()));
-			expect(cap).to.lessThan(ethers.parseEther(((formattedDefaultCap * 3) / 4 + 1).toString()));
+			expect(Number(ethers.formatEther(cap))).to.approximately((formattedDefaultCap * 3) / 4, 1);
 
 			// set dynamic liquidity params: 6 hours cut off time, 4 divider
 			await sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(
@@ -836,8 +835,7 @@ describe('SportsAMMV2RiskManager', () => {
 				0,
 				maturity
 			);
-			expect(cap).to.greaterThan(ethers.parseEther(((formattedDefaultCap * 5) / 8 - 1).toString()));
-			expect(cap).to.lessThan(ethers.parseEther(((formattedDefaultCap * 5) / 8 + 1).toString()));
+			expect(Number(ethers.formatEther(cap))).to.approximately((formattedDefaultCap * 5) / 8, 1);
 
 			// reset dynamic liquidity params
 			await sportsAMMV2RiskManager.setDynamicLiquidityParamsPerSport(SPORT_ID_NBA, 0, 0);
