@@ -7,6 +7,7 @@ const {
 const { SPORTS_AMM_INITAL_PARAMS } = require('./constants/overtimeContractParams');
 const { getTicketTradeData } = require('./utils/overtime');
 const { MAX_NUMBER, ZERO_ADDRESS } = require('./constants/general');
+const { GAME_ID_1 } = require('./constants/overtime');
 
 describe('SportsAMMV2', () => {
 	let sportsAMMV2Manager,
@@ -293,6 +294,21 @@ describe('SportsAMMV2', () => {
 			await expect(sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress1, true))
 				.to.emit(sportsAMMV2, 'SetMultiCollateralOnOffRamp')
 				.withArgs(dummyAddress1, true);
+		});
+
+		it('Should set the new root per game', async () => {
+			const newRoot = '0x0ed8693864a15cd5d424428f9fa9454b8f1a8cd22c82016c214204edc9251978';
+
+			await expect(
+				sportsAMMV2.connect(secondAccount).setRootPerGame(GAME_ID_1, newRoot)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+
+			await sportsAMMV2.setRootPerGame(GAME_ID_1, newRoot);
+			expect(await sportsAMMV2.rootPerGame(GAME_ID_1)).to.equal(newRoot);
+
+			await expect(sportsAMMV2.setRootPerGame(GAME_ID_1, newRoot))
+				.to.emit(sportsAMMV2, 'GameRootUpdated')
+				.withArgs(GAME_ID_1, newRoot);
 		});
 	});
 });
