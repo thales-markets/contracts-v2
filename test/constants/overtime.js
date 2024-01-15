@@ -26,6 +26,9 @@ const GAMES = {
 };
 
 const BUY_IN_AMOUNT = ethers.parseEther('10');
+const ADDITIONAL_SLIPPAGE = ethers.parseEther('0.02');
+
+const DEFAULT_AMOUNT = ethers.parseEther('10000');
 
 module.exports = {
 	INVALID_SPORT_ID,
@@ -41,4 +44,6 @@ module.exports = {
 	PLAYER_PROPS_LINE_1,
 	GAMES,
 	BUY_IN_AMOUNT,
+	ADDITIONAL_SLIPPAGE,
+	DEFAULT_AMOUNT,
 };

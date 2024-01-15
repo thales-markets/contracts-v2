@@ -42,20 +42,6 @@ describe('SportsAMMV2LiquidityPool Deployment and Setters', () => {
 		firstLiquidityProvider = accountsFixture.firstLiquidityProvider;
 		secondLiquidityProvider = accountsFixture.secondLiquidityProvider;
 		thirdLiquidityProvider = accountsFixture.thirdLiquidityProvider;
-
-		await collateral.setDefaultAmount(ethers.parseEther('10000'));
-		await collateral.mintForUser(firstLiquidityProvider);
-		await collateral.mintForUser(secondLiquidityProvider);
-		await collateral.mintForUser(thirdLiquidityProvider);
-		await collateral
-			.connect(firstLiquidityProvider)
-			.approve(sportsAMMV2LiquidityPool, ethers.parseEther('10000'));
-		await collateral
-			.connect(secondLiquidityProvider)
-			.approve(sportsAMMV2LiquidityPool, ethers.parseEther('10000'));
-		await collateral
-			.connect(thirdLiquidityProvider)
-			.approve(sportsAMMV2LiquidityPool, ethers.parseEther('10000'));
 	});
 
 	describe('Deployment', () => {

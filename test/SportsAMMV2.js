@@ -5,7 +5,8 @@ const {
 	deploySportsAMMV2Fixture,
 } = require('./utils/fixtures/overtimeFixtures');
 const { getTicketTradeData } = require('./utils/overtime');
-const { BUY_IN_AMOUNT } = require('./constants/overtime');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('./constants/overtime');
+const { ZERO_ADDRESS } = require('./constants/general');
 
 describe('SportsAMMV2', () => {
 	let sportsAMMV2Manager,
@@ -22,7 +23,10 @@ describe('SportsAMMV2', () => {
 		thirdAccount,
 		fourthAccount,
 		fifthAccount,
-		tradeData;
+		tradeData,
+		firstLiquidityProvider,
+		firstTrader,
+		secondTrader;
 
 	beforeEach(async () => {
 		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
@@ -42,8 +46,16 @@ describe('SportsAMMV2', () => {
 		thirdAccount = accountsFixture.thirdAccount;
 		fourthAccount = accountsFixture.fourthAccount;
 		fifthAccount = accountsFixture.fourthAccount;
+		firstTrader = accountsFixture.firstTrader;
+		secondTrader = accountsFixture.secondTrader;
+		firstLiquidityProvider = accountsFixture.firstLiquidityProvider;
 
 		tradeData = getTicketTradeData();
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
 	});
 
 	describe('Quote', () => {
@@ -51,6 +63,27 @@ describe('SportsAMMV2', () => {
 			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
 
 			expect(quote.payout).to.equal(ethers.parseEther('14.848484848484848484'));
+		});
+	});
+
+	describe('Trade', () => {
+		it('Should buy a ticket', async () => {
+			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
+
+			expect(quote.payout).to.equal(ethers.parseEther('14.848484848484848484'));
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeData,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
 		});
 	});
 });
