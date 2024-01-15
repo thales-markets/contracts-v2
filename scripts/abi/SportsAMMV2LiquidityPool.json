@@ -68,25 +68,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "whitelistAddress",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "flag",
-        "type": "bool"
-      }
-    ],
-    "name": "AddedIntoWhitelistDepositors",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "user",
         "type": "address"
       },
@@ -162,19 +143,6 @@
       }
     ],
     "name": "MaxAllowedDepositChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxAllowedDepositForUser",
-        "type": "uint256"
-      }
-    ],
-    "name": "MaxAllowedDepositForUserChanged",
     "type": "event"
   },
   {
@@ -367,19 +335,6 @@
       }
     ],
     "name": "SafeBoxSharePaid",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "flagToSet",
-        "type": "bool"
-      }
-    ],
-    "name": "SetOnlyWhitelistedDepositorsAllowed",
     "type": "event"
   },
   {
@@ -833,11 +788,6 @@
           },
           {
             "internalType": "uint256",
-            "name": "_maxAllowedDepositForUser",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
             "name": "_minDepositAmount",
             "type": "uint256"
           },
@@ -930,19 +880,6 @@
   },
   {
     "inputs": [],
-    "name": "maxAllowedDepositForUser",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "maxAllowedUsers",
     "outputs": [
       {
@@ -988,19 +925,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "onlyWhitelistedDepositorsAllowed",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1230,19 +1154,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_maxAllowedDepositForUser",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxAllowedDepositForUser",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "_maxAllowedUsers",
         "type": "uint256"
       }
@@ -1261,19 +1172,6 @@
       }
     ],
     "name": "setMinAllowedDeposit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "flagToSet",
-        "type": "bool"
-      }
-    ],
-    "name": "setOnlyWhitelistedDepositorsAllowed",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1383,24 +1281,6 @@
       }
     ],
     "name": "setUtilizationRate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "_whitelistedAddresses",
-        "type": "address[]"
-      },
-      {
-        "internalType": "bool",
-        "name": "_flag",
-        "type": "bool"
-      }
-    ],
-    "name": "setWhitelistedDepositorAddresses",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1625,25 +1505,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "whitelistedDepositors",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",

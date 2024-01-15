@@ -44,7 +44,6 @@ const SPORTS_AMM_INITAL_PARAMS = {
 
 const SPORTS_AMM_LP_INITAL_PARAMS = {
 	maxAllowedDeposit: ethers.parseEther('20000'),
-	maxAllowedDepositForUser: ethers.parseEther('20000'),
 	minDepositAmount: ethers.parseEther('20'),
 	maxAllowedUsers: 100,
 	roundLength: ONE_WEEK_IN_SECS,

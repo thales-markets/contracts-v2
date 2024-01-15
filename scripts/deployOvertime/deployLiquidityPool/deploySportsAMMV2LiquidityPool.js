@@ -22,7 +22,6 @@ async function main() {
 	const stakingThalesAddress = getTargetAddress('StakingThales', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
 	const maxAllowedDeposit = ethers.parseEther('20000');
-	const maxAllowedDepositForUser = ethers.parseEther('20000');
 	const minDepositAmount = ethers.parseEther('20');
 	const maxAllowedUsers = 100;
 	const week = 7 * 24 * 60 * 60;
@@ -38,7 +37,6 @@ async function main() {
 			_collateral: defaultCollateralAddress,
 			_roundLength: week,
 			_maxAllowedDeposit: maxAllowedDeposit,
-			_maxAllowedDepositForUser: maxAllowedDepositForUser,
 			_minDepositAmount: minDepositAmount,
 			_maxAllowedUsers: maxAllowedUsers,
 			_utilizationRate: utilizationRate,

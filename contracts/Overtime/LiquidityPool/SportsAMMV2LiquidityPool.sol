@@ -30,7 +30,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         IERC20 _collateral;
         uint _roundLength;
         uint _maxAllowedDeposit;
-        uint _maxAllowedDepositForUser;
         uint _minDepositAmount;
         uint _maxAllowedUsers;
         uint _utilizationRate;
@@ -75,7 +74,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     mapping(uint => uint) public cumulativeProfitAndLoss;
 
     uint public maxAllowedDeposit;
-    uint public maxAllowedDepositForUser;
     uint public minDepositAmount;
     uint public maxAllowedUsers;
     uint public usersCurrentlyInPool;
@@ -87,9 +85,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     address public poolRoundMastercopy;
 
     uint public totalDeposited;
-
-    bool public onlyWhitelistedDepositorsAllowed;
-    mapping(address => bool) public whitelistedDepositors;
 
     bool public roundClosingPrepared;
     uint public usersProcessedInRound;
@@ -110,7 +105,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         collateral = params._collateral;
         roundLength = params._roundLength;
         maxAllowedDeposit = params._maxAllowedDeposit;
-        maxAllowedDepositForUser = params._maxAllowedDepositForUser;
         minDepositAmount = params._minDepositAmount;
         maxAllowedUsers = params._maxAllowedUsers;
         utilizationRate = params._utilizationRate;
@@ -145,16 +139,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         address roundPool = _getOrCreateRoundPool(nextRound);
         collateral.safeTransferFrom(msg.sender, roundPool, amount);
 
-        require(
-            !onlyWhitelistedDepositorsAllowed || whitelistedDepositors[msg.sender],
-            "Only whitelisted depositors allowed"
-        );
         require(msg.sender != defaultLiquidityProvider, "Can't deposit directly as default LP");
-        require(
-            (balancesPerRound[round][msg.sender] + amount + balancesPerRound[nextRound][msg.sender]) <=
-                maxAllowedDepositForUser,
-            "Deposit amount exceeds LP user cap"
-        );
 
         // new user enters the pool
         if (balancesPerRound[round][msg.sender] == 0 && balancesPerRound[nextRound][msg.sender] == 0) {
@@ -582,13 +567,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         _setPausing ? _pause() : _unpause();
     }
 
-    /// @notice Set onlyWhitelistedDepositorsAllowed variable
-    /// @param flagToSet self explanatory
-    function setOnlyWhitelistedDepositorsAllowed(bool flagToSet) external onlyOwner {
-        onlyWhitelistedDepositorsAllowed = flagToSet;
-        emit SetOnlyWhitelistedDepositorsAllowed(flagToSet);
-    }
-
     /// @notice Set _poolRoundMastercopy
     /// @param _poolRoundMastercopy to clone round pools from
     function setPoolRoundMastercopy(address _poolRoundMastercopy) external onlyOwner {
@@ -610,13 +588,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function setMaxAllowedDeposit(uint _maxAllowedDeposit) external onlyOwner {
         maxAllowedDeposit = _maxAllowedDeposit;
         emit MaxAllowedDepositChanged(_maxAllowedDeposit);
-    }
-
-    /// @notice Set max allowed deposit for user
-    /// @param _maxAllowedDepositForUser Deposit value
-    function setMaxAllowedDepositForUser(uint _maxAllowedDepositForUser) external onlyOwner {
-        maxAllowedDepositForUser = _maxAllowedDepositForUser;
-        emit MaxAllowedDepositForUserChanged(_maxAllowedDepositForUser);
     }
 
     /// @notice Set min allowed deposit
@@ -659,20 +630,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         require(!started, "Can't change round length after start");
         roundLength = _roundLength;
         emit RoundLengthChanged(_roundLength);
-    }
-
-    /// @notice Set addresses which can deposit into the AMM when only whitelisted depositors are allowed
-    /// @param _whitelistedAddresses Addresses to set the whitelist flag for
-    /// @param _flag to set
-    function setWhitelistedDepositorAddresses(address[] calldata _whitelistedAddresses, bool _flag) external onlyOwner {
-        require(_whitelistedAddresses.length > 0, "Whitelisted addresses cannot be empty");
-        for (uint256 index = 0; index < _whitelistedAddresses.length; index++) {
-            // only if current flag is different, if same skip it
-            if (whitelistedDepositors[_whitelistedAddresses[index]] != _flag) {
-                whitelistedDepositors[_whitelistedAddresses[index]] = _flag;
-                emit AddedIntoWhitelistDepositors(_whitelistedAddresses[index], _flag);
-            }
-        }
     }
 
     /// @notice set utilization rate parameter
@@ -740,12 +697,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     event RoundLengthChanged(uint roundLength);
     event MaxAllowedDepositChanged(uint maxAllowedDeposit);
-    event MaxAllowedDepositForUserChanged(uint maxAllowedDepositForUser);
     event MinAllowedDepositChanged(uint minAllowedDeposit);
     event MaxAllowedUsersChanged(uint maxAllowedUsersChanged);
     event UtilizationRateChanged(uint utilizationRate);
     event SetSafeBoxParams(address safeBox, uint safeBoxImpact);
-
-    event SetOnlyWhitelistedDepositorsAllowed(bool flagToSet);
-    event AddedIntoWhitelistDepositors(address whitelistAddress, bool flag);
 }

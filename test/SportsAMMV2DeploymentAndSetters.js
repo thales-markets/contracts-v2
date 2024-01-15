@@ -9,7 +9,7 @@ const { getTicketTradeData } = require('./utils/overtime');
 const { MAX_NUMBER, ZERO_ADDRESS } = require('./constants/general');
 const { GAME_ID_1 } = require('./constants/overtime');
 
-describe('SportsAMMV2', () => {
+describe('SportsAMMV2 Deployment and Setters', () => {
 	let sportsAMMV2Manager,
 		sportsAMMV2RiskManager,
 		sportsAMMV2,
@@ -53,7 +53,7 @@ describe('SportsAMMV2', () => {
 			expect(await sportsAMMV2.manager()).to.equal(await sportsAMMV2Manager.getAddress());
 			expect(await sportsAMMV2.riskManager()).to.equal(await sportsAMMV2RiskManager.getAddress());
 			expect(await sportsAMMV2.referrals()).to.equal(referrals.address);
-			expect(await sportsAMMV2.stakingThales()).to.equal(stakingThales.address);
+			expect(await sportsAMMV2.stakingThales()).to.equal(await stakingThales.getAddress());
 			expect(await sportsAMMV2.safeBox()).to.equal(safeBox.address);
 		});
 
@@ -233,10 +233,7 @@ describe('SportsAMMV2', () => {
 			await sportsAMMV2.setLiquidityPool(dummyAddress1);
 			expect(await sportsAMMV2.liquidityPool()).to.equal(dummyAddress1);
 
-			curentLpAllowance = await collateral.allowance(
-				await sportsAMMV2.getAddress(),
-				await sportsAMMV2.liquidityPool()
-			);
+			curentLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyAddress1);
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
 
 			const oldLpAllowance = await collateral.allowance(
@@ -280,7 +277,7 @@ describe('SportsAMMV2', () => {
 
 			const oldLpAllowance = await collateral.allowance(
 				await sportsAMMV2.getAddress(),
-				await dummyAddress1
+				dummyAddress1
 			);
 			expect(oldLpAllowance).to.equal(0);
 

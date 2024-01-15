@@ -23,8 +23,10 @@ async function deployAccountsFixture() {
 		fourthAccount,
 		fifthAccount,
 		referrals,
-		stakingThales,
 		safeBox,
+		firstLiquidityProvider,
+		secondLiquidityProvider,
+		thirdLiquidityProvider,
 	] = await ethers.getSigners();
 
 	return {
@@ -34,8 +36,10 @@ async function deployAccountsFixture() {
 		fourthAccount,
 		fifthAccount,
 		referrals,
-		stakingThales,
 		safeBox,
+		firstLiquidityProvider,
+		secondLiquidityProvider,
+		thirdLiquidityProvider,
 	};
 }
 
@@ -54,8 +58,12 @@ async function deployTokenFixture() {
 
 // one fixture for all Sports AMM contracts, because nasted fixtures don't work for some reason
 async function deploySportsAMMV2Fixture() {
-	const { owner, referrals, stakingThales, safeBox } = await deployAccountsFixture();
+	const { owner, referrals, safeBox } = await deployAccountsFixture();
 	const { collateral } = await deployTokenFixture();
+
+	// deploy mock Staking Thales
+	const StakingThales = await ethers.getContractFactory('MockStakingThales');
+	const stakingThales = await upgrades.deployProxy(StakingThales);
 
 	// deploy Sports AMM manager
 	const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
@@ -80,6 +88,7 @@ async function deploySportsAMMV2Fixture() {
 	// deploy Sports AMM
 	const collateralAddress = await collateral.getAddress();
 	const sportsAMMV2RiskManagerAddress = await sportsAMMV2RiskManager.getAddress();
+	const stakingThalesAddress = await stakingThales.getAddress();
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
@@ -88,7 +97,7 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
 		referrals.address,
-		stakingThales.address,
+		stakingThalesAddress,
 		safeBox.address,
 	]);
 
@@ -119,11 +128,10 @@ async function deploySportsAMMV2Fixture() {
 		{
 			_owner: owner.address,
 			_sportsAMM: sportsAMMV2Address,
-			_stakingThales: stakingThales.address,
+			_stakingThales: stakingThalesAddress,
 			_collateral: collateralAddress,
 			_roundLength: SPORTS_AMM_LP_INITAL_PARAMS.roundLength,
 			_maxAllowedDeposit: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit,
-			_maxAllowedDepositForUser: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDepositForUser,
 			_minDepositAmount: SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount,
 			_maxAllowedUsers: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedUsers,
 			_utilizationRate: SPORTS_AMM_LP_INITAL_PARAMS.utilizationRate,
@@ -157,7 +165,8 @@ async function deploySportsAMMV2Fixture() {
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
 
-	const root = await getMerkleTreeRoot();
+	// const root = await getMerkleTreeRoot();
+	const root = '0x0ed8693864a15cd5d424428f9fa9454b8f1a8cd22c82016c214204edc9251977';
 
 	// set new root on Sports AMM contract
 	await sportsAMMV2.setRootPerGame(GAME_ID_1, root);
