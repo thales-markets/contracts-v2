@@ -23,7 +23,6 @@ async function deployAccountsFixture() {
 		thirdAccount,
 		fourthAccount,
 		fifthAccount,
-		referrals,
 		safeBox,
 		firstLiquidityProvider,
 		secondLiquidityProvider,
@@ -38,7 +37,6 @@ async function deployAccountsFixture() {
 		thirdAccount,
 		fourthAccount,
 		fifthAccount,
-		referrals,
 		safeBox,
 		firstLiquidityProvider,
 		secondLiquidityProvider,
@@ -65,7 +63,6 @@ async function deployTokenFixture() {
 async function deploySportsAMMV2Fixture() {
 	const {
 		owner,
-		referrals,
 		safeBox,
 		firstLiquidityProvider,
 		secondLiquidityProvider,
@@ -78,6 +75,10 @@ async function deploySportsAMMV2Fixture() {
 	// deploy mock Staking Thales
 	const StakingThales = await ethers.getContractFactory('MockStakingThales');
 	const stakingThales = await upgrades.deployProxy(StakingThales);
+
+	// deploy mock Referrals
+	const Referrals = await ethers.getContractFactory('MockReferrals');
+	const referrals = await upgrades.deployProxy(Referrals);
 
 	// deploy Sports AMM manager
 	const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
@@ -103,6 +104,7 @@ async function deploySportsAMMV2Fixture() {
 	const collateralAddress = await collateral.getAddress();
 	const sportsAMMV2RiskManagerAddress = await sportsAMMV2RiskManager.getAddress();
 	const stakingThalesAddress = await stakingThales.getAddress();
+	const referralsAddress = await referrals.getAddress();
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
@@ -110,7 +112,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralAddress,
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
-		referrals.address,
+		referralsAddress,
 		stakingThalesAddress,
 		safeBox.address,
 	]);

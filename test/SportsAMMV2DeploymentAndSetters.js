@@ -52,7 +52,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(await sportsAMMV2.defaultCollateral()).to.equal(await collateral.getAddress());
 			expect(await sportsAMMV2.manager()).to.equal(await sportsAMMV2Manager.getAddress());
 			expect(await sportsAMMV2.riskManager()).to.equal(await sportsAMMV2RiskManager.getAddress());
-			expect(await sportsAMMV2.referrals()).to.equal(referrals.address);
+			expect(await sportsAMMV2.referrals()).to.equal(await referrals.getAddress());
 			expect(await sportsAMMV2.stakingThales()).to.equal(await stakingThales.getAddress());
 			expect(await sportsAMMV2.safeBox()).to.equal(safeBox.address);
 		});

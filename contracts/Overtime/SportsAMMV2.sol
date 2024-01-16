@@ -352,7 +352,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmount,
         address _ticketCreator
     ) external notPaused onlyKnownTickets(msg.sender) {
-        if (_cancelled) {
+        if (!_cancelled) {
             _handleReferrerAndSB(_buyInAmount, _ticketCreator);
         }
         knownTickets.remove(msg.sender);
