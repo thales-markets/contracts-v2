@@ -1,4 +1,4 @@
-const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const {
 	deployAccountsFixture,
@@ -6,6 +6,8 @@ const {
 } = require('./utils/fixtures/overtimeFixtures');
 const { SPORTS_AMM_LP_INITAL_PARAMS } = require('./constants/overtimeContractParams');
 const { ZERO_ADDRESS } = require('./constants/general');
+const { getTicketTradeData } = require('./utils/overtime');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('./constants/overtime');
 
 describe('SportsAMMV2LiquidityPool', () => {
 	let sportsAMMV2,
@@ -21,7 +23,9 @@ describe('SportsAMMV2LiquidityPool', () => {
 		fourthAccount,
 		firstLiquidityProvider,
 		secondLiquidityProvider,
-		thirdLiquidityProvider;
+		thirdLiquidityProvider,
+		tradeData,
+		firstTrader;
 
 	beforeEach(async () => {
 		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
@@ -42,6 +46,9 @@ describe('SportsAMMV2LiquidityPool', () => {
 		firstLiquidityProvider = accountsFixture.firstLiquidityProvider;
 		secondLiquidityProvider = accountsFixture.secondLiquidityProvider;
 		thirdLiquidityProvider = accountsFixture.thirdLiquidityProvider;
+		firstTrader = accountsFixture.firstTrader;
+
+		tradeData = getTicketTradeData();
 	});
 
 	describe('Start liqudiity pool', () => {
@@ -330,6 +337,224 @@ describe('SportsAMMV2LiquidityPool', () => {
 			await expect(
 				sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(ethers.parseEther('100'))
 			).to.be.revertedWith('Withdrawal is requested, cannot deposit');
+		});
+	});
+
+	describe('Round closing', () => {
+		let sportsAMMV2LiquidityPoolWithFirstLiquidityProvider,
+			sportsAMMV2LiquidityPoolWithSecondLiquidityProvider,
+			sportsAMMV2LiquidityPoolWithThirdLiquidityProvider,
+			currentRound,
+			currentRoundCloseTime;
+
+		beforeEach(async () => {
+			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
+				sportsAMMV2LiquidityPool.connect(firstLiquidityProvider);
+			sportsAMMV2LiquidityPoolWithSecondLiquidityProvider =
+				sportsAMMV2LiquidityPool.connect(secondLiquidityProvider);
+			sportsAMMV2LiquidityPoolWithThirdLiquidityProvider =
+				sportsAMMV2LiquidityPool.connect(thirdLiquidityProvider);
+
+			// deposit and start pool
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(ethers.parseEther('500'));
+			await sportsAMMV2LiquidityPoolWithSecondLiquidityProvider.deposit(ethers.parseEther('500'));
+			await sportsAMMV2LiquidityPool.start();
+
+			currentRound = await sportsAMMV2LiquidityPool.round();
+			currentRoundCloseTime = await sportsAMMV2LiquidityPool.getRoundEndTime(currentRound);
+
+			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeData,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const ticketGame1 = tradeData[0];
+			await sportsAMMV2.setScoreForGame(
+				ticketGame1.gameId,
+				ticketGame1.playerPropsId,
+				ticketGame1.playerId,
+				123,
+				100
+			);
+		});
+
+		it('Should fail with "Can\'t close current round"', async () => {
+			await expect(sportsAMMV2LiquidityPool.prepareRoundClosing()).to.be.revertedWith(
+				"Can't close current round"
+			);
+		});
+
+		it('Should be able to close current round"', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(true);
+		});
+
+		it('Should fail with "Round closing not prepared" on processing round closing', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+			await expect(sportsAMMV2LiquidityPool.processRoundClosingBatch(10)).to.be.revertedWith(
+				'Round closing not prepared'
+			);
+		});
+
+		it('Should fail with "All users already processed"', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+			await sportsAMMV2LiquidityPool.prepareRoundClosing();
+			await sportsAMMV2LiquidityPool.processRoundClosingBatch(10);
+
+			await expect(sportsAMMV2LiquidityPool.processRoundClosingBatch(10)).to.be.revertedWith(
+				'All users already processed'
+			);
+		});
+
+		it('Should fail with "Batch size has to be greater than 0"', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+			await sportsAMMV2LiquidityPool.prepareRoundClosing();
+
+			await expect(sportsAMMV2LiquidityPool.processRoundClosingBatch(0)).to.be.revertedWith(
+				'Batch size has to be greater than 0'
+			);
+		});
+
+		it('Should fail with "Round closing not prepared" on round closing', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+			await expect(sportsAMMV2LiquidityPool.closeRound()).to.be.revertedWith(
+				'Round closing not prepared'
+			);
+		});
+
+		it('Should fail with "Not all users processed yet"', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+			await sportsAMMV2LiquidityPool.prepareRoundClosing();
+			await sportsAMMV2LiquidityPool.processRoundClosingBatch(1);
+			await expect(sportsAMMV2LiquidityPool.closeRound()).to.be.revertedWith(
+				'Not all users processed yet'
+			);
+		});
+
+		it('Should close round', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+
+			await sportsAMMV2LiquidityPool.prepareRoundClosing();
+			await sportsAMMV2LiquidityPool.processRoundClosingBatch(10);
+			await sportsAMMV2LiquidityPool.closeRound();
+		});
+
+		it('Should emit round closing events', async () => {
+			await time.increaseTo(currentRoundCloseTime);
+
+			await expect(sportsAMMV2LiquidityPool.prepareRoundClosing())
+				.to.emit(sportsAMMV2LiquidityPool, 'RoundClosingPrepared')
+				.withArgs(currentRound);
+
+			await expect(sportsAMMV2LiquidityPool.processRoundClosingBatch(10))
+				.to.emit(sportsAMMV2LiquidityPool, 'RoundClosingBatchProcessed')
+				.withArgs(currentRound, 10);
+
+			await expect(sportsAMMV2LiquidityPool.closeRound())
+				.to.emit(sportsAMMV2LiquidityPool, 'RoundClosed')
+				.withArgs(currentRound, ethers.parseEther('0.9898'));
+		});
+	});
+
+	describe('Trades', () => {
+		let sportsAMMV2LiquidityPoolWithFirstLiquidityProvider,
+			sportsAMMV2LiquidityPoolWithSecondLiquidityProvider,
+			sportsAMMV2LiquidityPoolWithThirdLiquidityProvider;
+
+		beforeEach(async () => {
+			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
+				sportsAMMV2LiquidityPool.connect(firstLiquidityProvider);
+			sportsAMMV2LiquidityPoolWithSecondLiquidityProvider =
+				sportsAMMV2LiquidityPool.connect(secondLiquidityProvider);
+			sportsAMMV2LiquidityPoolWithThirdLiquidityProvider =
+				sportsAMMV2LiquidityPool.connect(thirdLiquidityProvider);
+		});
+
+		it('Should be negative round - ticket in current round', async () => {
+			// deposit and start pool
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(ethers.parseEther('1000'));
+			await sportsAMMV2LiquidityPool.start();
+
+			let currentRound = await sportsAMMV2LiquidityPool.round();
+			let currentRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(currentRound);
+			let currentRoundPoolBalanceBeforeTrade = await collateral.balanceOf(currentRoundPoolAddress);
+
+			expect(currentRoundPoolBalanceBeforeTrade).to.equal(ethers.parseEther('1000'));
+
+			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeData,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const diffPayoutBuyIn =
+				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+
+			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
+
+			const diffCurrentRoundPoolBalance =
+				ethers.formatEther(currentRoundPoolBalanceBeforeTrade) -
+				ethers.formatEther(currentRoundPoolBalanceAfterTrade);
+
+			expect(currentRoundPoolBalanceAfterTrade).to.equal(ethers.parseEther('989.8'));
+			// difference due to js
+			expect(diffPayoutBuyIn).to.approximately(diffCurrentRoundPoolBalance, 0.00000000001);
+
+			expect(await sportsAMMV2.numOfActiveTickets()).to.equal(1);
+			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(currentRound);
+			expect(await sportsAMMV2LiquidityPool.tradingTicketsPerRound(currentRound, 0)).to.equal(
+				ticketAddress
+			);
+			expect(
+				await sportsAMMV2LiquidityPool.isTradingTicketInARound(currentRound, ticketAddress)
+			).to.equal(true);
+			expect(
+				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
+			).to.equal(false);
+
+			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(false);
+
+			const ticketGame1 = tradeData[0];
+			await sportsAMMV2.setScoreForGame(
+				ticketGame1.gameId,
+				ticketGame1.playerPropsId,
+				ticketGame1.playerId,
+				123,
+				100
+			);
+
+			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(false);
+
+			const currentRoundCloseTime = await sportsAMMV2LiquidityPool.getRoundEndTime(currentRound);
+			await time.increaseTo(currentRoundCloseTime);
+
+			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(true);
+			expect(await sportsAMMV2LiquidityPool.roundClosingPrepared()).to.equal(false);
+			await sportsAMMV2LiquidityPool.prepareRoundClosing();
+			expect(await sportsAMMV2LiquidityPool.roundClosingPrepared()).to.equal(true);
+			await sportsAMMV2LiquidityPool.processRoundClosingBatch(20);
+			expect(await sportsAMMV2LiquidityPool.usersProcessedInRound()).to.equal(1);
+			await sportsAMMV2LiquidityPool.closeRound();
 		});
 	});
 });

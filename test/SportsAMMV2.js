@@ -62,7 +62,7 @@ describe('SportsAMMV2', () => {
 		it('Should get quote', async () => {
 			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
 
-			expect(quote.payout).to.equal(ethers.parseEther('14.848484848484848484'));
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
 		});
 	});
 
@@ -70,7 +70,7 @@ describe('SportsAMMV2', () => {
 		it('Should buy a ticket', async () => {
 			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
 
-			expect(quote.payout).to.equal(ethers.parseEther('14.848484848484848484'));
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
 
 			await sportsAMMV2
 				.connect(firstTrader)

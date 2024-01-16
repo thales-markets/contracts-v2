@@ -15,19 +15,19 @@ const getGameLine = (game) =>
 		    : 0;
 
 const getTradeDataItem = (game, position) => {
-	return [
-		game.gameId,
-		game.sportId,
-		game.childId,
-		game.playerPropsId,
-		game.maturity,
-		game.status,
-		getGameLine(game),
-		game.playerProps.playerId,
-		game.odds,
-		game.proof,
-		position,
-	];
+	return {
+		gameId: game.gameId,
+		sportId: game.sportId,
+		childId: game.childId,
+		playerPropsId: game.playerPropsId,
+		maturity: game.maturity,
+		status: game.status,
+		line: getGameLine(game),
+		playerId: game.playerProps.playerId,
+		odds: game.odds,
+		merkleProof: game.proof,
+		position: position,
+	};
 };
 
 const getTicketTradeData = () => {
