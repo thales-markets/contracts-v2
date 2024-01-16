@@ -170,11 +170,11 @@ describe('SportsAMMV2LiquidityPool Deployment and Setters', () => {
 			await sportsAMMV2LiquidityPool.setSportsAMM(dummyAddress1);
 			expect(await sportsAMMV2LiquidityPool.sportsAMM()).to.equal(dummyAddress1);
 
-			curentLpAllowance = await collateral.allowance(
+			curentSportsAmmAllowance = await collateral.allowance(
 				await sportsAMMV2LiquidityPool.getAddress(),
 				await dummyAddress1
 			);
-			expect(curentLpAllowance).to.equal(MAX_NUMBER);
+			expect(curentSportsAmmAllowance).to.equal(MAX_NUMBER);
 
 			const oldSportsAmmAllowance = await collateral.allowance(
 				await sportsAMMV2LiquidityPool.getAddress(),
