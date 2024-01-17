@@ -5,7 +5,6 @@ const {
 	deploySportsAMMV2Fixture,
 } = require('./utils/fixtures/overtimeFixtures');
 const { SPORTS_AMM_INITAL_PARAMS } = require('./constants/overtimeContractParams');
-const { getTicketTradeData } = require('./utils/overtime');
 const { MAX_NUMBER, ZERO_ADDRESS } = require('./constants/general');
 const { GAME_ID_1 } = require('./constants/overtime');
 

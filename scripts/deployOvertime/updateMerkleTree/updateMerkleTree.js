@@ -1,5 +1,8 @@
 const { ethers } = require('hardhat');
 const { getTargetAddress } = require('../../helpers');
+const fs = require('fs');
+const { getMerkleTree } = require('../../../test/utils/merkleTree/merkleTree');
+const markets = require(`./markets.json`);
 
 async function updateMerkleTree() {
 	let accounts = await ethers.getSigners();
@@ -15,7 +18,7 @@ async function updateMerkleTree() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const root = await getMerkleTreeRoot();
+	const { root, treeMarketsAndHashes } = await getMerkleTree(markets);
 
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	console.log('Found SportsAMMV2 at:', sportsAMMV2Address);
@@ -33,6 +36,14 @@ async function updateMerkleTree() {
 			'New root set for game 0x3063613139613935343563616437636230393634613865623435363366336666'
 		);
 	});
+
+	fs.writeFileSync(
+		`scripts/deployOvertime/updateMerkleTree/treeMarketsAndHashes.json`,
+		JSON.stringify(treeMarketsAndHashes),
+		function (err) {
+			if (err) return console.log(err);
+		}
+	);
 }
 
 updateMerkleTree()

@@ -5,11 +5,10 @@ const {
 	MANAGER_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
-const {
-	getMerkleTreeRoot,
-} = require('../../../scripts/deployOvertime/updateMerkleTree/merkleTree');
+const { getMerkleTreeRoot } = require('../merkleTree/merkleTree');
 const { GAME_ID_1, DEFAULT_AMOUNT } = require('../../constants/overtime');
 const { time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { createMerkleTree, getTicketTradeDataCurrentRound } = require('../overtime');
 
 // We define a fixture to reuse the same setup in every test.
 // We use loadFixture to run this setup once, snapshot that state,
@@ -181,8 +180,8 @@ async function deploySportsAMMV2Fixture() {
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
 
-	const root = await getMerkleTreeRoot();
-	// const root = '0x0ed8693864a15cd5d424428f9fa9454b8f1a8cd22c82016c214204edc9251977';
+	const root = await createMerkleTree();
+	const tradeDataCurrentRound = getTicketTradeDataCurrentRound();
 
 	// set new root on Sports AMM contract
 	await sportsAMMV2.setRootPerGame(GAME_ID_1, root);
@@ -219,6 +218,7 @@ async function deploySportsAMMV2Fixture() {
 		referrals,
 		stakingThales,
 		safeBox,
+		tradeDataCurrentRound,
 	};
 }
 

@@ -1,11 +1,9 @@
 const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256');
 const { web3 } = require('hardhat');
-const fs = require('fs');
 const { ethers } = require('hardhat');
-const markets = require(`./markets.json`);
 
-async function getMerkleTreeRoot() {
+async function getMerkleTree(markets) {
 	let treeMarketsHashes = [];
 	let treeMarketsAndHashes = [];
 
@@ -80,17 +78,17 @@ async function getMerkleTreeRoot() {
 		});
 	});
 
-	fs.writeFileSync(
-		`scripts/deployOvertime/updateMerkleTree/treeMarketsAndHashes.json`,
-		JSON.stringify(treeMarketsAndHashes),
-		function (err) {
-			if (err) return console.log(err);
-		}
-	);
+	// fs.writeFileSync(
+	// 	`scripts/deployOvertime/updateMerkleTree/treeMarketsAndHashes.json`,
+	// 	JSON.stringify(treeMarketsAndHashes),
+	// 	function (err) {
+	// 		if (err) return console.log(err);
+	// 	}
+	// );
 
-	return root;
+	return { root, treeMarketsAndHashes };
 }
 
 module.exports = {
-	getMerkleTreeRoot,
+	getMerkleTree,
 };

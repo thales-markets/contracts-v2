@@ -4,9 +4,7 @@ const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('./utils/fixtures/overtimeFixtures');
-const { SPORTS_AMM_LP_INITAL_PARAMS } = require('./constants/overtimeContractParams');
 const { ZERO_ADDRESS } = require('./constants/general');
-const { getTicketTradeData } = require('./utils/overtime');
 const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('./constants/overtime');
 
 describe('SportsAMMV2LiquidityPool', () => {
@@ -24,7 +22,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 		firstLiquidityProvider,
 		secondLiquidityProvider,
 		thirdLiquidityProvider,
-		tradeData,
+		tradeDataCurrentRound,
 		firstTrader;
 
 	beforeEach(async () => {
@@ -48,7 +46,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 		thirdLiquidityProvider = accountsFixture.thirdLiquidityProvider;
 		firstTrader = accountsFixture.firstTrader;
 
-		tradeData = getTicketTradeData();
+		tradeDataCurrentRound = sportsAMMV2Fixture.tradeDataCurrentRound;
 	});
 
 	describe('Trades', () => {
@@ -79,11 +77,11 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(currentRoundPoolBalanceBeforeTrade).to.equal(initialDeposit);
 
 			// create a ticket
-			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
+			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
-					tradeData,
+					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
 					quote.payout,
 					ADDITIONAL_SLIPPAGE,
@@ -136,7 +134,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(false);
 
 			// resolve ticket game as winning for the user
-			const ticketGame1 = tradeData[0];
+			const ticketGame1 = tradeDataCurrentRound[0];
 			await sportsAMMV2.setScoreForGame(
 				ticketGame1.gameId,
 				ticketGame1.playerPropsId,
@@ -232,11 +230,11 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(currentRoundPoolBalanceBeforeTrade).to.equal(initialDeposit);
 
 			// create a ticket
-			const quote = await sportsAMMV2.tradeQuote(tradeData, BUY_IN_AMOUNT);
+			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
-					tradeData,
+					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
 					quote.payout,
 					ADDITIONAL_SLIPPAGE,
@@ -289,7 +287,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(false);
 
 			// resolve ticket game as loss for the user
-			const ticketGame1 = tradeData[0];
+			const ticketGame1 = tradeDataCurrentRound[0];
 			await sportsAMMV2.setScoreForGame(
 				ticketGame1.gameId,
 				ticketGame1.playerPropsId,
