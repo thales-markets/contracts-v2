@@ -469,7 +469,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// try exercise on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
-			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercised();
+			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 
 			// increase time to round close time
 			let currentRoundCloseTime = await sportsAMMV2LiquidityPool.getRoundEndTime(currentRound);
@@ -489,7 +489,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// try exercise ticket on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
-			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercised();
+			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 			expect(
 				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
 			).to.equal(false);
@@ -506,7 +506,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// exercise ticket on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(true);
-			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercised();
+			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 			expect(
 				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
 			).to.equal(true);
@@ -549,12 +549,16 @@ describe('SportsAMMV2LiquidityPool', () => {
 			const currentRoundCumulativePnl = Number(
 				ethers.formatEther(await sportsAMMV2LiquidityPool.cumulativeProfitAndLoss(currentRound))
 			);
+			const cumulativePnLBetweenRounds = Number(
+				ethers.formatEther(await sportsAMMV2LiquidityPool.cumulativePnLBetweenRounds(3, 2))
+			);
 			const roundProfitWithoutSafeBox = roundProfit * (1 - safeBoxImpact);
 			const calculatedPnl =
 				1 + roundProfitWithoutSafeBox / ethers.formatEther(currentRoundAllocation);
 
 			expect(currentRoundPnl.toFixed(8)).to.equal(calculatedPnl.toFixed(8));
 			expect(currentRoundCumulativePnl.toFixed(8)).to.equal(calculatedPnl.toFixed(8));
+			expect(cumulativePnLBetweenRounds).to.equal(1);
 
 			// check default LP balance
 			const calculatedDefaultLpProfit = diffDefaultLpBalance * (currentRoundPnl - 1);
@@ -583,7 +587,6 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(nextRoundAllocation.toFixed(8)).to.equal(caclucaltedNextRoundAllocation.toFixed(8));
 		});
 
-		// TODO - not finished
 		it('Should be positive round - ticket in cross rounds', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 			const defaultLpAddress = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
@@ -736,66 +739,57 @@ describe('SportsAMMV2LiquidityPool', () => {
 			currentRoundCloseTime = await sportsAMMV2LiquidityPool.getRoundEndTime(currentRound);
 			await time.increaseTo(currentRoundCloseTime);
 
-			// const safeBoxBalanceBeforeClose = await collateral.balanceOf(safeBox);
+			const safeBoxBalanceBeforeClose = await collateral.balanceOf(safeBox);
 
 			// close round
 			await sportsAMMV2LiquidityPool.prepareRoundClosing();
 			await sportsAMMV2LiquidityPool.processRoundClosingBatch(10);
 			await sportsAMMV2LiquidityPool.closeRound();
 
-			// // check safe box profit on positive round
-			// const safeBoxBalanceAfterClose = await collateral.balanceOf(safeBox);
-			// const diffSafeBoxBalance =
-			// 	ethers.formatEther(safeBoxBalanceAfterClose) -
-			// 	ethers.formatEther(safeBoxBalanceBeforeClose);
+			// check safe box profit
+			const safeBoxBalanceAfterClose = await collateral.balanceOf(safeBox);
+			const diffSafeBoxBalance =
+				ethers.formatEther(safeBoxBalanceAfterClose) -
+				ethers.formatEther(safeBoxBalanceBeforeClose);
 
-			// const roundProfit =
-			// 	ethers.formatEther(currentRoundPoolBalanceAfterExercise) -
-			// 	ethers.formatEther(currentRoundAllocation);
-			// const safeBoxImpact = ethers.formatEther(await sportsAMMV2LiquidityPool.safeBoxImpact());
+			const roundProfit =
+				ethers.formatEther(currentRoundPoolBalanceAfterExercise) -
+				ethers.formatEther(currentRoundPoolBalanceBeforeTrade);
 
-			// expect(diffSafeBoxBalance).to.greaterThan(0);
-			// expect(diffSafeBoxBalance.toFixed(4)).to.equal((roundProfit * safeBoxImpact).toFixed(4));
+			expect(diffSafeBoxBalance).to.equal(0);
+			expect(roundProfit).to.equal(0);
 
-			// // check PnL
-			// const currentRoundPnl = Number(
-			// 	ethers.formatEther(await sportsAMMV2LiquidityPool.profitAndLossPerRound(currentRound))
-			// );
-			// const currentRoundCumulativePnl = Number(
-			// 	ethers.formatEther(await sportsAMMV2LiquidityPool.cumulativeProfitAndLoss(currentRound))
-			// );
-			// const roundProfitWithoutSafeBox = roundProfit * (1 - safeBoxImpact);
-			// const calculatedPnl =
-			// 	1 + roundProfitWithoutSafeBox / ethers.formatEther(currentRoundAllocation);
+			// check PnL
+			const currentRoundPnl = await sportsAMMV2LiquidityPool.profitAndLossPerRound(currentRound);
+			const currentRoundCumulativePnl =
+				await sportsAMMV2LiquidityPool.cumulativeProfitAndLoss(currentRound);
+			const cumulativePnLBetweenRounds = await sportsAMMV2LiquidityPool.cumulativePnLBetweenRounds(
+				3,
+				2
+			);
 
-			// expect(currentRoundPnl.toFixed(8)).to.equal(calculatedPnl.toFixed(8));
-			// expect(currentRoundCumulativePnl.toFixed(8)).to.equal(calculatedPnl.toFixed(8));
+			expect(currentRoundPnl).to.equal(ethers.parseEther('1'));
+			expect(currentRoundCumulativePnl).to.equal(ethers.parseEther('1'));
+			expect(cumulativePnLBetweenRounds).to.equal(ethers.parseEther('1'));
 
-			// // check default LP balance
-			// const calculatedDefaultLpProfit = diffDefaultLpBalance * (currentRoundPnl - 1);
-			// let defaultLpBalanceAfterWithdrawal = await collateral.balanceOf(defaultLpAddress);
-			// let defaultLpProfit =
-			// 	ethers.formatEther(defaultLpBalanceAfterWithdrawal) -
-			// 	ethers.formatEther(defaultLpBalanceBeforeTrade);
-			// expect(defaultLpProfit.toFixed(8)).to.equal(calculatedDefaultLpProfit.toFixed(8));
+			await sportsAMMV2.exerciseTicket(ticketAddress);
 
-			// // check next round data
-			// nextRound = await sportsAMMV2LiquidityPool.round();
-			// expect(nextRound).to.equal(4);
-			// nextRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(nextRound);
-			// const nextRoundPoolBalance = Number(
-			// 	ethers.formatEther(await collateral.balanceOf(nextRoundPoolAddress))
-			// );
-			// nextRoundAllocation = Number(
-			// 	ethers.formatEther(await sportsAMMV2LiquidityPool.allocationPerRound(nextRound))
-			// );
-			// const caclucaltedNextRoundAllocation =
-			// 	Number(ethers.formatEther(currentRoundAllocation)) +
-			// 	roundProfitWithoutSafeBox -
-			// 	diffDefaultLpBalance * currentRoundPnl;
+			// check next round data
+			const nextRound = await sportsAMMV2LiquidityPool.round();
+			expect(nextRound).to.equal(4);
+			const nextRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(nextRound);
 
-			// expect(nextRoundPoolBalance.toFixed(8)).to.equal(caclucaltedNextRoundAllocation.toFixed(8));
-			// expect(nextRoundAllocation.toFixed(8)).to.equal(caclucaltedNextRoundAllocation.toFixed(8));
+			expect(await collateral.balanceOf(nextRoundPoolAddress)).to.equal(initialDeposit);
+			expect(await sportsAMMV2LiquidityPool.allocationPerRound(nextRound)).to.equal(initialDeposit);
+
+			// check default LP balance
+			let defaultLpBalanceAfterExercise = await collateral.balanceOf(defaultLpAddress);
+			let defaultLpProfit =
+				ethers.formatEther(defaultLpBalanceAfterExercise) -
+				ethers.formatEther(defaultLpBalanceBeforeTrade);
+			expect(defaultLpProfit.toFixed(8)).to.equal(
+				Number(ethers.formatEther(quote.buyInAmountAfterFees)).toFixed(8)
+			);
 		});
 	});
 });
