@@ -33,6 +33,7 @@ const getTicketTradeData = () => {
 	const marketsTree = require(`./merkleTree/treeMarketsAndHashes.json`);
 	const nbaMoneylineCurrentRound = marketsTree[0];
 	const nbaMoneylineNextRound = marketsTree[1];
+	const nbaSpreadNextRound = marketsTree[1].childMarkets[0];
 
 	const tradeDataCurrentRound = [];
 	tradeDataCurrentRound.push(getTradeDataItem(nbaMoneylineCurrentRound, 0));
@@ -40,7 +41,11 @@ const getTicketTradeData = () => {
 	const tradeDataNextRound = [];
 	tradeDataNextRound.push(getTradeDataItem(nbaMoneylineNextRound, 0));
 
-	return { tradeDataCurrentRound, tradeDataNextRound };
+	const tradeDataCrossRounds = [];
+	tradeDataCrossRounds.push(getTradeDataItem(nbaMoneylineCurrentRound, 0));
+	tradeDataCrossRounds.push(getTradeDataItem(nbaSpreadNextRound, 1));
+
+	return { tradeDataCurrentRound, tradeDataNextRound, tradeDataCrossRounds };
 };
 
 const createMerkleTree = async () => {

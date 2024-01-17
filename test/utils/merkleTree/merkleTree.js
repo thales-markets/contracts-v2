@@ -78,14 +78,6 @@ async function getMerkleTree(markets) {
 		});
 	});
 
-	// fs.writeFileSync(
-	// 	`scripts/deployOvertime/updateMerkleTree/treeMarketsAndHashes.json`,
-	// 	JSON.stringify(treeMarketsAndHashes),
-	// 	function (err) {
-	// 		if (err) return console.log(err);
-	// 	}
-	// );
-
 	return { root, treeMarketsAndHashes };
 }
 
