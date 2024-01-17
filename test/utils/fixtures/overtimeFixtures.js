@@ -8,7 +8,7 @@ const {
 const { getMerkleTreeRoot } = require('../merkleTree/merkleTree');
 const { GAME_ID_1, DEFAULT_AMOUNT } = require('../../constants/overtime');
 const { time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
-const { createMerkleTree, getTicketTradeDataCurrentRound } = require('../overtime');
+const { createMerkleTree, getTicketTradeData } = require('../overtime');
 
 // We define a fixture to reuse the same setup in every test.
 // We use loadFixture to run this setup once, snapshot that state,
@@ -181,7 +181,7 @@ async function deploySportsAMMV2Fixture() {
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
 
 	const root = await createMerkleTree();
-	const tradeDataCurrentRound = getTicketTradeDataCurrentRound();
+	const { tradeDataCurrentRound, tradeDataNextRound } = getTicketTradeData();
 
 	// set new root on Sports AMM contract
 	await sportsAMMV2.setRootPerGame(GAME_ID_1, root);
@@ -205,6 +205,9 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 	await collateral.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 
+	await collateral.mintForUser(owner);
+	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
+
 	return {
 		owner,
 		sportsAMMV2Manager,
@@ -219,6 +222,7 @@ async function deploySportsAMMV2Fixture() {
 		stakingThales,
 		safeBox,
 		tradeDataCurrentRound,
+		tradeDataNextRound,
 	};
 }
 

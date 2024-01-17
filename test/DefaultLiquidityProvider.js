@@ -29,9 +29,6 @@ describe('DefaultLiquidityProvider', () => {
 		thirdAccount = accountsFixture.thirdAccount;
 
 		defaultLiquidityProviderAddress = await defaultLiquidityProvider.getAddress();
-
-		await collateral.mintForUser(owner);
-		collateral.transfer(defaultLiquidityProviderAddress, DEFAULT_AMOUNT);
 	});
 
 	describe('Deployment', () => {

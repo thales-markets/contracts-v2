@@ -29,13 +29,18 @@ const getTradeDataItem = (game, position) => {
 	};
 };
 
-const getTicketTradeDataCurrentRound = () => {
+const getTicketTradeData = () => {
 	const marketsTree = require(`./merkleTree/treeMarketsAndHashes.json`);
-	const nbaMoneyline = marketsTree[0];
+	const nbaMoneylineCurrentRound = marketsTree[0];
+	const nbaMoneylineNextRound = marketsTree[1];
 
-	const tradeData = [];
-	tradeData.push(getTradeDataItem(nbaMoneyline, 0));
-	return tradeData;
+	const tradeDataCurrentRound = [];
+	tradeDataCurrentRound.push(getTradeDataItem(nbaMoneylineCurrentRound, 0));
+
+	const tradeDataNextRound = [];
+	tradeDataNextRound.push(getTradeDataItem(nbaMoneylineNextRound, 0));
+
+	return { tradeDataCurrentRound, tradeDataNextRound };
 };
 
 const createMerkleTree = async () => {
@@ -72,6 +77,6 @@ const createMerkleTree = async () => {
 };
 
 module.exports = {
-	getTicketTradeDataCurrentRound,
+	getTicketTradeData,
 	createMerkleTree,
 };
