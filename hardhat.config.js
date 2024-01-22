@@ -33,14 +33,27 @@ module.exports = {
 					browserURL: 'https://goerli-optimism.etherscan.io/',
 				},
 			},
+			{
+				network: 'optimisticSepolia',
+				chainId: 11155420,
+				urls: {
+					apiURL: 'https://optimism-sepolia.blockscout.com/api',
+					browserURL: 'https://optimism-sepolia.blockscout.com/',
+				},
+			},
 		],
 		apiKey: {
 			optimisticGoerli: OP_ETHERSCAN_KEY,
+			optimisticSepolia: OP_ETHERSCAN_KEY,
 		},
 	},
 	networks: {
 		optimisticGoerli: {
 			url: `https://optimism-goerli.infura.io/v3/${INFURA}`,
+			accounts: [TEST_PRIVATE_KEY],
+		},
+		optimisticSepolia: {
+			url: `https://optimism-sepolia.infura.io/v3/${INFURA}`,
 			accounts: [TEST_PRIVATE_KEY],
 		},
 	},

@@ -12,7 +12,10 @@ const setTargetAddress = (contractName, network, address) => {
 	});
 };
 
+const isTestNetwork = (network) => Number(network) === 420 || Number(network) === 11155420;
+
 module.exports = {
 	getTargetAddress,
 	setTargetAddress,
+	isTestNetwork,
 };

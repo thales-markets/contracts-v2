@@ -11,20 +11,21 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const exoticUSDC = await ethers.getContractFactory('ExoticUSDC');
+	const mockStakingThales = await ethers.getContractFactory('MockStakingThales');
 
-	const exoticUSDCDeployed = await exoticUSDC.deploy();
-	await exoticUSDCDeployed.waitForDeployment();
+	const mockStakingThalesDeployed = await mockStakingThales.deploy();
+	await mockStakingThalesDeployed.waitForDeployment();
 
-	const exoticUSDCAddress = await exoticUSDCDeployed.getAddress();
+	const mockStakingThalesAddress = await mockStakingThalesDeployed.getAddress();
 
-	console.log('ExoticUSDC deployed on:', exoticUSDCAddress);
-	setTargetAddress('ExoticUSDC', network, exoticUSDCAddress);
+	console.log('MockStakingThales deployed on:', mockStakingThalesAddress);
+	setTargetAddress('MockStakingThales', network, mockStakingThalesAddress);
 	await delay(5000);
 
 	try {
 		await hre.run('verify:verify', {
-			address: exoticUSDCAddress,
+			address: mockStakingThalesAddress,
+			contract: 'contracts/utils/test-helpers/MockStakingThales.sol:MockStakingThales',
 		});
 	} catch (e) {
 		console.log(e);

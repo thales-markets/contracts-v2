@@ -11,20 +11,21 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const exoticUSDC = await ethers.getContractFactory('ExoticUSDC');
+	const mockReferrals = await ethers.getContractFactory('MockReferrals');
 
-	const exoticUSDCDeployed = await exoticUSDC.deploy();
-	await exoticUSDCDeployed.waitForDeployment();
+	const mockReferralsDeployed = await mockReferrals.deploy();
+	await mockReferralsDeployed.waitForDeployment();
 
-	const exoticUSDCAddress = await exoticUSDCDeployed.getAddress();
+	const mockReferralsAddress = await mockReferralsDeployed.getAddress();
 
-	console.log('ExoticUSDC deployed on:', exoticUSDCAddress);
-	setTargetAddress('ExoticUSDC', network, exoticUSDCAddress);
+	console.log('MockReferrals deployed on:', mockReferralsAddress);
+	setTargetAddress('MockReferrals', network, mockReferralsAddress);
 	await delay(5000);
 
 	try {
 		await hre.run('verify:verify', {
-			address: exoticUSDCAddress,
+			address: mockReferralsAddress,
+			contract: 'contracts/utils/test-helpers/MockReferrals.sol:MockReferrals',
 		});
 	} catch (e) {
 		console.log(e);

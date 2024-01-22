@@ -1,18 +1,12 @@
-const { ethers, upgrades } = require('hardhat');
-const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
+const { ethers } = require('hardhat');
 
-const { setTargetAddress, getTargetAddress } = require('../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
 	let owner = accounts[0];
 	let networkObj = await ethers.provider.getNetwork();
 	let network = networkObj.name;
-
-	// if (networkObj.chainId == 420) {
-	// 	networkObj.name = 'optimisticGoerli';
-	// 	network = 'optimisticGoerli';
-	// }
 
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
@@ -32,7 +26,7 @@ async function main() {
 	setTargetAddress('TicketMastercopy', network, ticketMastercopyAddress);
 	await delay(5000);
 
-	if (networkObj.chainId == 420) {
+	if (isTestNetwork(networkObj.chainId)) {
 		await sportsAMMV2Deployed.setTicketMastercopy(ticketMastercopyAddress, {
 			from: owner.address,
 		});

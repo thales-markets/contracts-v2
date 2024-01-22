@@ -1,18 +1,13 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
 
-const { setTargetAddress, getTargetAddress } = require('../../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
 	let owner = accounts[0];
 	let networkObj = await ethers.provider.getNetwork();
 	let network = networkObj.name;
-
-	// if (networkObj.chainId == 420) {
-	// 	networkObj.name = 'optimisticGoerli';
-	// 	network = 'optimisticGoerli';
-	// }
 
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
@@ -68,7 +63,7 @@ async function main() {
 	);
 	await delay(5000);
 
-	if (networkObj.chainId == 420) {
+	if (isTestNetwork(networkObj.chainId)) {
 		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
 		await sportsAMMV2Deployed.setLiquidityPool(sportsAMMV2LiquidityPoolAddress, {

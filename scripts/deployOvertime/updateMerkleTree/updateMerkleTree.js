@@ -10,11 +10,6 @@ async function updateMerkleTree() {
 	let networkObj = await ethers.provider.getNetwork();
 	let network = networkObj.name;
 
-	// if (networkObj.chainId == 420) {
-	// 	networkObj.name = 'optimisticGoerli';
-	// 	network = 'optimisticGoerli';
-	// }
-
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
