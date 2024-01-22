@@ -16,6 +16,8 @@ const {
 	GAME_ID_1,
 	PLAYER_PROPS_ID_POINTS,
 	PLAYER_ID_1,
+	TOTAL_LINE,
+	PLAYER_PROPS_LINE_1,
 } = require('./constants/overtime');
 const {
 	RISK_MANAGER_PARAMS,
@@ -240,7 +242,8 @@ describe('SportsAMMV2RiskManager', () => {
 					SPORT_ID_NBA,
 					CHILD_ID_PLAYER_PROPS,
 					PLAYER_PROPS_ID_POINTS,
-					PLAYER_ID_1
+					PLAYER_ID_1,
+					PLAYER_PROPS_LINE_1
 				)
 			).to.equal(0);
 
@@ -253,6 +256,7 @@ describe('SportsAMMV2RiskManager', () => {
 						[CHILD_ID_PLAYER_PROPS],
 						[PLAYER_PROPS_ID_POINTS],
 						[PLAYER_ID_1],
+						[PLAYER_PROPS_LINE_1],
 						newCapForGame
 					)
 			).to.be.revertedWith('Invalid sender');
@@ -266,6 +270,7 @@ describe('SportsAMMV2RiskManager', () => {
 					[CHILD_ID_PLAYER_PROPS],
 					[PLAYER_PROPS_ID_POINTS],
 					[PLAYER_ID_1],
+					[PLAYER_PROPS_LINE_1],
 					invalidCap
 				)
 			).to.be.revertedWith('Invalid cap');
@@ -276,6 +281,7 @@ describe('SportsAMMV2RiskManager', () => {
 				[CHILD_ID_PLAYER_PROPS],
 				[PLAYER_PROPS_ID_POINTS],
 				[PLAYER_ID_1],
+				[PLAYER_PROPS_LINE_1],
 				newCapForGame
 			);
 			expect(
@@ -284,7 +290,8 @@ describe('SportsAMMV2RiskManager', () => {
 					SPORT_ID_NBA,
 					CHILD_ID_PLAYER_PROPS,
 					PLAYER_PROPS_ID_POINTS,
-					PLAYER_ID_1
+					PLAYER_ID_1,
+					PLAYER_PROPS_LINE_1
 				)
 			).to.equal(newCapForGame);
 
@@ -295,6 +302,7 @@ describe('SportsAMMV2RiskManager', () => {
 					[CHILD_ID_PLAYER_PROPS],
 					[PLAYER_PROPS_ID_POINTS],
 					[PLAYER_ID_1],
+					[PLAYER_PROPS_LINE_1],
 					newCapForGame
 				)
 			)
@@ -305,6 +313,7 @@ describe('SportsAMMV2RiskManager', () => {
 					CHILD_ID_PLAYER_PROPS,
 					PLAYER_PROPS_ID_POINTS,
 					PLAYER_ID_1,
+					PLAYER_PROPS_LINE_1,
 					newCapForGame
 				);
 		});
@@ -453,7 +462,8 @@ describe('SportsAMMV2RiskManager', () => {
 					SPORT_ID_NBA,
 					CHILD_ID_PLAYER_PROPS,
 					PLAYER_PROPS_ID_POINTS,
-					PLAYER_ID_1
+					PLAYER_ID_1,
+					PLAYER_PROPS_LINE_1
 				)
 			).to.equal(0);
 
@@ -466,6 +476,7 @@ describe('SportsAMMV2RiskManager', () => {
 						[CHILD_ID_PLAYER_PROPS],
 						[PLAYER_PROPS_ID_POINTS],
 						[PLAYER_ID_1],
+						[PLAYER_PROPS_LINE_1],
 						newRiskMultiplierForGame
 					)
 			).to.be.revertedWith('Invalid sender');
@@ -479,6 +490,7 @@ describe('SportsAMMV2RiskManager', () => {
 					[CHILD_ID_PLAYER_PROPS],
 					[PLAYER_PROPS_ID_POINTS],
 					[PLAYER_ID_1],
+					[PLAYER_PROPS_LINE_1],
 					invalidRiskMultiplier
 				)
 			).to.be.revertedWith('Invalid multiplier');
@@ -489,6 +501,7 @@ describe('SportsAMMV2RiskManager', () => {
 				[CHILD_ID_PLAYER_PROPS],
 				[PLAYER_PROPS_ID_POINTS],
 				[PLAYER_ID_1],
+				[PLAYER_PROPS_LINE_1],
 				newRiskMultiplierForGame
 			);
 			expect(
@@ -497,7 +510,8 @@ describe('SportsAMMV2RiskManager', () => {
 					SPORT_ID_NBA,
 					CHILD_ID_PLAYER_PROPS,
 					PLAYER_PROPS_ID_POINTS,
-					PLAYER_ID_1
+					PLAYER_ID_1,
+					PLAYER_PROPS_LINE_1
 				)
 			).to.equal(newRiskMultiplierForGame);
 
@@ -508,6 +522,7 @@ describe('SportsAMMV2RiskManager', () => {
 					[CHILD_ID_PLAYER_PROPS],
 					[PLAYER_PROPS_ID_POINTS],
 					[PLAYER_ID_1],
+					[PLAYER_PROPS_LINE_1],
 					newRiskMultiplierForGame
 				)
 			)
@@ -518,6 +533,7 @@ describe('SportsAMMV2RiskManager', () => {
 					CHILD_ID_PLAYER_PROPS,
 					PLAYER_PROPS_ID_POINTS,
 					PLAYER_ID_1,
+					PLAYER_PROPS_LINE_1,
 					newRiskMultiplierForGame
 				);
 		});
@@ -663,6 +679,7 @@ describe('SportsAMMV2RiskManager', () => {
 				0,
 				0,
 				0,
+				0,
 				maturity
 			);
 
@@ -676,6 +693,7 @@ describe('SportsAMMV2RiskManager', () => {
 				CHILD_ID_TOTAL,
 				0,
 				0,
+				TOTAL_LINE,
 				maturity
 			);
 
@@ -688,6 +706,7 @@ describe('SportsAMMV2RiskManager', () => {
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
+				0,
 				0,
 				0,
 				0,
@@ -706,6 +725,7 @@ describe('SportsAMMV2RiskManager', () => {
 				CHILD_ID_TOTAL,
 				0,
 				0,
+				TOTAL_LINE,
 				maturity
 			);
 
@@ -725,6 +745,7 @@ describe('SportsAMMV2RiskManager', () => {
 				CHILD_ID_TOTAL,
 				0,
 				0,
+				TOTAL_LINE,
 				maturity
 			);
 
@@ -738,6 +759,7 @@ describe('SportsAMMV2RiskManager', () => {
 				[CHILD_ID_TOTAL],
 				[0],
 				[0],
+				[TOTAL_LINE],
 				newCapForGame
 			);
 
@@ -747,6 +769,7 @@ describe('SportsAMMV2RiskManager', () => {
 				CHILD_ID_TOTAL,
 				0,
 				0,
+				TOTAL_LINE,
 				maturity
 			);
 
@@ -760,6 +783,7 @@ describe('SportsAMMV2RiskManager', () => {
 			let cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
+				0,
 				0,
 				0,
 				0,
@@ -781,6 +805,7 @@ describe('SportsAMMV2RiskManager', () => {
 				0,
 				0,
 				0,
+				0,
 				maturity
 			);
 			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 4).toString()));
@@ -799,6 +824,7 @@ describe('SportsAMMV2RiskManager', () => {
 				0,
 				0,
 				0,
+				0,
 				maturity
 			);
 			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 2).toString()));
@@ -811,6 +837,7 @@ describe('SportsAMMV2RiskManager', () => {
 			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
+				0,
 				0,
 				0,
 				0,
@@ -833,6 +860,7 @@ describe('SportsAMMV2RiskManager', () => {
 				0,
 				0,
 				0,
+				0,
 				maturity
 			);
 			expect(Number(ethers.formatEther(cap))).to.approximately((formattedDefaultCap * 5) / 8, 1);
@@ -844,6 +872,7 @@ describe('SportsAMMV2RiskManager', () => {
 			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
+				0,
 				0,
 				0,
 				0,
@@ -870,6 +899,7 @@ describe('SportsAMMV2RiskManager', () => {
 					0,
 					0,
 					0,
+					0,
 					maturity
 				);
 
@@ -884,6 +914,7 @@ describe('SportsAMMV2RiskManager', () => {
 					totalSpent,
 					GAME_ID_1,
 					SPORT_ID_NBA,
+					0,
 					0,
 					0,
 					0,
@@ -907,6 +938,7 @@ describe('SportsAMMV2RiskManager', () => {
 					0,
 					0,
 					0,
+					0,
 					maturity
 				);
 
@@ -924,6 +956,7 @@ describe('SportsAMMV2RiskManager', () => {
 				[0],
 				[0],
 				[0],
+				[0],
 				newRiskMultiplierForGame
 			);
 
@@ -932,6 +965,7 @@ describe('SportsAMMV2RiskManager', () => {
 					totalSpent,
 					GAME_ID_1,
 					SPORT_ID_NBA,
+					0,
 					0,
 					0,
 					0,

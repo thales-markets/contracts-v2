@@ -8,6 +8,7 @@ interface ISportsAMMV2RiskManager {
         uint16 _childId,
         uint16 _playerPropsId,
         uint16 _playerId,
+        int24 _line,
         uint _maturity
     ) external view returns (uint cap);
 
@@ -18,6 +19,7 @@ interface ISportsAMMV2RiskManager {
         uint16 _childId,
         uint16 _playerPropsId,
         uint16 _playerId,
+        int24 _line,
         uint _maturity
     ) external view returns (bool);
 }

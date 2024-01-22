@@ -103,8 +103,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // indicates is score set for game, game defined with gameId -> playerPropsId -> playerId
     mapping(bytes32 => mapping(uint => mapping(uint => bool))) public isScoreSetForGame;
 
-    // indicates is game explicitly cancelled, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => bool))))) public isGameCancelled;
+    // indicates is game explicitly cancelled, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId -> gameId
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => mapping(int => bool))))))
+        public isGameCancelled;
 
     // stores active tickets
     AddressSetLib.AddressSet internal knownTickets;
@@ -115,8 +116,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // is multi-collateral enabled
     bool public multicollateralEnabled;
 
-    // stores current risk per game and position, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => mapping(uint => uint))))))
+    // stores current risk per game and position, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId -> gameId
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => mapping(int => mapping(uint => uint)))))))
         public riskPerGameAndPosition;
 
     // the period of time in seconds before a game is matured and begins to be restricted for AMM trading
@@ -217,15 +218,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _childId child ID (total, spread, player props)
     /// @param _playerPropsId player props ID (0 if not player props game)
     /// @param _playerId player ID (0 if not player props game)
+    /// @param _line line
     /// @return isGameResolved true/false
     function isGameResolved(
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _childId,
         uint16 _playerPropsId,
-        uint16 _playerId
+        uint16 _playerId,
+        int24 _line
     ) external view returns (bool) {
-        return _isGameResolved(_gameId, _sportId, _childId, _playerPropsId, _playerId);
+        return _isGameResolved(_gameId, _sportId, _childId, _playerPropsId, _playerId, _line);
     }
 
     function getGameResult(
@@ -236,7 +239,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint16 _playerId,
         int24 _line
     ) external view returns (ISportsAMMV2.GameResult result) {
-        if (isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId]) {
+        if (isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_line]) {
             return result;
         }
 
@@ -321,15 +324,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _childId child ID (total, spread, player props)
     /// @param _playerPropsId player props ID (0 if not player props game)
     /// @param _playerId player ID (0 if not player props game)
+    /// @param _lineId line ID
     function cancelGame(
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _childId,
         uint16 _playerPropsId,
+        int16 _lineId,
         uint16 _playerId
     ) external onlyOwner {
-        require(!isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId], "Game already cancelled");
-        isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId] = true;
+        require(!isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_lineId], "Game already cancelled");
+        isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_lineId] = true;
         emit GameCancelled(_gameId, _sportId, _childId, _playerPropsId, _playerId);
     }
 
@@ -424,7 +429,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (
                 riskPerGameAndPosition[tradeDataItem.gameId][tradeDataItem.sportId][tradeDataItem.childId][
                     tradeDataItem.playerPropsId
-                ][tradeDataItem.playerId][tradeDataItem.position] +
+                ][tradeDataItem.playerId][tradeDataItem.line][tradeDataItem.position] +
                     amountsToBuy[i] >
                 riskManager.calculateCapToBeUsed(
                     tradeDataItem.gameId,
@@ -432,6 +437,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     tradeDataItem.childId,
                     tradeDataItem.playerPropsId,
                     tradeDataItem.playerId,
+                    tradeDataItem.line,
                     tradeDataItem.maturity
                 ) ||
                 !riskManager.isTotalSpendingLessThanTotalRisk(
@@ -441,6 +447,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     tradeDataItem.childId,
                     tradeDataItem.playerPropsId,
                     tradeDataItem.playerId,
+                    tradeDataItem.line,
                     tradeDataItem.maturity
                 )
             ) {
@@ -559,18 +566,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                 _tradeData[i].playerPropsId
-            ][_tradeData[i].playerId][_tradeData[i].position] += _amountsToBuy[i];
+            ][_tradeData[i].playerId][_tradeData[i].line][_tradeData[i].position] += _amountsToBuy[i];
             spentPerParent[_tradeData[i].gameId] += _amountsToBuy[i];
             require(
                 riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                     _tradeData[i].playerPropsId
-                ][_tradeData[i].playerId][_tradeData[i].position] <
+                ][_tradeData[i].playerId][_tradeData[i].line][_tradeData[i].position] <
                     riskManager.calculateCapToBeUsed(
                         _tradeData[i].gameId,
                         _tradeData[i].sportId,
                         _tradeData[i].childId,
                         _tradeData[i].playerPropsId,
                         _tradeData[i].playerId,
+                        _tradeData[i].line,
                         _tradeData[i].maturity
                     ),
                 "Risk per individual market and position exceeded"
@@ -583,6 +591,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _tradeData[i].childId,
                     _tradeData[i].playerPropsId,
                     _tradeData[i].playerId,
+                    _tradeData[i].line,
                     _tradeData[i].maturity
                 ),
                 "Risk is to high"
@@ -596,7 +605,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             tradeData.sportId,
             tradeData.childId,
             tradeData.playerPropsId,
-            tradeData.playerId
+            tradeData.playerId,
+            tradeData.line
         );
         if (tradeData.status == 0 && !isResolved) {
             if (tradeData.maturity >= block.timestamp) {
@@ -610,11 +620,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint16 _sportId,
         uint16 _childId,
         uint16 _playerPropsId,
-        uint16 _playerId
+        uint16 _playerId,
+        int24 _line
     ) internal view returns (bool) {
         return
             isScoreSetForGame[_gameId][_playerPropsId][_playerId] ||
-            isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId];
+            isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_line];
     }
 
     function _handleReferrerAndSB(uint _buyInAmount, address _tickerCreator) internal returns (uint safeBoxAmount) {

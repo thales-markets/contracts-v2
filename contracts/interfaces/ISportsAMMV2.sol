@@ -32,7 +32,8 @@ interface ISportsAMMV2 {
         uint16 _sportId,
         uint16 _childId,
         uint16 _playerPropsId,
-        uint16 _playerId
+        uint16 _playerId,
+        int24 _line
     ) external view returns (bool);
 
     function resolveTicket(

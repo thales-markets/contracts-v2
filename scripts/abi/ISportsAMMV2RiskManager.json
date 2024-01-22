@@ -27,6 +27,11 @@
         "type": "uint16"
       },
       {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
         "internalType": "uint256",
         "name": "_maturity",
         "type": "uint256"
@@ -74,6 +79,11 @@
         "internalType": "uint16",
         "name": "_playerId",
         "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
       },
       {
         "internalType": "uint256",

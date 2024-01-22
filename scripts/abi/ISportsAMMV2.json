@@ -95,6 +95,11 @@
         "internalType": "uint16",
         "name": "_playerId",
         "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
       }
     ],
     "name": "isGameResolved",

@@ -16,6 +16,7 @@ const GAME_ID_2 = '0x34323136353234000000000000000000000000000000000000000000000
 const PLAYER_PROPS_ID_POINTS = 11029; // points
 const PLAYER_ID_1 = 16429; // Giannis Antetokounmpo
 const PLAYER_PROPS_LINE_1 = 3350; // 33.5 points
+const TOTAL_LINE = 25600; // 256 points
 
 const GAMES = {
 	nbaMoneyline: marketsTree[0],
@@ -48,4 +49,5 @@ module.exports = {
 	BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
 	DEFAULT_AMOUNT,
+	TOTAL_LINE,
 };

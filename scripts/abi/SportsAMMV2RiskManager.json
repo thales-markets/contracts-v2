@@ -102,6 +102,12 @@
       },
       {
         "indexed": false,
+        "internalType": "int24",
+        "name": "line",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "cap",
         "type": "uint256"
@@ -259,6 +265,12 @@
       },
       {
         "indexed": false,
+        "internalType": "int24",
+        "name": "line",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "riskMultiplier",
         "type": "uint256"
@@ -386,6 +398,11 @@
         "type": "uint16"
       },
       {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
         "internalType": "uint256",
         "name": "_maturity",
         "type": "uint256"
@@ -428,6 +445,11 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
       }
     ],
     "name": "capPerGame",
@@ -660,6 +682,11 @@
         "type": "uint16"
       },
       {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
         "internalType": "uint256",
         "name": "_maturity",
         "type": "uint256"
@@ -806,6 +833,11 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
       }
     ],
     "name": "riskMultiplierPerGame",
@@ -864,6 +896,11 @@
         "internalType": "uint16[]",
         "name": "_playerIds",
         "type": "uint16[]"
+      },
+      {
+        "internalType": "int24[]",
+        "name": "_lines",
+        "type": "int24[]"
       },
       {
         "internalType": "uint256",
@@ -1069,6 +1106,11 @@
         "internalType": "uint16[]",
         "name": "_playerIds",
         "type": "uint16[]"
+      },
+      {
+        "internalType": "int24[]",
+        "name": "_lines",
+        "type": "int24[]"
       },
       {
         "internalType": "uint256",

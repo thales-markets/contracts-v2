@@ -107,7 +107,8 @@ contract Ticket is OwnedWithInit {
                     games[i].sportId,
                     games[i].childId,
                     games[i].playerPropsId,
-                    games[i].playerId
+                    games[i].playerId,
+                    games[i].line
                 )
             ) {
                 return false;
@@ -206,7 +207,14 @@ contract Ticket is OwnedWithInit {
     }
 
     function _isWinningPosition(GameData memory game) internal view returns (bool isWinning, bool isResolved) {
-        isResolved = sportsAMM.isGameResolved(game.gameId, game.sportId, game.childId, game.playerPropsId, game.playerId);
+        isResolved = sportsAMM.isGameResolved(
+            game.gameId,
+            game.sportId,
+            game.childId,
+            game.playerPropsId,
+            game.playerId,
+            game.line
+        );
         ISportsAMMV2.GameResult result = sportsAMM.getGameResult(
             game.gameId,
             game.sportId,
