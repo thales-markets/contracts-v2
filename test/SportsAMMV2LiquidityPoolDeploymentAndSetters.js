@@ -289,5 +289,22 @@ describe('SportsAMMV2LiquidityPool Deployment and Setters', () => {
 				.to.emit(sportsAMMV2LiquidityPool, 'SetSafeBoxParams')
 				.withArgs(dummyAddress1, newSafeBoxImpact);
 		});
+
+		it('Should set paused', async () => {
+			await expect(
+				sportsAMMV2LiquidityPool.connect(secondAccount).setPaused(true)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+
+			await sportsAMMV2LiquidityPool.setPaused(true);
+			expect(await sportsAMMV2LiquidityPool.paused()).to.equal(true);
+		});
+
+		it('Should set unpaused', async () => {
+			await sportsAMMV2LiquidityPool.setPaused(true);
+			expect(await sportsAMMV2LiquidityPool.paused()).to.equal(true);
+
+			await sportsAMMV2LiquidityPool.setPaused(false);
+			expect(await sportsAMMV2LiquidityPool.paused()).to.equal(false);
+		});
 	});
 });

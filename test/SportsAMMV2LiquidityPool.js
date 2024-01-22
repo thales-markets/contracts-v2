@@ -67,7 +67,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 				sportsAMMV2LiquidityPool.connect(thirdLiquidityProvider);
 		});
 
-		it('Should be negative round - ticket in the current round', async () => {
+		it('Should be ticket in the current round (negative round)', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 
 			// deposit and start pool
@@ -220,7 +220,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 			);
 		});
 
-		it('Should be positive round - ticket in the current round', async () => {
+		it('Should be ticket in the current round (positive round)', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 
 			// deposit and start pool
@@ -306,6 +306,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(
 				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
 			).to.equal(true);
+			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
 
 			let currentRoundPoolBalanceAfterExercise =
 				await collateral.balanceOf(currentRoundPoolAddress);
@@ -379,7 +380,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 			);
 		});
 
-		it('Should be positive round - ticket in the next round', async () => {
+		it('Should be ticket in the next round (positive round)', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 			const defaultLpAddress = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
 
@@ -510,6 +511,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(
 				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
 			).to.equal(true);
+			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
 
 			let currentRoundPoolBalanceAfterExercise =
 				await collateral.balanceOf(currentRoundPoolAddress);
@@ -587,7 +589,7 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(nextRoundAllocation.toFixed(8)).to.equal(caclucaltedNextRoundAllocation.toFixed(8));
 		});
 
-		it('Should be positive round - ticket in cross rounds', async () => {
+		it('Should be ticket in the round 1 (cross rounds)', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 			const defaultLpAddress = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
 

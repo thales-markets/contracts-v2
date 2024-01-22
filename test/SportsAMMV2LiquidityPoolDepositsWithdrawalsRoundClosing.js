@@ -684,11 +684,17 @@ describe('SportsAMMV2LiquidityPool', () => {
 			);
 		});
 
-		it('Should fail with "Can\'t close current round"', async () => {
+		it('Should fail with "Can\'t close current round" - round not ended', async () => {
 			await expect(sportsAMMV2LiquidityPool.prepareRoundClosing()).to.be.revertedWith(
 				"Can't close current round"
 			);
 		});
+
+		// it('Should fail with "Can\'t close current round" - postions not resolved', async () => {
+		// 	await expect(sportsAMMV2LiquidityPool.prepareRoundClosing()).to.be.revertedWith(
+		// 		"Can't close current round"
+		// 	);
+		// });
 
 		it('Should be able to close current round"', async () => {
 			await time.increaseTo(currentRoundCloseTime);

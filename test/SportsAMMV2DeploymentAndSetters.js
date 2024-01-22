@@ -306,5 +306,22 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 				.to.emit(sportsAMMV2, 'GameRootUpdated')
 				.withArgs(GAME_ID_1, newRoot);
 		});
+
+		it('Should set paused', async () => {
+			await expect(sportsAMMV2.connect(secondAccount).setPaused(true)).to.be.revertedWith(
+				'Only the contract owner may perform this action'
+			);
+
+			await sportsAMMV2.setPaused(true);
+			expect(await sportsAMMV2.paused()).to.equal(true);
+		});
+
+		it('Should set unpaused', async () => {
+			await sportsAMMV2.setPaused(true);
+			expect(await sportsAMMV2.paused()).to.equal(true);
+
+			await sportsAMMV2.setPaused(false);
+			expect(await sportsAMMV2.paused()).to.equal(false);
+		});
 	});
 });
