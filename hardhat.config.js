@@ -37,8 +37,8 @@ module.exports = {
 				network: 'optimisticSepolia',
 				chainId: 11155420,
 				urls: {
-					apiURL: 'https://optimism-sepolia.blockscout.com/api',
-					browserURL: 'https://optimism-sepolia.blockscout.com/',
+					apiURL: 'https://api-sepolia-optimistic.etherscan.io/api',
+					browserURL: 'https://sepolia-optimism.etherscan.io/',
 				},
 			},
 		],
