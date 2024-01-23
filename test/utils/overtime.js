@@ -83,5 +83,6 @@ const createMerkleTree = async () => {
 
 module.exports = {
 	getTicketTradeData,
+	getTradeDataItem,
 	createMerkleTree,
 };
