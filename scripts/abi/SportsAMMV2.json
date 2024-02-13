@@ -1785,10 +1785,20 @@
         "internalType": "uint256",
         "name": "_buyInAmount",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
       }
     ],
     "name": "tradeQuote",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "collateralQuote",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "buyInAmountAfterFees",

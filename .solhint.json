@@ -6,6 +6,8 @@
 		"no-global-import": "off",
 		"reason-string": "off",
 		"max-states-count": "off",
-		"not-rely-on-time": "off"
+		"not-rely-on-time": "off",
+		"explicit-types": "off",
+		"custom-errors": "off"
 	}
 }

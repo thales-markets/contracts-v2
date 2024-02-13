@@ -1,12 +1,12 @@
 [
 	{
-		"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
-		"sportId": 9004,
+		"gameId": "0x6133363966623838376361663439316230376232393236376635613638366138",
+		"sportId": 9011,
 		"childId": 0,
 		"playerPropsId": 0,
-		"maturity": 1706206332,
-		"homeTeam": "Milwaukee Bucks",
-		"awayTeam": "Indiana Pacers",
+		"maturity": 1707568200,
+		"homeTeam": "Manchester City",
+		"awayTeam": "Everton",
 		"homeScore": 0,
 		"awayScore": 0,
 		"finalResult": 0,
@@ -20,21 +20,21 @@
 			"outcome": 0,
 			"score": 0
 		},
-		"odds": [0.49, 0.57, 0],
+		"odds": [0.84682, 0.075887, 0.12789],
 		"childMarkets": [
 			{
-				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
-				"sportId": 9004,
-				"childId": 10001,
+				"gameId": "0x6133363966623838376361663439316230376232393236376635613638366138",
+				"sportId": 9011,
+				"childId": 10003,
 				"playerPropsId": 0,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
+				"maturity": 1707568200,
+				"homeTeam": "Manchester City",
+				"awayTeam": "Everton",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
 				"status": 0,
-				"spread": -550,
+				"spread": 0,
 				"total": 0,
 				"playerProps": {
 					"playerId": 0,
@@ -43,21 +43,21 @@
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": [0.5, 0.5, 0]
+				"odds": [0.97471, 0.922706, 0.20378]
 			},
 			{
-				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
-				"sportId": 9004,
+				"gameId": "0x6133363966623838376361663439316230376232393236376635613638366138",
+				"sportId": 9011,
 				"childId": 10001,
 				"playerPropsId": 0,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
+				"maturity": 1707568200,
+				"homeTeam": "Manchester City",
+				"awayTeam": "Everton",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
-				"status": 1,
-				"spread": -450,
+				"status": 0,
+				"spread": -150,
 				"total": 0,
 				"playerProps": {
 					"playerId": 0,
@@ -66,22 +66,22 @@
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": [0, 0, 0]
+				"odds": [0.645983, 0.425025]
 			},
 			{
-				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
-				"sportId": 9004,
+				"gameId": "0x6133363966623838376361663439316230376232393236376635613638366138",
+				"sportId": 9011,
 				"childId": 10002,
 				"playerPropsId": 0,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
+				"maturity": 1707568200,
+				"homeTeam": "Manchester City",
+				"awayTeam": "Everton",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
 				"status": 0,
 				"spread": 0,
-				"total": 25600,
+				"total": 250,
 				"playerProps": {
 					"playerId": 0,
 					"playerName": "",
@@ -89,16 +89,16 @@
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": [0.5, 0.5, 0]
+				"odds": [0.715177, 0.355833]
 			},
 			{
-				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
-				"sportId": 9004,
-				"childId": 10010,
-				"playerPropsId": 11029,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
+				"gameId": "0x6133363966623838376361663439316230376232393236376635613638366138",
+				"sportId": 9011,
+				"childId": 10004,
+				"playerPropsId": 0,
+				"maturity": 1707568200,
+				"homeTeam": "Manchester City",
+				"awayTeam": "Everton",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
@@ -106,47 +106,66 @@
 				"spread": 0,
 				"total": 0,
 				"playerProps": {
-					"playerId": 16429,
-					"playerName": "Giannis Antetokounmpo",
-					"line": 3350,
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": [0.52, 0.48, 0]
-			},
-			{
-				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
-				"sportId": 9004,
-				"childId": 10010,
-				"playerPropsId": 11087,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"spread": 0,
-				"total": 0,
-				"playerProps": {
-					"playerId": 16735,
-					"playerName": "Damian Lillard",
-					"line": 50,
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [0.5, 0.5, 0]
+				"odds": [0.68, 0.25, 0.0683, 0.0683],
+				"combinedPositions": [
+					{
+						"position1": {
+							"childId": 0,
+							"position": 0
+						},
+						"position2": {
+							"childId": 10002,
+							"position": 0
+						}
+					},
+					{
+						"position1": {
+							"childId": 0,
+							"position": 0
+						},
+						"position2": {
+							"childId": 10002,
+							"position": 1
+						}
+					},
+					{
+						"position1": {
+							"childId": 0,
+							"position": 1
+						},
+						"position2": {
+							"childId": 10002,
+							"position": 0
+						}
+					},
+					{
+						"position1": {
+							"childId": 0,
+							"position": 1
+						},
+						"position2": {
+							"childId": 10002,
+							"position": 1
+						}
+					}
+				]
 			}
 		]
 	},
 	{
-		"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
-		"sportId": 9004,
+		"gameId": "0x3333643133376534656163316334343731643363323261353463373865306561",
+		"sportId": 9011,
 		"childId": 0,
 		"playerPropsId": 0,
-		"maturity": 1706206332,
-		"homeTeam": "Milwaukee Bucks",
-		"awayTeam": "Indiana Pacers",
+		"maturity": 1707577200,
+		"homeTeam": "Luton Town",
+		"awayTeam": "Sheffield United",
 		"homeScore": 0,
 		"awayScore": 0,
 		"finalResult": 0,
@@ -160,68 +179,22 @@
 			"outcome": 0,
 			"score": 0
 		},
-		"odds": [0.49, 0.57, 0],
+		"odds": [0.578404, 0.220766, 0.251442],
 		"childMarkets": [
 			{
-				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
-				"sportId": 9004,
-				"childId": 10001,
-				"playerPropsId": 0,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"spread": -550,
-				"total": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"line": 0,
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [0.5, 0.5, 0]
-			},
-			{
-				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
-				"sportId": 9004,
-				"childId": 10001,
-				"playerPropsId": 0,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 1,
-				"spread": -450,
-				"total": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"line": 0,
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [0, 0, 0]
-			},
-			{
-				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
-				"sportId": 9004,
+				"gameId": "0x3333643133376534656163316334343731643363323261353463373865306561",
+				"sportId": 9011,
 				"childId": 10002,
 				"playerPropsId": 0,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
+				"maturity": 1707577200,
+				"homeTeam": "Luton Town",
+				"awayTeam": "Sheffield United",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
 				"status": 0,
 				"spread": 0,
-				"total": 25600,
+				"total": 250,
 				"playerProps": {
 					"playerId": 0,
 					"playerName": "",
@@ -229,53 +202,598 @@
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": [0.5, 0.5, 0]
+				"odds": [0.585932, 0.485077]
 			},
 			{
-				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
-				"sportId": 9004,
-				"childId": 10010,
-				"playerPropsId": 11029,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
+				"gameId": "0x3333643133376534656163316334343731643363323261353463373865306561",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Luton Town",
+				"awayTeam": "Sheffield United",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": -150,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.335494, 0.735516]
+			}
+		]
+	},
+	{
+		"gameId": "0x6166623166376461333332663335613436653561336266656234336566666663",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707577200,
+		"homeTeam": "Tottenham Hotspur",
+		"awayTeam": "Brighton & Hove Albion",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.563864, 0.255018, 0.23173],
+		"childMarkets": [
+			{
+				"gameId": "0x6166623166376461333332663335613436653561336266656234336566666663",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Tottenham Hotspur",
+				"awayTeam": "Brighton & Hove Albion",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
 				"status": 0,
 				"spread": 0,
-				"total": 0,
+				"total": 250,
 				"playerProps": {
-					"playerId": 16429,
-					"playerName": "Giannis Antetokounmpo",
-					"line": 3350,
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": [0.52, 0.48, 0]
+				"odds": [0.738322, 0.332688]
 			},
 			{
-				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
-				"sportId": 9004,
-				"childId": 10010,
-				"playerPropsId": 11087,
-				"maturity": 1706206332,
-				"homeTeam": "Milwaukee Bucks",
-				"awayTeam": "Indiana Pacers",
+				"gameId": "0x6166623166376461333332663335613436653561336266656234336566666663",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Tottenham Hotspur",
+				"awayTeam": "Brighton & Hove Albion",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": -150,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.351086, 0.719924]
+			}
+		]
+	},
+	{
+		"gameId": "0x3066333261393139303566313538313637653463303032626366646531663637",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707577200,
+		"homeTeam": "Liverpool",
+		"awayTeam": "Burnley",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.861478, 0.077978, 0.114357],
+		"childMarkets": [
+			{
+				"gameId": "0x3066333261393139303566313538313637653463303032626366646531663637",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Liverpool",
+				"awayTeam": "Burnley",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
 				"status": 0,
 				"spread": 0,
-				"total": 0,
+				"total": 350,
 				"playerProps": {
-					"playerId": 16735,
-					"playerName": "Damian Lillard",
-					"line": 50,
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": [0.5, 0.5, 0]
+				"odds": [0.563769, 0.50724]
+			},
+			{
+				"gameId": "0x3066333261393139303566313538313637653463303032626366646531663637",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Liverpool",
+				"awayTeam": "Burnley",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": -150,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.702236, 0.368773]
+			}
+		]
+	},
+	{
+		"gameId": "0x3234326236363132613265656163653831643234346364376632306364393531",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707577200,
+		"homeTeam": "Wolverhampton",
+		"awayTeam": "Brentford FC",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.485632, 0.288018, 0.275811],
+		"childMarkets": [
+			{
+				"gameId": "0x3234326236363132613265656163653831643234346364376632306364393531",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Wolverhampton",
+				"awayTeam": "Brentford FC",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": -100,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.334274, 0.736736]
+			},
+			{
+				"gameId": "0x3234326236363132613265656163653831643234346364376632306364393531",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Wolverhampton",
+				"awayTeam": "Brentford FC",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.587174, 0.483834]
+			}
+		]
+	},
+	{
+		"gameId": "0x3666663632306665393439663137656264303232633965333236303462646234",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707577200,
+		"homeTeam": "Fulham",
+		"awayTeam": "Bournemouth",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.418347, 0.352981, 0.279284],
+		"childMarkets": [
+			{
+				"gameId": "0x3666663632306665393439663137656264303232633965333236303462646234",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Fulham",
+				"awayTeam": "Bournemouth",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.591371, 0.479637]
+			},
+			{
+				"gameId": "0x3666663632306665393439663137656264303232633965333236303462646234",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707577200,
+				"homeTeam": "Fulham",
+				"awayTeam": "Bournemouth",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": -100,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.267738, 0.803273]
+			}
+		]
+	},
+	{
+		"gameId": "0x3639613036323236316339393565363665313235316633353035636332623339",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707586200,
+		"homeTeam": "Nottingham Forest",
+		"awayTeam": "Newcastle United",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.301801, 0.479744, 0.269067],
+		"childMarkets": [
+			{
+				"gameId": "0x3639613036323236316339393565363665313235316633353035636332623339",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707586200,
+				"homeTeam": "Nottingham Forest",
+				"awayTeam": "Newcastle United",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.597535, 0.473473]
+			},
+			{
+				"gameId": "0x3639613036323236316339393565363665313235316633353035636332623339",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707586200,
+				"homeTeam": "Nottingham Forest",
+				"awayTeam": "Newcastle United",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 100,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.734701, 0.336309]
+			}
+		]
+	},
+	{
+		"gameId": "0x3430323465656430303330313935643031343466353136613936616664326536",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707660000,
+		"homeTeam": "West Ham United",
+		"awayTeam": "Arsenal FC",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.167552, 0.655646, 0.227415],
+		"childMarkets": [
+			{
+				"gameId": "0x3430323465656430303330313935643031343466353136613936616664326536",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707660000,
+				"homeTeam": "West Ham United",
+				"awayTeam": "Arsenal FC",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 150,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.655482, 0.415527]
+			},
+			{
+				"gameId": "0x3430323465656430303330313935643031343466353136613936616664326536",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707660000,
+				"homeTeam": "West Ham United",
+				"awayTeam": "Arsenal FC",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.609004, 0.462004]
+			}
+		]
+	},
+	{
+		"gameId": "0x3033373638396631363839626265633435303538373365646330346165343034",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707669000,
+		"homeTeam": "Aston Villa",
+		"awayTeam": "Manchester United",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.468478, 0.315878, 0.265434],
+		"childMarkets": [
+			{
+				"gameId": "0x3033373638396631363839626265633435303538373365646330346165343034",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707669000,
+				"homeTeam": "Aston Villa",
+				"awayTeam": "Manchester United",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": -100,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.330013, 0.740997]
+			},
+			{
+				"gameId": "0x3033373638396631363839626265633435303538373365646330346165343034",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707669000,
+				"homeTeam": "Aston Villa",
+				"awayTeam": "Manchester United",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.656568, 0.41444]
+			}
+		]
+	},
+	{
+		"gameId": "0x3564363932316661613439653163666334666136653735343037653164333134",
+		"sportId": 9011,
+		"childId": 0,
+		"playerPropsId": 0,
+		"maturity": 1707768000,
+		"homeTeam": "Crystal Palace",
+		"awayTeam": "Chelsea",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"spread": 0,
+		"total": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"line": 0,
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.238851, 0.549457, 0.262304],
+		"childMarkets": [
+			{
+				"gameId": "0x3564363932316661613439653163666334666136653735343037653164333134",
+				"sportId": 9011,
+				"childId": 10002,
+				"playerPropsId": 0,
+				"maturity": 1707768000,
+				"homeTeam": "Crystal Palace",
+				"awayTeam": "Chelsea",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 0,
+				"total": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.560981, 0.510027]
+			},
+			{
+				"gameId": "0x3564363932316661613439653163666334666136653735343037653164333134",
+				"sportId": 9011,
+				"childId": 10001,
+				"playerPropsId": 0,
+				"maturity": 1707768000,
+				"homeTeam": "Crystal Palace",
+				"awayTeam": "Chelsea",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"spread": 150,
+				"total": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"line": 0,
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.760719, 0.310291]
 			}
 		]
 	}

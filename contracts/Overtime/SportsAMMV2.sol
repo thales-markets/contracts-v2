@@ -103,7 +103,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // indicates is score set for game, game defined with gameId -> playerPropsId -> playerId
     mapping(bytes32 => mapping(uint => mapping(uint => bool))) public isScoreSetForGame;
 
-    // indicates is game explicitly cancelled, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId -> gameId
+    // indicates is game explicitly cancelled, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId -> line
     mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => mapping(int => bool))))))
         public isGameCancelled;
 
@@ -116,7 +116,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // is multi-collateral enabled
     bool public multicollateralEnabled;
 
-    // stores current risk per game and position, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId -> gameId
+    // stores current risk per game and position, game defined with gameId -> sportId -> childId -> playerPropsId -> playerId -> line
     mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(uint => mapping(int => mapping(uint => uint)))))))
         public riskPerGameAndPosition;
 
@@ -169,6 +169,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice gets trade quote
     /// @param _tradeData trade data with all game info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
+    /// @param _collateral different collateral used for payment
+    /// @return collateralQuote buy-in amount in different collateral
     /// @return buyInAmountAfterFees ticket buy-in amount without fees
     /// @return payout expected payout
     /// @return totalQuote total ticket quote
@@ -176,11 +178,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @return amountsToBuy amounts per game
     function tradeQuote(
         TradeData[] calldata _tradeData,
-        uint _buyInAmount
+        uint _buyInAmount,
+        address _collateral
     )
         external
         view
         returns (
+            uint collateralQuote,
             uint buyInAmountAfterFees,
             uint payout,
             uint totalQuote,
@@ -189,6 +193,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         )
     {
         (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
+
+        collateralQuote = _collateral == address(0)
+            ? _buyInAmount
+            : multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
     }
 
     /// @notice is provided ticket active

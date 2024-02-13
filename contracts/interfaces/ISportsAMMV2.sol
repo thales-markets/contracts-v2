@@ -18,6 +18,16 @@ interface ISportsAMMV2 {
 
     function defaultCollateral() external view returns (IERC20);
 
+    function minBuyInAmount() external view returns (uint);
+
+    function maxTicketSize() external view returns (uint);
+
+    function maxSupportedAmount() external view returns (uint);
+
+    function maxSupportedOdds() external view returns (uint);
+
+    function safeBoxFee() external view returns (uint);
+
     function getGameResult(
         bytes32 _gameId,
         uint16 _sportId,
