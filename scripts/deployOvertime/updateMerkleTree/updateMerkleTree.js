@@ -21,16 +21,14 @@ async function updateMerkleTree() {
 	const sportsAMMV2Contract = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = sportsAMMV2Contract.attach(sportsAMMV2Address);
 
-	// set new root on contract
-	const tx = await sportsAMMV2.setRootPerGame(
-		'0x6133363966623838376361663439316230376232393236376635613638366138',
-		root
-	);
-	await tx.wait().then(() => {
-		console.log(
-			'New root set for game 0x6133363966623838376361663439316230376232393236376635613638366138'
-		);
-	});
+	for (let index = 0; index < treeMarketsAndHashes.length; index++) {
+		const market = treeMarketsAndHashes[index];
+		// set new root on contract
+		const tx = await sportsAMMV2.setRootPerGame(market.gameId, root);
+		await tx.wait().then(() => {
+			console.log(`New root set for game ${market.gameId}`);
+		});
+	}
 
 	fs.writeFileSync(
 		`scripts/deployOvertime/updateMerkleTree/treeMarketsAndHashes.json`,

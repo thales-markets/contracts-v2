@@ -46,6 +46,17 @@ interface ISportsAMMV2 {
         int24 _line
     ) external view returns (bool);
 
+    function isGameCancelled(
+        bytes32 _gameId,
+        uint _sportId,
+        uint _childId,
+        uint _playerPropsId,
+        uint _playerId,
+        int _line
+    ) external view returns (bool);
+
+    function gameScores(bytes32 _gameId, uint _playerPropsId, uint _playerId) external view returns (GameScore memory);
+
     function resolveTicket(
         address _ticketOwner,
         bool _hasUserWon,
@@ -55,4 +66,16 @@ interface ISportsAMMV2 {
     ) external;
 
     function exerciseTicket(address _ticket) external;
+
+    function getTicketsPerGame(uint _index, uint _pageSize, bytes32 _gameId) external view returns (address[] memory);
+
+    function numOfTicketsPerGame(bytes32 _gameId) external view returns (uint);
+
+    function getActiveTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory);
+
+    function numOfActiveTicketsPerUser(address _user) external view returns (uint);
+
+    function getResolvedTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory);
+
+    function numOfResolvedTicketsPerUser(address _user) external view returns (uint);
 }

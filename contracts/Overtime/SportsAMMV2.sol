@@ -135,6 +135,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // spent on parent market together with all children markets
     mapping(bytes32 => uint) public spentPerParent;
 
+    // stores active tickets per user
+    mapping(address => AddressSetLib.AddressSet) internal activeTicketsPerUser;
+
+    // stores resolved tickets per user
+    mapping(address => AddressSetLib.AddressSet) internal resolvedTicketsPerUser;
+
+    // stores tickets per game
+    mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the storage in the proxy contract with the parameters
@@ -218,6 +227,54 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @return numOfActiveTickets
     function numOfActiveTickets() external view returns (uint) {
         return knownTickets.elements.length;
+    }
+
+    /// @notice gets batch of active tickets per user
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _user to get active tickets for
+    /// @return activeTickets
+    function getActiveTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
+        return activeTicketsPerUser[_user].getPage(_index, _pageSize);
+    }
+
+    /// @notice gets number of active tickets per user
+    /// @param _user to get number of active tickets for
+    /// @return numOfActiveTickets
+    function numOfActiveTicketsPerUser(address _user) external view returns (uint) {
+        return activeTicketsPerUser[_user].elements.length;
+    }
+
+    /// @notice gets batch of resolved tickets per user
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _user to get resolved tickets for
+    /// @return resolvedTickets
+    function getResolvedTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
+        return resolvedTicketsPerUser[_user].getPage(_index, _pageSize);
+    }
+
+    /// @notice gets number of resolved tickets per user
+    /// @param _user to get number of resolved tickets for
+    /// @return numOfResolvedTickets
+    function numOfResolvedTicketsPerUser(address _user) external view returns (uint) {
+        return resolvedTicketsPerUser[_user].elements.length;
+    }
+
+    /// @notice gets batch of tickets per game
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _gameId to get tickets for
+    /// @return resolvedTickets
+    function getTicketsPerGame(uint _index, uint _pageSize, bytes32 _gameId) external view returns (address[] memory) {
+        return ticketsPerGame[_gameId].getPage(_index, _pageSize);
+    }
+
+    /// @notice gets number of tickets per game
+    /// @param _gameId to get number of tickets for
+    /// @return numOfTickets
+    function numOfTicketsPerGame(bytes32 _gameId) external view returns (uint) {
+        return ticketsPerGame[_gameId].elements.length;
     }
 
     /// @notice is specific game resolved
@@ -369,6 +426,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _handleReferrerAndSB(_buyInAmount, _ticketCreator);
         }
         knownTickets.remove(msg.sender);
+        if (activeTicketsPerUser[_ticketOwner].contains(msg.sender)) {
+            activeTicketsPerUser[_ticketOwner].remove(msg.sender);
+        }
+        resolvedTicketsPerUser[_ticketOwner].add(msg.sender);
         emit TicketResolved(msg.sender, _ticketOwner, _hasUserWon);
     }
 
@@ -523,6 +584,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // clone a ticket
         Ticket.GameData[] memory gameData = _getTicketData(_tradeData);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
+
         ticket.initialize(
             gameData,
             _buyInAmount,
@@ -533,7 +595,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             msg.sender,
             (block.timestamp + expiryDuration)
         );
-        knownTickets.add(address(ticket));
+        _saveTicketData(_tradeData, address(ticket), _differentRecipient);
 
         if (address(stakingThales) != address(0)) {
             stakingThales.updateVolume(_differentRecipient, _buyInAmount);
@@ -544,6 +606,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         emit NewTicket(gameData, address(ticket), buyInAmountAfterFees, payout);
         emit TicketCreated(address(ticket), _differentRecipient, _buyInAmount, buyInAmountAfterFees, payout, totalQuote);
+    }
+
+    function _saveTicketData(TradeData[] memory _tradeData, address ticket, address user) internal {
+        knownTickets.add(ticket);
+        activeTicketsPerUser[user].add(ticket);
+
+        for (uint i = 0; i < _tradeData.length; i++) {
+            ticketsPerGame[_tradeData[i].gameId].add(ticket);
+        }
     }
 
     function _getTicketData(TradeData[] memory _tradeData) internal pure returns (Ticket.GameData[] memory gameData) {

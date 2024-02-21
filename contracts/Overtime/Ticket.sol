@@ -36,6 +36,7 @@ contract Ticket is OwnedWithInit {
     uint public totalQuote;
     uint public numOfGames;
     uint public expiry;
+    uint public createdAt;
 
     bool public resolved;
     bool public paused;
@@ -79,6 +80,7 @@ contract Ticket is OwnedWithInit {
         ticketOwner = _ticketOwner;
         ticketCreator = _ticketCreator;
         expiry = _expiry;
+        createdAt = block.timestamp;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
