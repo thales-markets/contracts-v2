@@ -1327,6 +1327,32 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "gameId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "removeTicketsForGame",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "removeTicketsForUser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_ticketOwner",
         "type": "address"

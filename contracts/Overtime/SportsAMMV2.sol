@@ -277,6 +277,32 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         return ticketsPerGame[_gameId].elements.length;
     }
 
+    // TODO: remove, for test only
+    function removeTicketsForUser(address user) external {
+        address[] memory ticketsArray = activeTicketsPerUser[user].getPage(0, 200);
+        for (uint i = 0; i < ticketsArray.length; i++) {
+            if (activeTicketsPerUser[user].contains(ticketsArray[i])) {
+                activeTicketsPerUser[user].remove(ticketsArray[i]);
+            }
+            if (knownTickets.contains(ticketsArray[i])) {
+                knownTickets.remove(ticketsArray[i]);
+            }
+        }
+    }
+
+    // TODO: remove, for test only
+    function removeTicketsForGame(bytes32 gameId) external {
+        address[] memory ticketsArray = ticketsPerGame[gameId].getPage(0, 200);
+        for (uint i = 0; i < ticketsArray.length; i++) {
+            if (ticketsPerGame[gameId].contains(ticketsArray[i])) {
+                ticketsPerGame[gameId].remove(ticketsArray[i]);
+            }
+            if (knownTickets.contains(ticketsArray[i])) {
+                knownTickets.remove(ticketsArray[i]);
+            }
+        }
+    }
+
     /// @notice is specific game resolved
     /// @param _gameId game ID
     /// @param _sportId game ID

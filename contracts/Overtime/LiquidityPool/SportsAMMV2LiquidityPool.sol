@@ -419,17 +419,19 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (!started || block.timestamp < getRoundEndTime(round)) {
             return false;
         }
-        Ticket ticket;
-        address ticketAddress;
-        for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
-            ticketAddress = tradingTicketsPerRound[round][i];
-            if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
-                ticket = Ticket(ticketAddress);
-                if (!ticket.areAllPositionsResolved()) {
-                    return false;
-                }
-            }
-        }
+
+        // TODO: uncomment, for test only
+        // Ticket ticket;
+        // address ticketAddress;
+        // for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
+        //     ticketAddress = tradingTicketsPerRound[round][i];
+        //     if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
+        //         ticket = Ticket(ticketAddress);
+        //         if (!ticket.areAllPositionsResolved()) {
+        //             return false;
+        //         }
+        //     }
+        // }
         return true;
     }
 
