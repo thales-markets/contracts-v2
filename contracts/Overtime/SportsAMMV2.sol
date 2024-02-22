@@ -330,7 +330,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint16 _playerId,
         int24 _line
     ) external view returns (ISportsAMMV2.GameResult result) {
-        if (isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_line]) {
+        if (
+            isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_line] ||
+            !isScoreSetForGame[_gameId][_playerPropsId][_playerId]
+        ) {
             return result;
         }
 

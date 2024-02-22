@@ -168,11 +168,12 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
         bool isResolved = sportsAMM.isGameResolved(gameId, sportId, childId, playerPropsId, playerId, line);
 
-        bool isCancelled = sportsAMM.isGameCancelled(gameId, sportId, childId, playerPropsId, playerId, line);
-
         ISportsAMMV2.GameScore memory score = sportsAMM.gameScores(gameId, playerPropsId, playerId);
 
         ISportsAMMV2.GameResult result = sportsAMM.getGameResult(gameId, sportId, childId, playerPropsId, playerId, line);
+
+        bool isCancelled = sportsAMM.isGameCancelled(gameId, sportId, childId, playerPropsId, playerId, line) ||
+            (isResolved && result == ISportsAMMV2.GameResult.Cancelled);
 
         return GameStatus(isResolved, isCancelled, score, result);
     }
