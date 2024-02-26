@@ -59,7 +59,11 @@ describe('SportsAMMV2', () => {
 
 	describe('Quote', () => {
 		it('Should get quote', async () => {
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));
 		});
@@ -67,7 +71,11 @@ describe('SportsAMMV2', () => {
 
 	describe('Trade', () => {
 		it('Should buy a ticket', async () => {
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));
 

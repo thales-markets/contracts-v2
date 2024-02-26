@@ -1658,17 +1658,17 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_game",
-        "type": "bytes32"
+        "internalType": "bytes32[]",
+        "name": "_games",
+        "type": "bytes32[]"
       },
       {
-        "internalType": "bytes32",
-        "name": "_root",
-        "type": "bytes32"
+        "internalType": "bytes32[]",
+        "name": "_roots",
+        "type": "bytes32[]"
       }
     ],
-    "name": "setRootPerGame",
+    "name": "setRootsPerGames",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

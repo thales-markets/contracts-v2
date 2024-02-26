@@ -518,6 +518,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             totalQuote = totalQuote == 0 ? finalQuotes[i] : (totalQuote * finalQuotes[i]) / ONE;
         }
         if (totalQuote != 0) {
+            if (totalQuote < maxSupportedOdds) {
+                totalQuote = maxSupportedOdds;
+            }
             payout = (buyInAmountAfterFees * ONE) / totalQuote;
         }
 
@@ -837,12 +840,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== SETTERS ========== */
 
-    /// @notice sets root of merkle tree
-    /// @param _game game ID
-    /// @param _root new root
-    function setRootPerGame(bytes32 _game, bytes32 _root) public onlyOwner {
-        rootPerGame[_game] = _root;
-        emit GameRootUpdated(_game, _root);
+    /// @notice set roots of merkle tree
+    /// @param _games game IDs
+    /// @param _roots new roots
+    function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) public onlyOwner {
+        require(_games.length == _roots.length, "Invalid length");
+        for (uint i; i < _games.length; i++) {
+            rootPerGame[_games[i]] = _roots[i];
+            emit GameRootUpdated(_games[i], _roots[i]);
+        }
     }
 
     /// @notice sets different amounts

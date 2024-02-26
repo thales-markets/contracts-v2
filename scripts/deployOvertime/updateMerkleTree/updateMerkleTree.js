@@ -24,7 +24,7 @@ async function updateMerkleTree() {
 	for (let index = 0; index < treeMarketsAndHashes.length; index++) {
 		const market = treeMarketsAndHashes[index];
 		// set new root on contract
-		const tx = await sportsAMMV2.setRootPerGame(market.gameId, root);
+		const tx = await sportsAMMV2.setRootsPerGames([market.gameId], [root]);
 		await tx.wait().then(() => {
 			console.log(`New root set for game ${market.gameId}`);
 		});

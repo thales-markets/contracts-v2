@@ -24,7 +24,7 @@ async function createTicket() {
 	const tradeDataCurrentRound = [];
 	tradeDataCurrentRound.push(getTradeDataItem(nbaMoneylineCurrentRound, 0));
 
-	const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
+	const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
 
 	console.log(quote);
 

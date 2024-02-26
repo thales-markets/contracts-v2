@@ -296,13 +296,13 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			const newRoot = '0x0ed8693864a15cd5d424428f9fa9454b8f1a8cd22c82016c214204edc9251978';
 
 			await expect(
-				sportsAMMV2.connect(secondAccount).setRootPerGame(GAME_ID_1, newRoot)
+				sportsAMMV2.connect(secondAccount).setRootsPerGames([GAME_ID_1], [newRoot])
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await sportsAMMV2.setRootPerGame(GAME_ID_1, newRoot);
+			await sportsAMMV2.setRootsPerGames([GAME_ID_1], [newRoot]);
 			expect(await sportsAMMV2.rootPerGame(GAME_ID_1)).to.equal(newRoot);
 
-			await expect(sportsAMMV2.setRootPerGame(GAME_ID_1, newRoot))
+			await expect(sportsAMMV2.setRootsPerGames([GAME_ID_1], [newRoot]))
 				.to.emit(sportsAMMV2, 'GameRootUpdated')
 				.withArgs(GAME_ID_1, newRoot);
 		});

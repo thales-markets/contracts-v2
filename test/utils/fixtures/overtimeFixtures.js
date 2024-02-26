@@ -181,9 +181,8 @@ async function deploySportsAMMV2Fixture() {
 	const root = await createMerkleTree();
 	const { tradeDataCurrentRound, tradeDataNextRound, tradeDataCrossRounds } = getTicketTradeData();
 
-	// set new root on Sports AMM contract
-	await sportsAMMV2.setRootPerGame(GAME_ID_1, root);
-	await sportsAMMV2.setRootPerGame(GAME_ID_2, root);
+	// set new roots on Sports AMM contract
+	await sportsAMMV2.setRootsPerGames([GAME_ID_1, GAME_ID_2], [root, root]);
 
 	await collateral.setDefaultAmount(DEFAULT_AMOUNT);
 	await collateral.mintForUser(firstLiquidityProvider);

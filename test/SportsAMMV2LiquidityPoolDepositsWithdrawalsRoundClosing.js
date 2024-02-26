@@ -397,7 +397,11 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(await sportsAMMV2LiquidityPool.usersCurrentlyInPool()).to.equal(1);
 
 			// create a ticket
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -554,7 +558,11 @@ describe('SportsAMMV2LiquidityPool', () => {
 			expect(await sportsAMMV2LiquidityPool.usersCurrentlyInPool()).to.equal(2);
 
 			// create a ticket
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -660,7 +668,11 @@ describe('SportsAMMV2LiquidityPool', () => {
 			currentRound = await sportsAMMV2LiquidityPool.round();
 			currentRoundCloseTime = await sportsAMMV2LiquidityPool.getRoundEndTime(currentRound);
 
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
