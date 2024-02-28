@@ -417,12 +417,12 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// resolve ticket game as loss for the user
 			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame1.gameId,
-				ticketGame1.playerPropsId,
-				ticketGame1.playerId,
-				98,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame1.gameId],
+				[ticketGame1.playerPropsId],
+				[ticketGame1.playerId],
+				[98],
+				[100]
 			);
 
 			// increase time to round close time
@@ -578,12 +578,12 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// resolve ticket game as loss for the user
 			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame1.gameId,
-				ticketGame1.playerPropsId,
-				ticketGame1.playerId,
-				98,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame1.gameId],
+				[ticketGame1.playerPropsId],
+				[ticketGame1.playerId],
+				[98],
+				[100]
 			);
 
 			// increase time to round close time
@@ -687,12 +687,12 @@ describe('SportsAMMV2LiquidityPool', () => {
 				);
 
 			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame1.gameId,
-				ticketGame1.playerPropsId,
-				ticketGame1.playerId,
-				123,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame1.gameId],
+				[ticketGame1.playerPropsId],
+				[ticketGame1.playerId],
+				[123],
+				[100]
 			);
 		});
 

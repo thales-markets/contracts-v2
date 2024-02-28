@@ -393,43 +393,60 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    /// @notice set score for specific game
-    /// @param _gameId game ID
-    /// @param _playerPropsId player props ID (0 if not player props game)
-    /// @param _playerId player ID (0 if not player props game)
-    /// @param _homeScore home (first) team score
-    /// @param _awayScore away (second) team score (0 if player props or game with one side)
-    function setScoreForGame(
-        bytes32 _gameId,
-        uint16 _playerPropsId,
-        uint16 _playerId,
-        uint24 _homeScore,
-        uint24 _awayScore
+    /// @notice set scores for specific games
+    /// @param _gameIds game IDs
+    /// @param _playerPropsIds player props IDs (0 if not player props game)
+    /// @param _playerIds player IDs (0 if not player props game)
+    /// @param _homeScores home (first) team scores
+    /// @param _awayScores away (second) team scores (0 if player props or game with one side)
+    function setScoresForGames(
+        bytes32[] memory _gameIds,
+        uint16[] memory _playerPropsIds,
+        uint16[] memory _playerIds,
+        uint24[] memory _homeScores,
+        uint24[] memory _awayScores
     ) external onlyOwner {
-        require(!isScoreSetForGame[_gameId][_playerPropsId][_playerId], "Score already set for the game");
-        gameScores[_gameId][_playerPropsId][_playerId] = ISportsAMMV2.GameScore(_homeScore, _awayScore);
-        isScoreSetForGame[_gameId][_playerPropsId][_playerId] = true;
-        emit ScoreSetForGame(_gameId, _playerPropsId, _playerId, _homeScore, _awayScore);
+        for (uint i; i < _gameIds.length; i++) {
+            bytes32 gameId = _gameIds[i];
+            uint16 playerPropsId = _playerPropsIds[i];
+            uint16 playerId = _playerIds[i];
+            uint24 homeScore = _homeScores[i];
+            uint24 awayScore = _awayScores[i];
+
+            require(!isScoreSetForGame[gameId][playerPropsId][playerId], "Score already set for the game");
+            gameScores[gameId][playerPropsId][playerId] = ISportsAMMV2.GameScore(homeScore, awayScore);
+            isScoreSetForGame[gameId][playerPropsId][playerId] = true;
+            emit ScoreSetForGame(gameId, playerPropsId, playerId, homeScore, awayScore);
+        }
     }
 
-    /// @notice cancel specific game
-    /// @param _gameId game ID
-    /// @param _sportId sport ID
-    /// @param _childId child ID (total, spread, player props)
-    /// @param _playerPropsId player props ID (0 if not player props game)
-    /// @param _playerId player ID (0 if not player props game)
-    /// @param _lineId line ID
-    function cancelGame(
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _childId,
-        uint16 _playerPropsId,
-        int16 _lineId,
-        uint16 _playerId
+    /// @notice cancel specific games
+    /// @param _gameIds game IDs
+    /// @param _sportIds sport IDs
+    /// @param _childIds child IDs (total, spread, player props)
+    /// @param _playerPropsIds player props IDs (0 if not player props game)
+    /// @param _playerIds player IDs (0 if not player props game)
+    /// @param _lines lines
+    function cancelGames(
+        bytes32[] memory _gameIds,
+        uint16[] memory _sportIds,
+        uint16[] memory _childIds,
+        uint16[] memory _playerPropsIds,
+        uint16[] memory _playerIds,
+        int16[] memory _lines
     ) external onlyOwner {
-        require(!isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_lineId], "Game already cancelled");
-        isGameCancelled[_gameId][_sportId][_childId][_playerPropsId][_playerId][_lineId] = true;
-        emit GameCancelled(_gameId, _sportId, _childId, _playerPropsId, _playerId);
+        for (uint i; i < _gameIds.length; i++) {
+            bytes32 gameId = _gameIds[i];
+            uint16 sportId = _sportIds[i];
+            uint16 childId = _childIds[i];
+            uint16 playerPropsId = _playerPropsIds[i];
+            uint16 playerId = _playerIds[i];
+            int16 line = _lines[i];
+
+            require(!isGameCancelled[gameId][sportId][childId][playerPropsId][playerId][line], "Game already cancelled");
+            isGameCancelled[gameId][sportId][childId][playerPropsId][playerId][line] = true;
+            emit GameCancelled(gameId, sportId, childId, playerPropsId, playerId, line);
+        }
     }
 
     /// @notice exercise specific ticket
@@ -959,7 +976,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     );
 
     event ScoreSetForGame(bytes32 gameId, uint16 playerPropsId, uint16 playerId, uint24 homeScore, uint24 awayScore);
-    event GameCancelled(bytes32 gameId, uint16 sportId, uint16 childId, uint16 playerPropsId, uint16 playerId);
+    event GameCancelled(bytes32 gameId, uint16 sportId, uint16 childId, uint16 playerPropsId, uint16 playerId, int16 line);
 
     event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
     event ReferrerPaid(address refferer, address trader, uint amount, uint volume);

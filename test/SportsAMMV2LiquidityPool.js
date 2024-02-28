@@ -143,12 +143,12 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// resolve ticket game as winning for the user
 			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame1.gameId,
-				ticketGame1.playerPropsId,
-				ticketGame1.playerId,
-				123,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame1.gameId],
+				[ticketGame1.playerPropsId],
+				[ticketGame1.playerId],
+				[123],
+				[100]
 			);
 
 			// exercise ticket on LP (hasTicketsReadyToBeExercised should be false since it is winning ticket for the user)
@@ -300,12 +300,12 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// resolve ticket game as loss for the user
 			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame1.gameId,
-				ticketGame1.playerPropsId,
-				ticketGame1.playerId,
-				98,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame1.gameId],
+				[ticketGame1.playerPropsId],
+				[ticketGame1.playerId],
+				[98],
+				[100]
 			);
 
 			// exercise ticket on LP
@@ -505,12 +505,12 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// resolve ticket game as loss for the user
 			const ticketGame1 = tradeDataNextRound[0];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame1.gameId,
-				ticketGame1.playerPropsId,
-				ticketGame1.playerId,
-				98,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame1.gameId],
+				[ticketGame1.playerPropsId],
+				[ticketGame1.playerId],
+				[98],
+				[100]
 			);
 
 			// exercise ticket on LP
@@ -716,20 +716,20 @@ describe('SportsAMMV2LiquidityPool', () => {
 
 			// resolve ticket game as loss for the user
 			const ticketGame1 = tradeDataCrossRounds[0];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame1.gameId,
-				ticketGame1.playerPropsId,
-				ticketGame1.playerId,
-				98,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame1.gameId],
+				[ticketGame1.playerPropsId],
+				[ticketGame1.playerId],
+				[98],
+				[100]
 			);
 			const ticketGame2 = tradeDataCrossRounds[1];
-			await sportsAMMV2.setScoreForGame(
-				ticketGame2.gameId,
-				ticketGame2.playerPropsId,
-				ticketGame2.playerId,
-				98,
-				100
+			await sportsAMMV2.setScoresForGames(
+				[ticketGame2.gameId],
+				[ticketGame2.playerPropsId],
+				[ticketGame2.playerId],
+				[98],
+				[100]
 			);
 
 			// try exercise ticket on LP
