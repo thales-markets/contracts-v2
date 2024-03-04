@@ -227,6 +227,11 @@
         "internalType": "uint256",
         "name": "value",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
       }
     ],
     "name": "reverseTransformCollateral",
@@ -316,6 +321,11 @@
         "internalType": "uint256",
         "name": "value",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
       }
     ],
     "name": "transformCollateral",

@@ -6,8 +6,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 // internal
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
+import "../interfaces/ISportsAMMV2Manager.sol";
 
 contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
+    uint private constant COLLATERAL_DEFAULT_DECIMALS = 18;
+
     mapping(address => bool) public whitelistedAddresses;
 
     bool public needsTransformingCollateral;
@@ -30,16 +33,22 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
     /// @notice transforms collateral if needed - divide by 12 decimals (18 -> 6)
     /// @param value value to be transformed
+    /// @param collateral collateral address
     /// @return uint transformed value
-    function transformCollateral(uint value) external view returns (uint) {
-        return needsTransformingCollateral ? value / 1e12 : value;
+    function transformCollateral(uint value, address collateral) external view returns (uint) {
+        uint collateralDecimals = ISportsAMMV2Manager(collateral).decimals();
+        uint collateralTransformMultiplier = COLLATERAL_DEFAULT_DECIMALS - collateralDecimals;
+        return value / (10 ** collateralTransformMultiplier);
     }
 
     /// @notice reverse collateral if needed - multiple by 12 decimals (6 -> 18)
     /// @param value value to be reversed
+    /// @param collateral collateral address
     /// @return uint revered value
-    function reverseTransformCollateral(uint value) external view returns (uint) {
-        return needsTransformingCollateral ? value * 1e12 : value;
+    function reverseTransformCollateral(uint value, address collateral) external view returns (uint) {
+        uint collateralDecimals = ISportsAMMV2Manager(collateral).decimals();
+        uint collateralTransformMultiplier = COLLATERAL_DEFAULT_DECIMALS - collateralDecimals;
+        return value * (10 ** collateralTransformMultiplier);
     }
 
     /* ========== SETTERS ========== */
