@@ -1,9 +1,5 @@
 const { ONE_WEEK_IN_SECS } = require('./general');
 
-const MANAGER_INITAL_PARAMS = {
-	needsTransformingCollateral: false,
-};
-
 const RISK_MANAGER_INITAL_PARAMS = {
 	defaultCap: ethers.parseEther('1000'),
 	defaultRiskMultiplier: 3,

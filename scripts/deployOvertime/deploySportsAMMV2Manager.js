@@ -12,12 +12,9 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const needsTransformingCollateral = false;
-
 	const sportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
 	const sportsAMMV2ManagerDeployed = await upgrades.deployProxy(sportsAMMV2Manager, [
 		owner.address,
-		needsTransformingCollateral,
 	]);
 	await sportsAMMV2ManagerDeployed.waitForDeployment();
 

@@ -31,8 +31,6 @@ describe('SportsAMMV2Manager Methods', () => {
 		});
 
 		it('Transform collateral enabled', async () => {
-			await sportsAMMV2Manager.setNeedsTransformingCollateral(true);
-
 			const INITIAL_VALUE = 1_000_000_000_000;
 
 			let transformedValue = await sportsAMMV2Manager.transformCollateral(

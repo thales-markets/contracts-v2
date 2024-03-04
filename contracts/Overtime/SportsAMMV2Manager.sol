@@ -13,13 +13,10 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
     mapping(address => bool) public whitelistedAddresses;
 
-    bool public needsTransformingCollateral;
-
     /* ========== CONSTRUCTOR ========== */
 
-    function initialize(address _owner, bool _needsTransformingCollateral) external initializer {
+    function initialize(address _owner) external initializer {
         setOwner(_owner);
-        needsTransformingCollateral = _needsTransformingCollateral;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -66,17 +63,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         }
     }
 
-    /// @notice sets needsTransformingCollateral value
-    /// @param _needsTransformingCollateral boolean value to be set
-    function setNeedsTransformingCollateral(bool _needsTransformingCollateral) external onlyOwner {
-        if (needsTransformingCollateral != _needsTransformingCollateral) {
-            needsTransformingCollateral = _needsTransformingCollateral;
-            emit NeedsTransformingCollateralUpdated(_needsTransformingCollateral);
-        }
-    }
-
     /* ========== EVENTS ========== */
 
     event AddedIntoWhitelist(address whitelistedAddresses, bool flag);
-    event NeedsTransformingCollateralUpdated(bool needsTransformingCollateral);
 }

@@ -4,7 +4,6 @@ const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { MANAGER_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
 
 describe('SportsAMMV2Manager Deployment and Setters', () => {
 	let sportsAMMV2Manager, owner, secondAccount, thirdAccount, fourthAccount;
@@ -18,52 +17,9 @@ describe('SportsAMMV2Manager Deployment and Setters', () => {
 		it('Should set the right owner', async () => {
 			expect(await sportsAMMV2Manager.owner()).to.equal(owner.address);
 		});
-
-		it('Should set the right needsTransformingCollateral', async () => {
-			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
-				MANAGER_INITAL_PARAMS.needsTransformingCollateral
-			);
-		});
 	});
 
 	describe('Setters', () => {
-		it('Should set the new needsTransformingCollateral', async () => {
-			const newNeedsTransformingCollateral = true;
-
-			await expect(
-				sportsAMMV2Manager
-					.connect(secondAccount)
-					.setNeedsTransformingCollateral(newNeedsTransformingCollateral)
-			).to.be.revertedWith('Only the contract owner may perform this action');
-
-			await sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral);
-			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
-				newNeedsTransformingCollateral
-			);
-
-			await expect(
-				sportsAMMV2Manager.setNeedsTransformingCollateral(!newNeedsTransformingCollateral)
-			)
-				.to.emit(sportsAMMV2Manager, 'NeedsTransformingCollateralUpdated')
-				.withArgs(!newNeedsTransformingCollateral);
-		});
-
-		it('Should not change the needsTransformingCollateral', async () => {
-			const newNeedsTransformingCollateral = false;
-
-			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
-				newNeedsTransformingCollateral
-			);
-			await sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral);
-			expect(await sportsAMMV2Manager.needsTransformingCollateral()).to.equal(
-				newNeedsTransformingCollateral
-			);
-
-			await expect(
-				sportsAMMV2Manager.setNeedsTransformingCollateral(newNeedsTransformingCollateral)
-			).to.not.emit(sportsAMMV2Manager, 'NeedsTransformingCollateralUpdated');
-		});
-
 		it('Should set the new whitelisted addresses', async () => {
 			let whitelistedAddresses = [];
 			const isWhitelisted = true;

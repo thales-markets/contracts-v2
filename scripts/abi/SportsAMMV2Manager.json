@@ -46,19 +46,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "needsTransformingCollateral",
-        "type": "bool"
-      }
-    ],
-    "name": "NeedsTransformingCollateralUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "oldOwner",
         "type": "address"
@@ -112,11 +99,6 @@
         "internalType": "address",
         "name": "_owner",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_needsTransformingCollateral",
-        "type": "bool"
       }
     ],
     "name": "initialize",
@@ -151,19 +133,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "needsTransformingCollateral",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -243,19 +212,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_needsTransformingCollateral",
-        "type": "bool"
-      }
-    ],
-    "name": "setNeedsTransformingCollateral",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

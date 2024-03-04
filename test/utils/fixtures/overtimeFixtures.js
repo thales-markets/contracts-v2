@@ -79,10 +79,7 @@ async function deploySportsAMMV2Fixture() {
 
 	// deploy Sports AMM manager
 	const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
-	const sportsAMMV2Manager = await upgrades.deployProxy(SportsAMMV2Manager, [
-		owner.address,
-		MANAGER_INITAL_PARAMS.needsTransformingCollateral,
-	]);
+	const sportsAMMV2Manager = await upgrades.deployProxy(SportsAMMV2Manager, [owner.address]);
 
 	// deploy Sports AMM risk manager
 	const sportsAMMV2ManagerAddress = await sportsAMMV2Manager.getAddress();
