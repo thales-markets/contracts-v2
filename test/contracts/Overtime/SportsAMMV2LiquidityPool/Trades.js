@@ -3,68 +3,44 @@ const { expect } = require('chai');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
-} = require('./utils/fixtures/overtimeFixtures');
-const { ZERO_ADDRESS } = require('./constants/general');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, DEFAULT_AMOUNT } = require('./constants/overtime');
+} = require('../../../utils/fixtures/overtimeFixtures');
+const { ZERO_ADDRESS } = require('../../../constants/general');
+const {
+	BUY_IN_AMOUNT,
+	ADDITIONAL_SLIPPAGE,
+	DEFAULT_AMOUNT,
+} = require('../../../constants/overtime');
 
-describe('SportsAMMV2LiquidityPool', () => {
+describe('SportsAMMV2LiquidityPool Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2LiquidityPool,
-		sportsAMMV2LiquidityPoolRoundMastercopy,
-		defaultLiquidityProvider,
 		collateral,
-		stakingThales,
 		safeBox,
-		owner,
-		secondAccount,
-		thirdAccount,
-		fourthAccount,
 		firstLiquidityProvider,
-		secondLiquidityProvider,
-		thirdLiquidityProvider,
 		firstTrader,
 		tradeDataCurrentRound,
 		tradeDataNextRound,
 		tradeDataCrossRounds;
 
 	beforeEach(async () => {
-		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
-		const accountsFixture = await loadFixture(deployAccountsFixture);
-
-		sportsAMMV2 = sportsAMMV2Fixture.sportsAMMV2;
-		sportsAMMV2LiquidityPool = sportsAMMV2Fixture.sportsAMMV2LiquidityPool;
-		sportsAMMV2LiquidityPoolRoundMastercopy =
-			sportsAMMV2Fixture.sportsAMMV2LiquidityPoolRoundMastercopy;
-		defaultLiquidityProvider = sportsAMMV2Fixture.defaultLiquidityProvider;
-		collateral = sportsAMMV2Fixture.collateral;
-		stakingThales = sportsAMMV2Fixture.stakingThales;
-		safeBox = sportsAMMV2Fixture.safeBox;
-		owner = sportsAMMV2Fixture.owner;
-		secondAccount = accountsFixture.secondAccount;
-		thirdAccount = accountsFixture.thirdAccount;
-		fourthAccount = accountsFixture.fourthAccount;
-		firstLiquidityProvider = accountsFixture.firstLiquidityProvider;
-		secondLiquidityProvider = accountsFixture.secondLiquidityProvider;
-		thirdLiquidityProvider = accountsFixture.thirdLiquidityProvider;
-		firstTrader = accountsFixture.firstTrader;
-
-		tradeDataCurrentRound = sportsAMMV2Fixture.tradeDataCurrentRound;
-		tradeDataNextRound = sportsAMMV2Fixture.tradeDataNextRound;
-		tradeDataCrossRounds = sportsAMMV2Fixture.tradeDataCrossRounds;
+		({
+			sportsAMMV2,
+			sportsAMMV2LiquidityPool,
+			collateral,
+			safeBox,
+			tradeDataCurrentRound,
+			tradeDataNextRound,
+			tradeDataCrossRounds,
+		} = await loadFixture(deploySportsAMMV2Fixture));
+		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 	});
 
 	describe('Trades', () => {
-		let sportsAMMV2LiquidityPoolWithFirstLiquidityProvider,
-			sportsAMMV2LiquidityPoolWithSecondLiquidityProvider,
-			sportsAMMV2LiquidityPoolWithThirdLiquidityProvider;
+		let sportsAMMV2LiquidityPoolWithFirstLiquidityProvider;
 
 		beforeEach(async () => {
 			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
 				sportsAMMV2LiquidityPool.connect(firstLiquidityProvider);
-			sportsAMMV2LiquidityPoolWithSecondLiquidityProvider =
-				sportsAMMV2LiquidityPool.connect(secondLiquidityProvider);
-			sportsAMMV2LiquidityPoolWithThirdLiquidityProvider =
-				sportsAMMV2LiquidityPool.connect(thirdLiquidityProvider);
 		});
 
 		it('Should be ticket in the current round (negative round)', async () => {

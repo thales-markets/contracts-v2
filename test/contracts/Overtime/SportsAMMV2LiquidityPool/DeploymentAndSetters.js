@@ -3,9 +3,9 @@ const { expect } = require('chai');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
-} = require('./utils/fixtures/overtimeFixtures');
-const { SPORTS_AMM_LP_INITAL_PARAMS } = require('./constants/overtimeContractParams');
-const { ZERO_ADDRESS, MAX_NUMBER, ONE_WEEK_IN_SECS } = require('./constants/general');
+} = require('../../../utils/fixtures/overtimeFixtures');
+const { SPORTS_AMM_LP_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
+const { ZERO_ADDRESS, MAX_NUMBER, ONE_WEEK_IN_SECS } = require('../../../constants/general');
 
 describe('SportsAMMV2LiquidityPool Deployment and Setters', () => {
 	let sportsAMMV2,
@@ -18,30 +18,21 @@ describe('SportsAMMV2LiquidityPool Deployment and Setters', () => {
 		owner,
 		secondAccount,
 		thirdAccount,
-		fourthAccount,
-		firstLiquidityProvider,
-		secondLiquidityProvider,
-		thirdLiquidityProvider;
+		firstLiquidityProvider;
 
 	beforeEach(async () => {
-		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
-		const accountsFixture = await loadFixture(deployAccountsFixture);
-
-		sportsAMMV2 = sportsAMMV2Fixture.sportsAMMV2;
-		sportsAMMV2LiquidityPool = sportsAMMV2Fixture.sportsAMMV2LiquidityPool;
-		sportsAMMV2LiquidityPoolRoundMastercopy =
-			sportsAMMV2Fixture.sportsAMMV2LiquidityPoolRoundMastercopy;
-		defaultLiquidityProvider = sportsAMMV2Fixture.defaultLiquidityProvider;
-		collateral = sportsAMMV2Fixture.collateral;
-		stakingThales = sportsAMMV2Fixture.stakingThales;
-		safeBox = sportsAMMV2Fixture.safeBox;
-		owner = sportsAMMV2Fixture.owner;
-		secondAccount = accountsFixture.secondAccount;
-		thirdAccount = accountsFixture.thirdAccount;
-		fourthAccount = accountsFixture.fourthAccount;
-		firstLiquidityProvider = accountsFixture.firstLiquidityProvider;
-		secondLiquidityProvider = accountsFixture.secondLiquidityProvider;
-		thirdLiquidityProvider = accountsFixture.thirdLiquidityProvider;
+		({
+			sportsAMMV2,
+			sportsAMMV2LiquidityPool,
+			sportsAMMV2LiquidityPoolRoundMastercopy,
+			defaultLiquidityProvider,
+			collateral,
+			stakingThales,
+			safeBox,
+			owner,
+		} = await loadFixture(deploySportsAMMV2Fixture));
+		({ secondAccount, thirdAccount, firstLiquidityProvider } =
+			await loadFixture(deployAccountsFixture));
 	});
 
 	describe('Deployment', () => {

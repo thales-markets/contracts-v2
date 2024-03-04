@@ -227,5 +227,6 @@ async function deploySportsAMMV2Fixture() {
 
 module.exports = {
 	deployAccountsFixture,
+	deployTokenFixture,
 	deploySportsAMMV2Fixture,
 };

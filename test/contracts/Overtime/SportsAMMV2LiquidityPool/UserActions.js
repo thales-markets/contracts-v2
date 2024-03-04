@@ -3,50 +3,31 @@ const { expect } = require('chai');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
-} = require('./utils/fixtures/overtimeFixtures');
-const { ZERO_ADDRESS } = require('./constants/general');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('./constants/overtime');
+} = require('../../../utils/fixtures/overtimeFixtures');
+const { ZERO_ADDRESS } = require('../../../constants/general');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('../../../constants/overtime');
 
-describe('SportsAMMV2LiquidityPool', () => {
+describe('SportsAMMV2LiquidityPool User Actions', () => {
 	let sportsAMMV2,
 		sportsAMMV2LiquidityPool,
-		sportsAMMV2LiquidityPoolRoundMastercopy,
-		defaultLiquidityProvider,
 		collateral,
-		stakingThales,
-		safeBox,
-		owner,
+		tradeDataCurrentRound,
 		secondAccount,
-		thirdAccount,
-		fourthAccount,
 		firstLiquidityProvider,
 		secondLiquidityProvider,
 		thirdLiquidityProvider,
-		tradeDataCurrentRound,
 		firstTrader;
 
 	beforeEach(async () => {
-		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
-		const accountsFixture = await loadFixture(deployAccountsFixture);
-
-		sportsAMMV2 = sportsAMMV2Fixture.sportsAMMV2;
-		sportsAMMV2LiquidityPool = sportsAMMV2Fixture.sportsAMMV2LiquidityPool;
-		sportsAMMV2LiquidityPoolRoundMastercopy =
-			sportsAMMV2Fixture.sportsAMMV2LiquidityPoolRoundMastercopy;
-		defaultLiquidityProvider = sportsAMMV2Fixture.defaultLiquidityProvider;
-		collateral = sportsAMMV2Fixture.collateral;
-		stakingThales = sportsAMMV2Fixture.stakingThales;
-		safeBox = sportsAMMV2Fixture.safeBox;
-		owner = sportsAMMV2Fixture.owner;
-		secondAccount = accountsFixture.secondAccount;
-		thirdAccount = accountsFixture.thirdAccount;
-		fourthAccount = accountsFixture.fourthAccount;
-		firstLiquidityProvider = accountsFixture.firstLiquidityProvider;
-		secondLiquidityProvider = accountsFixture.secondLiquidityProvider;
-		thirdLiquidityProvider = accountsFixture.thirdLiquidityProvider;
-		firstTrader = accountsFixture.firstTrader;
-
-		tradeDataCurrentRound = sportsAMMV2Fixture.tradeDataCurrentRound;
+		({ sportsAMMV2, sportsAMMV2LiquidityPool, collateral, tradeDataCurrentRound } =
+			await loadFixture(deploySportsAMMV2Fixture));
+		({
+			secondAccount,
+			firstLiquidityProvider,
+			secondLiquidityProvider,
+			thirdLiquidityProvider,
+			firstTrader,
+		} = await loadFixture(deployAccountsFixture));
 	});
 
 	describe('Start liquidity pool', () => {

@@ -3,10 +3,10 @@ const { expect } = require('chai');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
-} = require('./utils/fixtures/overtimeFixtures');
-const { SPORTS_AMM_INITAL_PARAMS } = require('./constants/overtimeContractParams');
-const { MAX_NUMBER, ZERO_ADDRESS } = require('./constants/general');
-const { GAME_ID_1 } = require('./constants/overtime');
+} = require('../../../utils/fixtures/overtimeFixtures');
+const { SPORTS_AMM_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
+const { MAX_NUMBER, ZERO_ADDRESS } = require('../../../constants/general');
+const { GAME_ID_1 } = require('../../../constants/overtime');
 
 describe('SportsAMMV2 Deployment and Setters', () => {
 	let sportsAMMV2Manager,
@@ -24,22 +24,19 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 		fourthAccount;
 
 	beforeEach(async () => {
-		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
-		const accountsFixture = await loadFixture(deployAccountsFixture);
-
-		sportsAMMV2Manager = sportsAMMV2Fixture.sportsAMMV2Manager;
-		sportsAMMV2RiskManager = sportsAMMV2Fixture.sportsAMMV2RiskManager;
-		sportsAMMV2 = sportsAMMV2Fixture.sportsAMMV2;
-		ticketMastercopy = sportsAMMV2Fixture.ticketMastercopy;
-		sportsAMMV2LiquidityPool = sportsAMMV2Fixture.sportsAMMV2LiquidityPool;
-		collateral = sportsAMMV2Fixture.collateral;
-		referrals = sportsAMMV2Fixture.referrals;
-		stakingThales = sportsAMMV2Fixture.stakingThales;
-		safeBox = sportsAMMV2Fixture.safeBox;
-		owner = sportsAMMV2Fixture.owner;
-		secondAccount = accountsFixture.secondAccount;
-		thirdAccount = accountsFixture.thirdAccount;
-		fourthAccount = accountsFixture.fourthAccount;
+		({
+			sportsAMMV2Manager,
+			sportsAMMV2RiskManager,
+			sportsAMMV2,
+			ticketMastercopy,
+			sportsAMMV2LiquidityPool,
+			collateral,
+			referrals,
+			stakingThales,
+			safeBox,
+			owner,
+		} = await loadFixture(deploySportsAMMV2Fixture));
+		({ secondAccount, thirdAccount, fourthAccount } = await loadFixture(deployAccountsFixture));
 	});
 
 	describe('Deployment', () => {

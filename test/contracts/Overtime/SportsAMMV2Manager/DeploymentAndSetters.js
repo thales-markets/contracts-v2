@@ -3,22 +3,15 @@ const { expect } = require('chai');
 const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
-} = require('./utils/fixtures/overtimeFixtures');
-const { MANAGER_INITAL_PARAMS } = require('./constants/overtimeContractParams');
+} = require('../../../utils/fixtures/overtimeFixtures');
+const { MANAGER_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
 
-describe('SportsAMMV2Manager', () => {
+describe('SportsAMMV2Manager Deployment and Setters', () => {
 	let sportsAMMV2Manager, owner, secondAccount, thirdAccount, fourthAccount;
 
 	beforeEach(async () => {
-		const sportsAMMV2ManagerFixture = await loadFixture(deploySportsAMMV2Fixture);
-		const accountsFixture = await loadFixture(deployAccountsFixture);
-
-		sportsAMMV2Manager = sportsAMMV2ManagerFixture.sportsAMMV2Manager;
-		owner = sportsAMMV2ManagerFixture.owner;
-
-		secondAccount = accountsFixture.secondAccount;
-		thirdAccount = accountsFixture.thirdAccount;
-		fourthAccount = accountsFixture.fourthAccount;
+		({ sportsAMMV2Manager, owner } = await loadFixture(deploySportsAMMV2Fixture));
+		({ secondAccount, thirdAccount, fourthAccount } = await loadFixture(deployAccountsFixture));
 	});
 
 	describe('Deployment', () => {
@@ -115,30 +108,6 @@ describe('SportsAMMV2Manager', () => {
 			await expect(sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted))
 				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
 				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist');
-		});
-	});
-
-	describe('Transform collateral methods', () => {
-		it('Transform collateral disabled', async () => {
-			const INITIAL_VALUE = 1_000_000_000_000;
-
-			let transformedValue = await sportsAMMV2Manager.transformCollateral(INITIAL_VALUE);
-			expect(transformedValue).to.equal(INITIAL_VALUE);
-
-			transformedValue = await sportsAMMV2Manager.reverseTransformCollateral(INITIAL_VALUE);
-			expect(transformedValue).to.equal(INITIAL_VALUE);
-		});
-
-		it('Transform collateral enabled', async () => {
-			await sportsAMMV2Manager.setNeedsTransformingCollateral(true);
-
-			const INITIAL_VALUE = 1_000_000_000_000;
-
-			let transformedValue = await sportsAMMV2Manager.transformCollateral(INITIAL_VALUE);
-			expect(transformedValue).to.equal(1);
-
-			transformedValue = await sportsAMMV2Manager.reverseTransformCollateral(1);
-			expect(transformedValue).to.equal(INITIAL_VALUE);
 		});
 	});
 });

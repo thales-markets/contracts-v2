@@ -3,9 +3,9 @@ const { expect } = require('chai');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
-} = require('./utils/fixtures/overtimeFixtures');
-const { MAX_NUMBER } = require('./constants/general');
-const { DEFAULT_AMOUNT } = require('./constants/overtime');
+} = require('../../../utils/fixtures/overtimeFixtures');
+const { MAX_NUMBER } = require('../../../constants/general');
+const { DEFAULT_AMOUNT } = require('../../../constants/overtime');
 const { ethers } = require('hardhat');
 
 describe('DefaultLiquidityProvider', () => {
@@ -18,15 +18,9 @@ describe('DefaultLiquidityProvider', () => {
 		defaultLiquidityProviderAddress;
 
 	beforeEach(async () => {
-		const sportsAMMV2Fixture = await loadFixture(deploySportsAMMV2Fixture);
-		const accountsFixture = await loadFixture(deployAccountsFixture);
-
-		defaultLiquidityProvider = sportsAMMV2Fixture.defaultLiquidityProvider;
-		sportsAMMV2LiquidityPool = sportsAMMV2Fixture.sportsAMMV2LiquidityPool;
-		collateral = sportsAMMV2Fixture.collateral;
-		owner = sportsAMMV2Fixture.owner;
-		secondAccount = accountsFixture.secondAccount;
-		thirdAccount = accountsFixture.thirdAccount;
+		({ defaultLiquidityProvider, sportsAMMV2LiquidityPool, collateral, owner } =
+			await loadFixture(deploySportsAMMV2Fixture));
+		({ secondAccount, thirdAccount } = await loadFixture(deployAccountsFixture));
 
 		defaultLiquidityProviderAddress = await defaultLiquidityProvider.getAddress();
 	});
