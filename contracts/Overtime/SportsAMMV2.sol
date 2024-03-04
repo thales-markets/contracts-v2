@@ -40,22 +40,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     uint public constant CHILD_ID_TOTAL = 10002;
     uint public constant CHILD_ID_PLAYER_PROPS = 10010;
 
-    /* ========== STRUCT DEFINITION ========== */
-
-    struct TradeData {
-        bytes32 gameId;
-        uint16 sportId;
-        uint16 childId;
-        uint16 playerPropsId;
-        uint maturity;
-        uint8 status;
-        int24 line;
-        uint16 playerId;
-        uint[] odds;
-        bytes32[] merkleProof;
-        uint8 position;
-    }
-
     /* ========== STATE VARIABLES ========== */
 
     // merkle tree root per game
@@ -186,7 +170,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @return finalQuotes final quotes per game
     /// @return amountsToBuy amounts per game
     function tradeQuote(
-        TradeData[] calldata _tradeData,
+        ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
         address _collateral
     )
@@ -362,7 +346,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _collateral different collateral used for payment
     /// @param _isEth pay with ETH
     function trade(
-        TradeData[] calldata _tradeData,
+        ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
         uint _expectedPayout,
         uint _additionalSlippage,
@@ -501,7 +485,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _tradeQuote(
-        TradeData[] memory _tradeData,
+        ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount
     )
         internal
@@ -520,7 +504,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         buyInAmountAfterFees = ((ONE - safeBoxFee) * _buyInAmount) / ONE;
 
         for (uint i = 0; i < numOfPositions; i++) {
-            TradeData memory tradeDataItem = _tradeData[i];
+            ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
 
             _verifyMerkleTree(tradeDataItem);
 
@@ -543,12 +527,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         // check if any game breaches cap
         for (uint i = 0; i < _tradeData.length; i++) {
-            TradeData memory tradeDataItem = _tradeData[i];
+            ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
+            uint riskPerGame = amountsToBuy[i] - buyInAmountAfterFees;
             if (
                 riskPerGameAndPosition[tradeDataItem.gameId][tradeDataItem.sportId][tradeDataItem.childId][
                     tradeDataItem.playerPropsId
                 ][tradeDataItem.playerId][tradeDataItem.line][tradeDataItem.position] +
-                    amountsToBuy[i] >
+                    riskPerGame >
                 riskManager.calculateCapToBeUsed(
                     tradeDataItem.gameId,
                     tradeDataItem.sportId,
@@ -559,7 +544,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     tradeDataItem.maturity
                 ) ||
                 !riskManager.isTotalSpendingLessThanTotalRisk(
-                    spentPerParent[tradeDataItem.gameId] + amountsToBuy[i],
+                    spentPerParent[tradeDataItem.gameId] + riskPerGame,
                     tradeDataItem.gameId,
                     tradeDataItem.sportId,
                     tradeDataItem.childId,
@@ -604,7 +589,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     function _trade(
-        TradeData[] memory _tradeData,
+        ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
         uint _expectedPayout,
         uint _additionalSlippage,
@@ -624,7 +609,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         require((payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
         require(((ONE * _expectedPayout) / payout) <= (ONE + _additionalSlippage), "Slippage too high");
 
-        _checkRisk(_tradeData, amountsToBuy);
+        _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees);
 
         if (_sendDefaultCollateral) {
             defaultCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
@@ -657,7 +642,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit TicketCreated(address(ticket), _differentRecipient, _buyInAmount, buyInAmountAfterFees, payout, totalQuote);
     }
 
-    function _saveTicketData(TradeData[] memory _tradeData, address ticket, address user) internal {
+    function _saveTicketData(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) internal {
         knownTickets.add(ticket);
         activeTicketsPerUser[user].add(ticket);
 
@@ -666,11 +651,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _getTicketData(TradeData[] memory _tradeData) internal pure returns (Ticket.GameData[] memory gameData) {
+    function _getTicketData(
+        ISportsAMMV2.TradeData[] memory _tradeData
+    ) internal pure returns (Ticket.GameData[] memory gameData) {
         gameData = new Ticket.GameData[](_tradeData.length);
 
         for (uint i = 0; i < _tradeData.length; i++) {
-            TradeData memory tradeDataItem = _tradeData[i];
+            ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
 
             gameData[i] = Ticket.GameData(
                 tradeDataItem.gameId,
@@ -687,15 +674,22 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _checkRisk(TradeData[] memory _tradeData, uint[] memory _amountsToBuy) internal {
+    function _checkRisk(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint[] memory _amountsToBuy,
+        uint buyInAmountAfterFees
+    ) internal {
         for (uint i = 0; i < _tradeData.length; i++) {
             require(_isGameInAMMTrading(_tradeData[i]), "Not trading");
             require(_tradeData[i].odds.length > _tradeData[i].position, "Invalid position");
 
+            uint riskPerGame = _amountsToBuy[i] - buyInAmountAfterFees;
+
             riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                 _tradeData[i].playerPropsId
-            ][_tradeData[i].playerId][_tradeData[i].line][_tradeData[i].position] += _amountsToBuy[i];
-            spentPerParent[_tradeData[i].gameId] += _amountsToBuy[i];
+            ][_tradeData[i].playerId][_tradeData[i].line][_tradeData[i].position] += riskPerGame;
+            spentPerParent[_tradeData[i].gameId] += riskPerGame;
+
             require(
                 riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                     _tradeData[i].playerPropsId
@@ -727,7 +721,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _isGameInAMMTrading(TradeData memory tradeData) internal view returns (bool isTrading) {
+    function _isGameInAMMTrading(ISportsAMMV2.TradeData memory tradeData) internal view returns (bool isTrading) {
         bool isResolved = _isGameResolved(
             tradeData.gameId,
             tradeData.sportId,
@@ -781,7 +775,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         return safeBoxFeePerAddress[_toCheck] > 0 ? safeBoxFeePerAddress[_toCheck] : safeBoxFee;
     }
 
-    function _verifyMerkleTree(TradeData memory tradeDataItem) internal view {
+    function _verifyMerkleTree(ISportsAMMV2.TradeData memory tradeDataItem) internal view {
         // Compute the merkle leaf from trade data
         bytes32 leaf = keccak256(
             abi.encodePacked(

@@ -1848,7 +1848,7 @@
             "type": "uint8"
           }
         ],
-        "internalType": "struct SportsAMMV2.TradeData[]",
+        "internalType": "struct ISportsAMMV2.TradeData[]",
         "name": "_tradeData",
         "type": "tuple[]"
       },
@@ -1953,7 +1953,7 @@
             "type": "uint8"
           }
         ],
-        "internalType": "struct SportsAMMV2.TradeData[]",
+        "internalType": "struct ISportsAMMV2.TradeData[]",
         "name": "_tradeData",
         "type": "tuple[]"
       },

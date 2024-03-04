@@ -16,6 +16,20 @@ interface ISportsAMMV2 {
         uint24 awayScore;
     }
 
+    struct TradeData {
+        bytes32 gameId;
+        uint16 sportId;
+        uint16 childId;
+        uint16 playerPropsId;
+        uint maturity;
+        uint8 status;
+        int24 line;
+        uint16 playerId;
+        uint[] odds;
+        bytes32[] merkleProof;
+        uint8 position;
+    }
+
     function defaultCollateral() external view returns (IERC20);
 
     function minBuyInAmount() external view returns (uint);
