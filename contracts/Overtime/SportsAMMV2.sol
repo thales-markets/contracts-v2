@@ -185,7 +185,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint[] memory amountsToBuy
         )
     {
-        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
+        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy, ) = _tradeQuote(_tradeData, _buyInAmount);
 
         collateralQuote = _collateral == address(0)
             ? _buyInAmount
@@ -495,7 +495,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint payout,
             uint totalQuote,
             uint[] memory finalQuotes,
-            uint[] memory amountsToBuy
+            uint[] memory amountsToBuy,
+            uint payoutWithFees
         )
     {
         uint numOfPositions = _tradeData.length;
@@ -523,6 +524,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 totalQuote = maxSupportedOdds;
             }
             payout = (buyInAmountAfterFees * ONE) / totalQuote;
+            payoutWithFees = payout + _buyInAmount - buyInAmountAfterFees;
         }
 
         // check if any game breaches cap
@@ -598,17 +600,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal {
         uint payout;
         uint totalQuote;
+        uint payoutWithFees;
         uint[] memory amountsToBuy = new uint[](_tradeData.length);
-        uint[] memory finalQuotes = new uint[](_tradeData.length);
         uint buyInAmountAfterFees;
-        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount);
+        (buyInAmountAfterFees, payout, totalQuote, , amountsToBuy, payoutWithFees) = _tradeQuote(_tradeData, _buyInAmount);
 
-        // apply all checks
-        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
-        require(totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
-        require((payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
-        require(((ONE * _expectedPayout) / payout) <= (ONE + _additionalSlippage), "Slippage too high");
-
+        _checkLimits(_buyInAmount, totalQuote, payout, _expectedPayout, _additionalSlippage);
         _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees);
 
         if (_sendDefaultCollateral) {
@@ -636,7 +633,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         liquidityPool.commitTrade(address(ticket), payout - buyInAmountAfterFees);
-        defaultCollateral.safeTransfer(address(ticket), payout);
+        defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
 
         emit NewTicket(gameData, address(ticket), buyInAmountAfterFees, payout);
         emit TicketCreated(address(ticket), _differentRecipient, _buyInAmount, buyInAmountAfterFees, payout, totalQuote);
@@ -674,16 +671,30 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
+    function _checkLimits(
+        uint _buyInAmount,
+        uint _totalQuote,
+        uint _payout,
+        uint _expectedPayout,
+        uint _additionalSlippage
+    ) internal view {
+        // apply all checks
+        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
+        require(_totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
+        require((_payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
+        require(((ONE * _expectedPayout) / _payout) <= (ONE + _additionalSlippage), "Slippage too high");
+    }
+
     function _checkRisk(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint[] memory _amountsToBuy,
-        uint buyInAmountAfterFees
+        uint _buyInAmountAfterFees
     ) internal {
         for (uint i = 0; i < _tradeData.length; i++) {
             require(_isGameInAMMTrading(_tradeData[i]), "Not trading");
             require(_tradeData[i].odds.length > _tradeData[i].position, "Invalid position");
 
-            uint riskPerGame = _amountsToBuy[i] - buyInAmountAfterFees;
+            uint riskPerGame = _amountsToBuy[i] - _buyInAmountAfterFees;
 
             riskPerGameAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].childId][
                 _tradeData[i].playerPropsId

@@ -147,12 +147,13 @@ contract Ticket is OwnedWithInit {
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
 
-        uint payout = sportsAMM.defaultCollateral().balanceOf(address(this));
+        uint payoutWithFees = sportsAMM.defaultCollateral().balanceOf(address(this));
+        uint payout = payoutWithFees - (buyInAmount - buyInAmountAfterFees);
         bool isCancelled = false;
 
         if (isTicketLost()) {
-            if (payout > 0) {
-                sportsAMM.defaultCollateral().transfer(address(sportsAMM), payout);
+            if (payoutWithFees > 0) {
+                sportsAMM.defaultCollateral().transfer(address(sportsAMM), payoutWithFees);
             }
         } else {
             uint finalPayout = payout;
