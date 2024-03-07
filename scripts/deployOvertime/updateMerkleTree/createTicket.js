@@ -20,7 +20,7 @@ async function createTicket() {
 	const sportsAMMV2Contract = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = sportsAMMV2Contract.attach(sportsAMMV2Address);
 
-	const nbaMoneylineCurrentRound = marketsTree[0];
+	const nbaMoneylineCurrentRound = marketsTree[0].childMarkets[8];
 	const tradeDataCurrentRound = [];
 	tradeDataCurrentRound.push(getTradeDataItem(nbaMoneylineCurrentRound, 0));
 

@@ -16,6 +16,12 @@ interface ISportsAMMV2 {
         uint24 awayScore;
     }
 
+    struct CombinedPosition {
+        uint16 childId;
+        uint8 position;
+        int24 line;
+    }
+
     struct TradeData {
         bytes32 gameId;
         uint16 sportId;
@@ -28,6 +34,7 @@ interface ISportsAMMV2 {
         uint[] odds;
         bytes32[] merkleProof;
         uint8 position;
+        CombinedPosition[][] combinedPositions;
     }
 
     function defaultCollateral() external view returns (IERC20);

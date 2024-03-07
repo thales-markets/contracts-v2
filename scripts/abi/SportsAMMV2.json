@@ -261,6 +261,28 @@
             "internalType": "uint256",
             "name": "odd",
             "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "childId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+            "name": "combinedPositions",
+            "type": "tuple[]"
           }
         ],
         "indexed": false,
@@ -553,6 +575,19 @@
     ],
     "name": "TimesUpdated",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "CHILD_ID_COMBINED_POSITIONS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -1333,32 +1368,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "gameId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "removeTicketsForGame",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
-    ],
-    "name": "removeTicketsForUser",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_ticketOwner",
         "type": "address"
@@ -1846,6 +1855,28 @@
             "internalType": "uint8",
             "name": "position",
             "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "childId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
           }
         ],
         "internalType": "struct ISportsAMMV2.TradeData[]",
@@ -1951,6 +1982,28 @@
             "internalType": "uint8",
             "name": "position",
             "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "childId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
           }
         ],
         "internalType": "struct ISportsAMMV2.TradeData[]",

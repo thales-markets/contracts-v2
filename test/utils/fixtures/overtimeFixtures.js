@@ -2,7 +2,6 @@ const { upgrades } = require('hardhat');
 const {
 	RISK_MANAGER_INITAL_PARAMS,
 	SPORTS_AMM_INITAL_PARAMS,
-	MANAGER_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
 const { GAME_ID_1, DEFAULT_AMOUNT, GAME_ID_2 } = require('../../constants/overtime');

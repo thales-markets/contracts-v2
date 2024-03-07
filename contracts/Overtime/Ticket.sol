@@ -25,6 +25,7 @@ contract Ticket is OwnedWithInit {
         uint16 playerId;
         uint8 position;
         uint odd;
+        ISportsAMMV2.CombinedPosition[] combinedPositions;
     }
 
     ISportsAMMV2 public sportsAMM;
@@ -137,6 +138,14 @@ contract Ticket is OwnedWithInit {
     /// @return phase ticket phase
     function phase() public view returns (Phase) {
         return resolved ? ((expiry < block.timestamp) ? Phase.Expiry : Phase.Maturity) : Phase.Trading;
+    }
+
+    /// @notice gets combined positions of the game
+    /// @return combinedPositions game combined positions
+    function getCombinedPositions(
+        uint _gameIndex
+    ) public view returns (ISportsAMMV2.CombinedPosition[] memory combinedPositions) {
+        return games[_gameIndex].combinedPositions;
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */

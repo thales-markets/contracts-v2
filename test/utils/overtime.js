@@ -26,6 +26,7 @@ const getTradeDataItem = (game, position) => {
 		odds: game.odds,
 		merkleProof: game.proof,
 		position: position,
+		combinedPositions: game.combinedPositions || 0,
 	};
 };
 

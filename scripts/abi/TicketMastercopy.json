@@ -253,6 +253,42 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_gameIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCombinedPositions",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "childId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+        "name": "combinedPositions",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "bytes32",
@@ -303,6 +339,28 @@
             "internalType": "uint256",
             "name": "odd",
             "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "childId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+            "name": "combinedPositions",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct Ticket.GameData[]",

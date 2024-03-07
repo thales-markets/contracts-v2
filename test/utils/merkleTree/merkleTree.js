@@ -26,17 +26,27 @@ async function getMerkleTree(markets) {
 		);
 
 		for (i = 0; i < market.odds.length; i++) {
-			encodePackedOutput = web3.utils.encodePacked(
-				encodePackedOutput,
-				ethers.parseEther(market.odds[i].toString()).toString()
-			);
+			encodePackedOutput = web3.utils.encodePacked(encodePackedOutput, market.odds[i]);
+		}
+
+		if (market.childId === 10004) {
+			market.combinedPositions.forEach((combinedPositions) => {
+				combinedPositions.forEach((combinedPosition) => {
+					encodePackedOutput = web3.utils.encodePacked(
+						encodePackedOutput,
+						combinedPosition.childId,
+						combinedPosition.position,
+						combinedPosition.line
+					);
+				});
+			});
 		}
 
 		let hash = keccak256(encodePackedOutput);
 
 		let marketLeaf = {
 			...market,
-			odds: market.odds.map((o) => ethers.parseEther(o.toString()).toString()),
+			odds: market.odds,
 			hash,
 			proof: '',
 		};

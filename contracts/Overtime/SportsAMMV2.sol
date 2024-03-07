@@ -39,6 +39,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     uint public constant CHILD_ID_SPREAD = 10001;
     uint public constant CHILD_ID_TOTAL = 10002;
     uint public constant CHILD_ID_PLAYER_PROPS = 10010;
+    uint public constant CHILD_ID_COMBINED_POSITIONS = 10004;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -262,30 +263,30 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     // TODO: remove, for test only
-    function removeTicketsForUser(address user) external {
-        address[] memory ticketsArray = activeTicketsPerUser[user].getPage(0, 200);
-        for (uint i = 0; i < ticketsArray.length; i++) {
-            if (activeTicketsPerUser[user].contains(ticketsArray[i])) {
-                activeTicketsPerUser[user].remove(ticketsArray[i]);
-            }
-            if (knownTickets.contains(ticketsArray[i])) {
-                knownTickets.remove(ticketsArray[i]);
-            }
-        }
-    }
+    // function removeTicketsForUser(address user) external {
+    //     address[] memory ticketsArray = activeTicketsPerUser[user].getPage(0, 200);
+    //     for (uint i = 0; i < ticketsArray.length; i++) {
+    //         if (activeTicketsPerUser[user].contains(ticketsArray[i])) {
+    //             activeTicketsPerUser[user].remove(ticketsArray[i]);
+    //         }
+    //         if (knownTickets.contains(ticketsArray[i])) {
+    //             knownTickets.remove(ticketsArray[i]);
+    //         }
+    //     }
+    // }
 
     // TODO: remove, for test only
-    function removeTicketsForGame(bytes32 gameId) external {
-        address[] memory ticketsArray = ticketsPerGame[gameId].getPage(0, 200);
-        for (uint i = 0; i < ticketsArray.length; i++) {
-            if (ticketsPerGame[gameId].contains(ticketsArray[i])) {
-                ticketsPerGame[gameId].remove(ticketsArray[i]);
-            }
-            if (knownTickets.contains(ticketsArray[i])) {
-                knownTickets.remove(ticketsArray[i]);
-            }
-        }
-    }
+    // function removeTicketsForGame(bytes32 gameId) external {
+    //     address[] memory ticketsArray = ticketsPerGame[gameId].getPage(0, 200);
+    //     for (uint i = 0; i < ticketsArray.length; i++) {
+    //         if (ticketsPerGame[gameId].contains(ticketsArray[i])) {
+    //             ticketsPerGame[gameId].remove(ticketsArray[i]);
+    //         }
+    //         if (knownTickets.contains(ticketsArray[i])) {
+    //             knownTickets.remove(ticketsArray[i]);
+    //         }
+    //     }
+    // }
 
     /// @notice is specific game resolved
     /// @param _gameId game ID
@@ -666,7 +667,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 tradeDataItem.line,
                 tradeDataItem.playerId,
                 tradeDataItem.position,
-                tradeDataItem.odds[tradeDataItem.position]
+                tradeDataItem.odds[tradeDataItem.position],
+                tradeDataItem.childId == CHILD_ID_COMBINED_POSITIONS
+                    ? tradeDataItem.combinedPositions[tradeDataItem.position]
+                    : (new ISportsAMMV2.CombinedPosition[](0))
             );
         }
     }
@@ -788,19 +792,31 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _verifyMerkleTree(ISportsAMMV2.TradeData memory tradeDataItem) internal view {
         // Compute the merkle leaf from trade data
-        bytes32 leaf = keccak256(
-            abi.encodePacked(
-                tradeDataItem.gameId,
-                uint(tradeDataItem.sportId),
-                uint(tradeDataItem.childId),
-                uint(tradeDataItem.playerPropsId),
-                tradeDataItem.maturity,
-                uint(tradeDataItem.status),
-                int(tradeDataItem.line),
-                uint(tradeDataItem.playerId),
-                tradeDataItem.odds
-            )
+        bytes memory encodePackedOutput = abi.encodePacked(
+            tradeDataItem.gameId,
+            uint(tradeDataItem.sportId),
+            uint(tradeDataItem.childId),
+            uint(tradeDataItem.playerPropsId),
+            tradeDataItem.maturity,
+            uint(tradeDataItem.status),
+            int(tradeDataItem.line),
+            uint(tradeDataItem.playerId),
+            tradeDataItem.odds
         );
+        if (tradeDataItem.childId == CHILD_ID_COMBINED_POSITIONS) {
+            for (uint i; i < tradeDataItem.combinedPositions.length; i++) {
+                for (uint j; j < tradeDataItem.combinedPositions[i].length; j++) {
+                    encodePackedOutput = abi.encodePacked(
+                        encodePackedOutput,
+                        uint(tradeDataItem.combinedPositions[i][j].childId),
+                        uint(tradeDataItem.combinedPositions[i][j].position),
+                        int(tradeDataItem.combinedPositions[i][j].line)
+                    );
+                }
+            }
+        }
+
+        bytes32 leaf = keccak256(encodePackedOutput);
         // verify the proof is valid
         require(
             MerkleProof.verify(tradeDataItem.merkleProof, rootPerGame[tradeDataItem.gameId], leaf),

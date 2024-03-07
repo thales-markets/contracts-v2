@@ -29,6 +29,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint16 playerId;
         uint8 position;
         uint odd;
+        ISportsAMMV2.CombinedPosition[] combinedPositions;
     }
 
     struct GameStatus {
@@ -112,20 +113,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             GameData[] memory gamesData = new GameData[](ticket.numOfGames());
             GameStatus[] memory gamesStatus = new GameStatus[](ticket.numOfGames());
             for (uint j = 0; j < ticket.numOfGames(); j++) {
-                (
-                    bytes32 gameId,
-                    uint16 sportId,
-                    uint16 childId,
-                    uint16 playerPropsId,
-                    uint maturity,
-                    uint8 status,
-                    int24 line,
-                    uint16 playerId,
-                    uint8 position,
-                    uint odd
-                ) = ticket.games(j);
-
-                gamesData[j] = GameData(gameId, sportId, childId, playerPropsId, maturity, line, playerId, position, odd);
+                gamesData[j] = _getGameData(ticket, j);
                 gamesStatus[j] = _getGameStatus(ticket, j);
             }
 
@@ -152,19 +140,27 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return tickets;
     }
 
-    function _getGameStatus(Ticket ticket, uint gameIndex) internal view returns (GameStatus memory) {
+    function _getGameData(Ticket ticket, uint gameIndex) internal view returns (GameData memory) {
         (
             bytes32 gameId,
             uint16 sportId,
             uint16 childId,
             uint16 playerPropsId,
             uint maturity,
-            uint8 status,
+            ,
             int24 line,
             uint16 playerId,
             uint8 position,
             uint odd
         ) = ticket.games(gameIndex);
+        ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(gameIndex);
+
+        return GameData(gameId, sportId, childId, playerPropsId, maturity, line, playerId, position, odd, combinedPositions);
+    }
+
+    function _getGameStatus(Ticket ticket, uint gameIndex) internal view returns (GameStatus memory) {
+        (bytes32 gameId, uint16 sportId, uint16 childId, uint16 playerPropsId, , , int24 line, uint16 playerId, , ) = ticket
+            .games(gameIndex);
 
         bool isResolved = sportsAMM.isGameResolved(gameId, sportId, childId, playerPropsId, playerId, line);
 
