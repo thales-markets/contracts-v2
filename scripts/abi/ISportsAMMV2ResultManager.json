@@ -1,0 +1,270 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_position",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+        "name": "_combinedPositions",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "getMarketPositionStatus",
+    "outputs": [
+      {
+        "internalType": "enum ISportsAMMV2ResultManager.MarketPositionStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      }
+    ],
+    "name": "getResultsPerMarket",
+    "outputs": [
+      {
+        "internalType": "int24[]",
+        "name": "results",
+        "type": "int24[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_position",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+        "name": "_combinedPositions",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "isCancelledMarketPosition",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isCancelled",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+        "name": "combinedPositions",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "isMarketResolved",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isResolved",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_position",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+        "name": "_combinedPositions",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "isWinningMarketPosition",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isWinning",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

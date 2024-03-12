@@ -15,6 +15,7 @@ async function main() {
 	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 	const sportsAMMV2RiskManagerAddress = getTargetAddress('SportsAMMV2RiskManager', network);
+	const sportsAMMV2ResultManagerAddress = getTargetAddress('SportsAMMV2ResultManager', network);
 	const stakingThalesAddress = getTargetAddress('StakingThales', network);
 	const referralsAddress = getTargetAddress('Referrals', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
@@ -34,6 +35,7 @@ async function main() {
 		defaultCollateralAddress,
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
+		sportsAMMV2ResultManagerAddress,
 		referralsAddress,
 		stakingThalesAddress,
 		safeBoxAddress,

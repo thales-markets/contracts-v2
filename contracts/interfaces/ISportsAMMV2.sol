@@ -2,22 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../interfaces/ISportsAMMV2ResultManager.sol";
 
 interface ISportsAMMV2 {
-    enum GameResult {
-        Cancelled,
-        Home,
-        Away,
-        Draw
-    }
-
-    struct GameScore {
-        uint24 homeScore;
-        uint24 awayScore;
-    }
-
     struct CombinedPosition {
-        uint16 childId;
+        uint16 typeId;
         uint8 position;
         int24 line;
     }
@@ -25,8 +14,7 @@ interface ISportsAMMV2 {
     struct TradeData {
         bytes32 gameId;
         uint16 sportId;
-        uint16 childId;
-        uint16 playerPropsId;
+        uint16 typeId;
         uint maturity;
         uint8 status;
         int24 line;
@@ -39,6 +27,8 @@ interface ISportsAMMV2 {
 
     function defaultCollateral() external view returns (IERC20);
 
+    function resultManager() external view returns (ISportsAMMV2ResultManager);
+
     function minBuyInAmount() external view returns (uint);
 
     function maxTicketSize() external view returns (uint);
@@ -48,35 +38,6 @@ interface ISportsAMMV2 {
     function maxSupportedOdds() external view returns (uint);
 
     function safeBoxFee() external view returns (uint);
-
-    function getGameResult(
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _childId,
-        uint16 _playerPropsId,
-        uint16 _playerId,
-        int24 _line
-    ) external view returns (GameResult);
-
-    function isGameResolved(
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _childId,
-        uint16 _playerPropsId,
-        uint16 _playerId,
-        int24 _line
-    ) external view returns (bool);
-
-    function isGameCancelled(
-        bytes32 _gameId,
-        uint _sportId,
-        uint _childId,
-        uint _playerPropsId,
-        uint _playerId,
-        int _line
-    ) external view returns (bool);
-
-    function gameScores(bytes32 _gameId, uint _playerPropsId, uint _playerId) external view returns (GameScore memory);
 
     function resolveTicket(
         address _ticketOwner,

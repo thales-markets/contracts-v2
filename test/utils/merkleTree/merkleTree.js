@@ -11,17 +11,10 @@ async function getMerkleTree(markets) {
 		let encodePackedOutput = web3.utils.encodePacked(
 			market.gameId,
 			market.sportId,
-			market.childId,
-			market.playerPropsId,
+			market.typeId,
 			market.maturity,
 			market.status,
-			market.childId === 10001
-				? market.spread
-				: market.childId === 10002
-				  ? market.total
-				  : market.childId === 10010
-				    ? market.playerProps.line
-				    : 0,
+			market.line,
 			market.playerProps.playerId
 		);
 
@@ -29,18 +22,18 @@ async function getMerkleTree(markets) {
 			encodePackedOutput = web3.utils.encodePacked(encodePackedOutput, market.odds[i]);
 		}
 
-		if (market.childId === 10004) {
-			market.combinedPositions.forEach((combinedPositions) => {
-				combinedPositions.forEach((combinedPosition) => {
-					encodePackedOutput = web3.utils.encodePacked(
-						encodePackedOutput,
-						combinedPosition.childId,
-						combinedPosition.position,
-						combinedPosition.line
-					);
-				});
+		const marketCombinedPositions = market.combinedPositions || [[]];
+
+		marketCombinedPositions.forEach((combinedPositions) => {
+			combinedPositions.forEach((combinedPosition) => {
+				encodePackedOutput = web3.utils.encodePacked(
+					encodePackedOutput,
+					combinedPosition.typeId,
+					combinedPosition.position,
+					combinedPosition.line
+				);
 			});
-		}
+		});
 
 		let hash = keccak256(encodePackedOutput);
 

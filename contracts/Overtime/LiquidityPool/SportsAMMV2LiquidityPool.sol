@@ -427,7 +427,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         //     ticketAddress = tradingTicketsPerRound[round][i];
         //     if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
         //         ticket = Ticket(ticketAddress);
-        //         if (!ticket.areAllPositionsResolved()) {
+        //         if (!ticket.areAllMarketsResolved()) {
         //             return false;
         //         }
         //     }
@@ -482,8 +482,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (ticketRound == 0) {
             Ticket ticket = Ticket(_ticket);
             uint maturity;
-            for (uint i = 0; i < ticket.numOfGames(); i++) {
-                (, , , , maturity, , , , , ) = ticket.games(i);
+            for (uint i = 0; i < ticket.numOfMarkets(); i++) {
+                (, , , maturity, , , , , ) = ticket.markets(i);
                 if (maturity > firstRoundStartTime) {
                     if (i == 0) {
                         ticketRound = (maturity - firstRoundStartTime) / roundLength + 2;

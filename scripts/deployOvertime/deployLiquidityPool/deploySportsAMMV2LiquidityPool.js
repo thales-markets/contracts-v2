@@ -16,7 +16,7 @@ async function main() {
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const stakingThalesAddress = getTargetAddress('StakingThales', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
-	const maxAllowedDeposit = ethers.parseEther('20000');
+	const maxAllowedDeposit = ethers.parseEther('100000');
 	const minDepositAmount = ethers.parseEther('20');
 	const maxAllowedUsers = 100;
 	const week = 7 * 24 * 60 * 60;

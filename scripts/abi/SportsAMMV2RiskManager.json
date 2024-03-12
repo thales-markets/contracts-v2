@@ -85,13 +85,7 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "childId",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "playerPropsId",
+        "name": "typeId",
         "type": "uint16"
       },
       {
@@ -113,7 +107,7 @@
         "type": "uint256"
       }
     ],
-    "name": "SetCapPerGame",
+    "name": "SetCapPerMarket",
     "type": "event"
   },
   {
@@ -122,7 +116,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sport",
+        "name": "sportId",
         "type": "uint256"
       },
       {
@@ -141,13 +135,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sport",
+        "name": "sportId",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "child",
+        "name": "typeId",
         "type": "uint256"
       },
       {
@@ -157,7 +151,7 @@
         "type": "uint256"
       }
     ],
-    "name": "SetCapPerSportAndChild",
+    "name": "SetCapPerSportAndType",
     "type": "event"
   },
   {
@@ -192,7 +186,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sport",
+        "name": "sportId",
         "type": "uint256"
       },
       {
@@ -248,13 +242,7 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "childId",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "playerPropsId",
+        "name": "typeId",
         "type": "uint16"
       },
       {
@@ -276,7 +264,7 @@
         "type": "uint256"
       }
     ],
-    "name": "SetRiskMultiplierPerGame",
+    "name": "SetRiskMultiplierPerMarket",
     "type": "event"
   },
   {
@@ -285,7 +273,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "sport",
+        "name": "sportId",
         "type": "uint256"
       },
       {
@@ -326,33 +314,20 @@
   },
   {
     "inputs": [],
-    "name": "MIN_CHILD_NUMBER",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MIN_PLAYER_PROPS_NUMBER",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MIN_SPORT_NUMBER",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_TYPE_NUMBER",
     "outputs": [
       {
         "internalType": "uint256",
@@ -384,12 +359,7 @@
       },
       {
         "internalType": "uint16",
-        "name": "_childId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerPropsId",
+        "name": "_typeId",
         "type": "uint16"
       },
       {
@@ -442,17 +412,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
         "internalType": "int256",
         "name": "",
         "type": "int256"
       }
     ],
-    "name": "capPerGame",
+    "name": "capPerMarket",
     "outputs": [
       {
         "internalType": "uint256",
@@ -495,7 +460,7 @@
         "type": "uint256"
       }
     ],
-    "name": "capPerSportAndChild",
+    "name": "capPerSportAndType",
     "outputs": [
       {
         "internalType": "uint256",
@@ -594,11 +559,6 @@
         "internalType": "uint256[]",
         "name": "capsPerSportT",
         "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "capsPerSportPP",
-        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -668,12 +628,7 @@
       },
       {
         "internalType": "uint16",
-        "name": "_childId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerPropsId",
+        "name": "_typeId",
         "type": "uint16"
       },
       {
@@ -830,17 +785,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
         "internalType": "int256",
         "name": "",
         "type": "int256"
       }
     ],
-    "name": "riskMultiplierPerGame",
+    "name": "riskMultiplierPerMarket",
     "outputs": [
       {
         "internalType": "uint256",
@@ -884,12 +834,7 @@
       },
       {
         "internalType": "uint16[]",
-        "name": "_childIds",
-        "type": "uint16[]"
-      },
-      {
-        "internalType": "uint16[]",
-        "name": "_playerPropsIds",
+        "name": "_typeIds",
         "type": "uint16[]"
       },
       {
@@ -904,11 +849,11 @@
       },
       {
         "internalType": "uint256",
-        "name": "_capPerGame",
+        "name": "_capPerMarket",
         "type": "uint256"
       }
     ],
-    "name": "setCapPerGame",
+    "name": "setCapPerMarket",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -940,16 +885,16 @@
       },
       {
         "internalType": "uint256",
-        "name": "_childId",
+        "name": "_typeId",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_capPerChild",
+        "name": "_capPerType",
         "type": "uint256"
       }
     ],
-    "name": "setCapPerSportAndChild",
+    "name": "setCapPerSportAndType",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -968,17 +913,17 @@
       },
       {
         "internalType": "uint256[]",
-        "name": "_sportIdsForChildren",
+        "name": "_sportIdsForTypes",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_childIds",
+        "name": "_typeIds",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_capsPerSportAndChild",
+        "name": "_capsPerSportAndType",
         "type": "uint256[]"
       }
     ],
@@ -1094,12 +1039,7 @@
       },
       {
         "internalType": "uint16[]",
-        "name": "_childIds",
-        "type": "uint16[]"
-      },
-      {
-        "internalType": "uint16[]",
-        "name": "_playerPropsIds",
+        "name": "_typeIds",
         "type": "uint16[]"
       },
       {
@@ -1114,11 +1054,11 @@
       },
       {
         "internalType": "uint256",
-        "name": "_riskMultiplierPerGame",
+        "name": "_riskMultiplierPerMarket",
         "type": "uint256"
       }
     ],
-    "name": "setRiskMultiplierPerGame",
+    "name": "setRiskMultiplierPerMarket",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

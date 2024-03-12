@@ -13,12 +13,7 @@
       },
       {
         "internalType": "uint16",
-        "name": "_childId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerPropsId",
+        "name": "_typeId",
         "type": "uint16"
       },
       {
@@ -67,12 +62,7 @@
       },
       {
         "internalType": "uint16",
-        "name": "_childId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerPropsId",
+        "name": "_typeId",
         "type": "uint16"
       },
       {
@@ -95,7 +85,7 @@
     "outputs": [
       {
         "internalType": "bool",
-        "name": "",
+        "name": "_isNotRisky",
         "type": "bool"
       }
     ],

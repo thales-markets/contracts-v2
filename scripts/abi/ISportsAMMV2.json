@@ -28,47 +28,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_playerPropsId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_playerId",
-        "type": "uint256"
-      }
-    ],
-    "name": "gameScores",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint24",
-            "name": "homeScore",
-            "type": "uint24"
-          },
-          {
-            "internalType": "uint24",
-            "name": "awayScore",
-            "type": "uint24"
-          }
-        ],
-        "internalType": "struct ISportsAMMV2.GameScore",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "_index",
         "type": "uint256"
@@ -90,50 +49,6 @@
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_sportId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_childId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerPropsId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "int24",
-        "name": "_line",
-        "type": "int24"
-      }
-    ],
-    "name": "getGameResult",
-    "outputs": [
-      {
-        "internalType": "enum ISportsAMMV2.GameResult",
-        "name": "",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -192,94 +107,6 @@
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_sportId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_childId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_playerPropsId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_playerId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "int256",
-        "name": "_line",
-        "type": "int256"
-      }
-    ],
-    "name": "isGameCancelled",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_sportId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_childId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerPropsId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "int24",
-        "name": "_line",
-        "type": "int24"
-      }
-    ],
-    "name": "isGameResolved",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -425,6 +252,19 @@
     "name": "resolveTicket",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "resultManager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2ResultManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

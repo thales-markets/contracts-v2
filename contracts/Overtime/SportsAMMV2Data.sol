@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../interfaces/ISportsAMMV2.sol";
+import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "./Ticket.sol";
 
 contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
@@ -19,11 +20,10 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint safeBoxFee;
     }
 
-    struct GameData {
+    struct MarketData {
         bytes32 gameId;
         uint16 sportId;
-        uint16 childId;
-        uint16 playerPropsId;
+        uint16 typeId;
         uint maturity;
         int24 line;
         uint16 playerId;
@@ -32,23 +32,21 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         ISportsAMMV2.CombinedPosition[] combinedPositions;
     }
 
-    struct GameStatus {
-        bool isResolved;
-        bool isCancelled;
-        ISportsAMMV2.GameScore score;
-        ISportsAMMV2.GameResult result;
+    struct MarketResult {
+        ISportsAMMV2ResultManager.MarketPositionStatus status;
+        int24[] results;
     }
 
     struct TicketData {
         address id;
-        GameData[] gamesData;
-        GameStatus[] gamesStatus;
+        MarketData[] marketsData;
+        MarketResult[] marketsResult;
         address ticketOwner;
         address ticketCreator;
         uint buyInAmount;
         uint buyInAmountAfterFees;
         uint totalQuote;
-        uint numOfGames;
+        uint numOfMarkets;
         uint expiry;
         uint createdAt;
         bool resolved;
@@ -110,23 +108,23 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         TicketData[] memory tickets = new TicketData[](ticketsArray.length);
         for (uint i = 0; i < ticketsArray.length; i++) {
             Ticket ticket = Ticket(ticketsArray[i]);
-            GameData[] memory gamesData = new GameData[](ticket.numOfGames());
-            GameStatus[] memory gamesStatus = new GameStatus[](ticket.numOfGames());
-            for (uint j = 0; j < ticket.numOfGames(); j++) {
-                gamesData[j] = _getGameData(ticket, j);
-                gamesStatus[j] = _getGameStatus(ticket, j);
+            MarketData[] memory marketsData = new MarketData[](ticket.numOfMarkets());
+            MarketResult[] memory marketsResult = new MarketResult[](ticket.numOfMarkets());
+            for (uint j = 0; j < ticket.numOfMarkets(); j++) {
+                marketsData[j] = _getMarketData(ticket, j);
+                marketsResult[j] = _getMarketResult(ticket, j);
             }
 
             tickets[i] = TicketData(
                 ticketsArray[i],
-                gamesData,
-                gamesStatus,
+                marketsData,
+                marketsResult,
                 ticket.ticketOwner(),
                 ticket.ticketCreator(),
                 ticket.buyInAmount(),
                 ticket.buyInAmountAfterFees(),
                 ticket.totalQuote(),
-                ticket.numOfGames(),
+                ticket.numOfMarkets(),
                 ticket.expiry(),
                 ticket.createdAt(),
                 ticket.resolved(),
@@ -140,38 +138,39 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return tickets;
     }
 
-    function _getGameData(Ticket ticket, uint gameIndex) internal view returns (GameData memory) {
+    function _getMarketData(Ticket ticket, uint marketIndex) internal view returns (MarketData memory) {
         (
             bytes32 gameId,
             uint16 sportId,
-            uint16 childId,
-            uint16 playerPropsId,
+            uint16 typeId,
             uint maturity,
             ,
             int24 line,
             uint16 playerId,
             uint8 position,
             uint odd
-        ) = ticket.games(gameIndex);
-        ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(gameIndex);
+        ) = ticket.markets(marketIndex);
+        ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(marketIndex);
 
-        return GameData(gameId, sportId, childId, playerPropsId, maturity, line, playerId, position, odd, combinedPositions);
+        return MarketData(gameId, sportId, typeId, maturity, line, playerId, position, odd, combinedPositions);
     }
 
-    function _getGameStatus(Ticket ticket, uint gameIndex) internal view returns (GameStatus memory) {
-        (bytes32 gameId, uint16 sportId, uint16 childId, uint16 playerPropsId, , , int24 line, uint16 playerId, , ) = ticket
-            .games(gameIndex);
+    function _getMarketResult(Ticket ticket, uint marketIndex) internal view returns (MarketResult memory) {
+        (bytes32 gameId, , uint16 typeId, , , int24 line, uint16 playerId, uint8 position, ) = ticket.markets(marketIndex);
+        ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(marketIndex);
 
-        bool isResolved = sportsAMM.isGameResolved(gameId, sportId, childId, playerPropsId, playerId, line);
+        ISportsAMMV2ResultManager.MarketPositionStatus status = sportsAMM.resultManager().getMarketPositionStatus(
+            gameId,
+            typeId,
+            playerId,
+            line,
+            position,
+            combinedPositions
+        );
 
-        ISportsAMMV2.GameScore memory score = sportsAMM.gameScores(gameId, playerPropsId, playerId);
+        int24[] memory results = sportsAMM.resultManager().getResultsPerMarket(gameId, typeId, playerId);
 
-        ISportsAMMV2.GameResult result = sportsAMM.getGameResult(gameId, sportId, childId, playerPropsId, playerId, line);
-
-        bool isCancelled = sportsAMM.isGameCancelled(gameId, sportId, childId, playerPropsId, playerId, line) ||
-            (isResolved && result == ISportsAMMV2.GameResult.Cancelled);
-
-        return GameStatus(isResolved, isCancelled, score, result);
+        return MarketResult(status, results);
     }
 
     function setSportsAMM(ISportsAMMV2 _sportsAMM) external onlyOwner {

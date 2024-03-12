@@ -14,11 +14,10 @@ contract Ticket is OwnedWithInit {
         Expiry
     }
 
-    struct GameData {
+    struct MarketData {
         bytes32 gameId;
         uint16 sportId;
-        uint16 childId;
-        uint16 playerPropsId;
+        uint16 typeId;
         uint maturity;
         uint8 status;
         int24 line;
@@ -35,7 +34,7 @@ contract Ticket is OwnedWithInit {
     uint public buyInAmount;
     uint public buyInAmountAfterFees;
     uint public totalQuote;
-    uint public numOfGames;
+    uint public numOfMarkets;
     uint public expiry;
     uint public createdAt;
 
@@ -44,12 +43,12 @@ contract Ticket is OwnedWithInit {
     bool public initialized;
     bool public cancelled;
 
-    mapping(uint => GameData) public games;
+    mapping(uint => MarketData) public markets;
 
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the ticket contract
-    /// @param _gameData data with all game info needed for ticket
+    /// @param _markets data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
     /// @param _buyInAmountAfterFees ticket buy-in amount without fees
     /// @param _totalQuote total ticket quote
@@ -58,7 +57,7 @@ contract Ticket is OwnedWithInit {
     /// @param _ticketCreator creator of the ticket
     /// @param _expiry ticket expiry timestamp
     function initialize(
-        GameData[] calldata _gameData,
+        MarketData[] calldata _markets,
         uint _buyInAmount,
         uint _buyInAmountAfterFees,
         uint _totalQuote,
@@ -71,9 +70,9 @@ contract Ticket is OwnedWithInit {
         initialized = true;
         initOwner(msg.sender);
         sportsAMM = ISportsAMMV2(_sportsAMM);
-        numOfGames = _gameData.length;
-        for (uint i = 0; i < numOfGames; i++) {
-            games[i] = _gameData[i];
+        numOfMarkets = _markets.length;
+        for (uint i = 0; i < numOfMarkets; i++) {
+            markets[i] = _markets[i];
         }
         buyInAmount = _buyInAmount;
         buyInAmountAfterFees = _buyInAmountAfterFees;
@@ -89,29 +88,40 @@ contract Ticket is OwnedWithInit {
     /// @notice checks if the user lost the ticket
     /// @return isTicketLost true/false
     function isTicketLost() public view returns (bool) {
-        bool gameWinning;
-        bool gameResolved;
-        for (uint i = 0; i < numOfGames; i++) {
-            (gameWinning, gameResolved) = _isWinningPosition(games[i]);
-            if (gameResolved && !gameWinning) {
+        for (uint i = 0; i < numOfMarkets; i++) {
+            bool isMarketResolved = sportsAMM.resultManager().isMarketResolved(
+                markets[i].gameId,
+                markets[i].typeId,
+                markets[i].playerId,
+                markets[i].line,
+                markets[i].combinedPositions
+            );
+            bool isWinningMarketPosition = sportsAMM.resultManager().isWinningMarketPosition(
+                markets[i].gameId,
+                markets[i].typeId,
+                markets[i].playerId,
+                markets[i].line,
+                markets[i].position,
+                markets[i].combinedPositions
+            );
+            if (isMarketResolved && !isWinningMarketPosition) {
                 return true;
             }
         }
         return false;
     }
 
-    /// @notice checks are all positions of the ticket resolved
-    /// @return areAllPositionsResolved true/false
-    function areAllPositionsResolved() public view returns (bool) {
-        for (uint i = 0; i < numOfGames; i++) {
+    /// @notice checks are all markets of the ticket resolved
+    /// @return areAllMarketsResolved true/false
+    function areAllMarketsResolved() public view returns (bool) {
+        for (uint i = 0; i < numOfMarkets; i++) {
             if (
-                !sportsAMM.isGameResolved(
-                    games[i].gameId,
-                    games[i].sportId,
-                    games[i].childId,
-                    games[i].playerPropsId,
-                    games[i].playerId,
-                    games[i].line
+                !sportsAMM.resultManager().isMarketResolved(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].combinedPositions
                 )
             ) {
                 return false;
@@ -123,7 +133,7 @@ contract Ticket is OwnedWithInit {
     /// @notice checks if the user won the ticket
     /// @return hasUserWon true/false
     function isUserTheWinner() external view returns (bool hasUserWon) {
-        if (areAllPositionsResolved()) {
+        if (areAllMarketsResolved()) {
             hasUserWon = !isTicketLost();
         }
     }
@@ -131,7 +141,7 @@ contract Ticket is OwnedWithInit {
     /// @notice checks if the ticket ready to be exercised
     /// @return isExercisable true/false
     function isTicketExercisable() public view returns (bool isExercisable) {
-        isExercisable = !resolved && (areAllPositionsResolved() || isTicketLost());
+        isExercisable = !resolved && (areAllMarketsResolved() || isTicketLost());
     }
 
     /// @notice gets current phase of the ticket
@@ -143,9 +153,9 @@ contract Ticket is OwnedWithInit {
     /// @notice gets combined positions of the game
     /// @return combinedPositions game combined positions
     function getCombinedPositions(
-        uint _gameIndex
+        uint _marketIndex
     ) public view returns (ISportsAMMV2.CombinedPosition[] memory combinedPositions) {
-        return games[_gameIndex].combinedPositions;
+        return markets[_marketIndex].combinedPositions;
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
@@ -167,17 +177,17 @@ contract Ticket is OwnedWithInit {
         } else {
             uint finalPayout = payout;
             isCancelled = true;
-            for (uint i = 0; i < numOfGames; i++) {
-                ISportsAMMV2.GameResult result = sportsAMM.getGameResult(
-                    games[i].gameId,
-                    games[i].sportId,
-                    games[i].childId,
-                    games[i].playerPropsId,
-                    games[i].playerId,
-                    games[i].line
+            for (uint i = 0; i < numOfMarkets; i++) {
+                bool isCancelledMarketPosition = sportsAMM.resultManager().isCancelledMarketPosition(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].position,
+                    markets[i].combinedPositions
                 );
-                if (result == ISportsAMMV2.GameResult.Cancelled) {
-                    finalPayout = (finalPayout * games[i].odd) / ONE;
+                if (isCancelledMarketPosition) {
+                    finalPayout = (finalPayout * markets[i].odd) / ONE;
                 } else {
                     isCancelled = false;
                 }
@@ -216,28 +226,6 @@ contract Ticket is OwnedWithInit {
         cancelled = _cancelled;
         sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, ticketCreator);
         emit Resolved(_hasUserWon, _cancelled);
-    }
-
-    function _isWinningPosition(GameData memory game) internal view returns (bool isWinning, bool isResolved) {
-        isResolved = sportsAMM.isGameResolved(
-            game.gameId,
-            game.sportId,
-            game.childId,
-            game.playerPropsId,
-            game.playerId,
-            game.line
-        );
-        ISportsAMMV2.GameResult result = sportsAMM.getGameResult(
-            game.gameId,
-            game.sportId,
-            game.childId,
-            game.playerPropsId,
-            game.playerId,
-            game.line
-        );
-        if (isResolved && (uint(result) == (game.position + 1) || result == ISportsAMMV2.GameResult.Cancelled)) {
-            isWinning = true;
-        }
     }
 
     function _selfDestruct(address payable beneficiary) internal {

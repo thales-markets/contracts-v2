@@ -90,7 +90,7 @@
   },
   {
     "inputs": [],
-    "name": "areAllPositionsResolved",
+    "name": "areAllMarketsResolved",
     "outputs": [
       {
         "internalType": "bool",
@@ -190,71 +190,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "games",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "sportId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "childId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "playerPropsId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maturity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint8",
-        "name": "status",
-        "type": "uint8"
-      },
-      {
-        "internalType": "int24",
-        "name": "line",
-        "type": "int24"
-      },
-      {
-        "internalType": "uint16",
-        "name": "playerId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint8",
-        "name": "position",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "odd",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_gameIndex",
+        "name": "_marketIndex",
         "type": "uint256"
       }
     ],
@@ -264,7 +200,7 @@
         "components": [
           {
             "internalType": "uint16",
-            "name": "childId",
+            "name": "typeId",
             "type": "uint16"
           },
           {
@@ -302,12 +238,7 @@
           },
           {
             "internalType": "uint16",
-            "name": "childId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "playerPropsId",
+            "name": "typeId",
             "type": "uint16"
           },
           {
@@ -344,7 +275,7 @@
             "components": [
               {
                 "internalType": "uint16",
-                "name": "childId",
+                "name": "typeId",
                 "type": "uint16"
               },
               {
@@ -363,8 +294,8 @@
             "type": "tuple[]"
           }
         ],
-        "internalType": "struct Ticket.GameData[]",
-        "name": "_gameData",
+        "internalType": "struct Ticket.MarketData[]",
+        "name": "_markets",
         "type": "tuple[]"
       },
       {
@@ -463,6 +394,65 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "markets",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "sportId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maturity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "int24",
+        "name": "line",
+        "type": "int24"
+      },
+      {
+        "internalType": "uint16",
+        "name": "playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint8",
+        "name": "position",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "odd",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_owner",
         "type": "address"
@@ -488,7 +478,7 @@
   },
   {
     "inputs": [],
-    "name": "numOfGames",
+    "name": "numOfMarkets",
     "outputs": [
       {
         "internalType": "uint256",

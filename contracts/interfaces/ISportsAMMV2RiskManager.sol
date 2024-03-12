@@ -5,8 +5,7 @@ interface ISportsAMMV2RiskManager {
     function calculateCapToBeUsed(
         bytes32 _gameId,
         uint16 _sportId,
-        uint16 _childId,
-        uint16 _playerPropsId,
+        uint16 _typeId,
         uint16 _playerId,
         int24 _line,
         uint _maturity
@@ -16,10 +15,9 @@ interface ISportsAMMV2RiskManager {
         uint _totalSpent,
         bytes32 _gameId,
         uint16 _sportId,
-        uint16 _childId,
-        uint16 _playerPropsId,
+        uint16 _typeId,
         uint16 _playerId,
         int24 _line,
         uint _maturity
-    ) external view returns (bool);
+    ) external view returns (bool _isNotRisky);
 }
