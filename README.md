@@ -1,8 +1,15 @@
-# Sample Hardhat Project
+# Thales V2 contracts
+This repository is intended for v2 version of Thales contract architecture.
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+# About Thales
+A permissionless ecosystem where every derivative market is a unique smart contract.
+Powered by pioneering AMM architecture and trustless liquidity pools.
 
-Try running some of the following tasks:
+# Tests 
+TBD
+
+# APIs 
+TBD
 
 ```shell
 npx hardhat help
