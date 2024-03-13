@@ -93,9 +93,17 @@ async function deploySportsAMMV2Fixture() {
 		RISK_MANAGER_INITAL_PARAMS.maxRiskMultiplier,
 	]);
 
+	// deploy Sports AMM result manager
+	const SportsAMMV2ResultManager = await ethers.getContractFactory('SportsAMMV2ResultManager');
+	const sportsAMMV2ResultManager = await upgrades.deployProxy(SportsAMMV2ResultManager, [
+		owner.address,
+		sportsAMMV2ManagerAddress,
+	]);
+
 	// deploy Sports AMM
 	const collateralAddress = await collateral.getAddress();
 	const sportsAMMV2RiskManagerAddress = await sportsAMMV2RiskManager.getAddress();
+	const sportsAMMV2ResultManagerAddress = await sportsAMMV2ResultManager.getAddress();
 	const stakingThalesAddress = await stakingThales.getAddress();
 	const referralsAddress = await referrals.getAddress();
 
@@ -105,6 +113,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralAddress,
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
+		sportsAMMV2ResultManagerAddress,
 		referralsAddress,
 		stakingThalesAddress,
 		safeBox.address,
@@ -206,6 +215,7 @@ async function deploySportsAMMV2Fixture() {
 		owner,
 		sportsAMMV2Manager,
 		sportsAMMV2RiskManager,
+		sportsAMMV2ResultManager,
 		sportsAMMV2,
 		ticketMastercopy,
 		sportsAMMV2LiquidityPool,

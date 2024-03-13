@@ -1,32 +1,22 @@
-const { CHILD_ID_SPREAD, CHILD_ID_TOTAL, CHILD_ID_PLAYER_PROPS } = require('../constants/overtime');
+const { TYPE_ID_SPREAD, TYPE_ID_TOTAL, TYPE_ID_POINTS } = require('../constants/overtime');
 const markets = require(`../../scripts/deployOvertime/updateMerkleTree/markets.json`);
 const { ONE_DAY_IN_SECS, ONE_WEEK_IN_SECS } = require('../constants/general');
 const { getMerkleTree } = require('./merkleTree/merkleTree');
 const fs = require('fs');
 
-const getGameLine = (game) =>
-	game.childId === CHILD_ID_SPREAD
-		? game.spread
-		: game.childId === CHILD_ID_TOTAL
-		  ? game.total
-		  : game.childId === CHILD_ID_PLAYER_PROPS
-		    ? game.playerProps.line
-		    : 0;
-
-const getTradeDataItem = (game, position) => {
+const getTradeDataItem = (market, position) => {
 	return {
-		gameId: game.gameId,
-		sportId: game.sportId,
-		childId: game.childId,
-		playerPropsId: game.playerPropsId,
-		maturity: game.maturity,
-		status: game.status,
-		line: getGameLine(game),
-		playerId: game.playerProps.playerId,
-		odds: game.odds,
-		merkleProof: game.proof,
+		gameId: market.gameId,
+		sportId: market.sportId,
+		typeId: market.typeId,
+		maturity: market.maturity,
+		status: market.status,
+		line: market.line,
+		playerId: market.playerProps.playerId,
+		odds: market.odds,
+		merkleProof: market.proof,
 		position: position,
-		combinedPositions: game.combinedPositions || 0,
+		combinedPositions: market.combinedPositions || new Array(market.odds.length).fill([]),
 	};
 };
 

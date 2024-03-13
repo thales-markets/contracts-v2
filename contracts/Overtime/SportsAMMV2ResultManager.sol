@@ -38,7 +38,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
 
-    uint public constant CHILD_ID_SPREAD = 10001;
+    uint public constant TYPE_ID_SPREAD = 10001;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -272,7 +272,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 if (marketResult == _line) {
                     return ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
                 } else {
-                    uint winningPosition = _typeId == CHILD_ID_SPREAD
+                    uint winningPosition = _typeId == TYPE_ID_SPREAD
                         ? (marketResult < _line ? 0 : 1)
                         : (marketResult > _line ? 0 : 1);
                     if (winningPosition == position) {
@@ -313,9 +313,13 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         }
 
         return
-            hasCancelledPosition ? ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled : hasOpenPosition
-                ? ISportsAMMV2ResultManager.MarketPositionStatus.Open
-                : ISportsAMMV2ResultManager.MarketPositionStatus.Winning;
+            hasCancelledPosition
+                ? ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled
+                : (
+                    hasOpenPosition
+                        ? ISportsAMMV2ResultManager.MarketPositionStatus.Open
+                        : ISportsAMMV2ResultManager.MarketPositionStatus.Winning
+                );
     }
 
     /* ========== EVENTS ========== */

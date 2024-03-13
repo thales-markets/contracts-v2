@@ -13,6 +13,7 @@ const {
 
 describe('SportsAMMV2LiquidityPool Trades', () => {
 	let sportsAMMV2,
+		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
 		collateral,
 		safeBox,
@@ -25,6 +26,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
+			sportsAMMV2ResultManager,
 			sportsAMMV2LiquidityPool,
 			collateral,
 			safeBox,
@@ -117,14 +119,13 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(false);
 
-			// resolve ticket game as winning for the user
-			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame1.gameId],
-				[ticketGame1.playerPropsId],
-				[ticketGame1.playerId],
-				[123],
-				[100]
+			// resolve ticket market as winning for the user
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[0]]
 			);
 
 			// exercise ticket on LP (hasTicketsReadyToBeExercised should be false since it is winning ticket for the user)
@@ -274,14 +275,13 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(false);
 
-			// resolve ticket game as loss for the user
-			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame1.gameId],
-				[ticketGame1.playerPropsId],
-				[ticketGame1.playerId],
-				[98],
-				[100]
+			// resolve ticket market as loss for the user
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[1]]
 			);
 
 			// exercise ticket on LP
@@ -479,14 +479,13 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
 			).to.equal(false);
 
-			// resolve ticket game as loss for the user
-			const ticketGame1 = tradeDataNextRound[0];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame1.gameId],
-				[ticketGame1.playerPropsId],
-				[ticketGame1.playerId],
-				[98],
-				[100]
+			// resolve ticket market as loss for the user
+			const ticketMarket1 = tradeDataNextRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[1]]
 			);
 
 			// exercise ticket on LP
@@ -690,24 +689,21 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
 			).to.equal(false);
 
-			// resolve ticket game as loss for the user
-			const ticketGame1 = tradeDataCrossRounds[0];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame1.gameId],
-				[ticketGame1.playerPropsId],
-				[ticketGame1.playerId],
-				[98],
-				[100]
+			// resolve ticket market as loss for the user
+			const ticketMarket1 = tradeDataCrossRounds[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[1]]
 			);
-			const ticketGame2 = tradeDataCrossRounds[1];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame2.gameId],
-				[ticketGame2.playerPropsId],
-				[ticketGame2.playerId],
-				[98],
-				[100]
+			const ticketMarket2 = tradeDataCrossRounds[1];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket2.gameId],
+				[ticketMarket2.typeId],
+				[ticketMarket2.playerId],
+				[[1000]]
 			);
-
 			// try exercise ticket on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
 			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercised();

@@ -5,9 +5,9 @@ const { ONE_DAY_IN_SECS } = require('../../../constants/general');
 const {
 	SPORT_ID_NBA,
 	SPORT_ID_EPL,
-	CHILD_ID_SPREAD,
-	CHILD_ID_TOTAL,
-	CHILD_ID_PLAYER_PROPS,
+	TYPE_ID_SPREAD,
+	TYPE_ID_TOTAL,
+	TYPE_ID_POINTS,
 	GAME_ID_1,
 	TOTAL_LINE,
 } = require('../../../constants/overtime');
@@ -18,10 +18,10 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 
 	const {
 		newCapForSport,
-		newCapForSportAndChild,
-		newCapForGame,
+		newCapForSportAndType,
+		newCapForMarket,
 		newRiskMultiplierForSport,
-		newRiskMultiplierForGame,
+		newRiskMultiplierForMarket,
 		newDynamicLiquidityCutoffTime,
 		newDynamicLiquidityCutoffDivider,
 	} = RISK_MANAGER_PARAMS;
@@ -36,8 +36,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				[SPORT_ID_NBA],
 				[newCapForSport],
 				[SPORT_ID_EPL, SPORT_ID_EPL, SPORT_ID_NBA],
-				[CHILD_ID_SPREAD, CHILD_ID_TOTAL, CHILD_ID_PLAYER_PROPS],
-				[newCapForSportAndChild, newCapForSportAndChild, newCapForSportAndChild]
+				[TYPE_ID_SPREAD, TYPE_ID_TOTAL, TYPE_ID_POINTS],
+				[newCapForSportAndType, newCapForSportAndType, newCapForSportAndType]
 			);
 
 			const allDataForSports = await sportsAMMV2RiskManager.getAllDataForSports([
@@ -49,13 +49,11 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			expect(allDataForSports.capsPerSport[0]).to.equal(newCapForSport);
 			expect(allDataForSports.capsPerSportH[0]).to.equal(0);
 			expect(allDataForSports.capsPerSportT[0]).to.equal(0);
-			expect(allDataForSports.capsPerSportPP[0]).to.equal(newCapForSportAndChild);
 
 			// EPL
 			expect(allDataForSports.capsPerSport[1]).to.equal(0);
-			expect(allDataForSports.capsPerSportH[1]).to.equal(newCapForSportAndChild);
-			expect(allDataForSports.capsPerSportT[1]).to.equal(newCapForSportAndChild);
-			expect(allDataForSports.capsPerSportPP[1]).to.equal(0);
+			expect(allDataForSports.capsPerSportH[1]).to.equal(newCapForSportAndType);
+			expect(allDataForSports.capsPerSportT[1]).to.equal(newCapForSportAndType);
 		});
 	});
 
@@ -67,11 +65,10 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			defaultCap = await sportsAMMV2RiskManager.defaultCap();
 		});
 
-		it('Should get cap for game (MONEYLINE) - default cap', async () => {
+		it('Should get cap for market (MONEYLINE) - default cap', async () => {
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				0,
 				0,
 				0,
 				0,
@@ -81,12 +78,11 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			expect(cap).to.equal(defaultCap);
 		});
 
-		it('Should get cap for child game (TOTAL) - default cap / 2', async () => {
+		it('Should get cap for market (TOTAL) - default cap / 2', async () => {
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				CHILD_ID_TOTAL,
-				0,
+				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
 				maturity
@@ -95,13 +91,12 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			expect(cap).to.equal(ethers.parseEther((ethers.formatEther(defaultCap) / 2).toString()));
 		});
 
-		it('Should get cap for game (MONEYLINE) - cap per sport', async () => {
+		it('Should get cap for market (MONEYLINE) - cap per sport', async () => {
 			await sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForSport);
 
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				0,
 				0,
 				0,
 				0,
@@ -111,14 +106,13 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			expect(cap).to.equal(newCapForSport);
 		});
 
-		it('Should get cap for child game (TOTAL) - cap per sport / 2', async () => {
+		it('Should get cap for market (TOTAL) - cap per sport / 2', async () => {
 			await sportsAMMV2RiskManager.setCapPerSport(SPORT_ID_NBA, newCapForSport);
 
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				CHILD_ID_TOTAL,
-				0,
+				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
 				maturity
@@ -127,58 +121,54 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			expect(cap).to.equal(ethers.parseEther((ethers.formatEther(newCapForSport) / 2).toString()));
 		});
 
-		it('Should get cap for child game (TOTAL) - cap per sport and child', async () => {
-			await sportsAMMV2RiskManager.setCapPerSportAndChild(
+		it('Should get cap for market (TOTAL) - cap per sport and child', async () => {
+			await sportsAMMV2RiskManager.setCapPerSportAndType(
 				SPORT_ID_NBA,
-				CHILD_ID_TOTAL,
-				newCapForSportAndChild
+				TYPE_ID_TOTAL,
+				newCapForSportAndType
 			);
 
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				CHILD_ID_TOTAL,
-				0,
+				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
 				maturity
 			);
 
-			expect(cap).to.equal(newCapForSportAndChild);
+			expect(cap).to.equal(newCapForSportAndType);
 		});
 
-		it('Should get cap for child game (TOTAL) - cap per game', async () => {
-			await sportsAMMV2RiskManager.setCapPerGame(
+		it('Should get cap for market (TOTAL) - cap per market', async () => {
+			await sportsAMMV2RiskManager.setCapPerMarket(
 				[GAME_ID_1],
 				[SPORT_ID_NBA],
-				[CHILD_ID_TOTAL],
-				[0],
+				[TYPE_ID_TOTAL],
 				[0],
 				[TOTAL_LINE],
-				newCapForGame
+				newCapForMarket
 			);
 
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				CHILD_ID_TOTAL,
-				0,
+				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
 				maturity
 			);
 
-			expect(cap).to.equal(newCapForGame);
+			expect(cap).to.equal(newCapForMarket);
 		});
 
-		it('Should get cap for game (MONEYLINE) - dynamic liquidity', async () => {
+		it('Should get cap for market (MONEYLINE) - dynamic liquidity', async () => {
 			const formattedDefaultCap = ethers.formatEther(defaultCap);
 
 			// default cap
 			let cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				0,
 				0,
 				0,
 				0,
@@ -200,7 +190,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				0,
 				maturity
 			);
 			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 4).toString()));
@@ -219,7 +208,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				0,
 				maturity
 			);
 			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 2).toString()));
@@ -232,7 +220,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				0,
 				0,
 				0,
 				0,
@@ -255,7 +242,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				0,
 				maturity
 			);
 			expect(Number(ethers.formatEther(cap))).to.approximately((formattedDefaultCap * 5) / 8, 1);
@@ -267,7 +253,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
 				SPORT_ID_NBA,
-				0,
 				0,
 				0,
 				0,
@@ -294,7 +279,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 					0,
 					0,
 					0,
-					0,
 					maturity
 				);
 
@@ -309,7 +293,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 					totalSpent,
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					0,
 					0,
 					0,
 					0,
@@ -333,26 +316,24 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 					0,
 					0,
 					0,
-					0,
 					maturity
 				);
 
 			expect(isTotalSpendingLessThanTotalRisk).to.equal(true);
 		});
 
-		it('Should get total spending is more than total risk - default cap, risk per sport, risk per game', async () => {
+		it('Should get total spending is more than total risk - default cap, risk per sport, risk per market', async () => {
 			await sportsAMMV2RiskManager.setRiskMultiplierPerSport(
 				SPORT_ID_NBA,
 				newRiskMultiplierForSport
 			);
-			await sportsAMMV2RiskManager.setRiskMultiplierPerGame(
+			await sportsAMMV2RiskManager.setRiskMultiplierPerMarket(
 				[GAME_ID_1],
 				[SPORT_ID_NBA],
 				[0],
 				[0],
 				[0],
-				[0],
-				newRiskMultiplierForGame
+				newRiskMultiplierForMarket
 			);
 
 			const isTotalSpendingLessThanTotalRisk =
@@ -360,7 +341,6 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 					totalSpent,
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					0,
 					0,
 					0,
 					0,

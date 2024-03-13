@@ -9,6 +9,7 @@ const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('../../../constants/overt
 
 describe('SportsAMMV2LiquidityPool User Actions', () => {
 	let sportsAMMV2,
+		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
 		collateral,
 		tradeDataCurrentRound,
@@ -19,8 +20,13 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 		firstTrader;
 
 	beforeEach(async () => {
-		({ sportsAMMV2, sportsAMMV2LiquidityPool, collateral, tradeDataCurrentRound } =
-			await loadFixture(deploySportsAMMV2Fixture));
+		({
+			sportsAMMV2,
+			sportsAMMV2ResultManager,
+			sportsAMMV2LiquidityPool,
+			collateral,
+			tradeDataCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture));
 		({
 			secondAccount,
 			firstLiquidityProvider,
@@ -108,7 +114,7 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 
 		it('Should fail with "Deposit amount exceeds AMM LP cap"', async () => {
 			await expect(
-				sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(ethers.parseEther('30000'))
+				sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(ethers.parseEther('300000'))
 			).to.be.revertedWith('Deposit amount exceeds AMM LP cap');
 		});
 
@@ -396,14 +402,13 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					false
 				);
 
-			// resolve ticket game as loss for the user
-			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame1.gameId],
-				[ticketGame1.playerPropsId],
-				[ticketGame1.playerId],
-				[98],
-				[100]
+			// resolve ticket market as loss for the user
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[1]]
 			);
 
 			// increase time to round close time
@@ -557,14 +562,13 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					false
 				);
 
-			// resolve ticket game as loss for the user
-			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame1.gameId],
-				[ticketGame1.playerPropsId],
-				[ticketGame1.playerId],
-				[98],
-				[100]
+			// resolve ticket market as loss for the user
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[1]]
 			);
 
 			// increase time to round close time
@@ -667,13 +671,12 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					false
 				);
 
-			const ticketGame1 = tradeDataCurrentRound[0];
-			await sportsAMMV2.setScoresForGames(
-				[ticketGame1.gameId],
-				[ticketGame1.playerPropsId],
-				[ticketGame1.playerId],
-				[123],
-				[100]
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[0]]
 			);
 		});
 

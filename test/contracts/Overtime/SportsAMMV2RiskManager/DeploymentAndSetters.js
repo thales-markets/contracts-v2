@@ -4,19 +4,16 @@ const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { ZERO_ADDRESS, ONE_DAY_IN_SECS } = require('../../../constants/general');
+const { ZERO_ADDRESS } = require('../../../constants/general');
 const {
 	INVALID_SPORT_ID,
 	SPORT_ID_NBA,
 	SPORT_ID_EPL,
-	INVALID_CHILD_ID,
-	CHILD_ID_SPREAD,
-	CHILD_ID_TOTAL,
-	CHILD_ID_PLAYER_PROPS,
+	INVALID_TYPE_ID,
+	TYPE_ID_TOTAL,
+	TYPE_ID_POINTS,
 	GAME_ID_1,
-	PLAYER_PROPS_ID_POINTS,
 	PLAYER_ID_1,
-	TOTAL_LINE,
 	PLAYER_PROPS_LINE_1,
 } = require('../../../constants/overtime');
 const {
@@ -33,14 +30,14 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 		invalidMaxCap,
 		newMaxCap,
 		newCapForSport,
-		newCapForSportAndChild,
-		newCapForGame,
+		newCapForSportAndType,
+		newCapForMarket,
 		invalidRiskMultiplier,
 		newDefaultRiskMultiplier,
 		invalidMaxRiskMultiplier,
 		newMaxRiskMultiplier,
 		newRiskMultiplierForSport,
-		newRiskMultiplierForGame,
+		newRiskMultiplierForMarket,
 		newDynamicLiquidityCutoffTime,
 		newDynamicLiquidityCutoffDivider,
 	} = RISK_MANAGER_PARAMS;
@@ -178,64 +175,63 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				.withArgs(SPORT_ID_NBA, newCapForSport);
 		});
 
-		it('Should set the new cap per sport and child (NBA, TOTAL)', async () => {
-			expect(
-				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
-			).to.equal(0);
+		it('Should set the new cap per sport and type (NBA, TOTAL)', async () => {
+			expect(await sportsAMMV2RiskManager.capPerSportAndType(SPORT_ID_NBA, TYPE_ID_TOTAL)).to.equal(
+				0
+			);
 
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
-					.setCapPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForSportAndChild)
+					.setCapPerSportAndType(SPORT_ID_NBA, TYPE_ID_TOTAL, newCapForSportAndType)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
-				sportsAMMV2RiskManager.setCapPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL, invalidCap)
+				sportsAMMV2RiskManager.setCapPerSportAndType(SPORT_ID_NBA, TYPE_ID_TOTAL, invalidCap)
 			).to.be.revertedWith('Invalid cap');
 
 			await expect(
-				sportsAMMV2RiskManager.setCapPerSportAndChild(
+				sportsAMMV2RiskManager.setCapPerSportAndType(
 					INVALID_SPORT_ID,
-					CHILD_ID_TOTAL,
-					newCapForSportAndChild
+					TYPE_ID_TOTAL,
+					newCapForSportAndType
 				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
-				sportsAMMV2RiskManager.setCapPerSportAndChild(
+				sportsAMMV2RiskManager.setCapPerSportAndType(
 					SPORT_ID_NBA,
-					INVALID_CHILD_ID,
-					newCapForSportAndChild
+					INVALID_TYPE_ID,
+					newCapForSportAndType
 				)
-			).to.be.revertedWith('Invalid ID for child');
+			).to.be.revertedWith('Invalid ID for type');
 
-			await sportsAMMV2RiskManager.setCapPerSportAndChild(
+			await sportsAMMV2RiskManager.setCapPerSportAndType(
 				SPORT_ID_NBA,
-				CHILD_ID_TOTAL,
-				newCapForSportAndChild
+				TYPE_ID_TOTAL,
+				newCapForSportAndType
 			);
-			expect(
-				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
-			).to.equal(newCapForSportAndChild);
+			expect(await sportsAMMV2RiskManager.capPerSportAndType(SPORT_ID_NBA, TYPE_ID_TOTAL)).to.equal(
+				newCapForSportAndType
+			);
 
 			await expect(
-				sportsAMMV2RiskManager.setCapPerSportAndChild(
+				sportsAMMV2RiskManager.setCapPerSportAndType(
 					SPORT_ID_NBA,
-					CHILD_ID_TOTAL,
-					newCapForSportAndChild
+					TYPE_ID_TOTAL,
+					newCapForSportAndType
 				)
 			)
-				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndChild')
-				.withArgs(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForSportAndChild);
+				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndType')
+				.withArgs(SPORT_ID_NBA, TYPE_ID_TOTAL, newCapForSportAndType);
 		});
 
-		it('Should set the new cap per game (Giannis Antetokounmpo - points 33.5)', async () => {
+		it('Should set the new cap per market (Giannis Antetokounmpo - points 33.5)', async () => {
 			const sportsAMMV2RiskManagerWithSecondAccount = sportsAMMV2RiskManager.connect(secondAccount);
 
 			expect(
-				await sportsAMMV2RiskManagerWithSecondAccount.capPerGame(
+				await sportsAMMV2RiskManagerWithSecondAccount.capPerMarket(
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					CHILD_ID_PLAYER_PROPS,
-					PLAYER_PROPS_ID_POINTS,
+					TYPE_ID_POINTS,
 					PLAYER_ID_1,
 					PLAYER_PROPS_LINE_1
 				)
@@ -244,83 +240,77 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
-					.setCapPerGame(
+					.setCapPerMarket(
 						[GAME_ID_1],
 						[SPORT_ID_NBA],
-						[CHILD_ID_PLAYER_PROPS],
-						[PLAYER_PROPS_ID_POINTS],
+						[TYPE_ID_POINTS],
 						[PLAYER_ID_1],
 						[PLAYER_PROPS_LINE_1],
-						newCapForGame
+						newCapForMarket
 					)
 			).to.be.revertedWith('Invalid sender');
 
 			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
 
 			await expect(
-				sportsAMMV2RiskManagerWithSecondAccount.setCapPerGame(
+				sportsAMMV2RiskManagerWithSecondAccount.setCapPerMarket(
 					[GAME_ID_1],
 					[SPORT_ID_NBA],
-					[CHILD_ID_PLAYER_PROPS],
-					[PLAYER_PROPS_ID_POINTS],
+					[TYPE_ID_POINTS],
 					[PLAYER_ID_1],
 					[PLAYER_PROPS_LINE_1],
 					invalidCap
 				)
 			).to.be.revertedWith('Invalid cap');
 
-			await sportsAMMV2RiskManagerWithSecondAccount.setCapPerGame(
+			await sportsAMMV2RiskManagerWithSecondAccount.setCapPerMarket(
 				[GAME_ID_1],
 				[SPORT_ID_NBA],
-				[CHILD_ID_PLAYER_PROPS],
-				[PLAYER_PROPS_ID_POINTS],
+				[TYPE_ID_POINTS],
 				[PLAYER_ID_1],
 				[PLAYER_PROPS_LINE_1],
-				newCapForGame
+				newCapForMarket
 			);
 			expect(
-				await sportsAMMV2RiskManagerWithSecondAccount.capPerGame(
+				await sportsAMMV2RiskManagerWithSecondAccount.capPerMarket(
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					CHILD_ID_PLAYER_PROPS,
-					PLAYER_PROPS_ID_POINTS,
+					TYPE_ID_POINTS,
 					PLAYER_ID_1,
 					PLAYER_PROPS_LINE_1
 				)
-			).to.equal(newCapForGame);
+			).to.equal(newCapForMarket);
 
 			await expect(
-				sportsAMMV2RiskManager.setCapPerGame(
+				sportsAMMV2RiskManager.setCapPerMarket(
 					[GAME_ID_1],
 					[SPORT_ID_NBA],
-					[CHILD_ID_PLAYER_PROPS],
-					[PLAYER_PROPS_ID_POINTS],
+					[TYPE_ID_POINTS],
 					[PLAYER_ID_1],
 					[PLAYER_PROPS_LINE_1],
-					newCapForGame
+					newCapForMarket
 				)
 			)
-				.to.emit(sportsAMMV2RiskManager, 'SetCapPerGame')
+				.to.emit(sportsAMMV2RiskManager, 'SetCapPerMarket')
 				.withArgs(
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					CHILD_ID_PLAYER_PROPS,
-					PLAYER_PROPS_ID_POINTS,
+					TYPE_ID_POINTS,
 					PLAYER_ID_1,
 					PLAYER_PROPS_LINE_1,
-					newCapForGame
+					newCapForMarket
 				);
 		});
 
 		it('Should set the new caps - batch ([NBA, EPL], [TOTAL, TOTAL])', async () => {
 			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(0);
 			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_EPL)).to.equal(0);
-			expect(
-				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
-			).to.equal(0);
-			expect(
-				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_EPL, CHILD_ID_TOTAL)
-			).to.equal(0);
+			expect(await sportsAMMV2RiskManager.capPerSportAndType(SPORT_ID_NBA, TYPE_ID_TOTAL)).to.equal(
+				0
+			);
+			expect(await sportsAMMV2RiskManager.capPerSportAndType(SPORT_ID_EPL, TYPE_ID_TOTAL)).to.equal(
+				0
+			);
 
 			await expect(
 				sportsAMMV2RiskManager
@@ -329,8 +319,8 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 						[SPORT_ID_NBA, SPORT_ID_EPL],
 						[newCapForSport, newCapForSport],
 						[SPORT_ID_NBA, SPORT_ID_EPL],
-						[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-						[newCapForSportAndChild, newCapForSportAndChild]
+						[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+						[newCapForSportAndType, newCapForSportAndType]
 					)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
@@ -338,8 +328,8 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, invalidCap],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForSportAndChild, newCapForSportAndChild]
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[newCapForSportAndType, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid cap');
 			await expect(
@@ -347,8 +337,8 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[invalidCap, newCapForSportAndChild]
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[invalidCap, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid cap');
 			await expect(
@@ -356,8 +346,8 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[INVALID_SPORT_ID, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForSportAndChild, newCapForSportAndChild]
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[newCapForSportAndType, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
@@ -365,8 +355,8 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, INVALID_SPORT_ID],
-					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForSportAndChild, newCapForSportAndChild]
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[newCapForSportAndType, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid ID for sport');
 			await expect(
@@ -374,44 +364,44 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[CHILD_ID_TOTAL, INVALID_CHILD_ID],
-					[newCapForSportAndChild, newCapForSportAndChild]
+					[TYPE_ID_TOTAL, INVALID_TYPE_ID],
+					[newCapForSportAndType, newCapForSportAndType]
 				)
-			).to.be.revertedWith('Invalid ID for child');
+			).to.be.revertedWith('Invalid ID for type');
 
 			await sportsAMMV2RiskManager.setCaps(
 				[SPORT_ID_NBA, SPORT_ID_EPL],
 				[newCapForSport, newCapForSport],
 				[SPORT_ID_NBA, SPORT_ID_EPL],
-				[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-				[newCapForSportAndChild, newCapForSportAndChild]
+				[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+				[newCapForSportAndType, newCapForSportAndType]
 			);
 			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(newCapForSport);
 			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_EPL)).to.equal(newCapForSport);
-			expect(
-				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_NBA, CHILD_ID_TOTAL)
-			).to.equal(newCapForSportAndChild);
-			expect(
-				await sportsAMMV2RiskManager.capPerSportAndChild(SPORT_ID_EPL, CHILD_ID_TOTAL)
-			).to.equal(newCapForSportAndChild);
+			expect(await sportsAMMV2RiskManager.capPerSportAndType(SPORT_ID_NBA, TYPE_ID_TOTAL)).to.equal(
+				newCapForSportAndType
+			);
+			expect(await sportsAMMV2RiskManager.capPerSportAndType(SPORT_ID_EPL, TYPE_ID_TOTAL)).to.equal(
+				newCapForSportAndType
+			);
 
 			await expect(
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
 					[SPORT_ID_NBA, SPORT_ID_EPL],
-					[CHILD_ID_TOTAL, CHILD_ID_TOTAL],
-					[newCapForSportAndChild, newCapForSportAndChild]
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[newCapForSportAndType, newCapForSportAndType]
 				)
 			)
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSport')
 				.withArgs(SPORT_ID_NBA, newCapForSport)
 				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSport')
 				.withArgs(SPORT_ID_EPL, newCapForSport)
-				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndChild')
-				.withArgs(SPORT_ID_NBA, CHILD_ID_TOTAL, newCapForSportAndChild)
-				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndChild')
-				.withArgs(SPORT_ID_EPL, CHILD_ID_TOTAL, newCapForSportAndChild);
+				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndType')
+				.withArgs(SPORT_ID_NBA, TYPE_ID_TOTAL, newCapForSportAndType)
+				.to.emit(sportsAMMV2RiskManager, 'SetCapPerSportAndType')
+				.withArgs(SPORT_ID_EPL, TYPE_ID_TOTAL, newCapForSportAndType);
 		});
 
 		it('Should set the new risk multiplier per sport (NBA)', async () => {
@@ -447,15 +437,14 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				.withArgs(SPORT_ID_NBA, newRiskMultiplierForSport);
 		});
 
-		it('Should set the new risk multiplier per game (Giannis Antetokounmpo - points 33.5)', async () => {
+		it('Should set the new risk multiplier per market (Giannis Antetokounmpo - points 33.5)', async () => {
 			const sportsAMMV2RiskManagerWithSecondAccount = sportsAMMV2RiskManager.connect(secondAccount);
 
 			expect(
-				await sportsAMMV2RiskManagerWithSecondAccount.riskMultiplierPerGame(
+				await sportsAMMV2RiskManagerWithSecondAccount.riskMultiplierPerMarket(
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					CHILD_ID_PLAYER_PROPS,
-					PLAYER_PROPS_ID_POINTS,
+					TYPE_ID_POINTS,
 					PLAYER_ID_1,
 					PLAYER_PROPS_LINE_1
 				)
@@ -464,71 +453,65 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
-					.setRiskMultiplierPerGame(
+					.setRiskMultiplierPerMarket(
 						[GAME_ID_1],
 						[SPORT_ID_NBA],
-						[CHILD_ID_PLAYER_PROPS],
-						[PLAYER_PROPS_ID_POINTS],
+						[TYPE_ID_POINTS],
 						[PLAYER_ID_1],
 						[PLAYER_PROPS_LINE_1],
-						newRiskMultiplierForGame
+						newRiskMultiplierForMarket
 					)
 			).to.be.revertedWith('Invalid sender');
 
 			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
 
 			await expect(
-				sportsAMMV2RiskManagerWithSecondAccount.setRiskMultiplierPerGame(
+				sportsAMMV2RiskManagerWithSecondAccount.setRiskMultiplierPerMarket(
 					[GAME_ID_1],
 					[SPORT_ID_NBA],
-					[CHILD_ID_PLAYER_PROPS],
-					[PLAYER_PROPS_ID_POINTS],
+					[TYPE_ID_POINTS],
 					[PLAYER_ID_1],
 					[PLAYER_PROPS_LINE_1],
 					invalidRiskMultiplier
 				)
 			).to.be.revertedWith('Invalid multiplier');
 
-			await sportsAMMV2RiskManagerWithSecondAccount.setRiskMultiplierPerGame(
+			await sportsAMMV2RiskManagerWithSecondAccount.setRiskMultiplierPerMarket(
 				[GAME_ID_1],
 				[SPORT_ID_NBA],
-				[CHILD_ID_PLAYER_PROPS],
-				[PLAYER_PROPS_ID_POINTS],
+				[TYPE_ID_POINTS],
 				[PLAYER_ID_1],
 				[PLAYER_PROPS_LINE_1],
-				newRiskMultiplierForGame
+				newRiskMultiplierForMarket
 			);
 			expect(
-				await sportsAMMV2RiskManagerWithSecondAccount.riskMultiplierPerGame(
+				await sportsAMMV2RiskManagerWithSecondAccount.riskMultiplierPerMarket(
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					CHILD_ID_PLAYER_PROPS,
-					PLAYER_PROPS_ID_POINTS,
+					TYPE_ID_POINTS,
 					PLAYER_ID_1,
 					PLAYER_PROPS_LINE_1
 				)
-			).to.equal(newRiskMultiplierForGame);
+			).to.equal(newRiskMultiplierForMarket);
 
 			await expect(
-				sportsAMMV2RiskManager.setRiskMultiplierPerGame(
+				sportsAMMV2RiskManager.setRiskMultiplierPerMarket(
 					[GAME_ID_1],
 					[SPORT_ID_NBA],
-					[CHILD_ID_PLAYER_PROPS],
-					[PLAYER_PROPS_ID_POINTS],
+					[TYPE_ID_POINTS],
 					[PLAYER_ID_1],
 					[PLAYER_PROPS_LINE_1],
-					newRiskMultiplierForGame
+					newRiskMultiplierForMarket
 				)
 			)
-				.to.emit(sportsAMMV2RiskManager, 'SetRiskMultiplierPerGame')
+				.to.emit(sportsAMMV2RiskManager, 'SetRiskMultiplierPerMarket')
 				.withArgs(
 					GAME_ID_1,
 					SPORT_ID_NBA,
-					CHILD_ID_PLAYER_PROPS,
-					PLAYER_PROPS_ID_POINTS,
+					TYPE_ID_POINTS,
 					PLAYER_ID_1,
 					PLAYER_PROPS_LINE_1,
-					newRiskMultiplierForGame
+					newRiskMultiplierForMarket
 				);
 		});
 

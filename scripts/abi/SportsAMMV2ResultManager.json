@@ -150,7 +150,7 @@
   },
   {
     "inputs": [],
-    "name": "CHILD_ID_SPREAD",
+    "name": "TYPE_ID_SPREAD",
     "outputs": [
       {
         "internalType": "uint256",

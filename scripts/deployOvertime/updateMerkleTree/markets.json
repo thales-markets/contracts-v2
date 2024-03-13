@@ -1,11 +1,11 @@
 [
 	{
-		"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-		"sportId": 9011,
+		"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+		"sportId": 9004,
 		"typeId": 0,
-		"maturity": 1710926337,
-		"homeTeam": "Liverpool",
-		"awayTeam": "Manchester City",
+		"maturity": 1706206332,
+		"homeTeam": "Milwaukee Bucks",
+		"awayTeam": "Indiana Pacers",
 		"homeScore": 0,
 		"awayScore": 0,
 		"finalResult": 0,
@@ -17,477 +17,230 @@
 			"outcome": 0,
 			"score": 0
 		},
-		"odds": ["334448160535000000", "438596491228000000", "261096605744000000"],
+		"odds": [0.49, 0.57, 0],
 		"childMarkets": [
 			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
 				"typeId": 10001,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
 				"status": 0,
-				"line": -50,
+				"line": -550,
 				"playerProps": {
 					"playerId": 0,
 					"playerName": "",
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": ["335570469799000000", "697885196375000000"],
-				"proof": [
-					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
-					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
-					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
-					"0x28bd17f162d8b6975fc26e8f757496b9c31f7f69d577dccab1e75e69da4b6ec1"
-				]
+				"odds": [0.5, 0.5, 0]
 			},
 			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
 				"typeId": 10001,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 1,
+				"line": -450,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0, 0, 0]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 10002,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"line": 25600,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.5, 0.5, 0]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 11029,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"line": 3350,
+				"playerProps": {
+					"playerId": 16429,
+					"playerName": "Giannis Antetokounmpo",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.52, 0.48, 0]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
+				"typeId": 11087,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
 				"homeScore": 0,
 				"awayScore": 0,
 				"finalResult": 0,
 				"status": 0,
 				"line": 50,
 				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
+					"playerId": 16735,
+					"playerName": "Damian Lillard",
 					"outcome": 0,
 					"score": 0
 				},
-				"odds": ["590163934428000000", "438596491228000000"],
-				"proof": [
-					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
-					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
-					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
-					"0x28bd17f162d8b6975fc26e8f757496b9c31f7f69d577dccab1e75e69da4b6ec1"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10001,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 100,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": ["736147757255000000", "297619047619000000"],
-				"proof": [
-					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
-					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
-					"0x28bd17f162d8b6975fc26e8f757496b9c31f7f69d577dccab1e75e69da4b6ec1"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10002,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 400,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": ["318471337580000000", "720670391064000000"],
-				"proof": [
-					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
-					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
-					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
-					"0x28bd17f162d8b6975fc26e8f757496b9c31f7f69d577dccab1e75e69da4b6ec1"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10002,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 350,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": ["440528634361000000", "593495934959000000"],
-				"proof": [
-					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
-					"0xfa739c91e8f058b561ea16ab7d3c6595afcde9e48aa18e20e412b0d0da0e62a4",
-					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
-					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10002,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 300,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": ["553571428572000000", "480769230769000000"],
-				"proof": [
-					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
-					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
-					"0x28bd17f162d8b6975fc26e8f757496b9c31f7f69d577dccab1e75e69da4b6ec1"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10002,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 250,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": ["653979238755000000", "384615384615000000"],
-				"proof": [
-					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
-					"0xfa739c91e8f058b561ea16ab7d3c6595afcde9e48aa18e20e412b0d0da0e62a4",
-					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
-					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10003,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000"
-				],
-				"proof": [
-					"0x7059ed25bc700280e0c47558fa09dd580104b784e8ba50cf0b39b674f9969706",
-					"0x04c1c2255ad24dbbfd568f3c35d2abce616bfcec32179406758df2c53bf67436",
-					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
-					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10004,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000",
-					"121096605744000000"
-				],
-				"combinedPositions": [
-					[
-						{ "typeId": 0, "position": 0, "line": 0 },
-						{ "typeId": 10002, "position": 0, "line": 350 }
-					],
-					[
-						{ "typeId": 0, "position": 0, "line": 0 },
-						{ "typeId": 10002, "position": 1, "line": 350 }
-					],
-					[
-						{ "typeId": 0, "position": 1, "line": 0 },
-						{ "typeId": 10002, "position": 0, "line": 350 }
-					],
-					[
-						{ "typeId": 0, "position": 1, "line": 0 },
-						{ "typeId": 10002, "position": 1, "line": 350 }
-					]
-				],
-				"proof": [
-					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
-					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
-					"0x699b920c80c65dfe58ce83f1adcea4697a752d645ec7d5c82737e41dcc1881d8",
-					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10005,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000"
-				],
-				"proof": [
-					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
-					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
-					"0x699b920c80c65dfe58ce83f1adcea4697a752d645ec7d5c82737e41dcc1881d8",
-					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10006,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000",
-					"121096605744000000",
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000",
-					"121096605744000000",
-					"121096605744000000"
-				],
-				"combinedPositions": [
-					[
-						{ "typeId": 10005, "position": 0, "line": 0 },
-						{ "typeId": 0, "position": 0, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 0, "line": 0 },
-						{ "typeId": 0, "position": 1, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 0, "line": 0 },
-						{ "typeId": 0, "position": 2, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 1, "line": 0 },
-						{ "typeId": 0, "position": 0, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 1, "line": 0 },
-						{ "typeId": 0, "position": 1, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 1, "line": 0 },
-						{ "typeId": 0, "position": 2, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 2, "line": 0 },
-						{ "typeId": 0, "position": 0, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 2, "line": 0 },
-						{ "typeId": 0, "position": 1, "line": 0 }
-					],
-					[
-						{ "typeId": 10005, "position": 2, "line": 0 },
-						{ "typeId": 0, "position": 2, "line": 0 }
-					]
-				],
-				"proof": [
-					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
-					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
-					"0x699b920c80c65dfe58ce83f1adcea4697a752d645ec7d5c82737e41dcc1881d8",
-					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10007,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000",
-					"121096605744000000",
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000"
-				],
-				"combinedPositions": [
-					[{ "typeId": 10002, "position": 1, "line": 250 }],
-					[{ "typeId": 10002, "position": 0, "line": 250 }],
-					[
-						{ "typeId": 10002, "position": 0, "line": 150 },
-						{ "typeId": 10002, "position": 1, "line": 450 }
-					],
-					[
-						{ "typeId": 10002, "position": 0, "line": 250 },
-						{ "typeId": 10002, "position": 1, "line": 550 }
-					],
-					[{ "typeId": 10002, "position": 0, "line": 450 }],
-					[
-						{ "typeId": 10002, "position": 0, "line": 350 },
-						{ "typeId": 10002, "position": 2, "line": 650 }
-					],
-					[{ "typeId": 10002, "position": 0, "line": 650 }]
-				],
-				"proof": [
-					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
-					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
-					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
-					"0x28bd17f162d8b6975fc26e8f757496b9c31f7f69d577dccab1e75e69da4b6ec1"
-				]
-			},
-			{
-				"gameId": "0x3432353636383600000000000000000000000000000000000000000000000000",
-				"sportId": 9011,
-				"typeId": 10008,
-				"maturity": 1710926337,
-				"homeTeam": "Liverpool",
-				"awayTeam": "Manchester City",
-				"homeScore": 0,
-				"awayScore": 0,
-				"finalResult": 0,
-				"status": 0,
-				"line": 0,
-				"playerProps": {
-					"playerId": 0,
-					"playerName": "",
-					"outcome": 0,
-					"score": 0
-				},
-				"odds": [
-					"334448160535000000",
-					"438596491228000000",
-					"261096605744000000"
-				],
-				"combinedPositions": [
-					[
-						{ "typeId": 10005, "position": 0, "line": 0 },
-						{ "typeId": 0, "position": 0, "line": 0 },
-						{ "typeId": 10002, "position": 0, "line": 250 }
-					],
-					[
-						{ "typeId": 10005, "position": 1, "line": 0 },
-						{ "typeId": 0, "position": 1, "line": 0 },
-						{ "typeId": 10002, "position": 0, "line": 150 },
-						{ "typeId": 10002, "position": 1, "line": 450 }
-					],
-					[
-						{ "typeId": 10005, "position": 2, "line": 0 },
-						{ "typeId": 0, "position": 2, "line": 0 },
-						{ "typeId": 10002, "position": 1, "line": 250 }
-					]
-				],
-				"proof": [
-					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
-					"0x04c1c2255ad24dbbfd568f3c35d2abce616bfcec32179406758df2c53bf67436",
-					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
-					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
-				]
+				"odds": [0.5, 0.5, 0]
 			}
-		],
-		"proof": [
-			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
-			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
-			"0x699b920c80c65dfe58ce83f1adcea4697a752d645ec7d5c82737e41dcc1881d8",
-			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
+		"sportId": 9004,
+		"typeId": 0,
+		"maturity": 1706206332,
+		"homeTeam": "Milwaukee Bucks",
+		"awayTeam": "Indiana Pacers",
+		"homeScore": 0,
+		"awayScore": 0,
+		"finalResult": 0,
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": "",
+			"outcome": 0,
+			"score": 0
+		},
+		"odds": [0.49, 0.57, 0],
+		"childMarkets": [
+			{
+				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
+				"sportId": 9004,
+				"typeId": 10001,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"line": -550,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.5, 0.5, 0]
+			},
+			{
+				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
+				"sportId": 9004,
+				"typeId": 10001,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 1,
+				"line": -450,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0, 0, 0]
+			},
+			{
+				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
+				"sportId": 9004,
+				"typeId": 10002,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"line": 25600,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": "",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.5, 0.5, 0]
+			},
+			{
+				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
+				"sportId": 9004,
+				"typeId": 11029,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"line": 3350,
+				"playerProps": {
+					"playerId": 16429,
+					"playerName": "Giannis Antetokounmpo",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.52, 0.48, 0]
+			},
+			{
+				"gameId": "0x3432313635323400000000000000000000000000000000000000000000000000",
+				"sportId": 9004,
+				"typeId": 11087,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 16735,
+					"playerName": "Damian Lillard",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.5, 0.5, 0]
+			}
 		]
 	}
 ]

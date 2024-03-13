@@ -13,15 +13,15 @@ const RISK_MANAGER_PARAMS = {
 	invalidMaxCap: ethers.parseEther('900'),
 	newMaxCap: ethers.parseEther('10000'),
 	newCapForSport: ethers.parseEther('10000'),
-	newCapForSportAndChild: ethers.parseEther('900'),
-	newCapForGame: ethers.parseEther('5000'),
+	newCapForSportAndType: ethers.parseEther('900'),
+	newCapForMarket: ethers.parseEther('5000'),
 
 	invalidRiskMultiplier: 6,
 	newDefaultRiskMultiplier: 4,
 	invalidMaxRiskMultiplier: 3,
 	newMaxRiskMultiplier: 5,
 	newRiskMultiplierForSport: 5,
-	newRiskMultiplierForGame: 3,
+	newRiskMultiplierForMarket: 3,
 
 	newDynamicLiquidityCutoffTime: 6 * 60 * 60, // 6 hours
 	newDynamicLiquidityCutoffDivider: ethers.parseEther('4'),

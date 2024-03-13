@@ -19,7 +19,10 @@ async function getMerkleTree(markets) {
 		);
 
 		for (i = 0; i < market.odds.length; i++) {
-			encodePackedOutput = web3.utils.encodePacked(encodePackedOutput, market.odds[i]);
+			encodePackedOutput = web3.utils.encodePacked(
+				encodePackedOutput,
+				ethers.parseEther(market.odds[i].toString()).toString()
+			);
 		}
 
 		const marketCombinedPositions = market.combinedPositions || [[]];
@@ -39,7 +42,7 @@ async function getMerkleTree(markets) {
 
 		let marketLeaf = {
 			...market,
-			odds: market.odds,
+			odds: market.odds.map((o) => ethers.parseEther(o.toString()).toString()),
 			hash,
 			proof: '',
 		};
