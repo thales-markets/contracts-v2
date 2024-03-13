@@ -1,14 +1,18 @@
 # Thales V2 contracts
+
 This repository is intended for v2 version of Thales contract architecture.
 
 # About Thales
+
 A permissionless ecosystem where every derivative market is a unique smart contract.
 Powered by pioneering AMM architecture and trustless liquidity pools.
 
-# Tests 
+# Tests
+
 TBD
 
-# APIs 
+# APIs
+
 TBD
 
 ```shell
