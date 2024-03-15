@@ -12,7 +12,9 @@ const setTargetAddress = (contractName, network, address) => {
 	});
 };
 
-const isTestNetwork = (network) => Number(network) === 420 || Number(network) === 11155420;
+// TODO: added OP and ARB as test networks
+const isTestNetwork = (network) =>
+	Number(network) === 420 || Number(network) === 11155420 || Number(network) === 10;
 
 module.exports = {
 	getTargetAddress,
