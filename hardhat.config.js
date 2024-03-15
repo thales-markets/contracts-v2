@@ -12,6 +12,7 @@ const TEST_PRIVATE_KEY = vars.get('TEST_PRIVATE_KEY');
 const PRIVATE_KEY = vars.get('PRIVATE_KEY');
 const INFURA = vars.get('INFURA');
 const OP_ETHERSCAN_KEY = vars.get('OP_ETHERSCAN_KEY');
+const ARB_ETHERSCAN_KEY = vars.get('ARB_ETHERSCAN_KEY');
 const REPORT_GAS = vars.get('REPORT_GAS');
 
 module.exports = {
@@ -47,6 +48,7 @@ module.exports = {
 			optimisticGoerli: OP_ETHERSCAN_KEY,
 			optimisticSepolia: OP_ETHERSCAN_KEY,
 			optimisticEthereum: OP_ETHERSCAN_KEY,
+			arbitrumOne: ARB_ETHERSCAN_KEY,
 		},
 	},
 	networks: {
@@ -60,6 +62,10 @@ module.exports = {
 		},
 		optimisticEthereum: {
 			url: `https://optimism-mainnet.infura.io/v3/${INFURA}`,
+			accounts: [PRIVATE_KEY],
+		},
+		arbitrumOne: {
+			url: `https://arbitrum-mainnet.infura.io/v3/${INFURA}`,
 			accounts: [PRIVATE_KEY],
 		},
 	},

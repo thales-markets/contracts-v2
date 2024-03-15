@@ -14,7 +14,10 @@ const setTargetAddress = (contractName, network, address) => {
 
 // TODO: added OP and ARB as test networks
 const isTestNetwork = (network) =>
-	Number(network) === 420 || Number(network) === 11155420 || Number(network) === 10;
+	Number(network) === 420 ||
+	Number(network) === 11155420 ||
+	Number(network) === 10 ||
+	Number(network) === 42161;
 
 module.exports = {
 	getTargetAddress,
