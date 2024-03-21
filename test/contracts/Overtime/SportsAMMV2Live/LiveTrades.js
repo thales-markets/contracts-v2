@@ -14,7 +14,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		tradeDataTenMarketsCurrentRound,
 		firstLiquidityProvider,
 		firstTrader,
-		liveTradingProcessor;
+		liveTradingProcessor,
+		mockChainlinkOracle;
 
 	beforeEach(async () => {
 		({
@@ -23,6 +24,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
 			liveTradingProcessor,
+			mockChainlinkOracle,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
@@ -51,11 +53,16 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					BUY_IN_AMOUNT,
 					quote.payout,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
+					firstTrader,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
 				);
+
+			let requestId = await liveTradingProcessor.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true);
 		});
 	});
 });
