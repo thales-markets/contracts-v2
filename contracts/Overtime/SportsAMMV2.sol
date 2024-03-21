@@ -15,6 +15,7 @@ import "../utils/libraries/AddressSetLib.sol";
 
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
+import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 
 import "./Ticket.sol";
@@ -23,6 +24,12 @@ import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
+
+interface WethLike {
+    function deposit() external payable;
+
+    function withdraw(uint256) external;
+}
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -117,6 +124,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
+
+    // pools
+    mapping(bytes32 => address) public collateralPool;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -440,9 +450,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_isEth) {
             require(_collateral == multiCollateralOnOffRamp.WETH9(), "Wrong collateral sent");
             require(msg.value >= collateralQuote, "Not enough ETH sent");
-            exactReceived = multiCollateralOnOffRamp.onrampWithEth{value: msg.value}(msg.value);
+            uint balanceBefore = IERC20(multiCollateralOnOffRamp.WETH9()).balanceOf(address(this));
+            WethLike(multiCollateralOnOffRamp.WETH9()).deposit{value: msg.value}();
+
+            uint balanceDiff = IERC20(multiCollateralOnOffRamp.WETH9()).balanceOf(address(this)) - balanceBefore;
+            require(balanceDiff == msg.value, "Not enough WETH received");
+
+            // exactReceived = multiCollateralOnOffRamp.onrampWithEth{value: msg.value}(msg.value);
             // TODO: return different collateral pool
-            // lpPool = collateralPool[ETH_POOL];
+            lpPool = collateralPool["ETH_POOL"];
         } else {
             IERC20(_collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
             IERC20(_collateral).approve(address(multiCollateralOnOffRamp), collateralQuote);
@@ -494,7 +510,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (address(stakingThales) != address(0)) {
             stakingThales.updateVolume(params._differentRecipient, params._buyInAmount);
         }
-        if (params._collateralPool != address(0)) {} else {
+        if (params._collateralPool != address(0)) {
+            // TODO: add logic here
+        } else {
             liquidityPool.commitTrade(address(ticket), payout - buyInAmountAfterFees);
             defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
         }
