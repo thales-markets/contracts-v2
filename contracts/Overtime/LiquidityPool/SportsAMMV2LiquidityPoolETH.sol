@@ -135,10 +135,11 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
     }
 
     /// @notice deposit funds from user into pool for the next round
-    function deposit() external payable canDeposit(msg.value) nonReentrant whenNotPaused roundClosingNotPrepared {
+    /// @param amount value to be deposited
+    function deposit(uint amount) external canDeposit(amount) nonReentrant whenNotPaused roundClosingNotPrepared {
         uint nextRound = round + 1;
         address roundPool = _getOrCreateRoundPool(nextRound);
-        collateral.safeTransferFrom(msg.sender, roundPool, msg.value);
+        collateral.safeTransferFrom(msg.sender, roundPool, amount);
 
         require(msg.sender != defaultLiquidityProvider, "Can't deposit directly as default LP");
 
@@ -149,30 +150,30 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
             usersCurrentlyInPool = usersCurrentlyInPool + 1;
         }
 
-        balancesPerRound[nextRound][msg.sender] += msg.value;
+        balancesPerRound[nextRound][msg.sender] += amount;
 
-        allocationPerRound[nextRound] += msg.value;
-        totalDeposited += msg.value;
+        allocationPerRound[nextRound] += amount;
+        totalDeposited += amount;
 
         if (address(stakingThales) != address(0)) {
-            stakingThales.updateVolume(msg.sender, msg.value);
+            stakingThales.updateVolume(msg.sender, amount);
         }
 
-        emit Deposited(msg.sender, msg.value, round);
+        emit Deposited(msg.sender, amount, round);
     }
 
     /// @notice get collateral amount needed for trade and store ticket as trading in the round
     /// @param ticket to trade
-    function commitTrade(address ticket) external payable nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
+    /// @param amount amount to get
+    function commitTrade(address ticket, uint amount) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
         require(started, "Pool has not started");
-        require(msg.value > 0, "Can't commit a zero trade");
+        require(amount > 0, "Can't commit a zero trade");
 
         uint ticketRound = getTicketRound(ticket);
         roundPerTicket[ticket] = ticketRound;
         address liquidityPoolRound = _getOrCreateRoundPool(ticketRound);
         if (ticketRound == round) {
-            // TODO: add transfer function in liquidity round
-            // collateral.safeTransferFrom(liquidityPoolRound, address(sportsAMM), msg.value);
+            collateral.safeTransferFrom(liquidityPoolRound, address(sportsAMM), amount);
             require(
                 collateral.balanceOf(liquidityPoolRound) >=
                     (allocationPerRound[round] - ((allocationPerRound[round] * utilizationRate) / ONE)),
@@ -180,20 +181,16 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
             );
         } else if (ticketRound > round) {
             uint poolBalance = collateral.balanceOf(liquidityPoolRound);
-            if (poolBalance >= msg.value) {
-                // TODO: add transfer function in liquidity round
-                // collateral.safeTransferFrom(liquidityPoolRound, address(sportsAMM), amount);
-                // (bool sent, bytes memory data) = payable(sportsAMM).call{value: msg.value}("");
-                // require(sent, "Failed");
+            if (poolBalance >= amount) {
+                collateral.safeTransferFrom(liquidityPoolRound, address(sportsAMM), amount);
             } else {
-                uint differenceToLPAsDefault = msg.value - poolBalance;
+                uint differenceToLPAsDefault = amount - poolBalance;
                 _depositAsDefault(differenceToLPAsDefault, liquidityPoolRound, ticketRound);
-                // TODO: add transfer function in liquidity round
-                // collateral.safeTransferFrom(liquidityPoolRound, address(sportsAMM), amount);
+                collateral.safeTransferFrom(liquidityPoolRound, address(sportsAMM), amount);
             }
         } else {
             require(ticketRound == 1, "Invalid round");
-            _provideAsDefault(msg.value);
+            _provideAsDefault(amount);
         }
 
         tradingTicketsPerRound[ticketRound].push(ticket);
