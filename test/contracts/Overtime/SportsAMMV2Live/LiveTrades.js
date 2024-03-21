@@ -1,0 +1,61 @@
+const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { expect } = require('chai');
+const {
+	deployAccountsFixture,
+	deploySportsAMMV2Fixture,
+} = require('../../../utils/fixtures/overtimeFixtures');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('../../../constants/overtime');
+const { ZERO_ADDRESS } = require('../../../constants/general');
+
+describe('SportsAMMV2 Quotes And Trades', () => {
+	let sportsAMMV2,
+		sportsAMMV2LiquidityPool,
+		tradeDataCurrentRound,
+		tradeDataTenMarketsCurrentRound,
+		firstLiquidityProvider,
+		firstTrader,
+		liveTradingProcessor;
+
+	beforeEach(async () => {
+		({
+			sportsAMMV2,
+			sportsAMMV2LiquidityPool,
+			tradeDataCurrentRound,
+			tradeDataTenMarketsCurrentRound,
+			liveTradingProcessor,
+		} = await loadFixture(deploySportsAMMV2Fixture));
+		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+	});
+
+	describe('Live Trade', () => {
+		it('Should buy a live trade', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
+
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
+
+			await liveTradingProcessor
+				.connect(firstTrader)
+				.requestLiveTrade(
+					tradeDataCurrentRound[0].gameId,
+					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].position,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+		});
+	});
+});

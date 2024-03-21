@@ -89,7 +89,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint[] memory odds;
         ISportsAMMV2.CombinedPosition[][] memory comPositions;
 
-        tradeData[1] = ISportsAMMV2.TradeData(
+        tradeData[0] = ISportsAMMV2.TradeData(
             lTradeData.gameId,
             lTradeData.sportId,
             0, //type, set moneyline
@@ -102,20 +102,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             lTradeData.position,
             comPositions //combinedPositions[]
         );
-
-        //    struct TradeData {
-        //        bytes32 gameId;
-        //        uint16 sportId;
-        //        uint16 typeId;
-        //        uint maturity;
-        //        uint8 status;
-        //        int24 line;
-        //        uint16 playerId;
-        //        uint[] odds;
-        //        bytes32[] merkleProof;
-        //        uint8 position;
-        //        CombinedPosition[][] combinedPositions;
-        //    }
 
         sportsAMM.tradeLive(
             tradeData,
