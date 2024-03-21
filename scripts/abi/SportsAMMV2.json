@@ -384,6 +384,25 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "liquidityPool",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      }
+    ],
+    "name": "SetLiquidityPoolForCollateral",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "onOffRamper",
         "type": "address"
       },
@@ -1273,6 +1292,29 @@
       {
         "internalType": "address",
         "name": "_liquidityPool",
+        "type": "address"
+      }
+    ],
+    "name": "setLiquidityPool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_liquidityName",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "_liquidityPool",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "_collateral",
         "type": "address"
       }
     ],

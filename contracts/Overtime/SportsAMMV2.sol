@@ -25,10 +25,14 @@ import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 
-interface WethLike {
+interface EthUtility {
     function deposit() external payable;
 
     function withdraw(uint256) external;
+
+    function priceFeed() external view returns (address);
+
+    // function priceFeedKeyPerCollateral(address) external view returns(bytes32);
 }
 
 /// @title Sports AMM V2 contract
@@ -43,6 +47,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
+    bytes32 private constant ETH_KEY = 0x4554480000000000000000000000000000000000000000000000000000000000;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -450,14 +455,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_isEth) {
             require(_collateral == multiCollateralOnOffRamp.WETH9(), "Wrong collateral sent");
             require(msg.value >= collateralQuote, "Not enough ETH sent");
-            uint balanceBefore = IERC20(multiCollateralOnOffRamp.WETH9()).balanceOf(address(this));
-            WethLike(multiCollateralOnOffRamp.WETH9()).deposit{value: msg.value}();
-
-            uint balanceDiff = IERC20(multiCollateralOnOffRamp.WETH9()).balanceOf(address(this)) - balanceBefore;
+            uint balanceBefore = IERC20(_collateral).balanceOf(address(this));
+            EthUtility(_collateral).deposit{value: msg.value}();
+            uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
             require(balanceDiff == msg.value, "Not enough WETH received");
 
-            // exactReceived = multiCollateralOnOffRamp.onrampWithEth{value: msg.value}(msg.value);
-            // TODO: return different collateral pool
+            // exactReceived = IPriceFeed(multiCollateralOnOffRamp.priceFeed).rateForCurrency(WethLike(multiCollateralOnOffRamp).priceFeedKeyPerCollateral(_collateral));
+            exactReceived =
+                (IPriceFeed(EthUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(ETH_KEY) *
+                    balanceDiff) /
+                ONE;
             lpPool = collateralPool["ETH_POOL"];
         } else {
             IERC20(_collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
@@ -796,6 +803,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit SetLiquidityPool(_liquidityPool);
     }
 
+    /// @notice sets new LP Pool with LP address and the supported collateral
+    /// @param _liquidityName new LP name of the pool
+    /// @param _liquidityPool new LP address
+    /// @param _collateral collateral that is supported by the pool
+    function setLiquidityPool(bytes32 _liquidityName, address _liquidityPool, IERC20 _collateral) external onlyOwner {
+        if (collateralPool[_liquidityName] != address(0)) {
+            _collateral.approve(_liquidityPool, 0);
+        }
+        collateralPool[_liquidityName] = _liquidityPool;
+        _collateral.approve(_liquidityPool, MAX_APPROVAL);
+        emit SetLiquidityPoolForCollateral(_liquidityPool, address(_collateral));
+    }
+
     /// @notice sets multi-collateral on/off ramp contract and enable/disable
     /// @param _onOffRamper new multi-collateral on/off ramp address
     /// @param _enabled enable/disable multi-collateral on/off ramp
@@ -854,5 +874,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event TimesUpdated(uint minimalTimeLeftToMaturity, uint expiryDuration);
     event TicketMastercopyUpdated(address ticketMastercopy);
     event SetLiquidityPool(address liquidityPool);
+    event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
 }
