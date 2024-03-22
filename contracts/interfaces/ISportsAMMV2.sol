@@ -32,6 +32,7 @@ interface ISportsAMMV2 {
         address _differentRecipient;
         bool _sendDefaultCollateral;
         address _collateralPool;
+        uint _collateralPriceInUSD;
     }
 
     function defaultCollateral() external view returns (IERC20);

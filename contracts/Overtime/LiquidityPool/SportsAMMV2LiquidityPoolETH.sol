@@ -165,7 +165,10 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
     /// @notice get collateral amount needed for trade and store ticket as trading in the round
     /// @param ticket to trade
     /// @param amount amount to get
-    function commitTrade(address ticket, uint amount) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
+    function commitTrade(
+        address ticket,
+        uint amount
+    ) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared returns (IERC20) {
         require(started, "Pool has not started");
         require(amount > 0, "Can't commit a zero trade");
 
@@ -195,6 +198,7 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
 
         tradingTicketsPerRound[ticketRound].push(ticket);
         isTradingTicketInARound[ticketRound][ticket] = true;
+        return collateral;
     }
 
     /// @notice transfer collateral amount from AMM to LP (ticket liquidity pool round)

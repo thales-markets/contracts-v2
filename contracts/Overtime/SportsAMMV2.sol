@@ -32,6 +32,7 @@ interface EthUtility {
 
     function priceFeed() external view returns (address);
 
+    function commitTrade(address ticket, uint amount) external returns (IERC20);
     // function priceFeedKeyPerCollateral(address) external view returns(bytes32);
 }
 
@@ -290,6 +291,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _isEth
     ) external payable nonReentrant notPaused {
         address useLPpool;
+        uint collateralPriceInUSD;
         if (_referrer != address(0)) {
             referrals.setReferrer(_referrer, msg.sender);
         }
@@ -299,20 +301,35 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         if (_collateral != address(0)) {
-            useLPpool = _handleDifferentCollateral(_buyInAmount, _collateral, _isEth);
+            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, _isEth);
         }
-
-        _trade(
-            _tradeData,
-            ISportsAMMV2.TradeParams(
-                _buyInAmount,
-                _expectedPayout,
-                _additionalSlippage,
-                _differentRecipient,
-                _collateral == address(0),
-                useLPpool
-            )
-        );
+        if (useLPpool != address(0)) {
+            _tradeWithDifferentCollateral(
+                _tradeData,
+                ISportsAMMV2.TradeParams(
+                    _buyInAmount,
+                    _expectedPayout,
+                    _additionalSlippage,
+                    _differentRecipient,
+                    _collateral == address(0),
+                    useLPpool,
+                    collateralPriceInUSD
+                )
+            );
+        } else {
+            _trade(
+                _tradeData,
+                ISportsAMMV2.TradeParams(
+                    _buyInAmount,
+                    _expectedPayout,
+                    _additionalSlippage,
+                    _differentRecipient,
+                    _collateral == address(0),
+                    address(0),
+                    0
+                )
+            );
+        }
     }
 
     /// @notice exercise specific ticket
@@ -446,7 +463,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmount,
         address _collateral,
         bool _isEth
-    ) internal nonReentrant notPaused returns (address lpPool) {
+    ) internal nonReentrant notPaused returns (address lpPool, uint ethUsdPrice) {
         require(multicollateralEnabled, "Multi collateral not enabled");
         uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
 
@@ -459,12 +476,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             EthUtility(_collateral).deposit{value: msg.value}();
             uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
             require(balanceDiff == msg.value, "Not enough WETH received");
-
-            // exactReceived = IPriceFeed(multiCollateralOnOffRamp.priceFeed).rateForCurrency(WethLike(multiCollateralOnOffRamp).priceFeedKeyPerCollateral(_collateral));
-            exactReceived =
-                (IPriceFeed(EthUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(ETH_KEY) *
-                    balanceDiff) /
-                ONE;
+            ethUsdPrice = IPriceFeed(EthUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(ETH_KEY);
+            exactReceived = _transformToUSD(balanceDiff, ethUsdPrice);
             lpPool = collateralPool["ETH_POOL"];
         } else {
             IERC20(_collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
@@ -476,7 +489,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         //send the surplus to SB
         if (exactReceived > _buyInAmount) {
-            defaultCollateral.safeTransfer(safeBox, exactReceived - _buyInAmount);
+            if (lpPool != address(0)) {
+                // TODO: add the logic to send to safeBox surplus
+            } else {
+                defaultCollateral.safeTransfer(safeBox, exactReceived - _buyInAmount);
+            }
         }
     }
 
@@ -492,7 +509,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
 
         _checkLimits(params._buyInAmount, totalQuote, payout, params._expectedPayout, params._additionalSlippage);
-        _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees);
+        _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees, 0);
 
         if (params._sendDefaultCollateral) {
             defaultCollateral.safeTransferFrom(msg.sender, address(this), params._buyInAmount);
@@ -517,12 +534,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (address(stakingThales) != address(0)) {
             stakingThales.updateVolume(params._differentRecipient, params._buyInAmount);
         }
-        if (params._collateralPool != address(0)) {
-            // TODO: add logic here
-        } else {
-            liquidityPool.commitTrade(address(ticket), payout - buyInAmountAfterFees);
-            defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
-        }
+
+        liquidityPool.commitTrade(address(ticket), payout - buyInAmountAfterFees);
+        defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
 
         emit NewTicket(markets, address(ticket), buyInAmountAfterFees, payout);
         emit TicketCreated(
@@ -533,6 +547,86 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             payout,
             totalQuote
         );
+    }
+
+    function _tradeWithDifferentCollateral(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        ISportsAMMV2.TradeParams memory params
+    ) internal {
+        uint payout;
+        uint totalQuote;
+        uint payoutWithFees;
+        uint[] memory amountsToBuy = new uint[](_tradeData.length);
+        uint buyInAmountAfterFees;
+        (buyInAmountAfterFees, payout, totalQuote, , amountsToBuy, payoutWithFees) = _tradeQuote(
+            _tradeData,
+            params._buyInAmount
+        );
+
+        _checkLimits(
+            _transformToUSD(params._buyInAmount, params._collateralPriceInUSD),
+            totalQuote,
+            _transformToUSD(payout, params._collateralPriceInUSD),
+            _transformToUSD(params._buyInAmount, params._expectedPayout),
+            params._additionalSlippage
+        );
+        _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees, params._collateralPriceInUSD);
+
+        if (params._sendDefaultCollateral) {
+            defaultCollateral.safeTransferFrom(msg.sender, address(this), params._buyInAmount);
+        }
+
+        // clone a ticket
+        Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
+        Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
+
+        ticket.initialize(
+            markets,
+            params._buyInAmount,
+            buyInAmountAfterFees,
+            totalQuote,
+            address(this),
+            params._differentRecipient,
+            msg.sender,
+            (block.timestamp + expiryDuration)
+        );
+        _saveTicketData(_tradeData, address(ticket), params._differentRecipient);
+
+        if (address(stakingThales) != address(0)) {
+            stakingThales.updateVolume(
+                params._differentRecipient,
+                _transformToUSD(params._buyInAmount, params._collateralPriceInUSD)
+            );
+        }
+        IERC20 collateral = EthUtility(params._collateralPool).commitTrade(address(ticket), payout - buyInAmountAfterFees);
+        collateral.safeTransfer(address(ticket), payoutWithFees);
+
+        emit NewTicket(
+            markets,
+            address(ticket),
+            _transformToUSD(buyInAmountAfterFees, params._collateralPriceInUSD),
+            _transformToUSD(payout, params._collateralPriceInUSD)
+        );
+        emit TicketCreated(
+            address(ticket),
+            params._differentRecipient,
+            _transformToUSD(params._buyInAmount, params._collateralPriceInUSD),
+            _transformToUSD(buyInAmountAfterFees, params._collateralPriceInUSD),
+            _transformToUSD(payout, params._collateralPriceInUSD),
+            totalQuote
+        );
+    }
+
+    // TODO: to redifine for USDC or sUSD - add decimals as parameter
+    function _transformToCollateral(
+        uint _amountInUSD,
+        uint _collateralPriceInUSD
+    ) internal pure returns (uint amountInCollateral) {
+        amountInCollateral = (_amountInUSD * ONE) / _collateralPriceInUSD;
+    }
+
+    function _transformToUSD(uint _amountInCollateral, uint _collateralPriceInUSD) internal pure returns (uint amountInUSD) {
+        amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / ONE;
     }
 
     function _saveTicketData(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) internal {
@@ -584,13 +678,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _checkRisk(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint[] memory _amountsToBuy,
-        uint _buyInAmountAfterFees
+        uint _buyInAmountAfterFees,
+        uint _collateralPriceInUSD
     ) internal {
+        bool transformToUSD = _collateralPriceInUSD > 0;
+        uint riskPerMarket;
         for (uint i = 0; i < _tradeData.length; i++) {
             require(_isMarketInAMMTrading(_tradeData[i]), "Not trading");
             require(_tradeData[i].odds.length > _tradeData[i].position, "Invalid position");
-
-            uint riskPerMarket = _amountsToBuy[i] - _buyInAmountAfterFees;
+            if (transformToUSD) {
+                _transformToUSD(_amountsToBuy[i], _collateralPriceInUSD) -
+                    _transformToUSD(_buyInAmountAfterFees, _collateralPriceInUSD);
+            } else {
+                riskPerMarket = _amountsToBuy[i] - _buyInAmountAfterFees;
+            }
 
             riskPerMarketAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].typeId][
                 _tradeData[i].playerId
