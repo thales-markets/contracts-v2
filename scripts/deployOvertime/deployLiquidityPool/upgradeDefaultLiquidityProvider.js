@@ -11,41 +11,41 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
-	const sportsAMMV2LiquidityPoolAddress = getTargetAddress('SportsAMMV2LiquidityPool', network);
+	const defaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
+	const defaultLiquidityProviderAddress = getTargetAddress('DefaultLiquidityProvider', network);
 
-	let sportsAMMV2LiquidityPoolImplementationAddress;
+	let defaultLiquidityProviderImplementationAddress;
 
 	// upgrade if test networks
 	if (isTestNetwork(networkObj.chainId)) {
-		await upgrades.upgradeProxy(sportsAMMV2LiquidityPoolAddress, sportsAMMV2LiquidityPool);
+		await upgrades.upgradeProxy(defaultLiquidityProviderAddress, defaultLiquidityProvider);
 
-		sportsAMMV2LiquidityPoolImplementationAddress = await getImplementationAddress(
+		defaultLiquidityProviderImplementationAddress = await getImplementationAddress(
 			ethers.provider,
-			sportsAMMV2LiquidityPoolAddress
+			defaultLiquidityProviderAddress
 		);
 	} else {
-		sportsAMMV2LiquidityPoolImplementationAddress = await upgrades.prepareUpgrade(
-			sportsAMMV2LiquidityPoolAddress,
-			sportsAMMV2LiquidityPool
+		defaultLiquidityProviderImplementationAddress = await upgrades.prepareUpgrade(
+			defaultLiquidityProviderAddress,
+			defaultLiquidityProvider
 		);
 	}
 
-	console.log('SportsAMMV2LiquidityPool upgraded');
+	console.log('DefaultLiquidityProvider upgraded');
 	console.log(
-		'SportsAMMV2LiquidityPool Implementation:',
-		sportsAMMV2LiquidityPoolImplementationAddress
+		'DefaultLiquidityProvider Implementation:',
+		defaultLiquidityProviderImplementationAddress
 	);
 	setTargetAddress(
-		'SportsAMMV2LiquidityPoolImplementation',
+		'DefaultLiquidityProviderImplementation',
 		network,
-		sportsAMMV2LiquidityPoolImplementationAddress
+		defaultLiquidityProviderImplementationAddress
 	);
 	await delay(5000);
 
 	try {
 		await hre.run('verify:verify', {
-			address: sportsAMMV2LiquidityPoolImplementationAddress,
+			address: defaultLiquidityProviderImplementationAddress,
 		});
 	} catch (e) {
 		console.log(e);
