@@ -294,7 +294,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         if (_collateral != address(0)) {
-            _handleDifferentCollateral(_buyInAmount, _collateral, _isEth);
+            _handleDifferentCollateral(_buyInAmount, _collateral, _isEth, msg.sender);
         }
 
         _trade(
@@ -317,8 +317,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
-        address _collateral,
-        bool _isEth
+        address _collateral
     ) external payable nonReentrant notPaused {
         require(msg.sender == liveTradingProcessor, "only possible from live trading processor");
 
@@ -327,10 +326,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         require(_differentRecipient != address(0), "recipient has to be defined");
-        _differentRecipient = msg.sender;
 
         if (_collateral != address(0)) {
-            _handleDifferentCollateral(_buyInAmount, _collateral, _isEth);
+            _handleDifferentCollateral(_buyInAmount, _collateral, false, _differentRecipient);
         }
 
         _trade(
@@ -476,7 +474,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _handleDifferentCollateral(
         uint _buyInAmount,
         address _collateral,
-        bool _isEth
+        bool _isEth,
+        address fromAddress
     ) internal nonReentrant notPaused {
         require(multicollateralEnabled, "Multi collateral not enabled");
         uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
@@ -488,7 +487,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             require(msg.value >= collateralQuote, "Not enough ETH sent");
             exactReceived = multiCollateralOnOffRamp.onrampWithEth{value: msg.value}(msg.value);
         } else {
-            IERC20(_collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
+            IERC20(_collateral).safeTransferFrom(fromAddress, address(this), collateralQuote);
             IERC20(_collateral).approve(address(multiCollateralOnOffRamp), collateralQuote);
             exactReceived = multiCollateralOnOffRamp.onramp(_collateral, collateralQuote);
         }
@@ -526,7 +525,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees);
 
         if (tradeDataInternal._sendDefaultCollateral) {
-            defaultCollateral.safeTransferFrom(msg.sender, address(this), tradeDataInternal._buyInAmount);
+            defaultCollateral.safeTransferFrom(
+                tradeDataInternal.isLive ? tradeDataInternal._differentRecipient : msg.sender,
+                address(this),
+                tradeDataInternal._buyInAmount
+            );
         }
 
         // clone a ticket

@@ -252,11 +252,8 @@ async function deploySportsAMMV2Fixture() {
 
 	const liveTradingProcessorAddress = liveTradingProcessor.getAddress();
 
-	mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
-
+	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
-
-	await collateral.connect(firstTrader).approve(liveTradingProcessorAddress, DEFAULT_AMOUNT);
 
 	return {
 		owner,

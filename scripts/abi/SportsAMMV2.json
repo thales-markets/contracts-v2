@@ -1689,11 +1689,6 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isEth",
-        "type": "bool"
       }
     ],
     "name": "tradeLive",

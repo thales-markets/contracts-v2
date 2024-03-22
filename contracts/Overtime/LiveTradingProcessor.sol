@@ -30,7 +30,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _differentRecipient;
         address _referrer;
         address _collateral;
-        bool _isEth;
     }
 
     mapping(bytes32 => LiveTradeData) public requestIdToTradeData;
@@ -56,8 +55,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
-        address _collateral,
-        bool _isEth
+        address _collateral
     ) external whenNotPaused {
         Chainlink.Request memory req;
 
@@ -84,8 +82,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _additionalSlippage,
             _differentRecipient,
             _referrer,
-            _collateral,
-            _isEth
+            _collateral
         );
 
         counterToRequestId[requestCounter++] = requestId;
@@ -94,14 +91,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     function fulfillLiveTrade(bytes32 _requestId, bool allow) external recordChainlinkFulfillment(_requestId) {
         if (allow) {
             LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
-
-            //TODO: handle different collateral
-            sportsAMM.defaultCollateral().approve(address(sportsAMM), lTradeData._buyInAmount);
-            sportsAMM.defaultCollateral().safeTransferFrom(
-                lTradeData._differentRecipient,
-                address(this),
-                lTradeData._buyInAmount
-            );
 
             ISportsAMMV2.TradeData[] memory tradeData = new ISportsAMMV2.TradeData[](1);
             bytes32[] memory merkleProofs;
@@ -112,7 +101,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 lTradeData.gameId,
                 lTradeData.sportId,
                 0, //type, set moneyline
-                block.timestamp + 60, //maturity, hardcode to timestmap with buffer
+                block.timestamp + 60, //maturity, hardcode to timestamp with buffer
                 0, //status
                 0, //line
                 0, //playerId
@@ -129,8 +118,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 lTradeData._additionalSlippage,
                 lTradeData._differentRecipient,
                 lTradeData._referrer,
-                lTradeData._collateral,
-                lTradeData._isEth
+                lTradeData._collateral
             );
         }
         //TODO: handle for trade not allowed

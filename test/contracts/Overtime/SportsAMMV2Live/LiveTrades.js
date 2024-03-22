@@ -55,8 +55,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
-					false
+					ZERO_ADDRESS
 				);
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
