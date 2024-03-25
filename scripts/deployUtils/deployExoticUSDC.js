@@ -1,5 +1,4 @@
 const { ethers } = require('hardhat');
-
 const { setTargetAddress } = require('../helpers');
 
 async function main() {
