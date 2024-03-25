@@ -9,8 +9,10 @@ const path = require('path');
 /** @type import('hardhat/config').HardhatUserConfig */
 
 const TEST_PRIVATE_KEY = vars.get('TEST_PRIVATE_KEY');
+const PRIVATE_KEY = vars.get('PRIVATE_KEY');
 const INFURA = vars.get('INFURA');
 const OP_ETHERSCAN_KEY = vars.get('OP_ETHERSCAN_KEY');
+const ARB_ETHERSCAN_KEY = vars.get('ARB_ETHERSCAN_KEY');
 const REPORT_GAS = vars.get('REPORT_GAS');
 
 module.exports = {
@@ -26,14 +28,6 @@ module.exports = {
 	etherscan: {
 		customChains: [
 			{
-				network: 'optimisticGoerli',
-				chainId: 420,
-				urls: {
-					apiURL: 'https://api-goerli-optimism.etherscan.io/api',
-					browserURL: 'https://goerli-optimism.etherscan.io/',
-				},
-			},
-			{
 				network: 'optimisticSepolia',
 				chainId: 11155420,
 				urls: {
@@ -43,18 +37,23 @@ module.exports = {
 			},
 		],
 		apiKey: {
-			optimisticGoerli: OP_ETHERSCAN_KEY,
 			optimisticSepolia: OP_ETHERSCAN_KEY,
+			optimisticEthereum: OP_ETHERSCAN_KEY,
+			arbitrumOne: ARB_ETHERSCAN_KEY,
 		},
 	},
 	networks: {
-		optimisticGoerli: {
-			url: `https://optimism-goerli.infura.io/v3/${INFURA}`,
-			accounts: [TEST_PRIVATE_KEY],
-		},
 		optimisticSepolia: {
 			url: `https://optimism-sepolia.infura.io/v3/${INFURA}`,
 			accounts: [TEST_PRIVATE_KEY],
+		},
+		optimisticEthereum: {
+			url: `https://optimism-mainnet.infura.io/v3/${INFURA}`,
+			accounts: [PRIVATE_KEY],
+		},
+		arbitrumOne: {
+			url: `https://arbitrum-mainnet.infura.io/v3/${INFURA}`,
+			accounts: [PRIVATE_KEY],
 		},
 	},
 	gasReporter: {

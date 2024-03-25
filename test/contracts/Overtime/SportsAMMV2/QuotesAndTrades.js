@@ -11,12 +11,17 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
+		tradeDataTenMarketsCurrentRound,
 		firstLiquidityProvider,
 		firstTrader;
 
 	beforeEach(async () => {
-		({ sportsAMMV2, sportsAMMV2LiquidityPool, tradeDataCurrentRound } =
-			await loadFixture(deploySportsAMMV2Fixture));
+		({
+			sportsAMMV2,
+			sportsAMMV2LiquidityPool,
+			tradeDataCurrentRound,
+			tradeDataTenMarketsCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
@@ -38,7 +43,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 	});
 
 	describe('Trade', () => {
-		it('Should buy a ticket', async () => {
+		it('Should buy a ticket (1 market)', async () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
@@ -51,6 +56,29 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				.connect(firstTrader)
 				.trade(
 					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+		});
+
+		it('Should buy a ticket (10 markets)', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
+
+			expect(quote.payout).to.equal('28106125509765924870');
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
 					quote.payout,
 					ADDITIONAL_SLIPPAGE,

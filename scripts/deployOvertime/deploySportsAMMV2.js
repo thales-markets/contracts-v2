@@ -1,6 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
-const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
-
+const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
 const { setTargetAddress, getTargetAddress } = require('../helpers');
 
 async function main() {
@@ -12,6 +11,7 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
+	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 	const sportsAMMV2RiskManagerAddress = getTargetAddress('SportsAMMV2RiskManager', network);
@@ -30,16 +30,20 @@ async function main() {
 	const expiryDuration = 7776000;
 
 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
-	const sportsAMMV2Deployed = await upgrades.deployProxy(sportsAMMV2, [
-		owner.address,
-		defaultCollateralAddress,
-		sportsAMMV2ManagerAddress,
-		sportsAMMV2RiskManagerAddress,
-		sportsAMMV2ResultManagerAddress,
-		referralsAddress,
-		stakingThalesAddress,
-		safeBoxAddress,
-	]);
+	const sportsAMMV2Deployed = await upgrades.deployProxy(
+		sportsAMMV2,
+		[
+			owner.address,
+			defaultCollateralAddress,
+			sportsAMMV2ManagerAddress,
+			sportsAMMV2RiskManagerAddress,
+			sportsAMMV2ResultManagerAddress,
+			referralsAddress,
+			stakingThalesAddress,
+			safeBoxAddress,
+		],
+		{ initialOwner: protocolDAOAddress }
+	);
 	await sportsAMMV2Deployed.waitForDeployment();
 
 	const sportsAMMV2Address = await sportsAMMV2Deployed.getAddress();
@@ -69,9 +73,13 @@ async function main() {
 		ethers.provider,
 		sportsAMMV2Address
 	);
-
 	console.log('SportsAMMV2 Implementation:', sportsAMMV2ImplementationAddress);
 	setTargetAddress('SportsAMMV2Implementation', network, sportsAMMV2ImplementationAddress);
+
+	const sportsAMMV2ProxyAdminAddress = await getAdminAddress(ethers.provider, sportsAMMV2Address);
+	console.log('SportsAMMV2 Proxy Admin:', sportsAMMV2ProxyAdminAddress);
+	setTargetAddress('SportsAMMV2ProxyAdmin', network, sportsAMMV2ProxyAdminAddress);
+
 	await delay(5000);
 
 	try {

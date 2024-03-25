@@ -36,28 +36,39 @@ const getTicketTradeData = () => {
 	tradeDataCrossRounds.push(getTradeDataItem(nbaMoneylineCurrentRound, 0));
 	tradeDataCrossRounds.push(getTradeDataItem(nbaSpreadNextRound, 1));
 
-	return { tradeDataCurrentRound, tradeDataNextRound, tradeDataCrossRounds };
+	const tradeDataTenMarketsCurrentRound = [];
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[2], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[3], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[4], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[5], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[6], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[7], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[8], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[9], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[10], 0));
+	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[11], 0));
+
+	return {
+		tradeDataCurrentRound,
+		tradeDataNextRound,
+		tradeDataCrossRounds,
+		tradeDataTenMarketsCurrentRound,
+	};
 };
 
 const createMerkleTree = async () => {
-	const marketInCurrentRound = markets[0];
-	const marketInCrossRounds = markets[1];
-
 	const today = Math.round(new Date().getTime() / 1000);
 	const tomorrow = today + ONE_DAY_IN_SECS;
 	const nextWeek = tomorrow + ONE_WEEK_IN_SECS;
 
-	marketInCurrentRound.maturity = tomorrow;
-	marketInCurrentRound.childMarkets.forEach((childMarket) => {
-		childMarket.maturity = tomorrow;
+	const newMarkets = [];
+	markets.forEach((market, index) => {
+		market.maturity = index === 1 ? nextWeek : tomorrow;
+		market.childMarkets.forEach((childMarket) => {
+			childMarket.maturity = index === 1 ? nextWeek : tomorrow;
+		});
+		newMarkets.push(market);
 	});
-
-	marketInCrossRounds.maturity = nextWeek;
-	marketInCrossRounds.childMarkets.forEach((childMarket) => {
-		childMarket.maturity = nextWeek;
-	});
-
-	const newMarkets = [marketInCurrentRound, marketInCrossRounds];
 
 	const { root, treeMarketsAndHashes } = await getMerkleTree(newMarkets);
 

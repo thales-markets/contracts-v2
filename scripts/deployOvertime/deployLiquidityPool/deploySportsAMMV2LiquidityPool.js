@@ -1,6 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
-const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
-
+const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
 const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../../helpers');
 
 async function main() {
@@ -12,6 +11,7 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
+	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const stakingThalesAddress = getTargetAddress('StakingThales', network);
@@ -24,21 +24,25 @@ async function main() {
 	const safeBoxImpact = ethers.parseEther('0.2');
 
 	const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
-	const sportsAMMV2LiquidityPoolDeployed = await upgrades.deployProxy(sportsAMMV2LiquidityPool, [
-		{
-			_owner: owner.address,
-			_sportsAMM: sportsAMMV2Address,
-			_stakingThales: stakingThalesAddress,
-			_collateral: defaultCollateralAddress,
-			_roundLength: week,
-			_maxAllowedDeposit: maxAllowedDeposit,
-			_minDepositAmount: minDepositAmount,
-			_maxAllowedUsers: maxAllowedUsers,
-			_utilizationRate: utilizationRate,
-			_safeBox: safeBoxAddress,
-			_safeBoxImpact: safeBoxImpact,
-		},
-	]);
+	const sportsAMMV2LiquidityPoolDeployed = await upgrades.deployProxy(
+		sportsAMMV2LiquidityPool,
+		[
+			{
+				_owner: owner.address,
+				_sportsAMM: sportsAMMV2Address,
+				_stakingThales: stakingThalesAddress,
+				_collateral: defaultCollateralAddress,
+				_roundLength: week,
+				_maxAllowedDeposit: maxAllowedDeposit,
+				_minDepositAmount: minDepositAmount,
+				_maxAllowedUsers: maxAllowedUsers,
+				_utilizationRate: utilizationRate,
+				_safeBox: safeBoxAddress,
+				_safeBoxImpact: safeBoxImpact,
+			},
+		],
+		{ initialOwner: protocolDAOAddress }
+	);
 	await sportsAMMV2LiquidityPoolDeployed.waitForDeployment();
 
 	const sportsAMMV2LiquidityPoolAddress = await sportsAMMV2LiquidityPoolDeployed.getAddress();
@@ -51,7 +55,6 @@ async function main() {
 		ethers.provider,
 		sportsAMMV2LiquidityPoolAddress
 	);
-
 	console.log(
 		'SportsAMMV2LiquidityPool Implementation:',
 		sportsAMMV2LiquidityPoolImplementationAddress
@@ -61,6 +64,18 @@ async function main() {
 		network,
 		sportsAMMV2LiquidityPoolImplementationAddress
 	);
+
+	const sportsAMMV2LiquidityPoolProxyAdminAddress = await getAdminAddress(
+		ethers.provider,
+		sportsAMMV2LiquidityPoolAddress
+	);
+	console.log('SportsAMMV2LiquidityPool Proxy Admin:', sportsAMMV2LiquidityPoolProxyAdminAddress);
+	setTargetAddress(
+		'SportsAMMV2LiquidityPoolProxyAdmin',
+		network,
+		sportsAMMV2LiquidityPoolProxyAdminAddress
+	);
+
 	await delay(5000);
 
 	if (isTestNetwork(networkObj.chainId)) {

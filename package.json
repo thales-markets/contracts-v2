@@ -8,7 +8,9 @@
 		"format": "prettier --write \"contracts/**/*.sol\" \"**/*.js\" \"**/*.md\" \"**/*.yml\" \"**/*.json\"",
 		"prepare": "husky install",
 		"clean-install": "rm -rf build && rm ./package-lock.json && rm -rf node_modules/* && npm install",
-		"compile": "hardhat compile"
+		"compile": "hardhat compile",
+		"test": "node --max-old-space-size=4096 ./node_modules/.bin/hardhat test",
+		"coverage": "node --max-old-space-size=4096 ./node_modules/.bin/hardhat coverage"
 	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-toolbox": "^4.0.0",
