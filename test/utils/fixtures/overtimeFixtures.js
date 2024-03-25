@@ -253,8 +253,90 @@ async function deploySportsAMMV2Fixture() {
 	};
 }
 
+async function deployETHLiquidityPoolFixture() {
+	const {
+		owner,
+		sportsAMMV2Manager,
+		sportsAMMV2RiskManager,
+		sportsAMMV2ResultManager,
+		sportsAMMV2,
+		ticketMastercopy,
+		sportsAMMV2LiquidityPool,
+		sportsAMMV2LiquidityPoolRoundMastercopy,
+		defaultLiquidityProvider,
+		collateral,
+		referrals,
+		stakingThales,
+		safeBox,
+		tradeDataCurrentRound,
+		tradeDataNextRound,
+		tradeDataCrossRounds,
+		tradeDataTenMarketsCurrentRound,
+	} = await deploySportsAMMV2Fixture();
+
+	const WETH = await ethers.getContractFactory('WETH');
+	const weth = await WETH.deploy();
+
+	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory(
+		'SportsAMMV2LiquidityPoolETH'
+	);
+	const sportsAMMV2LiquidityPoolETH = await upgrades.deployProxy(SportsAMMV2LiquidityPoolETH, [
+		{
+			_owner: owner.address,
+			_sportsAMM: sportsAMMV2Address,
+			_stakingThales: stakingThalesAddress,
+			_collateral: collateralAddress,
+			_roundLength: SPORTS_AMM_LP_INITAL_PARAMS.roundLength,
+			_maxAllowedDeposit: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit,
+			_minDepositAmount: SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount,
+			_maxAllowedUsers: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedUsers,
+			_utilizationRate: SPORTS_AMM_LP_INITAL_PARAMS.utilizationRate,
+			_safeBox: safeBox.address,
+			_safeBoxImpact: SPORTS_AMM_LP_INITAL_PARAMS.safeBoxImpact,
+		},
+	]);
+
+	const sportsAMMV2LiquidityPoolETHAddress = sportsAMMV2LiquidityPoolETH.getAddress();
+	const wethAddress = weth.getAddress();
+	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
+		sportsAMMV2LiquidityPoolRoundMastercopyAddress
+	);
+
+	// deploy default liqudity provider
+	const DefaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
+	const defaultLiquidityProviderETH = await upgrades.deployProxy(DefaultLiquidityProvider, [
+		owner.address,
+		sportsAMMV2LiquidityPoolETHAddress,
+		wethAddress,
+	]);
+
+	return {
+		owner,
+		sportsAMMV2Manager,
+		sportsAMMV2RiskManager,
+		sportsAMMV2ResultManager,
+		sportsAMMV2,
+		ticketMastercopy,
+		sportsAMMV2LiquidityPool,
+		sportsAMMV2LiquidityPoolRoundMastercopy,
+		defaultLiquidityProvider,
+		sportsAMMV2LiquidityPoolETH,
+		defaultLiquidityProviderETH,
+		weth,
+		collateral,
+		referrals,
+		stakingThales,
+		safeBox,
+		tradeDataCurrentRound,
+		tradeDataNextRound,
+		tradeDataCrossRounds,
+		tradeDataTenMarketsCurrentRound,
+	};
+}
+
 module.exports = {
 	deployAccountsFixture,
 	deployTokenFixture,
 	deploySportsAMMV2Fixture,
+	deployETHLiquidityPoolFixture,
 };
