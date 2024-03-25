@@ -17,7 +17,7 @@ jobs:
       - run:
           name: Compile
           command: |
-            npx hardhat compile --showsize --optimizer
+            npx hardhat compile
       - run:
           name: Test and output gas used
           command: |
