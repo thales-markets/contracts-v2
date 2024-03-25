@@ -24,7 +24,7 @@ jobs:
             set +e
             circleci tests glob 'test/contracts/*/*.js' |
             circleci tests split |
-            xargs npm test --
+            npm test
             EXIT_CODE=$?
             printf "\\n"
             exit $EXIT_CODE
@@ -53,15 +53,11 @@ jobs:
       - attach_workspace:
           at: /tmp/coverage
       - run:
-          name: Copy files
+          name: Copy coverage files
           command: |
             cp -R /tmp/coverage/coverage-*.json .
       - run:
-          name: Remove file - only node files
-          command: |
-            rm coverage.json
-      - run:
-          name: LS
+          name: List coverage files
           command: |
             ls /tmp/coverage/
       - codecov/upload
