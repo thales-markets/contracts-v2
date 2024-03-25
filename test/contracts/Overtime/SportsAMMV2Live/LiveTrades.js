@@ -4,7 +4,7 @@ const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('../../../constants/overtime');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, SPORT_ID_NBA } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
 
 describe('SportsAMMV2 Quotes And Trades', () => {
@@ -15,7 +15,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		firstLiquidityProvider,
 		firstTrader,
 		liveTradingProcessor,
-		mockChainlinkOracle;
+		mockChainlinkOracle,
+		sportsAMMV2RiskManager;
 
 	beforeEach(async () => {
 		({
@@ -25,6 +26,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			tradeDataTenMarketsCurrentRound,
 			liveTradingProcessor,
 			mockChainlinkOracle,
+			sportsAMMV2RiskManager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
@@ -43,6 +45,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));
+
+			await sportsAMMV2RiskManager.setLiveTradingPerSportEnabled(SPORT_ID_NBA, true);
 
 			await liveTradingProcessor
 				.connect(firstTrader)

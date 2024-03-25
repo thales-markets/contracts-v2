@@ -33,6 +33,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     mapping(bytes32 => LiveTradeData) public requestIdToTradeData;
+    mapping(bytes32 => bool) public requestIdToFulfillAllowed;
+    mapping(bytes32 => bool) public requestIdFulfilled;
     mapping(bytes32 => uint) public timestampPerRequest;
 
     uint public requestCounter;
@@ -57,6 +59,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _referrer,
         address _collateral
     ) external whenNotPaused {
+        require(sportsAMM.riskManager().liveTradingPerSportEnabled(sportId), "Live trading not enabled on sportId");
+
         Chainlink.Request memory req;
 
         req = buildChainlinkRequest(specId, address(this), this.fulfillLiveTrade.selector);
@@ -86,12 +90,30 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         );
 
         counterToRequestId[requestCounter++] = requestId;
+
+        emit LiveTradeRequested(
+            msg.sender,
+            (requestCounter - 1),
+            requestId,
+            gameId,
+            sportId,
+            _position,
+            _buyInAmount,
+            _expectedPayout,
+            _additionalSlippage,
+            _differentRecipient,
+            _referrer,
+            _collateral
+        );
     }
 
     function fulfillLiveTrade(bytes32 _requestId, bool allow) external recordChainlinkFulfillment(_requestId) {
-        if (allow) {
-            LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
+        //might be redundant as already done by Chainlink Client, but making double sure
+        require(!requestIdToFulfillAllowed[_requestId], "Request ID already fulfilled");
 
+        LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
+
+        if (allow) {
             ISportsAMMV2.TradeData[] memory tradeData = new ISportsAMMV2.TradeData[](1);
             bytes32[] memory merkleProofs;
             uint[] memory odds = new uint[](3);
@@ -121,10 +143,75 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 lTradeData._collateral
             );
         }
-        //TODO: handle for trade not allowed
+        requestIdToFulfillAllowed[_requestId] = allow;
+        requestIdFulfilled[_requestId] = true;
+
+        emit LiveTradeFulfilled(
+            lTradeData._differentRecipient,
+            _requestId,
+            allow,
+            lTradeData.gameId,
+            lTradeData.sportId,
+            lTradeData.position,
+            lTradeData._buyInAmount,
+            lTradeData._expectedPayout,
+            lTradeData._additionalSlippage,
+            lTradeData._referrer,
+            lTradeData._collateral,
+            block.timestamp
+        );
     }
+
+    //////////// SETTERS
 
     function setPaused(bool _setPausing) external onlyOwner {
         _setPausing ? _pause() : _unpause();
     }
+
+    function setConfiguration(
+        address _link,
+        address _oracle,
+        address _sportsAMM,
+        bytes32 _specId,
+        uint _payment
+    ) external onlyOwner {
+        setChainlinkToken(_link);
+        setChainlinkOracle(_oracle);
+        sportsAMM = SportsAMMV2(_sportsAMM);
+        specId = _specId;
+        payment = _payment;
+
+        emit ContextReset(_link, _oracle, _sportsAMM, _specId, _payment);
+    }
+
+    /////// EVENTS
+    event ContextReset(address _link, address _oracle, address _sportsAMM, bytes32 _specId, uint _payment);
+    event LiveTradeRequested(
+        address sender,
+        uint requestCounter,
+        bytes32 requestId,
+        bytes32 gameId,
+        uint16 sportId,
+        uint8 _position,
+        uint _buyInAmount,
+        uint _expectedPayout,
+        uint _additionalSlippage,
+        address _differentRecipient,
+        address _referrer,
+        address _collateral
+    );
+    event LiveTradeFulfilled(
+        address recipient,
+        bytes32 requestId,
+        bool allow,
+        bytes32 gameId,
+        uint16 sportId,
+        uint8 _position,
+        uint _buyInAmount,
+        uint _expectedPayout,
+        uint _additionalSlippage,
+        address _referrer,
+        address _collateral,
+        uint timestamp
+    );
 }
