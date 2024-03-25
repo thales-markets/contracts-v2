@@ -242,5 +242,4005 @@
 				"odds": [0.5, 0.5, 0]
 			}
 		]
+	},
+	{
+		"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "REAL SOCIEDAD",
+		"awayTeam": "CÁDIZ",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3830666564353637613166343639393836306561313639616432633330313538",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "REAL SOCIEDAD",
+				"awayTeam": "CÁDIZ",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "MALLORCA",
+		"awayTeam": "GRANADA",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6638323130373532656136316335383961623334636430643565333833613936",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "MALLORCA",
+				"awayTeam": "GRANADA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "OSASUNA",
+		"awayTeam": "REAL MADRID",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6330626237363164303765636664313863313231336536393531333234656337",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "OSASUNA",
+				"awayTeam": "REAL MADRID",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "GETAFE",
+		"awayTeam": "GIRONA",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3539373234323063616237336661373533653164333562343132353339336465",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "GETAFE",
+				"awayTeam": "GIRONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "ATHLETIC BILBAO",
+		"awayTeam": "ALAVÉS",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6165323564333838656664343136396336393236343638303838393036316433",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "ATHLETIC BILBAO",
+				"awayTeam": "ALAVÉS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "SEVILLA",
+		"awayTeam": "CELTA VIGO",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6466643939656237643961323930373537653431353965623534393632616535",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "SEVILLA",
+				"awayTeam": "CELTA VIGO",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "LAS PALMAS",
+		"awayTeam": "ALMERÍA",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3433356233353937313933663439363739343530393237356635626262303463",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "LAS PALMAS",
+				"awayTeam": "ALMERÍA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "VILLARREAL",
+		"awayTeam": "VALENCIA",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3439396362373434396566396463326635306536636466346138636261323538",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "VILLARREAL",
+				"awayTeam": "VALENCIA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "RAYO VALLECANO",
+		"awayTeam": "REAL BETIS",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x3737653836643731656239666664353038376366656336643437366533653866",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "RAYO VALLECANO",
+				"awayTeam": "REAL BETIS",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
+	},
+	{
+		"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+		"sportId": 9014,
+		"typeId": 0,
+		"maturity": 1710536414,
+		"homeTeam": "ATLETICO MADRID",
+		"awayTeam": "BARCELONA",
+		"results": [],
+		"status": 0,
+		"line": 0,
+		"playerProps": {
+			"playerId": 0,
+			"playerName": ""
+		},
+		"odds": [0.9, 0.9, 0.9],
+		"childMarkets": [
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": -50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa5c47622a1cef6cade1cb4b61c63229ae13e4cdf74c871b154b08d48b9a264b6",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 50,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xa247e12098db1a7dad09029b9e503d7155706345ec32d4f4bf082762b65bc629",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10001,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 100,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xf7eca9d1590e76584bf2d961e282ac31e51d4a58272d5a44fb7a0e5d96a3f24e",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 400,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xb4bad7fdcbf13c9f8e7d1cc623e834483f806b01caa55e5184dc5c34457147f7",
+					"0xa27f4098575af5abe74072de2cb5f249f09ba1d37b7ee48ee49685214d555a70",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 350,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x46bbd501bcb49a19d3ba7256f05278d718dfe4ce718e017e10ab63b5bedf814f",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 300,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0xe56c04d16dbd25ce168bb98aff049e5ddf36982ada96b8df0723a55ab6aa88a7",
+					"0xe7d41af1f9e91e5601f5a7a2a55db9023e795c30174bc8f0cc7b1bc32eb0c613",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10002,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 250,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9],
+				"proof": [
+					"0x6d296d592e288fa133deba324d29d05fa8730298f3ce42af525be50b4e8cc5af",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10003,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x4ae74d31bc10dd8f35e29a605acd9c22c778bcb91ac4bdd9d21f51b1db58decd",
+					"0x14b14f0bf60ca53e5127069f50d17e50765bb5fdda148f9d0c84106bb671706b",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10004,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 350 }
+					],
+					[
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 350 }
+					]
+				],
+				"proof": [
+					"0x3c7f75e3fbb42246be1ad3ce56c8dd6ea2ae02e02dcd8ade345f248654c35e23",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10005,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"proof": [
+					"0x136e83f867b30458f84b3f97d32b344cc24a8fcd0574a56612b51783fd0dfb46",
+					"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10006,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 }
+					]
+				],
+				"proof": [
+					"0x2788e9e526099aa09b9b5fb0288463312d34c763ef737ae05ab32112a5e1991a",
+					"0x3f28ad498de87b1a648a24c9fec868b7c34de427b9597f405d7515bbcef6d457",
+					"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10007,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[{ "typeId": 10002, "position": 1, "line": 250 }],
+					[{ "typeId": 10002, "position": 0, "line": 250 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10002, "position": 0, "line": 250 },
+						{ "typeId": 10002, "position": 1, "line": 550 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 450 }],
+					[
+						{ "typeId": 10002, "position": 0, "line": 350 },
+						{ "typeId": 10002, "position": 2, "line": 650 }
+					],
+					[{ "typeId": 10002, "position": 0, "line": 650 }]
+				],
+				"proof": [
+					"0x920550ee48b3d58aea84d44e88203422579e6d272e0d7b60fdd466d25b4d4f42",
+					"0x75bcc14f7e54517d21ee8101e352f8fbf21146b00c59d3d53e0b066749ee8052",
+					"0x3b1501b75bac3f543c593aea1766d05517798043e5bde49d0e0eac2fcdedf3be",
+					"0xe006095d36ec3c9e601900ea33a2000471ceaefe0580d8d87a63d01a773c2c97"
+				]
+			},
+			{
+				"gameId": "0x6464386239383361643735393839646138656666313433353865363163666363",
+				"sportId": 9014,
+				"typeId": 10008,
+				"maturity": 1710536414,
+				"homeTeam": "ATLETICO MADRID",
+				"awayTeam": "BARCELONA",
+				"results": [],
+				"status": 0,
+				"line": 0,
+				"playerProps": {
+					"playerId": 0,
+					"playerName": ""
+				},
+				"odds": [0.9, 0.9, 0.9],
+				"combinedPositions": [
+					[
+						{ "typeId": 10005, "position": 0, "line": 0 },
+						{ "typeId": 0, "position": 0, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 250 }
+					],
+					[
+						{ "typeId": 10005, "position": 1, "line": 0 },
+						{ "typeId": 0, "position": 1, "line": 0 },
+						{ "typeId": 10002, "position": 0, "line": 150 },
+						{ "typeId": 10002, "position": 1, "line": 450 }
+					],
+					[
+						{ "typeId": 10005, "position": 2, "line": 0 },
+						{ "typeId": 0, "position": 2, "line": 0 },
+						{ "typeId": 10002, "position": 1, "line": 250 }
+					]
+				],
+				"proof": [
+					"0x4a50efb2d3cf8cb6fdd4c50fb1b58cd46c38fbf6ca5e4175e0fd7247627c35cc",
+					"0x19583417068c17c11052337c5250f182e9bb1f23286702b75911ad2204fa7b33",
+					"0xee29d161c6b782101c6c34e4b5400efafac9f0bc19da1b265a4f3f7372c945b5",
+					"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+				]
+			}
+		],
+		"proof": [
+			"0x061ef6a24beb2eca0a9350909eb2e6fab552c0d4c496e4b457e35192f268d57a",
+			"0xcef5ca8a4eaeea83ad741ada346ec63afa0848cb3e7b28d9f2c7bc8229f603a5",
+			"0x786d0c79c62c2862e183dd45714cc0fe32833f72bb7e9f7a23ccc2fd18bb1565",
+			"0xa68a39fb3e2792000245287a79a6f6a87d46285c0473dc3993d3ee229389d828"
+		]
 	}
 ]

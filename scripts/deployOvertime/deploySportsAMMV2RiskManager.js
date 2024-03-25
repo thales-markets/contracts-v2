@@ -1,6 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
-const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
-
+const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
 const { setTargetAddress, getTargetAddress } = require('../helpers');
 
 async function main() {
@@ -12,6 +11,7 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
+	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 
 	let defaultCap = ethers.parseEther('1000');
@@ -20,14 +20,18 @@ async function main() {
 	let maxRiskMultiplier = 5;
 
 	const sportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
-	const sportsAMMV2RiskManagerDeployed = await upgrades.deployProxy(sportsAMMV2RiskManager, [
-		owner.address,
-		sportsAMMV2ManagerAddress,
-		defaultCap,
-		defaultRiskMultiplier,
-		maxCap,
-		maxRiskMultiplier,
-	]);
+	const sportsAMMV2RiskManagerDeployed = await upgrades.deployProxy(
+		sportsAMMV2RiskManager,
+		[
+			owner.address,
+			sportsAMMV2ManagerAddress,
+			defaultCap,
+			defaultRiskMultiplier,
+			maxCap,
+			maxRiskMultiplier,
+		],
+		{ initialOwner: protocolDAOAddress }
+	);
 	await sportsAMMV2RiskManagerDeployed.waitForDeployment();
 
 	const sportsAMMV2RiskManagerAddress = await sportsAMMV2RiskManagerDeployed.getAddress();
@@ -40,7 +44,6 @@ async function main() {
 		ethers.provider,
 		sportsAMMV2RiskManagerAddress
 	);
-
 	console.log(
 		'SportsAMMV2RiskManager Implementation:',
 		sportsAMMV2RiskManagerImplementationAddress
@@ -50,6 +53,18 @@ async function main() {
 		network,
 		sportsAMMV2RiskManagerImplementationAddress
 	);
+
+	const sportsAMMV2RiskManagerProxyAdminAddress = await getAdminAddress(
+		ethers.provider,
+		sportsAMMV2RiskManagerAddress
+	);
+	console.log('SportsAMMV2RiskManager Proxy Admin:', sportsAMMV2RiskManagerProxyAdminAddress);
+	setTargetAddress(
+		'SportsAMMV2RiskManagerProxyAdmin',
+		network,
+		sportsAMMV2RiskManagerProxyAdminAddress
+	);
+
 	await delay(5000);
 
 	try {

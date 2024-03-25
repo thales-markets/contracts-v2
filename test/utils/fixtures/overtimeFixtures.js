@@ -184,10 +184,31 @@ async function deploySportsAMMV2Fixture() {
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
 
 	const root = await createMerkleTree();
-	const { tradeDataCurrentRound, tradeDataNextRound, tradeDataCrossRounds } = getTicketTradeData();
+	const {
+		tradeDataCurrentRound,
+		tradeDataNextRound,
+		tradeDataCrossRounds,
+		tradeDataTenMarketsCurrentRound,
+	} = getTicketTradeData();
+
+	const gameIds = [];
+	const roots = [];
+
+	const allTradeData = [
+		...tradeDataCurrentRound,
+		...tradeDataNextRound,
+		...tradeDataCrossRounds,
+		...tradeDataTenMarketsCurrentRound,
+	];
+
+	for (let index = 0; index < allTradeData.length; index++) {
+		const market = allTradeData[index];
+		gameIds.push(market.gameId);
+		roots.push(root);
+	}
 
 	// set new roots on Sports AMM contract
-	await sportsAMMV2.setRootsPerGames([GAME_ID_1, GAME_ID_2], [root, root]);
+	await sportsAMMV2.setRootsPerGames(gameIds, roots);
 
 	await collateral.setDefaultAmount(DEFAULT_AMOUNT);
 	await collateral.mintForUser(firstLiquidityProvider);
@@ -228,6 +249,7 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataCurrentRound,
 		tradeDataNextRound,
 		tradeDataCrossRounds,
+		tradeDataTenMarketsCurrentRound,
 	};
 }
 
