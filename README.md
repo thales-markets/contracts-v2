@@ -2,8 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/thales-markets/contracts-v2/tree/main.svg?style=svg)](https://circleci.com/gh/thales-markets/contracts-v2/tree/main)
 [![Codecov](https://codecov.io/gh/thales-markets/contracts-v2/branch/main/graph/badge.svg?token=M2e5X0vJRQ)](https://codecov.io/gh/thales-markets/contracts-v2)
-[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
-[![Twitter Follow](https://img.shields.io/twitter/follow/thalesmarket.svg?label=thalesmarket&style=social)](https://twitter.com/thales_io)
+[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=Thales_discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
+[![Twitter Follow](https://img.shields.io/twitter/follow/thales_io.svg?label=thales_io&style=social)](https://twitter.com/thales_io)
 
 This repository is intended for v2 version of Thales contract architecture.
 
@@ -20,12 +20,11 @@ Everything about the [THALES token](https://thales.io/about/thales-token).
 
 - [Thales Markets](https://thalesmarket.io/)
 - [Overtime (Sport) Markets](https://overtimemarkets.xyz/)
--
 
 ### Community
 
-[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
-[![Twitter Follow](https://img.shields.io/twitter/follow/thalesmarket.svg?label=thalesmarket&style=social)](https://twitter.com/thales_io)
+[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=Thales_discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
+[![Twitter Follow](https://img.shields.io/twitter/follow/thales_io.svg?label=thales_io&style=social)](https://twitter.com/thales_io)
 
 ## Contracts
 
