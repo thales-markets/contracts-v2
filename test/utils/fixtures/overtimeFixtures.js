@@ -3,6 +3,7 @@ const {
 	RISK_MANAGER_INITAL_PARAMS,
 	SPORTS_AMM_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
+	SPORTS_AMM_LP_ETH_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
 const { GAME_ID_1, DEFAULT_AMOUNT, GAME_ID_2 } = require('../../constants/overtime');
 const { createMerkleTree, getTicketTradeData } = require('../overtime');
@@ -274,30 +275,36 @@ async function deployETHLiquidityPoolFixture() {
 		tradeDataTenMarketsCurrentRound,
 	} = await deploySportsAMMV2Fixture();
 
-	const WETH = await ethers.getContractFactory('WETH');
+	const WETH = await ethers.getContractFactory('WETH9');
 	const weth = await WETH.deploy();
 
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory(
 		'SportsAMMV2LiquidityPoolETH'
 	);
+	const sportsAMMV2Address = await sportsAMMV2.getAddress();
+	const stakingThalesAddress = await stakingThales.getAddress();
+	const wethAddress = await weth.getAddress();
+
 	const sportsAMMV2LiquidityPoolETH = await upgrades.deployProxy(SportsAMMV2LiquidityPoolETH, [
 		{
 			_owner: owner.address,
 			_sportsAMM: sportsAMMV2Address,
 			_stakingThales: stakingThalesAddress,
-			_collateral: collateralAddress,
-			_roundLength: SPORTS_AMM_LP_INITAL_PARAMS.roundLength,
-			_maxAllowedDeposit: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit,
-			_minDepositAmount: SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount,
-			_maxAllowedUsers: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedUsers,
-			_utilizationRate: SPORTS_AMM_LP_INITAL_PARAMS.utilizationRate,
+			_collateral: wethAddress,
+			_roundLength: SPORTS_AMM_LP_ETH_INITAL_PARAMS.roundLength,
+			_maxAllowedDeposit: SPORTS_AMM_LP_ETH_INITAL_PARAMS.maxAllowedDeposit,
+			_minDepositAmount: SPORTS_AMM_LP_ETH_INITAL_PARAMS.minDepositAmount,
+			_maxAllowedUsers: SPORTS_AMM_LP_ETH_INITAL_PARAMS.maxAllowedUsers,
+			_utilizationRate: SPORTS_AMM_LP_ETH_INITAL_PARAMS.utilizationRate,
 			_safeBox: safeBox.address,
-			_safeBoxImpact: SPORTS_AMM_LP_INITAL_PARAMS.safeBoxImpact,
+			_safeBoxImpact: SPORTS_AMM_LP_ETH_INITAL_PARAMS.safeBoxImpact,
 		},
 	]);
 
-	const sportsAMMV2LiquidityPoolETHAddress = sportsAMMV2LiquidityPoolETH.getAddress();
-	const wethAddress = weth.getAddress();
+	const sportsAMMV2LiquidityPoolETHAddress = await sportsAMMV2LiquidityPoolETH.getAddress();
+
+	const sportsAMMV2LiquidityPoolRoundMastercopyAddress =
+		await sportsAMMV2LiquidityPoolRoundMastercopy.getAddress();
 	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
 	);
@@ -309,6 +316,9 @@ async function deployETHLiquidityPoolFixture() {
 		sportsAMMV2LiquidityPoolETHAddress,
 		wethAddress,
 	]);
+
+	const defaultLiquidityProviderETHAddress = await defaultLiquidityProviderETH.getAddress();
+	await sportsAMMV2LiquidityPoolETH.setDefaultLiquidityProvider(defaultLiquidityProviderETHAddress);
 
 	return {
 		owner,

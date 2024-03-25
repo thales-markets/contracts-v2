@@ -3,8 +3,9 @@ const { expect } = require('chai');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
+	deployETHLiquidityPoolFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { SPORTS_AMM_LP_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
+const { SPORTS_AMM_LP_INITAL_PARAMS, SPORTS_AMM_LP_ETH_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
 const { ZERO_ADDRESS, MAX_NUMBER, ONE_WEEK_IN_SECS } = require('../../../constants/general');
 
 describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
@@ -37,57 +38,57 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 			stakingThales,
 			safeBox,
 			owner,
-		} = await loadFixture(deploySportsAMMV2Fixture));
+		} = await loadFixture(deployETHLiquidityPoolFixture));
 		({ secondAccount, thirdAccount, firstLiquidityProvider } =
 			await loadFixture(deployAccountsFixture));
 	});
 
 	describe('Deployment', () => {
 		it('Should set the right owner', async () => {
-			expect(await sportsAMMV2LiquidityPool.owner()).to.equal(owner.address);
+			expect(await sportsAMMV2LiquidityPoolETH.owner()).to.equal(owner.address);
 		});
 
 		it('Should set the right addresses', async () => {
-			expect(await sportsAMMV2LiquidityPool.collateral()).to.equal(await collateral.getAddress());
-			expect(await sportsAMMV2LiquidityPool.stakingThales()).to.equal(
+			expect(await sportsAMMV2LiquidityPoolETH.collateral()).to.equal(await weth.getAddress());
+			expect(await sportsAMMV2LiquidityPoolETH.stakingThales()).to.equal(
 				await stakingThales.getAddress()
 			);
-			expect(await sportsAMMV2LiquidityPool.safeBox()).to.equal(safeBox.address);
-			expect(await sportsAMMV2LiquidityPool.sportsAMM()).to.equal(await sportsAMMV2.getAddress());
+			expect(await sportsAMMV2LiquidityPoolETH.safeBox()).to.equal(safeBox.address);
+			expect(await sportsAMMV2LiquidityPoolETH.sportsAMM()).to.equal(await sportsAMMV2.getAddress());
 		});
 
-		it('Should set the right amounts', async () => {
-			expect(await sportsAMMV2LiquidityPool.maxAllowedDeposit()).to.equal(
-				SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit
+		it('Should set the right amounts in ETH pool', async () => {
+			expect(await sportsAMMV2LiquidityPoolETH.maxAllowedDeposit()).to.equal(
+				SPORTS_AMM_LP_ETH_INITAL_PARAMS.maxAllowedDeposit
 			);
-			expect(await sportsAMMV2LiquidityPool.minDepositAmount()).to.equal(
-				SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount
+			expect(await sportsAMMV2LiquidityPoolETH.minDepositAmount()).to.equal(
+				SPORTS_AMM_LP_ETH_INITAL_PARAMS.minDepositAmount
 			);
-			expect(await sportsAMMV2LiquidityPool.maxAllowedUsers()).to.equal(
-				SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedUsers
+			expect(await sportsAMMV2LiquidityPoolETH.maxAllowedUsers()).to.equal(
+				SPORTS_AMM_LP_ETH_INITAL_PARAMS.maxAllowedUsers
 			);
-			expect(await sportsAMMV2LiquidityPool.utilizationRate()).to.equal(
-				SPORTS_AMM_LP_INITAL_PARAMS.utilizationRate
+			expect(await sportsAMMV2LiquidityPoolETH.utilizationRate()).to.equal(
+				SPORTS_AMM_LP_ETH_INITAL_PARAMS.utilizationRate
 			);
-			expect(await sportsAMMV2LiquidityPool.safeBoxImpact()).to.equal(
-				SPORTS_AMM_LP_INITAL_PARAMS.safeBoxImpact
+			expect(await sportsAMMV2LiquidityPoolETH.safeBoxImpact()).to.equal(
+				SPORTS_AMM_LP_ETH_INITAL_PARAMS.safeBoxImpact
 			);
 		});
 
 		it('Should set the right times', async () => {
-			expect(await sportsAMMV2LiquidityPool.roundLength()).to.equal(
+			expect(await sportsAMMV2LiquidityPoolETH.roundLength()).to.equal(
 				SPORTS_AMM_LP_INITAL_PARAMS.roundLength
 			);
 		});
 
 		it('Should set the right round pool mastercopy', async () => {
-			expect(await sportsAMMV2LiquidityPool.poolRoundMastercopy()).to.equal(
+			expect(await sportsAMMV2LiquidityPoolETH.poolRoundMastercopy()).to.equal(
 				await sportsAMMV2LiquidityPoolRoundMastercopy.getAddress()
 			);
 		});
 		it('Should set the right default liquidity provider', async () => {
-			expect(await sportsAMMV2LiquidityPool.defaultLiquidityProvider()).to.equal(
-				await defaultLiquidityProvider.getAddress()
+			expect(await sportsAMMV2LiquidityPoolETH.defaultLiquidityProvider()).to.equal(
+				await defaultLiquidityProviderETH.getAddress()
 			);
 		});
 	});
