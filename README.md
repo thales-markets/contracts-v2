@@ -1,25 +1,45 @@
 # Thales v2 contracts
 
+[![CircleCI](https://circleci.com/gh/thales-markets/contracts-v2/tree/main.svg?style=svg)](https://circleci.com/gh/thales-markets/contracts-v2/tree/main)
+[![Codecov](https://codecov.io/gh/thales-markets/contracts-v2/branch/main/graph/badge.svg?token=M2e5X0vJRQ)](https://codecov.io/gh/thales-markets/contracts-v2)
+[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
+[![Twitter Follow](https://img.shields.io/twitter/follow/thalesmarket.svg?label=thalesmarket&style=social)](https://twitter.com/thales_io)
+
 This repository is intended for v2 version of Thales contract architecture.
 
-# About Thales
+## About Thales
 
 A permissionless ecosystem where every derivative market is a unique smart contract.
 Powered by pioneering AMM architecture and trustless liquidity pools.
 
-### Testing
+For the latest system documentation see [docs.thales.io](https://docs.thales.io/).
 
-[![CircleCI](https://circleci.com/gh/thales-markets/contracts-v2/tree/main.svg?style=svg)](https://circleci.com/gh/thales-markets/contracts-v2/tree/main)
-[![codecov](https://codecov.io/gh/thales-markets/contracts-v2/branch/main/graph/badge.svg?token=M2e5X0vJRQ)](https://codecov.io/gh/thales-markets/contracts-v2)
+Everything about the [THALES token](https://thales.io/about/thales-token).
 
-# APIs
+### dApps
+
+- [Thales Markets](https://thalesmarket.io/)
+- [Overtime (Sport) Markets](https://overtimemarkets.xyz/)
+-
+
+### Community
+
+[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
+[![Twitter Follow](https://img.shields.io/twitter/follow/thalesmarket.svg?label=thalesmarket&style=social)](https://twitter.com/thales_io)
+
+## Contracts
+
+List off all deployed contracts are listed [here](https://contracts.thalesmarket.io/).
+
+### Audits
 
 TBD
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+### Testing
+
+[![CircleCI](https://circleci.com/gh/thales-markets/contracts-v2/tree/main.svg?style=svg)](https://circleci.com/gh/thales-markets/contracts-v2/tree/main)
+[![Codecov](https://codecov.io/gh/thales-markets/contracts-v2/branch/main/graph/badge.svg?token=M2e5X0vJRQ)](https://codecov.io/gh/thales-markets/contracts-v2)
+
+## Module Usage
+
+TBD
