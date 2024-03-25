@@ -48,7 +48,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
-    bytes32 private constant ETH_KEY = 0x4554480000000000000000000000000000000000000000000000000000000000;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -476,7 +475,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             EthUtility(_collateral).deposit{value: msg.value}();
             uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
             require(balanceDiff == msg.value, "Not enough WETH received");
-            ethUsdPrice = IPriceFeed(EthUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(ETH_KEY);
+            ethUsdPrice = IPriceFeed(EthUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency("ETH");
             exactReceived = _transformToUSD(balanceDiff, ethUsdPrice);
             lpPool = collateralPool["ETH_POOL"];
         } else {

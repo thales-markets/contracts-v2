@@ -278,6 +278,10 @@ async function deployETHLiquidityPoolFixture() {
 	const WETH = await ethers.getContractFactory('WETH9');
 	const weth = await WETH.deploy();
 
+	const AddressManager = await ethers.getContractFactory('AddressManager');
+	const addressManager = await AddressManager.deploy();
+	const addressManagerAddress = await addressManager.getAddress();
+
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory(
 		'SportsAMMV2LiquidityPoolETH'
 	);
@@ -298,6 +302,7 @@ async function deployETHLiquidityPoolFixture() {
 			_utilizationRate: SPORTS_AMM_LP_ETH_INITAL_PARAMS.utilizationRate,
 			_safeBox: safeBox.address,
 			_safeBoxImpact: SPORTS_AMM_LP_ETH_INITAL_PARAMS.safeBoxImpact,
+			_addressManager: addressManagerAddress,
 		},
 	]);
 

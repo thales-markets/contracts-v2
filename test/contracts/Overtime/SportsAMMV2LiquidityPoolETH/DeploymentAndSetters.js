@@ -5,7 +5,10 @@ const {
 	deploySportsAMMV2Fixture,
 	deployETHLiquidityPoolFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { SPORTS_AMM_LP_INITAL_PARAMS, SPORTS_AMM_LP_ETH_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
+const {
+	SPORTS_AMM_LP_INITAL_PARAMS,
+	SPORTS_AMM_LP_ETH_INITAL_PARAMS,
+} = require('../../../constants/overtimeContractParams');
 const { ZERO_ADDRESS, MAX_NUMBER, ONE_WEEK_IN_SECS } = require('../../../constants/general');
 
 describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
@@ -54,7 +57,9 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 				await stakingThales.getAddress()
 			);
 			expect(await sportsAMMV2LiquidityPoolETH.safeBox()).to.equal(safeBox.address);
-			expect(await sportsAMMV2LiquidityPoolETH.sportsAMM()).to.equal(await sportsAMMV2.getAddress());
+			expect(await sportsAMMV2LiquidityPoolETH.sportsAMM()).to.equal(
+				await sportsAMMV2.getAddress()
+			);
 		});
 
 		it('Should set the right amounts in ETH pool', async () => {

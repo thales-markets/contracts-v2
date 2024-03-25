@@ -11,6 +11,7 @@ import "../../utils/proxy/ProxyReentrancyGuard.sol";
 import "../../utils/proxy/ProxyOwned.sol";
 
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
+import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
 import "./SportsAMMV2LiquidityPoolRound.sol";
 import "../Ticket.sol";
@@ -35,6 +36,7 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
         uint _utilizationRate;
         address _safeBox;
         uint _safeBoxImpact;
+        address _addressManager;
     }
 
     /* ========== CONSTANTS ========== */
@@ -94,6 +96,8 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
     address public safeBox;
     uint public safeBoxImpact;
 
+    address public addressManager;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(InitParams calldata params) external initializer {
@@ -110,6 +114,7 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
         utilizationRate = params._utilizationRate;
         safeBox = params._safeBox;
         safeBoxImpact = params._safeBoxImpact;
+        addressManager = params._addressManager;
 
         collateral.approve(params._sportsAMM, MAX_APPROVAL);
         round = 1;

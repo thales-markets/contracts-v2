@@ -429,6 +429,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "addressManager",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -816,6 +829,11 @@
             "internalType": "uint256",
             "name": "_safeBoxImpact",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "_addressManager",
+            "type": "address"
           }
         ],
         "internalType": "struct SportsAMMV2LiquidityPoolETH.InitParams",
