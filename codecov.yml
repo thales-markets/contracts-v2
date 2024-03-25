@@ -5,14 +5,14 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "70...100"
+  range: "70...90"
   status:
     project:
       default:
-        target: 80% #overall project/ repo coverage
+        target: 90% #overall project/repo coverage
     patch:
       default:
-        target: 70%  
+        target: 90% #branch patch coverage
 
 ignore:
   - "contracts/utils"

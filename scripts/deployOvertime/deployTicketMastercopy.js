@@ -1,5 +1,4 @@
 const { ethers } = require('hardhat');
-
 const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../helpers');
 
 async function main() {
