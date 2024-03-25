@@ -1,6 +1,5 @@
 const { ethers, upgrades } = require('hardhat');
-const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
-
+const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
 const { setTargetAddress, getTargetAddress } = require('../helpers');
 
 async function main() {
@@ -12,13 +11,15 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
+	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 
 	const sportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
-	const sportsAMMV2DataDeployed = await upgrades.deployProxy(sportsAMMV2Data, [
-		owner.address,
-		sportsAMMV2Address,
-	]);
+	const sportsAMMV2DataDeployed = await upgrades.deployProxy(
+		sportsAMMV2Data,
+		[owner.address, sportsAMMV2Address],
+		{ initialOwner: protocolDAOAddress }
+	);
 	await sportsAMMV2DataDeployed.waitForDeployment();
 
 	const sportsAMMV2DataAddress = await sportsAMMV2DataDeployed.getAddress();
@@ -31,9 +32,16 @@ async function main() {
 		ethers.provider,
 		sportsAMMV2DataAddress
 	);
-
 	console.log('SportsAMMV2Data Implementation:', sportsAMMV2DataImplementationAddress);
 	setTargetAddress('SportsAMMV2DataImplementation', network, sportsAMMV2DataImplementationAddress);
+
+	const sportsAMMV2DataProxyAdminAddress = await getAdminAddress(
+		ethers.provider,
+		sportsAMMV2DataAddress
+	);
+	console.log('SportsAMMV2Data Proxy Admin:', sportsAMMV2DataProxyAdminAddress);
+	setTargetAddress('SportsAMMV2DataProxyAdmin', network, sportsAMMV2DataProxyAdminAddress);
+
 	await delay(5000);
 
 	try {
