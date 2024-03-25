@@ -1661,6 +1661,11 @@
         "type": "tuple[]"
       },
       {
+        "internalType": "address",
+        "name": "requester",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "_buyInAmount",
         "type": "uint256"

@@ -486,6 +486,11 @@
     "name": "requestIdToTradeData",
     "outputs": [
       {
+        "internalType": "address",
+        "name": "requester",
+        "type": "address"
+      },
+      {
         "internalType": "bytes32",
         "name": "gameId",
         "type": "bytes32"

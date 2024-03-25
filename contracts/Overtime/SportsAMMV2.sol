@@ -306,12 +306,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _differentRecipient,
                 _collateral == address(0),
                 false
-            )
+            ),
+            msg.sender
         );
     }
 
     function tradeLive(
         ISportsAMMV2.TradeData[] calldata _tradeData,
+        address requester,
         uint _buyInAmount,
         uint _expectedPayout,
         uint _additionalSlippage,
@@ -328,7 +330,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         require(_differentRecipient != address(0), "recipient has to be defined");
 
         if (_collateral != address(0)) {
-            _handleDifferentCollateral(_buyInAmount, _collateral, false, _differentRecipient);
+            _handleDifferentCollateral(_buyInAmount, _collateral, false, requester);
         }
 
         _trade(
@@ -340,7 +342,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _differentRecipient,
                 _collateral == address(0),
                 true
-            )
+            ),
+            requester
         );
     }
 
@@ -500,7 +503,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _trade(ISportsAMMV2.TradeData[] memory _tradeData, TradeDataInternal memory tradeDataInternal) internal {
+    function _trade(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        TradeDataInternal memory tradeDataInternal,
+        address requester
+    ) internal {
         uint payout = tradeDataInternal._expectedPayout;
         uint totalQuote = (ONE * ONE) / ((tradeDataInternal._expectedPayout * ONE) / tradeDataInternal._buyInAmount);
         uint payoutWithFees = tradeDataInternal._expectedPayout;
@@ -525,11 +532,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees);
 
         if (tradeDataInternal._sendDefaultCollateral) {
-            defaultCollateral.safeTransferFrom(
-                tradeDataInternal.isLive ? tradeDataInternal._differentRecipient : msg.sender,
-                address(this),
-                tradeDataInternal._buyInAmount
-            );
+            defaultCollateral.safeTransferFrom(requester, address(this), tradeDataInternal._buyInAmount);
         }
 
         // clone a ticket

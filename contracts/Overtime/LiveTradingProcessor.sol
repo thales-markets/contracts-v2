@@ -21,6 +21,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     uint public payment;
 
     struct LiveTradeData {
+        address requester;
         bytes32 gameId;
         uint16 sportId;
         uint8 position;
@@ -48,14 +49,23 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         payment = _payment;
     }
 
+    /// @notice requestLiveTrade
+    /// @param gameId for which to request a live trade
+    /// @param sportId for which to request a live trade
+    /// @param _position for which to request a live trade
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _expectedPayout expected payout
+    /// @param _additionalSlippage the maximum slippage a user will accept
+    /// @param _referrer who should get the referrer fee if any
+    /// @param _collateral different collateral used for payment
     function requestLiveTrade(
         bytes32 gameId,
         uint16 sportId,
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
-        uint _additionalSlippage,
-        address _differentRecipient,
+        uint _additionalSlippage, // TODO: consider how this will be used exactly
+        address _differentRecipient, // in case a voucher is used
         address _referrer,
         address _collateral
     ) external whenNotPaused {
@@ -78,6 +88,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         bytes32 requestId = sendChainlinkRequest(req, payment);
         timestampPerRequest[requestId] = block.timestamp;
         requestIdToTradeData[requestId] = LiveTradeData(
+            msg.sender,
             gameId,
             sportId,
             _position,
@@ -89,11 +100,11 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _collateral
         );
 
-        counterToRequestId[requestCounter++] = requestId;
+        counterToRequestId[requestCounter] = requestId;
 
         emit LiveTradeRequested(
             msg.sender,
-            (requestCounter - 1),
+            requestCounter,
             requestId,
             gameId,
             sportId,
@@ -105,6 +116,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _referrer,
             _collateral
         );
+        requestCounter++;
     }
 
     function fulfillLiveTrade(bytes32 _requestId, bool allow) external recordChainlinkFulfillment(_requestId) {
@@ -135,6 +147,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
             sportsAMM.tradeLive(
                 tradeData,
+                lTradeData.requester,
                 lTradeData._buyInAmount,
                 lTradeData._expectedPayout,
                 lTradeData._additionalSlippage,
