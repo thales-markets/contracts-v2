@@ -111,6 +111,7 @@ artifacts
 
 /.idea/*
 /.vscode/*
+/coverage.json
 # openzeppelin local deploy
 .openzeppelin/unknown-31337.json
 test/contracts/SportMarkets/SGP.csv
