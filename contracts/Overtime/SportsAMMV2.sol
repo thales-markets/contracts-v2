@@ -130,7 +130,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
-    // pools
+    // TODO use address -> address to be the collateral itself to pool
     mapping(bytes32 => address) public collateralPool;
 
     /* ========== CONSTRUCTOR ========== */
