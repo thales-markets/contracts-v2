@@ -233,48 +233,6 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.mintForUser(owner);
 	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
 
-	return {
-		owner,
-		sportsAMMV2Manager,
-		sportsAMMV2RiskManager,
-		sportsAMMV2ResultManager,
-		sportsAMMV2,
-		ticketMastercopy,
-		sportsAMMV2LiquidityPool,
-		sportsAMMV2LiquidityPoolRoundMastercopy,
-		defaultLiquidityProvider,
-		collateral,
-		referrals,
-		stakingThales,
-		safeBox,
-		tradeDataCurrentRound,
-		tradeDataNextRound,
-		tradeDataCrossRounds,
-		tradeDataTenMarketsCurrentRound,
-	};
-}
-
-async function deployETHLiquidityPoolFixture() {
-	const {
-		owner,
-		sportsAMMV2Manager,
-		sportsAMMV2RiskManager,
-		sportsAMMV2ResultManager,
-		sportsAMMV2,
-		ticketMastercopy,
-		sportsAMMV2LiquidityPool,
-		sportsAMMV2LiquidityPoolRoundMastercopy,
-		defaultLiquidityProvider,
-		collateral,
-		referrals,
-		stakingThales,
-		safeBox,
-		tradeDataCurrentRound,
-		tradeDataNextRound,
-		tradeDataCrossRounds,
-		tradeDataTenMarketsCurrentRound,
-	} = await deploySportsAMMV2Fixture();
-
 	const WETH = await ethers.getContractFactory('WETH9');
 	const weth = await WETH.deploy();
 
@@ -285,8 +243,6 @@ async function deployETHLiquidityPoolFixture() {
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory(
 		'SportsAMMV2LiquidityPoolETH'
 	);
-	const sportsAMMV2Address = await sportsAMMV2.getAddress();
-	const stakingThalesAddress = await stakingThales.getAddress();
 	const wethAddress = await weth.getAddress();
 
 	const sportsAMMV2LiquidityPoolETH = await upgrades.deployProxy(SportsAMMV2LiquidityPoolETH, [
@@ -308,14 +264,11 @@ async function deployETHLiquidityPoolFixture() {
 
 	const sportsAMMV2LiquidityPoolETHAddress = await sportsAMMV2LiquidityPoolETH.getAddress();
 
-	const sportsAMMV2LiquidityPoolRoundMastercopyAddress =
-		await sportsAMMV2LiquidityPoolRoundMastercopy.getAddress();
 	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
 	);
 
 	// deploy default liqudity provider
-	const DefaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
 	const defaultLiquidityProviderETH = await upgrades.deployProxy(DefaultLiquidityProvider, [
 		owner.address,
 		sportsAMMV2LiquidityPoolETHAddress,
@@ -353,5 +306,4 @@ module.exports = {
 	deployAccountsFixture,
 	deployTokenFixture,
 	deploySportsAMMV2Fixture,
-	deployETHLiquidityPoolFixture,
 };

@@ -41,7 +41,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 			stakingThales,
 			safeBox,
 			owner,
-		} = await loadFixture(deployETHLiquidityPoolFixture));
+		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ secondAccount, thirdAccount, firstLiquidityProvider } =
 			await loadFixture(deployAccountsFixture));
 	});

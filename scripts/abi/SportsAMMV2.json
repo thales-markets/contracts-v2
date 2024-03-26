@@ -526,9 +526,9 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "address",
         "name": "",
-        "type": "bytes32"
+        "type": "address"
       }
     ],
     "name": "collateralPool",
@@ -1303,18 +1303,13 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_liquidityName",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "_collateralAddress",
+        "type": "address"
       },
       {
         "internalType": "address",
         "name": "_liquidityPool",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IERC20",
-        "name": "_collateral",
         "type": "address"
       }
     ],

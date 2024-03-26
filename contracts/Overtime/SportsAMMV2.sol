@@ -599,7 +599,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _transformToUSD(params._buyInAmount, params._collateralPriceInUSD)
             );
         }
-        IERC20 collateral = UtilityInterface(params._collateralPool).commitTrade(address(ticket), payout - buyInAmountAfterFees);
+        IERC20 collateral = UtilityInterface(params._collateralPool).commitTrade(
+            address(ticket),
+            payout - buyInAmountAfterFees
+        );
         collateral.safeTransfer(address(ticket), payoutWithFees);
 
         emit NewTicket(
@@ -910,10 +913,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _liquidityPool new LP address
     function setLiquidityPool(address _collateralAddress, address _liquidityPool) external onlyOwner {
         if (collateralPool[_collateralAddress] != address(0)) {
-            _collateral.approve(_liquidityPool, 0);
+            IERC20(_collateralAddress).approve(_liquidityPool, 0);
         }
         collateralPool[_collateralAddress] = _liquidityPool;
-        _collateral.approve(_liquidityPool, MAX_APPROVAL);
+        IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
         emit SetLiquidityPoolForCollateral(_liquidityPool, _collateralAddress);
     }
 
