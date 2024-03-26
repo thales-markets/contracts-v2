@@ -32,7 +32,7 @@ contract Ticket is OwnedWithInit {
     address public ticketCreator;
 
     uint public buyInAmount;
-    uint public buyInAmountAfterFees;
+    uint public fees;
     uint public totalQuote;
     uint public numOfMarkets;
     uint public expiry;
@@ -50,7 +50,7 @@ contract Ticket is OwnedWithInit {
     /// @notice initialize the ticket contract
     /// @param _markets data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
-    /// @param _buyInAmountAfterFees ticket buy-in amount without fees
+    /// @param _fees ticket fees
     /// @param _totalQuote total ticket quote
     /// @param _sportsAMM address of Sports AMM contact
     /// @param _ticketOwner owner of the ticket
@@ -59,7 +59,7 @@ contract Ticket is OwnedWithInit {
     function initialize(
         MarketData[] calldata _markets,
         uint _buyInAmount,
-        uint _buyInAmountAfterFees,
+        uint _fees,
         uint _totalQuote,
         address _sportsAMM,
         address _ticketOwner,
@@ -75,7 +75,7 @@ contract Ticket is OwnedWithInit {
             markets[i] = _markets[i];
         }
         buyInAmount = _buyInAmount;
-        buyInAmountAfterFees = _buyInAmountAfterFees;
+        fees = _fees;
         totalQuote = _totalQuote;
         ticketOwner = _ticketOwner;
         ticketCreator = _ticketCreator;
@@ -167,7 +167,7 @@ contract Ticket is OwnedWithInit {
         require(isExercisable, "Ticket not exercisable yet");
 
         uint payoutWithFees = sportsAMM.defaultCollateral().balanceOf(address(this));
-        uint payout = payoutWithFees - (buyInAmount - buyInAmountAfterFees);
+        uint payout = payoutWithFees - fees;
         bool isCancelled = false;
 
         if (isTicketLost()) {
