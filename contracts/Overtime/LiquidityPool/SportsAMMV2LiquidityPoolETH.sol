@@ -120,8 +120,6 @@ contract SportsAMMV2LiquidityPoolETH is Initializable, ProxyOwned, PausableUpgra
         round = 1;
     }
 
-    receive() external payable {}
-
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice start pool and begin round #2
