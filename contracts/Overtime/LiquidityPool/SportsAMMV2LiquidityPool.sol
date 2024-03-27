@@ -632,6 +632,13 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         emit MaxAllowedUsersChanged(_maxAllowedUsers);
     }
 
+    /// @notice Set if deposits can be made with ETH
+    /// @param _canDepositETH flag true users can deposit using ETH
+    function setCanDepositETH(uint _canDepositETH) external onlyOwner {
+        canDepositETH = _canDepositETH;
+        emit CanDepositETH(_canDepositETH);
+    }
+
     /// @notice Set SportsAMM contract
     /// @param _sportsAMM SportsAMM address
     function setSportsAMM(ISportsAMMV2 _sportsAMM) external onlyOwner {
