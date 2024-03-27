@@ -726,7 +726,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     event RoundClosed(uint round, uint roundPnL);
 
     event PoolRoundMastercopyChanged(address newMastercopy);
-    event StakingThalesChanged(address stakingThales);
     event SportAMMChanged(address sportAMM);
     event DefaultLiquidityProviderChanged(address newProvider);
 
@@ -734,6 +733,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     event MaxAllowedDepositChanged(uint maxAllowedDeposit);
     event MinAllowedDepositChanged(uint minAllowedDeposit);
     event MaxAllowedUsersChanged(uint maxAllowedUsersChanged);
+    event CanDepositETH(bool canDepositETH);
     event UtilizationRateChanged(uint utilizationRate);
     event SetSafeBoxParams(address safeBox, uint safeBoxImpact);
 }
