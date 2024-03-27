@@ -71,7 +71,7 @@ async function deploySportsAMMV2Fixture() {
 	const { collateral } = await deployTokenFixture();
 
 	// deploy Address Manager
-	const AddressManager = await ethers.getContractFactory('AddressManager');
+	const AddressManager = await ethers.getContractFactory('AddressManagerExtension');
 	const addressManager = await upgrades.deployProxy(AddressManager, [
 		owner.address,
 		ZERO_ADDRESS,

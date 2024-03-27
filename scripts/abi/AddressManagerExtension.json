@@ -205,6 +205,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      }
+    ],
+    "name": "getAddressForName",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "contract_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getAddresses",
     "outputs": [
