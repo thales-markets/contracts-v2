@@ -1,11 +1,13 @@
-const { upgrades } = require('hardhat');
+const { upgrades, ethers } = require('hardhat');
 const {
 	RISK_MANAGER_INITAL_PARAMS,
 	SPORTS_AMM_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
+	SPORTS_AMM_LP_ETH_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
 const { GAME_ID_1, DEFAULT_AMOUNT, GAME_ID_2 } = require('../../constants/overtime');
 const { createMerkleTree, getTicketTradeData } = require('../overtime');
+const { ZERO_ADDRESS } = require('../../constants/general');
 
 // We define a fixture to reuse the same setup in every test.
 // We use loadFixture to run this setup once, snapshot that state,
@@ -68,6 +70,24 @@ async function deploySportsAMMV2Fixture() {
 	} = await deployAccountsFixture();
 	const { collateral } = await deployTokenFixture();
 
+	// deploy Address Manager
+	const AddressManager = await ethers.getContractFactory('AddressManagerExtension');
+	const addressManager = await upgrades.deployProxy(AddressManager, [
+		owner.address,
+		ZERO_ADDRESS,
+		ZERO_ADDRESS,
+		ZERO_ADDRESS,
+		ZERO_ADDRESS,
+		ZERO_ADDRESS,
+		ZERO_ADDRESS,
+	]);
+	const addressManagerAddress = await addressManager.getAddress();
+
+	// deploy mock PriceFeed
+	const PriceFeed = await ethers.getContractFactory('MockPriceFeed');
+	const priceFeed = await PriceFeed.deploy();
+	const priceFeedAddress = await priceFeed.getAddress();
+
 	// deploy mock Staking Thales
 	const StakingThales = await ethers.getContractFactory('MockStakingThales');
 	const stakingThales = await upgrades.deployProxy(StakingThales);
@@ -106,6 +126,16 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2ResultManagerAddress = await sportsAMMV2ResultManager.getAddress();
 	const stakingThalesAddress = await stakingThales.getAddress();
 	const referralsAddress = await referrals.getAddress();
+	await addressManager.setAddressInAddressBook('StakingThales', stakingThalesAddress, {
+		from: owner.address,
+	});
+	await addressManager.setAddressInAddressBook('Refferals', referralsAddress, {
+		from: owner.address,
+	});
+	await addressManager.setAddressInAddressBook('SafeBox', safeBox, { from: owner.address });
+	await addressManager.setAddressInAddressBook('PriceFeed', priceFeedAddress, {
+		from: owner.address,
+	});
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
@@ -146,8 +176,9 @@ async function deploySportsAMMV2Fixture() {
 		{
 			_owner: owner.address,
 			_sportsAMM: sportsAMMV2Address,
-			_stakingThales: stakingThalesAddress,
+			_addressManager: addressManagerAddress,
 			_collateral: collateralAddress,
+			_collateralKey: ethers.encodeBytes32String('SUSD'),
 			_roundLength: SPORTS_AMM_LP_INITAL_PARAMS.roundLength,
 			_maxAllowedDeposit: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit,
 			_minDepositAmount: SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount,
@@ -232,6 +263,45 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.mintForUser(owner);
 	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
 
+	const WETH = await ethers.getContractFactory('WETH9');
+	const weth = await WETH.deploy();
+
+	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
+	const wethAddress = await weth.getAddress();
+
+	const sportsAMMV2LiquidityPoolETH = await upgrades.deployProxy(SportsAMMV2LiquidityPoolETH, [
+		{
+			_owner: owner.address,
+			_sportsAMM: sportsAMMV2Address,
+			_addressManager: addressManagerAddress,
+			_collateral: wethAddress,
+			_collateralKey: ethers.encodeBytes32String('ETH'),
+			_roundLength: SPORTS_AMM_LP_ETH_INITAL_PARAMS.roundLength,
+			_maxAllowedDeposit: SPORTS_AMM_LP_ETH_INITAL_PARAMS.maxAllowedDeposit,
+			_minDepositAmount: SPORTS_AMM_LP_ETH_INITAL_PARAMS.minDepositAmount,
+			_maxAllowedUsers: SPORTS_AMM_LP_ETH_INITAL_PARAMS.maxAllowedUsers,
+			_utilizationRate: SPORTS_AMM_LP_ETH_INITAL_PARAMS.utilizationRate,
+			_safeBox: safeBox.address,
+			_safeBoxImpact: SPORTS_AMM_LP_ETH_INITAL_PARAMS.safeBoxImpact,
+		},
+	]);
+
+	const sportsAMMV2LiquidityPoolETHAddress = await sportsAMMV2LiquidityPoolETH.getAddress();
+
+	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
+		sportsAMMV2LiquidityPoolRoundMastercopyAddress
+	);
+
+	// deploy default liqudity provider
+	const defaultLiquidityProviderETH = await upgrades.deployProxy(DefaultLiquidityProvider, [
+		owner.address,
+		sportsAMMV2LiquidityPoolETHAddress,
+		wethAddress,
+	]);
+
+	const defaultLiquidityProviderETHAddress = await defaultLiquidityProviderETH.getAddress();
+	await sportsAMMV2LiquidityPoolETH.setDefaultLiquidityProvider(defaultLiquidityProviderETHAddress);
+
 	return {
 		owner,
 		sportsAMMV2Manager,
@@ -242,10 +312,14 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolRoundMastercopy,
 		defaultLiquidityProvider,
+		sportsAMMV2LiquidityPoolETH,
+		defaultLiquidityProviderETH,
+		weth,
 		collateral,
 		referrals,
 		stakingThales,
 		safeBox,
+		addressManager,
 		tradeDataCurrentRound,
 		tradeDataNextRound,
 		tradeDataCrossRounds,

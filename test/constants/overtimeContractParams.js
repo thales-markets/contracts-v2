@@ -47,9 +47,20 @@ const SPORTS_AMM_LP_INITAL_PARAMS = {
 	safeBoxImpact: ethers.parseEther('0.2'),
 };
 
+const SPORTS_AMM_LP_ETH_INITAL_PARAMS = {
+	maxAllowedDeposit: ethers.parseEther('28.98'),
+	minDepositAmount: ethers.parseEther('0.00029'),
+	maxAllowedUsers: 100,
+	roundLength: ONE_WEEK_IN_SECS,
+	utilizationRate: ethers.parseEther('0.2'),
+	safeBoxImpact: ethers.parseEther('0.2'),
+	zero_address: '0x0000000000000000000000000000000000000000',
+};
+
 module.exports = {
 	RISK_MANAGER_INITAL_PARAMS,
 	RISK_MANAGER_PARAMS,
 	SPORTS_AMM_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
+	SPORTS_AMM_LP_ETH_INITAL_PARAMS,
 };
