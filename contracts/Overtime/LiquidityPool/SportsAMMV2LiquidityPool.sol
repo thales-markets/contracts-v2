@@ -104,6 +104,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     bool public canDepositETH;
 
+    bool public isDefaultCollateral;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(InitParams calldata params) external initializer {
@@ -122,6 +124,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         safeBox = params._safeBox;
         safeBoxImpact = params._safeBoxImpact;
         canDepositETH = params._canDepositETH;
+        isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(params._collateral);
 
         collateral.approve(params._sportsAMM, MAX_APPROVAL);
         round = 1;
@@ -181,9 +184,15 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         totalDeposited += amount;
         address stakingThales = addressManager.getAddress("StakingThales");
         if (stakingThales != address(0)) {
-            uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(collateralKey);
-            uint amountInUSD = _transformToUSD(amount, collateralPriceInUSD);
-            IStakingThales(stakingThales).updateVolume(msg.sender, amountInUSD);
+            if (isDefaultCollateral) {
+                IStakingThales(stakingThales).updateVolume(msg.sender, amount);
+            } else {
+                uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
+                    collateralKey
+                );
+                uint amountInUSD = _transformToUSD(amount, collateralPriceInUSD);
+                IStakingThales(stakingThales).updateVolume(msg.sender, amountInUSD);
+            }
         }
 
         emit Deposited(msg.sender, amount, round);
@@ -634,7 +643,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     /// @notice Set if deposits can be made with ETH
     /// @param _canDepositETH flag true users can deposit using ETH
-    function setCanDepositETH(uint _canDepositETH) external onlyOwner {
+    function setCanDepositETH(bool _canDepositETH) external onlyOwner {
         canDepositETH = _canDepositETH;
         emit CanDepositETH(_canDepositETH);
     }

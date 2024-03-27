@@ -1,5 +1,16 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      }
+    ],
+    "name": "InvalidAddressForContractName",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
@@ -20,6 +31,25 @@
       }
     ],
     "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_address",
+        "type": "address"
+      }
+    ],
+    "name": "NewContractInAddressBook",
     "type": "event"
   },
   {
@@ -118,6 +148,82 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "addressBook",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      }
+    ],
+    "name": "checkIfContractExists",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "contractExists",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      }
+    ],
+    "name": "getAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "contract_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      }
+    ],
+    "name": "getAddressForName",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "contract_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getAddresses",
     "outputs": [
@@ -157,6 +263,25 @@
         "internalType": "struct IAddressManager.Addresses",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "_contractNames",
+        "type": "string[]"
+      }
+    ],
+    "name": "getAddresses",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "contracts",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -310,6 +435,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      }
+    ],
+    "name": "resetAddressForContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "safeBox",
     "outputs": [
@@ -320,6 +458,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_contractName",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "_address",
+        "type": "address"
+      }
+    ],
+    "name": "setAddressInAddressBook",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

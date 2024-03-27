@@ -22,6 +22,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 		weth,
 		collateral,
 		stakingThales,
+		addressManager,
 		safeBox,
 		owner,
 		secondAccount,
@@ -39,6 +40,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 			weth,
 			collateral,
 			stakingThales,
+			addressManager,
 			safeBox,
 			owner,
 		} = await loadFixture(deploySportsAMMV2Fixture));
@@ -53,7 +55,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 
 		it('Should set the right addresses', async () => {
 			expect(await sportsAMMV2LiquidityPoolETH.collateral()).to.equal(await weth.getAddress());
-			expect(await sportsAMMV2LiquidityPoolETH.stakingThales()).to.equal(
+			expect(await addressManager.getAddressForName('StakingThales')).to.equal(
 				await stakingThales.getAddress()
 			);
 			expect(await sportsAMMV2LiquidityPoolETH.safeBox()).to.equal(safeBox.address);
@@ -107,19 +109,23 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 
 		it('Should set the new Staking Thales', async () => {
 			await expect(
-				sportsAMMV2LiquidityPool.connect(secondAccount).setStakingThales(dummyAddress1)
+				addressManager
+					.connect(secondAccount)
+					.setAddressInAddressBook('StakingThales', dummyAddress1)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await expect(sportsAMMV2LiquidityPool.setStakingThales(ZERO_ADDRESS)).to.be.revertedWith(
-				'Can not set a zero address!'
-			);
+			await expect(
+				addressManager.setAddressInAddressBook('StakingThales', ZERO_ADDRESS)
+			).to.be.revertedWith('InvalidAddress');
 
-			await sportsAMMV2LiquidityPool.setStakingThales(dummyAddress1);
-			expect(await sportsAMMV2LiquidityPool.stakingThales()).to.equal(dummyAddress1);
+			await addressManager.connect(owner).setAddressInAddressBook('StakingThales', dummyAddress1);
+			expect(await addressManager.getAddressForName('StakingThales')).to.equal(dummyAddress1);
 
-			await expect(sportsAMMV2LiquidityPool.setStakingThales(dummyAddress1))
-				.to.emit(sportsAMMV2LiquidityPool, 'StakingThalesChanged')
-				.withArgs(dummyAddress1);
+			await expect(
+				addressManager.connect(owner).setAddressInAddressBook('StakingThales', dummyAddress1)
+			)
+				.to.emit(addressManager, 'NewContractInAddressBook')
+				.withArgs('StakingThales', dummyAddress1);
 		});
 
 		it('Should set the new default liquidity provider', async () => {

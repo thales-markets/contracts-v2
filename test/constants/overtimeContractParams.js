@@ -54,6 +54,7 @@ const SPORTS_AMM_LP_ETH_INITAL_PARAMS = {
 	roundLength: ONE_WEEK_IN_SECS,
 	utilizationRate: ethers.parseEther('0.2'),
 	safeBoxImpact: ethers.parseEther('0.2'),
+	zero_address: '0x0000000000000000000000000000000000000000',
 };
 
 module.exports = {
