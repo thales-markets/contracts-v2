@@ -14,6 +14,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
     using SafeERC20 for IERC20;
 
+    uint private constant ONE = 1e18;
+
     SportsAMMV2 public sportsAMM;
 
     bytes32 public specId;
@@ -119,11 +121,20 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         requestCounter++;
     }
 
-    function fulfillLiveTrade(bytes32 _requestId, bool allow) external recordChainlinkFulfillment(_requestId) {
+    function fulfillLiveTrade(
+        bytes32 _requestId,
+        bool allow,
+        uint approvedPayoutAmount
+    ) external recordChainlinkFulfillment(_requestId) {
         //might be redundant as already done by Chainlink Client, but making double sure
         require(!requestIdToFulfillAllowed[_requestId], "Request ID already fulfilled");
 
         LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
+
+        if (((ONE * lTradeData._expectedPayout) / approvedPayoutAmount) > (ONE + lTradeData._additionalSlippage)) {
+            // ensure the slippage rule is adhered to
+            allow = false;
+        }
 
         if (allow) {
             ISportsAMMV2.TradeData[] memory tradeData = new ISportsAMMV2.TradeData[](1);
@@ -149,7 +160,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 tradeData,
                 lTradeData.requester,
                 lTradeData._buyInAmount,
-                lTradeData._expectedPayout,
+                approvedPayoutAmount,
                 lTradeData._additionalSlippage,
                 lTradeData._differentRecipient,
                 lTradeData._referrer,

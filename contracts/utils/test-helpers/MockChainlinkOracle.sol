@@ -13,7 +13,7 @@ contract MockChainlinkOracle {
         liveTradingProcessor = _liveTradingProcessor;
     }
 
-    function fulfillLiveTrade(bytes32 _requestId, bool allow) external {
-        ILiveTradingProcessor(liveTradingProcessor).fulfillLiveTrade(_requestId, allow);
+    function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedAmount) external {
+        ILiveTradingProcessor(liveTradingProcessor).fulfillLiveTrade(_requestId, allow, approvedAmount);
     }
 }

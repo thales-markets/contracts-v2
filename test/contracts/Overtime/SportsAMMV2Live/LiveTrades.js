@@ -65,7 +65,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await mockChainlinkOracle.fulfillLiveTrade(requestId, true);
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
 		});
 	});
 });
