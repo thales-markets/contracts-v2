@@ -24,17 +24,7 @@ import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
-
-interface UtilityInterface {
-    function deposit() external payable;
-
-    function withdraw(uint256) external;
-
-    function priceFeed() external view returns (address);
-
-    function commitTrade(address ticket, uint amount) external returns (IERC20);
-    // function priceFeedKeyPerCollateral(address) external view returns(bytes32);
-}
+import "../interfaces/ICollateralUtility.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -473,11 +463,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             require(_collateral == multiCollateralOnOffRamp.WETH9(), "Wrong collateral sent");
             require(msg.value >= collateralQuote, "Not enough ETH sent");
             uint balanceBefore = IERC20(_collateral).balanceOf(address(this));
-            UtilityInterface(_collateral).deposit{value: msg.value}();
+            ICollateralUtility(_collateral).deposit{value: msg.value}();
             uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
             require(balanceDiff == msg.value, "Not enough WETH received");
             // TODO here to change to get rate for collateral address to be more generic
-            ethUsdPrice = IPriceFeed(UtilityInterface(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency("ETH");
+            ethUsdPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
+                "ETH"
+            );
             exactReceived = _transformToUSD(balanceDiff, ethUsdPrice);
             lpPool = collateralPool[_collateral];
         } else {
@@ -599,7 +591,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _transformToUSD(params._buyInAmount, params._collateralPriceInUSD)
             );
         }
-        IERC20 collateral = UtilityInterface(params._collateralPool).commitTrade(
+        IERC20 collateral = ICollateralUtility(params._collateralPool).commitTrade(
             address(ticket),
             payout - buyInAmountAfterFees
         );
