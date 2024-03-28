@@ -2,6 +2,29 @@
 pragma solidity ^0.8.20;
 
 interface ISportsAMMV2RiskManager {
+    struct TypeCap {
+        uint typeId;
+        uint cap;
+    }
+
+    struct CapData {
+        uint capPerSport;
+        uint capPerChild;
+        TypeCap[] capPerType;
+    }
+
+    struct DynamicLiquidityData {
+        uint cutoffTimePerSport;
+        uint cutoffDividerPerSport;
+    }
+
+    struct RiskData {
+        uint sportId;
+        CapData capData;
+        uint riskMultiplierPerSport;
+        DynamicLiquidityData dynamicLiquidityData;
+    }
+
     function calculateCapToBeUsed(
         bytes32 _gameId,
         uint16 _sportId,

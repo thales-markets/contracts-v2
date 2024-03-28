@@ -257,7 +257,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "buyInAmountAfterFees",
+        "name": "buyInAmount",
         "type": "uint256"
       },
       {
@@ -434,7 +434,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "buyInAmountAfterFees",
+        "name": "fees",
         "type": "uint256"
       },
       {
@@ -1802,7 +1802,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "buyInAmountAfterFees",
+        "name": "fees",
         "type": "uint256"
       },
       {

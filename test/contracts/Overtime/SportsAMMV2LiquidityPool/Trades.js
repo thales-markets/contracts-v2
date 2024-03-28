@@ -78,11 +78,14 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				);
 
 			// difference between payout and buy-in (amount taken from LP)
-			// buy-in without fees: 9.8
 			// payout: 20
-			// diff taken from LP: 10.8
+			// fees: 0.2
+			// buy-in: 10
+			// diff taken from LP: 10.2
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
@@ -234,11 +237,14 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				);
 
 			// difference between payout and buy-in (amount taken from LP)
-			// buy-in without fees: 9.8
 			// payout: 20
-			// diff taken from LP: 10.8
+			// fees: 0.2
+			// buy-in: 10
+			// diff taken from LP: 10.2
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
@@ -396,12 +402,15 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					false
 				);
 
-			// difference between payout and buy-in (amount taken from default LP)
-			// buy-in without fees: 9.8
+			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
+			// fees: 0.2
+			// buy-in: 10
 			// diff taken from LP: 10.2
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 			let defaultLpBalanceAfterTrade = await collateral.balanceOf(defaultLpAddress);
@@ -604,12 +613,15 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					false
 				);
 
-			// difference between payout and buy-in (amount taken from default LP)
-			// buy-in without fees: 9.8
+			// difference between payout and buy-in (amount taken from LP)
 			// payout: 40
+			// fees: 0.2
+			// buy-in: 10
 			// diff taken from LP: 30.2
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 			let defaultLpBalanceAfterTrade = await collateral.balanceOf(defaultLpAddress);
@@ -769,9 +781,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			let defaultLpProfit =
 				ethers.formatEther(defaultLpBalanceAfterExercise) -
 				ethers.formatEther(defaultLpBalanceBeforeTrade);
-			expect(defaultLpProfit.toFixed(8)).to.equal(
-				Number(ethers.formatEther(quote.buyInAmountAfterFees)).toFixed(8)
-			);
+			let buyInAmountAfterFees = ethers.formatEther(BUY_IN_AMOUNT) - ethers.formatEther(quote.fees);
+			expect(defaultLpProfit.toFixed(8)).to.equal(Number(buyInAmountAfterFees).toFixed(8));
 		});
 	});
 });
