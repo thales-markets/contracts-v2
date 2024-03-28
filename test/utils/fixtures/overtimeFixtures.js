@@ -265,9 +265,18 @@ async function deploySportsAMMV2Fixture() {
 
 	const WETH = await ethers.getContractFactory('WETH9');
 	const weth = await WETH.deploy();
+	const wethAddress = await weth.getAddress();
+
+	await priceFeed.setPriceFeedForCollateral(
+		ethers.encodeBytes32String('WETH'),
+		wethAddress,
+		ethers.parseEther('3500')
+	);
+	await priceFeed.setWETH9(wethAddress);
+
+	console.log(await priceFeed.getCurrencies());
 
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
-	const wethAddress = await weth.getAddress();
 
 	const sportsAMMV2LiquidityPoolETH = await upgrades.deployProxy(SportsAMMV2LiquidityPoolETH, [
 		{
@@ -287,11 +296,12 @@ async function deploySportsAMMV2Fixture() {
 	]);
 
 	const sportsAMMV2LiquidityPoolETHAddress = await sportsAMMV2LiquidityPoolETH.getAddress();
+	console.log('fix address: ', sportsAMMV2LiquidityPoolETHAddress);
 
 	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
 	);
-
+	await sportsAMMV2LiquidityPoolETH.setCanDepositETH(true);
 	// deploy default liqudity provider
 	const defaultLiquidityProviderETH = await upgrades.deployProxy(DefaultLiquidityProvider, [
 		owner.address,

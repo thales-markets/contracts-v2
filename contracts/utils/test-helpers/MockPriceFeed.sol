@@ -8,10 +8,16 @@ contract MockPriceFeed {
     // List of currency keys for convenient iteration
     bytes32[] public currencyKeys;
 
+    address public WETH9;
+
     uint public priceForETHinUSD;
+
+    mapping(address => uint) public collateralPriceInUSD;
+    mapping(bytes32 => address) public collateralAddressForKey;
 
     constructor() {
         currencyKeys.push("ETH");
+        priceForETHinUSD = 3500 * 1e18;
     }
 
     struct RateAndUpdatedTime {
@@ -27,12 +33,30 @@ contract MockPriceFeed {
         return _getRateAndUpdatedTime(currencyKey).rate;
     }
 
+    function setPriceFeedForCollateral(bytes32 _collateralKey, address _collateral, uint _priceInUSD) external {
+        currencyKeys.push(_collateralKey);
+        collateralAddressForKey[_collateralKey] = _collateral;
+        collateralPriceInUSD[_collateral] = _priceInUSD;
+    }
+
+    function setWETH9(address _WETH9) external {
+        WETH9 = _WETH9;
+    }
+
     function setPriceForETH(uint _priceInUSD) external {
         priceForETHinUSD = _priceInUSD;
     }
 
     function _getRateAndUpdatedTime(bytes32 currencyKey) internal view returns (RateAndUpdatedTime memory) {
-        require(currencyKey == currencyKeys[0], "Invalid key");
-        return RateAndUpdatedTime({rate: priceForETHinUSD > 0 ? priceForETHinUSD : 3500, time: uint40(block.timestamp)});
+        require(collateralAddressForKey[currencyKey] != address(0) || currencyKey == currencyKeys[0], "Invalid key");
+        if (currencyKey == currencyKeys[0]) {
+            return RateAndUpdatedTime({rate: priceForETHinUSD, time: uint40(block.timestamp)});
+        } else {
+            return
+                RateAndUpdatedTime({
+                    rate: collateralPriceInUSD[collateralAddressForKey[currencyKey]],
+                    time: uint40(block.timestamp)
+                });
+        }
     }
 }

@@ -149,25 +149,29 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     function depositWithEth() external payable canDeposit(msg.value) nonReentrant whenNotPaused roundClosingNotPrepared {
         require(msg.value > 0 && canDepositETH, "Can not deposit ETH");
-        uint balanceBefore = IERC20(collateral).balanceOf(address(this));
+        uint balanceBefore = collateral.balanceOf(address(this));
         ICollateralUtility(address(collateral)).deposit{value: msg.value}();
-        uint balanceDiff = IERC20(collateral).balanceOf(address(this)) - balanceBefore;
-        require(balanceDiff == msg.value, "Not enough WETH received");
-        _deposit(balanceDiff);
+        uint balanceDiff = collateral.balanceOf(address(this)) - balanceBefore;
+        require(balanceDiff > 0 && balanceDiff == msg.value, "Not enough WETH received");
+        _deposit(balanceDiff, true);
     }
 
     /// @notice deposit funds from user into pool for the next round
     /// @param amount value to be deposited
     function deposit(uint amount) external canDeposit(amount) nonReentrant whenNotPaused roundClosingNotPrepared {
-        _deposit(amount);
+        _deposit(amount, false);
     }
 
     /// @notice deposit funds from user into pool for the next round
     /// @param amount value to be deposited
-    function _deposit(uint amount) internal {
+    function _deposit(uint amount, bool _isEthReceived) internal {
         uint nextRound = round + 1;
         address roundPool = _getOrCreateRoundPool(nextRound);
-        collateral.safeTransferFrom(msg.sender, roundPool, amount);
+        if (_isEthReceived) {
+            collateral.safeTransfer(roundPool, amount);
+        } else {
+            collateral.safeTransferFrom(msg.sender, roundPool, amount);
+        }
 
         require(msg.sender != defaultLiquidityProvider, "Can't deposit directly as default LP");
 

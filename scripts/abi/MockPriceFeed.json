@@ -5,6 +5,57 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "WETH9",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "collateralAddressForKey",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "collateralPriceInUSD",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -90,12 +141,48 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "_collateralKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_priceInUSD",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPriceFeedForCollateral",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_priceInUSD",
         "type": "uint256"
       }
     ],
     "name": "setPriceForETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_WETH9",
+        "type": "address"
+      }
+    ],
+    "name": "setWETH9",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
