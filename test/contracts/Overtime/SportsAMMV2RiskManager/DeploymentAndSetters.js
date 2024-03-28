@@ -336,8 +336,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					.setCaps(
 						[SPORT_ID_NBA, SPORT_ID_EPL],
 						[newCapForSport, newCapForSport],
-						[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+						[SPORT_ID_NBA, SPORT_ID_EPL],
 						[newCapForSportChild, newCapForSportChild],
+						[SPORT_ID_NBA, SPORT_ID_EPL],
+						[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 						[newCapForSportAndType, newCapForSportAndType]
 					)
 			).to.be.revertedWith('Only the contract owner may perform this action');
@@ -345,8 +347,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, invalidCap],
-					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSportChild, newCapForSportChild],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 					[newCapForSportAndType, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid cap');
@@ -354,8 +358,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
-					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[invalidCap, newCapForSportChild],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 					[newCapForSportAndType, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid cap');
@@ -363,8 +369,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
-					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSportChild, newCapForSportChild],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 					[invalidCap, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid cap');
@@ -372,8 +380,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				sportsAMMV2RiskManager.setCaps(
 					[INVALID_SPORT_ID, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
-					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSportChild, newCapForSportChild],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 					[newCapForSportAndType, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid ID for sport');
@@ -381,8 +391,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
-					[TYPE_ID_TOTAL, INVALID_TYPE_ID],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSportChild, newCapForSportChild],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
+					[TYPE_ID_TOTAL, INVALID_TYPE_ID],
 					[newCapForSportAndType, newCapForSportAndType]
 				)
 			).to.be.revertedWith('Invalid ID for type');
@@ -390,8 +402,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 			await sportsAMMV2RiskManager.setCaps(
 				[SPORT_ID_NBA, SPORT_ID_EPL],
 				[newCapForSport, newCapForSport],
-				[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+				[SPORT_ID_NBA, SPORT_ID_EPL],
 				[newCapForSportChild, newCapForSportChild],
+				[SPORT_ID_NBA, SPORT_ID_EPL],
+				[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 				[newCapForSportAndType, newCapForSportAndType]
 			);
 			expect(await sportsAMMV2RiskManager.capPerSport(SPORT_ID_NBA)).to.equal(newCapForSport);
@@ -413,8 +427,10 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				sportsAMMV2RiskManager.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSport, newCapForSport],
-					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
 					[newCapForSportChild, newCapForSportChild],
+					[SPORT_ID_NBA, SPORT_ID_EPL],
+					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 					[newCapForSportAndType, newCapForSportAndType]
 				)
 			)
