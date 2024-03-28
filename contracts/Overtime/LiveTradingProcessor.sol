@@ -22,6 +22,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint public payment;
 
+    uint maxAllowedExecutionDelay = 60;
+
     struct LiveTradeData {
         address requester;
         bytes32 gameId;
@@ -66,7 +68,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
-        uint _additionalSlippage, // TODO: consider how this will be used exactly
+        uint _additionalSlippage,
         address _differentRecipient, // in case a voucher is used
         address _referrer,
         address _collateral
@@ -121,20 +123,25 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         requestCounter++;
     }
 
+    /// @notice fulfillLiveTrade
+    /// @param _requestId which is being fulfilled
+    /// @param allow whether the live trade should go through
+    /// @param approvedPayoutAmount what will be the actual payout
     function fulfillLiveTrade(
         bytes32 _requestId,
         bool allow,
         uint approvedPayoutAmount
-    ) external recordChainlinkFulfillment(_requestId) {
+    ) external whenNotPaused recordChainlinkFulfillment(_requestId) {
         //might be redundant as already done by Chainlink Client, but making double sure
         require(!requestIdToFulfillAllowed[_requestId], "Request ID already fulfilled");
+        require((timestampPerRequest[_requestId] + maxAllowedExecutionDelay) > block.timestamp, "Request timed out");
 
         LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
 
-        if (((ONE * lTradeData._expectedPayout) / approvedPayoutAmount) > (ONE + lTradeData._additionalSlippage)) {
-            // ensure the slippage rule is adhered to
-            allow = false;
-        }
+        require(
+            ((ONE * lTradeData._expectedPayout) / approvedPayoutAmount) <= (ONE + lTradeData._additionalSlippage),
+            "Slippage too high"
+        );
 
         if (allow) {
             ISportsAMMV2.TradeData[] memory tradeData = new ISportsAMMV2.TradeData[](1);
@@ -188,10 +195,18 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     //////////// SETTERS
 
+    /// @notice pause live trading
+    /// @param _setPausing whether to pause or unpause
     function setPaused(bool _setPausing) external onlyOwner {
         _setPausing ? _pause() : _unpause();
     }
 
+    /// @notice setConfiguration
+    /// @param _link payment token
+    /// @param _oracle CL node that will execute the requests
+    /// @param _sportsAMM address
+    /// @param _specId CL node job spec ID
+    /// @param _payment amount of payment token for each request
     function setConfiguration(
         address _link,
         address _oracle,
@@ -206,6 +221,13 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         payment = _payment;
 
         emit ContextReset(_link, _oracle, _sportsAMM, _specId, _payment);
+    }
+
+    /// @notice setMaxAllowedExecutionDelay
+    /// @param _maxAllowedExecutionDelay maximum allowed buffer for the CL request to be executed, defaulted at 60 seconds
+    function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
+        maxAllowedExecutionDelay = _maxAllowedExecutionDelay;
+        emit SetMaxAllowedExecutionDelay(_maxAllowedExecutionDelay);
     }
 
     /////// EVENTS
@@ -238,4 +260,5 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _collateral,
         uint timestamp
     );
+    event SetMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay);
 }
