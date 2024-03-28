@@ -156,7 +156,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _buyInAmount ticket buy-in amount
     /// @param _collateral different collateral used for payment
     /// @return collateralQuote buy-in amount in different collateral
-    /// @return buyInAmountAfterFees ticket buy-in amount without fees
+    /// @return fees ticket fees
     /// @return payout expected payout
     /// @return totalQuote total ticket quote
     /// @return finalQuotes final quotes per market
@@ -170,14 +170,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         view
         returns (
             uint collateralQuote,
-            uint buyInAmountAfterFees,
+            uint fees,
             uint payout,
             uint totalQuote,
             uint[] memory finalQuotes,
             uint[] memory amountsToBuy
         )
     {
-        (buyInAmountAfterFees, payout, totalQuote, finalQuotes, amountsToBuy, ) = _tradeQuote(_tradeData, _buyInAmount);
+        (fees, payout, totalQuote, finalQuotes, amountsToBuy, ) = _tradeQuote(_tradeData, _buyInAmount);
 
         collateralQuote = _collateral == address(0)
             ? _buyInAmount
@@ -354,7 +354,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         internal
         view
         returns (
-            uint buyInAmountAfterFees,
+            uint fees,
             uint payout,
             uint totalQuote,
             uint[] memory finalQuotes,
@@ -365,7 +365,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint numOfMarkets = _tradeData.length;
         finalQuotes = new uint[](numOfMarkets);
         amountsToBuy = new uint[](numOfMarkets);
-        buyInAmountAfterFees = ((ONE - safeBoxFee) * _buyInAmount) / ONE;
+        fees = (safeBoxFee * _buyInAmount) / ONE;
 
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
@@ -379,21 +379,21 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 totalQuote = 0;
                 break;
             }
-            amountsToBuy[i] = (ONE * buyInAmountAfterFees) / finalQuotes[i];
+            amountsToBuy[i] = (ONE * _buyInAmount) / finalQuotes[i];
             totalQuote = totalQuote == 0 ? finalQuotes[i] : (totalQuote * finalQuotes[i]) / ONE;
         }
         if (totalQuote != 0) {
             if (totalQuote < maxSupportedOdds) {
                 totalQuote = maxSupportedOdds;
             }
-            payout = (buyInAmountAfterFees * ONE) / totalQuote;
-            payoutWithFees = payout + _buyInAmount - buyInAmountAfterFees;
+            payout = (_buyInAmount * ONE) / totalQuote;
+            payoutWithFees = payout + fees;
         }
 
         // check if any market breaches cap
         for (uint i = 0; i < _tradeData.length; i++) {
             ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
-            uint riskPerMarket = amountsToBuy[i] - buyInAmountAfterFees;
+            uint riskPerMarket = amountsToBuy[i] - _buyInAmount;
             if (
                 riskPerMarketAndPosition[tradeDataItem.gameId][tradeDataItem.sportId][tradeDataItem.typeId][
                     tradeDataItem.playerId
@@ -463,11 +463,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint totalQuote;
         uint payoutWithFees;
         uint[] memory amountsToBuy = new uint[](_tradeData.length);
-        uint buyInAmountAfterFees;
-        (buyInAmountAfterFees, payout, totalQuote, , amountsToBuy, payoutWithFees) = _tradeQuote(_tradeData, _buyInAmount);
+        uint fees;
+        (fees, payout, totalQuote, , amountsToBuy, payoutWithFees) = _tradeQuote(_tradeData, _buyInAmount);
 
         _checkLimits(_buyInAmount, totalQuote, payout, _expectedPayout, _additionalSlippage);
-        _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees);
+        _checkRisk(_tradeData, amountsToBuy, _buyInAmount);
 
         if (_sendDefaultCollateral) {
             defaultCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
@@ -480,7 +480,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ticket.initialize(
             markets,
             _buyInAmount,
-            buyInAmountAfterFees,
+            fees,
             totalQuote,
             address(this),
             _differentRecipient,
@@ -493,11 +493,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             stakingThales.updateVolume(_differentRecipient, _buyInAmount);
         }
 
-        liquidityPool.commitTrade(address(ticket), payout - buyInAmountAfterFees);
+        liquidityPool.commitTrade(address(ticket), payout + fees - _buyInAmount);
         defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
 
-        emit NewTicket(markets, address(ticket), buyInAmountAfterFees, payout);
-        emit TicketCreated(address(ticket), _differentRecipient, _buyInAmount, buyInAmountAfterFees, payout, totalQuote);
+        emit NewTicket(markets, address(ticket), _buyInAmount, payout);
+        emit TicketCreated(address(ticket), _differentRecipient, _buyInAmount, fees, payout, totalQuote);
     }
 
     function _saveTicketData(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) internal {
@@ -549,13 +549,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _checkRisk(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint[] memory _amountsToBuy,
-        uint _buyInAmountAfterFees
+        uint _buyInAmount
     ) internal {
         for (uint i = 0; i < _tradeData.length; i++) {
             require(_isMarketInAMMTrading(_tradeData[i]), "Not trading");
             require(_tradeData[i].odds.length > _tradeData[i].position, "Invalid position");
 
-            uint riskPerMarket = _amountsToBuy[i] - _buyInAmountAfterFees;
+            uint riskPerMarket = _amountsToBuy[i] - _buyInAmount;
 
             riskPerMarketAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].typeId][
                 _tradeData[i].playerId
@@ -792,12 +792,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EVENTS ========== */
 
-    event NewTicket(Ticket.MarketData[] markets, address ticket, uint buyInAmountAfterFees, uint payout);
+    event NewTicket(Ticket.MarketData[] markets, address ticket, uint buyInAmount, uint payout);
     event TicketCreated(
         address ticket,
         address differentRecipient,
         uint buyInAmount,
-        uint buyInAmountAfterFees,
+        uint fees,
         uint payout,
         uint totalQuote
     );
