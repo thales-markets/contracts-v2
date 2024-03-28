@@ -908,12 +908,22 @@
       },
       {
         "internalType": "uint256[]",
-        "name": "_typeIds",
+        "name": "_sportIdsForChild",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
         "name": "_capsPerSportChild",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_sportIdsForType",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_typeIds",
         "type": "uint256[]"
       },
       {

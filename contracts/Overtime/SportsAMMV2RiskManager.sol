@@ -294,24 +294,28 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice sets the cap per sport, cap per sport child and cap per sport and type (batch)
     /// @param _sportIds sport IDs to set cap for
     /// @param _capsPerSport the cap amounts used for the sport IDs
-    /// @param _typeIds type IDs to set cap for
+    /// @param _sportIdsForChild sport IDs to set child cap for
     /// @param _capsPerSportChild the cap amounts used for the sport child markets
+    /// @param _sportIdsForType sport IDs to set type cap for
+    /// @param _typeIds type IDs to set cap for
     /// @param _capsPerSportAndType the cap amounts used for the sport IDs and type IDs
     function setCaps(
         uint[] memory _sportIds,
         uint[] memory _capsPerSport,
-        uint[] memory _typeIds,
+        uint[] memory _sportIdsForChild,
         uint[] memory _capsPerSportChild,
+        uint[] memory _sportIdsForType,
+        uint[] memory _typeIds,
         uint[] memory _capsPerSportAndType
     ) external onlyOwner {
         for (uint i; i < _sportIds.length; i++) {
             _setCapPerSport(_sportIds[i], _capsPerSport[i]);
         }
-        for (uint i; i < _sportIds.length; i++) {
-            _setCapPerSportChild(_sportIds[i], _capsPerSportChild[i]);
+        for (uint i; i < _sportIdsForChild.length; i++) {
+            _setCapPerSportChild(_sportIdsForChild[i], _capsPerSportChild[i]);
         }
-        for (uint i; i < _sportIds.length; i++) {
-            _setCapPerSportAndType(_sportIds[i], _typeIds[i], _capsPerSportAndType[i]);
+        for (uint i; i < _sportIdsForType.length; i++) {
+            _setCapPerSportAndType(_sportIdsForType[i], _typeIds[i], _capsPerSportAndType[i]);
         }
     }
 
