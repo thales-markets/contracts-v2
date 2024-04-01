@@ -687,7 +687,7 @@
     "name": "sportsAMM",
     "outputs": [
       {
-        "internalType": "contract SportsAMMV2",
+        "internalType": "contract ISportsAMMV2",
         "name": "",
         "type": "address"
       }

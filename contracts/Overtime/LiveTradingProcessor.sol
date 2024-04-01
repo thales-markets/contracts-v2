@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "./SportsAMMV2.sol";
+import "../interfaces/ISportsAMMV2.sol";
 
 contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
@@ -16,7 +16,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint private constant ONE = 1e18;
 
-    SportsAMMV2 public sportsAMM;
+    ISportsAMMV2 public sportsAMM;
 
     bytes32 public specId;
 
@@ -48,7 +48,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     constructor(address _link, address _oracle, address _sportsAMM, bytes32 _specId, uint _payment) Ownable(msg.sender) {
         setChainlinkToken(_link);
         setChainlinkOracle(_oracle);
-        sportsAMM = SportsAMMV2(_sportsAMM);
+        sportsAMM = ISportsAMMV2(_sportsAMM);
         specId = _specId;
         payment = _payment;
     }
@@ -216,7 +216,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     ) external onlyOwner {
         setChainlinkToken(_link);
         setChainlinkOracle(_oracle);
-        sportsAMM = SportsAMMV2(_sportsAMM);
+        sportsAMM = ISportsAMMV2(_sportsAMM);
         specId = _specId;
         payment = _payment;
 
