@@ -69,7 +69,7 @@ async function deploySportsAMMV2Fixture() {
 		secondTrader,
 	} = await deployAccountsFixture();
 	const { collateral } = await deployTokenFixture();
-
+	const collateralAddress = await collateral.getAddress();
 	// deploy Address Manager
 	const AddressManager = await ethers.getContractFactory('AddressManagerExtension');
 	const addressManager = await upgrades.deployProxy(AddressManager, [
@@ -96,6 +96,26 @@ async function deploySportsAMMV2Fixture() {
 	const Referrals = await ethers.getContractFactory('MockReferrals');
 	const referrals = await upgrades.deployProxy(Referrals);
 
+	// deploy WETH collateral
+	const WETH = await ethers.getContractFactory('WETH9');
+	const weth = await WETH.deploy();
+	const wethAddress = await weth.getAddress();
+
+	await priceFeed.setPriceFeedForCollateral(
+		ethers.encodeBytes32String('WETH'),
+		wethAddress,
+		ethers.parseEther('3500')
+	);
+	await priceFeed.setWETH9(wethAddress);
+
+	// deploy mock PriceFeed
+	const MultiCollateral = await ethers.getContractFactory('MockMultiCollateralOnOffRamp');
+	const multiCollateral = await MultiCollateral.deploy();
+	await multiCollateral.setPriceFeed(priceFeedAddress);
+	await multiCollateral.setSUSD(collateralAddress);
+	await multiCollateral.setCollateralKey(wethAddress, ethers.encodeBytes32String('WETH'));
+	const multiCollateralAddress = await multiCollateral.getAddress();
+
 	// deploy Sports AMM manager
 	const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
 	const sportsAMMV2Manager = await upgrades.deployProxy(SportsAMMV2Manager, [owner.address]);
@@ -121,7 +141,6 @@ async function deploySportsAMMV2Fixture() {
 	]);
 
 	// deploy Sports AMM
-	const collateralAddress = await collateral.getAddress();
 	const sportsAMMV2RiskManagerAddress = await sportsAMMV2RiskManager.getAddress();
 	const sportsAMMV2ResultManagerAddress = await sportsAMMV2ResultManager.getAddress();
 	const stakingThalesAddress = await stakingThales.getAddress();
@@ -161,6 +180,7 @@ async function deploySportsAMMV2Fixture() {
 		SPORTS_AMM_INITAL_PARAMS.expiryDuration
 	);
 
+	await sportsAMMV2.setMultiCollateralOnOffRamp(multiCollateralAddress, true);
 	// deploy ticket mastercopy
 	const TicketMastercopy = await ethers.getContractFactory('TicketMastercopy');
 	const ticketMastercopy = await TicketMastercopy.deploy();
@@ -263,19 +283,6 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.mintForUser(owner);
 	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
 
-	const WETH = await ethers.getContractFactory('WETH9');
-	const weth = await WETH.deploy();
-	const wethAddress = await weth.getAddress();
-
-	await priceFeed.setPriceFeedForCollateral(
-		ethers.encodeBytes32String('WETH'),
-		wethAddress,
-		ethers.parseEther('3500')
-	);
-	await priceFeed.setWETH9(wethAddress);
-
-	console.log(await priceFeed.getCurrencies());
-
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 
 	const sportsAMMV2LiquidityPoolETH = await upgrades.deployProxy(SportsAMMV2LiquidityPoolETH, [
@@ -296,7 +303,9 @@ async function deploySportsAMMV2Fixture() {
 	]);
 
 	const sportsAMMV2LiquidityPoolETHAddress = await sportsAMMV2LiquidityPoolETH.getAddress();
-	console.log('fix address: ', sportsAMMV2LiquidityPoolETHAddress);
+
+	await sportsAMMV2.setCollateralLiquidityPool(wethAddress, sportsAMMV2LiquidityPoolETHAddress);
+	console.log('ETH LP addr: ', sportsAMMV2LiquidityPoolETHAddress);
 
 	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
@@ -326,6 +335,7 @@ async function deploySportsAMMV2Fixture() {
 		defaultLiquidityProviderETH,
 		weth,
 		collateral,
+		priceFeed,
 		referrals,
 		stakingThales,
 		safeBox,

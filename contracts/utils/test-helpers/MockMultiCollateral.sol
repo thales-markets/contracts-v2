@@ -11,6 +11,7 @@ contract MockMultiCollateralOnOffRamp {
     address public priceFeed;
     IERC20 public sUSD;
     mapping(address => bytes32) public collateralKey;
+    mapping(bytes32 => address) public collateralAddress;
 
     function setPriceFeed(address _priceFeed) external {
         priceFeed = _priceFeed;
@@ -22,9 +23,14 @@ contract MockMultiCollateralOnOffRamp {
 
     function setCollateralKey(address _collateral, bytes32 _collateralKey) external {
         collateralKey[_collateral] = _collateralKey;
+        collateralAddress[_collateralKey] = _collateral;
     }
 
     function onramp(address _collateral, uint _collateralAmount) external returns (uint convertedAmount) {
+        // 1. Receive collateral amount from the sender
+        // 2. Convert to the USD amount
+        // 3. Send USD back to the sender
+        // REQUIRED: Contract needs to hold enough USD amount to execute
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _collateralAmount);
         convertedAmount = getMinimumReceived(_collateral, _collateralAmount);
         sUSD.safeTransfer(msg.sender, convertedAmount);
@@ -45,7 +51,9 @@ contract MockMultiCollateralOnOffRamp {
         collateralQuote = (amount * 1e18) / collateralInUSD;
     }
 
-    function WETH9() external view returns (address) {}
+    function WETH9() external view returns (address) {
+        return collateralAddress["WETH"];
+    }
 
     function offrampIntoEth(uint amount) external returns (uint) {}
 

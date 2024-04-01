@@ -18,6 +18,8 @@ import "../Ticket.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ICollateralUtility.sol";
 
+import "hardhat/console.sol";
+
 contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradeable, ProxyReentrancyGuard {
     /* ========== LIBRARIES ========== */
 
@@ -208,7 +210,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function commitTrade(address ticket, uint amount) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
         require(started, "Pool has not started");
         require(amount > 0, "Can't commit a zero trade");
-
+        console.log("amount: ", amount);
         uint ticketRound = getTicketRound(ticket);
         roundPerTicket[ticket] = ticketRound;
         address liquidityPoolRound = _getOrCreateRoundPool(ticketRound);
@@ -232,7 +234,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             require(ticketRound == 1, "Invalid round");
             _provideAsDefault(amount);
         }
-
+        console.log("Reached here");
         tradingTicketsPerRound[ticketRound].push(ticket);
         isTradingTicketInARound[ticketRound][ticket] = true;
     }

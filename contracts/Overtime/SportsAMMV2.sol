@@ -26,6 +26,8 @@ import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../interfaces/ICollateralUtility.sol";
 
+import "hardhat/console.sol";
+
 /// @title Sports AMM V2 contract
 /// @author vladan
 contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
@@ -294,6 +296,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, _isEth);
         }
         if (useLPpool != address(0)) {
+            console.log("in diff Collateral");
             _tradeWithDifferentCollateral(
                 _tradeData,
                 ISportsAMMV2.TradeParams(
@@ -301,11 +304,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _expectedPayout,
                     _additionalSlippage,
                     _differentRecipient,
-                    _collateral == address(0),
+                    _collateral,
                     useLPpool,
                     collateralPriceInUSD
                 )
             );
+            console.log("end diff Collateral");
         } else {
             _trade(
                 _tradeData,
@@ -314,7 +318,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _expectedPayout,
                     _additionalSlippage,
                     _differentRecipient,
-                    _collateral == address(0),
+                    // _collateral == address(0),
+                    address(0),
                     address(0),
                     0
                 )
@@ -339,10 +344,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _hasUserWon,
         bool _cancelled,
         uint _buyInAmount,
-        address _ticketCreator
+        address _ticketCreator,
+        address _collateral
     ) external notPaused onlyKnownTickets(msg.sender) {
         if (!_cancelled) {
-            _handleReferrerAndSB(_buyInAmount, _ticketCreator);
+            _handleReferrerAndSB(_buyInAmount, _ticketCreator, _collateral);
         }
         knownTickets.remove(msg.sender);
         if (activeTicketsPerUser[_ticketOwner].contains(msg.sender)) {
@@ -453,10 +459,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmount,
         address _collateral,
         bool _isEth
-    ) internal nonReentrant notPaused returns (address lpPool, uint ethUsdPrice) {
+    ) internal returns (address lpPool, uint ethUsdPrice) {
         require(multicollateralEnabled, "Multi collateral not enabled");
         uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
-
+        console.log("collateralQuote: ", collateralQuote);
         uint exactReceived;
 
         if (_isEth) {
@@ -472,6 +478,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             );
             exactReceived = _transformToUSD(balanceDiff, ethUsdPrice);
             lpPool = collateralPool[_collateral];
+            console.logAddress(lpPool);
         } else {
             IERC20(_collateral).safeTransferFrom(msg.sender, address(this), collateralQuote);
             IERC20(_collateral).approve(address(multiCollateralOnOffRamp), collateralQuote);
@@ -504,7 +511,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _checkLimits(params._buyInAmount, totalQuote, payout, params._expectedPayout, params._additionalSlippage);
         _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees, 0);
 
-        if (params._sendDefaultCollateral) {
+        if (params._collateral == address(0)) {
             defaultCollateral.safeTransferFrom(msg.sender, address(this), params._buyInAmount);
         }
 
@@ -513,14 +520,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
         ticket.initialize(
-            markets,
-            params._buyInAmount,
-            buyInAmountAfterFees,
-            totalQuote,
-            address(this),
-            params._differentRecipient,
-            msg.sender,
-            (block.timestamp + expiryDuration)
+            Ticket.TicketInit(
+                markets,
+                params._buyInAmount,
+                buyInAmountAfterFees,
+                totalQuote,
+                address(this),
+                params._differentRecipient,
+                msg.sender,
+                params._collateral,
+                (block.timestamp + expiryDuration)
+            )
         );
         _saveTicketData(_tradeData, address(ticket), params._differentRecipient);
 
@@ -555,62 +565,87 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeData,
             params._buyInAmount
         );
-
+        console.log("collateral price in USD: ", params._collateralPriceInUSD);
+        console.log("buyInAmount: ", params._buyInAmount);
+        console.log("buyInAmountAfterFees: ", buyInAmountAfterFees);
+        console.log("payout: ", payout);
+        console.log("payoutWithFees: ", payoutWithFees);
         _checkLimits(
-            _transformToUSD(params._buyInAmount, params._collateralPriceInUSD),
+            params._buyInAmount,
+            // _transformToUSD(params._buyInAmount, params._collateralPriceInUSD),
             totalQuote,
-            _transformToUSD(payout, params._collateralPriceInUSD),
-            _transformToUSD(params._buyInAmount, params._expectedPayout),
+            // _transformToUSD(payout, params._collateralPriceInUSD),
+            payout,
+            // _transformToUSD(params._buyInAmount, params._expectedPayout),
+            params._expectedPayout,
             params._additionalSlippage
         );
         _checkRisk(_tradeData, amountsToBuy, buyInAmountAfterFees, params._collateralPriceInUSD);
 
-        if (params._sendDefaultCollateral) {
-            defaultCollateral.safeTransferFrom(msg.sender, address(this), params._buyInAmount);
-        }
+        // if (params._sendDefaultCollateral) {
+        //     defaultCollateral.safeTransferFrom(msg.sender, address(this), params._buyInAmount);
+        // }
 
         // clone a ticket
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
         ticket.initialize(
-            markets,
-            params._buyInAmount,
-            buyInAmountAfterFees,
-            totalQuote,
-            address(this),
-            params._differentRecipient,
-            msg.sender,
-            (block.timestamp + expiryDuration)
+            Ticket.TicketInit(
+                markets,
+                _transformToCollateral(params._buyInAmount, params._collateralPriceInUSD),
+                _transformToCollateral(buyInAmountAfterFees, params._collateralPriceInUSD),
+                totalQuote,
+                address(this),
+                params._differentRecipient,
+                msg.sender,
+                params._collateral,
+                (block.timestamp + expiryDuration)
+            )
         );
         _saveTicketData(_tradeData, address(ticket), params._differentRecipient);
 
         if (address(stakingThales) != address(0)) {
             stakingThales.updateVolume(
                 params._differentRecipient,
-                _transformToUSD(params._buyInAmount, params._collateralPriceInUSD)
+                params._buyInAmount
+                // _transformToUSD(params._buyInAmount, params._collateralPriceInUSD)
             );
         }
-        IERC20 collateral = ICollateralUtility(params._collateralPool).commitTrade(
+        ISportsAMMV2LiquidityPool(params._collateralPool).commitTrade(
             address(ticket),
-            payout - buyInAmountAfterFees
+            // payout - buyInAmountAfterFees
+            _transformToCollateral(payout - buyInAmountAfterFees, params._collateralPriceInUSD)
+            // buyInAmountAfterFees
         );
-        collateral.safeTransfer(address(ticket), payoutWithFees);
+        IERC20(params._collateral).safeTransfer(
+            address(ticket),
+            _transformToCollateral(payoutWithFees, params._collateralPriceInUSD)
+        );
 
-        emit NewTicket(
-            markets,
-            address(ticket),
-            _transformToUSD(buyInAmountAfterFees, params._collateralPriceInUSD),
-            _transformToUSD(payout, params._collateralPriceInUSD)
-        );
+        emit NewTicket(markets, address(ticket), buyInAmountAfterFees, payout);
         emit TicketCreated(
             address(ticket),
             params._differentRecipient,
-            _transformToUSD(params._buyInAmount, params._collateralPriceInUSD),
-            _transformToUSD(buyInAmountAfterFees, params._collateralPriceInUSD),
-            _transformToUSD(payout, params._collateralPriceInUSD),
+            params._buyInAmount,
+            buyInAmountAfterFees,
+            payout,
             totalQuote
         );
+        // emit NewTicket(
+        //     markets,
+        //     address(ticket),
+        //     _transformToUSD(buyInAmountAfterFees, params._collateralPriceInUSD),
+        //     _transformToUSD(payout, params._collateralPriceInUSD)
+        // );
+        // emit TicketCreated(
+        //     address(ticket),
+        //     params._differentRecipient,
+        //     _transformToUSD(params._buyInAmount, params._collateralPriceInUSD),
+        //     _transformToUSD(buyInAmountAfterFees, params._collateralPriceInUSD),
+        //     _transformToUSD(payout, params._collateralPriceInUSD),
+        //     totalQuote
+        // );
     }
 
     // TODO: to redifine for USDC or sUSD - add decimals as parameter
@@ -618,6 +653,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _amountInUSD,
         uint _collateralPriceInUSD
     ) internal pure returns (uint amountInCollateral) {
+        console.log(_amountInUSD);
+        console.log(_collateralPriceInUSD);
+        console.log((_amountInUSD * ONE) / _collateralPriceInUSD);
+
         amountInCollateral = (_amountInUSD * ONE) / _collateralPriceInUSD;
     }
 
@@ -667,6 +706,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // apply all checks
         require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
         require(_totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
+        console.log("payout: ", _payout);
+        console.log("_buyInAmount: ", _buyInAmount);
+        console.log("maxSupportedAmount: ", maxSupportedAmount);
         require((_payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
         require(((ONE * _expectedPayout) / _payout) <= (ONE + _additionalSlippage), "Slippage too high");
     }
@@ -738,19 +780,24 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleReferrerAndSB(uint _buyInAmount, address _tickerCreator) internal returns (uint safeBoxAmount) {
+    function _handleReferrerAndSB(
+        uint _buyInAmount,
+        address _tickerCreator,
+        address _collateral
+    ) internal returns (uint safeBoxAmount) {
         uint referrerShare;
         address referrer = referrals.sportReferrals(_tickerCreator);
+        IERC20 useCollateral = IERC20(_collateral);
         if (referrer != address(0)) {
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
-                defaultCollateral.safeTransfer(referrer, referrerShare);
+                useCollateral.safeTransfer(referrer, referrerShare);
                 emit ReferrerPaid(referrer, _tickerCreator, referrerShare, _buyInAmount);
             }
         }
         safeBoxAmount = _getSafeBoxAmount(_buyInAmount, _tickerCreator);
-        defaultCollateral.safeTransfer(safeBox, safeBoxAmount - referrerShare);
+        useCollateral.safeTransfer(safeBox, safeBoxAmount - referrerShare);
         emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
     }
 
@@ -903,7 +950,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice sets new LP Pool with LP address and the supported collateral
     /// @param _collateralAddress collateral address that is supported by the pool
     /// @param _liquidityPool new LP address
-    function setLiquidityPool(address _collateralAddress, address _liquidityPool) external onlyOwner {
+    function setCollateralLiquidityPool(address _collateralAddress, address _liquidityPool) external onlyOwner {
         if (collateralPool[_collateralAddress] != address(0)) {
             IERC20(_collateralAddress).approve(_liquidityPool, 0);
         }

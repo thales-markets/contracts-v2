@@ -30,7 +30,8 @@ interface ISportsAMMV2 {
         uint _expectedPayout;
         uint _additionalSlippage;
         address _differentRecipient;
-        bool _sendDefaultCollateral;
+        // bool _sendDefaultCollateral;
+        address _collateral;
         address _collateralPool;
         uint _collateralPriceInUSD;
     }
@@ -54,7 +55,8 @@ interface ISportsAMMV2 {
         bool _hasUserWon,
         bool _cancelled,
         uint _buyInAmount,
-        address _ticketCreator
+        address _ticketCreator,
+        address _collateral
     ) external;
 
     function exerciseTicket(address _ticket) external;

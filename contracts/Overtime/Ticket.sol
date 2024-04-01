@@ -27,9 +27,22 @@ contract Ticket is OwnedWithInit {
         ISportsAMMV2.CombinedPosition[] combinedPositions;
     }
 
+    struct TicketInit {
+        MarketData[] _markets;
+        uint _buyInAmount;
+        uint _buyInAmountAfterFees;
+        uint _totalQuote;
+        address _sportsAMM;
+        address _ticketOwner;
+        address _ticketCreator;
+        address _collateral;
+        uint _expiry;
+    }
+
     ISportsAMMV2 public sportsAMM;
     address public ticketOwner;
     address public ticketCreator;
+    address public collateral;
 
     uint public buyInAmount;
     uint public buyInAmountAfterFees;
@@ -48,38 +61,41 @@ contract Ticket is OwnedWithInit {
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the ticket contract
-    /// @param _markets data with all market info needed for ticket
-    /// @param _buyInAmount ticket buy-in amount
-    /// @param _buyInAmountAfterFees ticket buy-in amount without fees
-    /// @param _totalQuote total ticket quote
-    /// @param _sportsAMM address of Sports AMM contact
-    /// @param _ticketOwner owner of the ticket
-    /// @param _ticketCreator creator of the ticket
-    /// @param _expiry ticket expiry timestamp
-    function initialize(
-        MarketData[] calldata _markets,
-        uint _buyInAmount,
-        uint _buyInAmountAfterFees,
-        uint _totalQuote,
-        address _sportsAMM,
-        address _ticketOwner,
-        address _ticketCreator,
-        uint _expiry
+    /// @param params all parameters for Init
+    // / @param _markets data with all market info needed for ticket
+    // / @param _buyInAmount ticket buy-in amount
+    // / @param _buyInAmountAfterFees ticket buy-in amount without fees
+    // / @param _totalQuote total ticket quote
+    // / @param _sportsAMM address of Sports AMM contact
+    // / @param _ticketOwner owner of the ticket
+    // / @param _ticketCreator creator of the ticket
+    // / @param _expiry ticket expiry timestamp
+    function initialize( TicketInit calldata params
+        // MarketData[] calldata _markets,
+        // uint _buyInAmount,
+        // uint _buyInAmountAfterFees,
+        // uint _totalQuote,
+        // address _sportsAMM,
+        // address _ticketOwner,
+        // address _ticketCreator,
+        // address _collateral,
+        // uint _expiry
     ) external {
         require(!initialized, "Ticket already initialized");
         initialized = true;
         initOwner(msg.sender);
-        sportsAMM = ISportsAMMV2(_sportsAMM);
-        numOfMarkets = _markets.length;
+        sportsAMM = ISportsAMMV2(params._sportsAMM);
+        numOfMarkets = params._markets.length;
         for (uint i = 0; i < numOfMarkets; i++) {
-            markets[i] = _markets[i];
+            markets[i] = params._markets[i];
         }
-        buyInAmount = _buyInAmount;
-        buyInAmountAfterFees = _buyInAmountAfterFees;
-        totalQuote = _totalQuote;
-        ticketOwner = _ticketOwner;
-        ticketCreator = _ticketCreator;
-        expiry = _expiry;
+        buyInAmount = params._buyInAmount;
+        buyInAmountAfterFees = params._buyInAmountAfterFees;
+        totalQuote = params._totalQuote;
+        ticketOwner = params._ticketOwner;
+        ticketCreator = params._ticketCreator;
+        collateral = params._collateral;
+        expiry = params._expiry;
         createdAt = block.timestamp;
     }
 
@@ -224,7 +240,7 @@ contract Ticket is OwnedWithInit {
     function _resolve(bool _hasUserWon, bool _cancelled) internal {
         resolved = true;
         cancelled = _cancelled;
-        sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, ticketCreator);
+        sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, ticketCreator, collateral);
         emit Resolved(_hasUserWon, _cancelled);
     }
 

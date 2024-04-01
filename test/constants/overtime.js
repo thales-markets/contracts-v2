@@ -18,6 +18,7 @@ const PLAYER_PROPS_LINE_1 = 3350; // 33.5 points
 const TOTAL_LINE = 25600; // 256 points
 
 const BUY_IN_AMOUNT = ethers.parseEther('10');
+const ETH_BUY_IN_AMOUNT = ethers.parseEther('0.002857');
 const ADDITIONAL_SLIPPAGE = ethers.parseEther('0.02');
 
 const DEFAULT_AMOUNT = ethers.parseEther('10000');
@@ -35,6 +36,7 @@ module.exports = {
 	PLAYER_ID_1,
 	PLAYER_PROPS_LINE_1,
 	BUY_IN_AMOUNT,
+	ETH_BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
 	DEFAULT_AMOUNT,
 	TOTAL_LINE,
