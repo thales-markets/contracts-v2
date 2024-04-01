@@ -35,14 +35,14 @@ contract Ticket is OwnedWithInit {
         address _sportsAMM;
         address _ticketOwner;
         address _ticketCreator;
-        address _collateral;
+        IERC20 _collateral;
         uint _expiry;
     }
 
     ISportsAMMV2 public sportsAMM;
     address public ticketOwner;
     address public ticketCreator;
-    address public collateral;
+    IERC20 public collateral;
 
     uint public buyInAmount;
     uint public buyInAmountAfterFees;
@@ -62,25 +62,7 @@ contract Ticket is OwnedWithInit {
 
     /// @notice initialize the ticket contract
     /// @param params all parameters for Init
-    // / @param _markets data with all market info needed for ticket
-    // / @param _buyInAmount ticket buy-in amount
-    // / @param _buyInAmountAfterFees ticket buy-in amount without fees
-    // / @param _totalQuote total ticket quote
-    // / @param _sportsAMM address of Sports AMM contact
-    // / @param _ticketOwner owner of the ticket
-    // / @param _ticketCreator creator of the ticket
-    // / @param _expiry ticket expiry timestamp
-    function initialize( TicketInit calldata params
-        // MarketData[] calldata _markets,
-        // uint _buyInAmount,
-        // uint _buyInAmountAfterFees,
-        // uint _totalQuote,
-        // address _sportsAMM,
-        // address _ticketOwner,
-        // address _ticketCreator,
-        // address _collateral,
-        // uint _expiry
-    ) external {
+    function initialize(TicketInit calldata params) external {
         require(!initialized, "Ticket already initialized");
         initialized = true;
         initOwner(msg.sender);
@@ -182,13 +164,13 @@ contract Ticket is OwnedWithInit {
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
 
-        uint payoutWithFees = sportsAMM.defaultCollateral().balanceOf(address(this));
+        uint payoutWithFees = collateral.balanceOf(address(this));
         uint payout = payoutWithFees - (buyInAmount - buyInAmountAfterFees);
         bool isCancelled = false;
 
         if (isTicketLost()) {
             if (payoutWithFees > 0) {
-                sportsAMM.defaultCollateral().transfer(address(sportsAMM), payoutWithFees);
+                collateral.transfer(address(sportsAMM), payoutWithFees);
             }
         } else {
             uint finalPayout = payout;
@@ -208,14 +190,11 @@ contract Ticket is OwnedWithInit {
                     isCancelled = false;
                 }
             }
-            sportsAMM.defaultCollateral().transfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
+            collateral.transfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
 
-            uint balance = sportsAMM.defaultCollateral().balanceOf(address(this));
+            uint balance = collateral.balanceOf(address(this));
             if (balance != 0) {
-                sportsAMM.defaultCollateral().transfer(
-                    address(sportsAMM),
-                    sportsAMM.defaultCollateral().balanceOf(address(this))
-                );
+                collateral.transfer(address(sportsAMM), collateral.balanceOf(address(this)));
             }
         }
 
@@ -232,7 +211,7 @@ contract Ticket is OwnedWithInit {
 
     /// @notice withdraw collateral from the ticket
     function withdrawCollateral(address recipient) external onlyAMM {
-        sportsAMM.defaultCollateral().transfer(recipient, sportsAMM.defaultCollateral().balanceOf(address(this)));
+        collateral.transfer(recipient, collateral.balanceOf(address(this)));
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -240,14 +219,14 @@ contract Ticket is OwnedWithInit {
     function _resolve(bool _hasUserWon, bool _cancelled) internal {
         resolved = true;
         cancelled = _cancelled;
-        sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, ticketCreator, collateral);
+        sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, ticketCreator, address(collateral));
         emit Resolved(_hasUserWon, _cancelled);
     }
 
     function _selfDestruct(address payable beneficiary) internal {
-        uint balance = sportsAMM.defaultCollateral().balanceOf(address(this));
+        uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
-            sportsAMM.defaultCollateral().transfer(beneficiary, balance);
+            collateral.transfer(beneficiary, balance);
         }
     }
 

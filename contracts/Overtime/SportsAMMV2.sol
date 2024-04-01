@@ -528,7 +528,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 address(this),
                 params._differentRecipient,
                 msg.sender,
-                params._collateral,
+                defaultCollateral,
                 (block.timestamp + expiryDuration)
             )
         );
@@ -599,7 +599,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 address(this),
                 params._differentRecipient,
                 msg.sender,
-                params._collateral,
+                IERC20(params._collateral),
                 (block.timestamp + expiryDuration)
             )
         );
@@ -845,7 +845,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _exerciseTicket(address _ticket) internal {
         Ticket ticket = Ticket(_ticket);
         ticket.exercise();
-        uint amount = defaultCollateral.balanceOf(address(this));
+        uint amount = ticket.collateral().balanceOf(address(this));
         if (amount > 0) {
             liquidityPool.transferToPool(_ticket, amount);
         }

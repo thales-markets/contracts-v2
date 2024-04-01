@@ -145,7 +145,7 @@
     "name": "collateral",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "",
         "type": "address"
       }
@@ -344,7 +344,7 @@
             "type": "address"
           },
           {
-            "internalType": "address",
+            "internalType": "contract IERC20",
             "name": "_collateral",
             "type": "address"
           },
