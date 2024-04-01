@@ -312,12 +312,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
+    /// @notice make a live trade and create a ticket
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _expectedPayout expected payout got from LiveTradingProcessor method
+    /// @param _differentRecipient different recipient of the ticket
+    /// @param _referrer referrer to get referral fee
+    /// @param _collateral different collateral used for payment
     function tradeLive(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         address _requester,
         uint _buyInAmount,
         uint _expectedPayout,
-        uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
         address _collateral
@@ -339,7 +345,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             TradeDataInternal(
                 _buyInAmount,
                 _expectedPayout,
-                _additionalSlippage,
+                0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
                 _differentRecipient,
                 _collateral == address(0),
                 true,

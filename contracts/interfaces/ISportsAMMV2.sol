@@ -69,7 +69,6 @@ interface ISportsAMMV2 {
         address _requester,
         uint _buyInAmount,
         uint _expectedPayout,
-        uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
         address _collateral

@@ -18,16 +18,16 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     ISportsAMMV2 public sportsAMM;
 
-    bytes32 public specId;
+    bytes32 public jobSpecId;
 
-    uint public payment;
+    uint public paymentAmount;
 
     uint maxAllowedExecutionDelay = 60;
 
     struct LiveTradeData {
         address requester;
-        bytes32 gameId;
-        uint16 sportId;
+        bytes32 _gameId;
+        uint16 _sportId;
         uint8 position;
         uint _buyInAmount;
         uint _expectedPayout;
@@ -45,26 +45,32 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     uint public requestCounter;
     mapping(uint => bytes32) public counterToRequestId;
 
-    constructor(address _link, address _oracle, address _sportsAMM, bytes32 _specId, uint _payment) Ownable(msg.sender) {
+    constructor(
+        address _link,
+        address _oracle,
+        address _sportsAMM,
+        bytes32 _jobSpecId,
+        uint _paymentAmount
+    ) Ownable(msg.sender) {
         setChainlinkToken(_link);
         setChainlinkOracle(_oracle);
         sportsAMM = ISportsAMMV2(_sportsAMM);
-        specId = _specId;
-        payment = _payment;
+        jobSpecId = _jobSpecId;
+        paymentAmount = _paymentAmount;
     }
 
     /// @notice requestLiveTrade
-    /// @param gameId for which to request a live trade
-    /// @param sportId for which to request a live trade
+    /// @param _gameId for which to request a live trade
+    /// @param _sportId for which to request a live trade
     /// @param _position for which to request a live trade
     /// @param _buyInAmount ticket buy-in amount
     /// @param _expectedPayout expected payout
     /// @param _additionalSlippage the maximum slippage a user will accept
     /// @param _referrer who should get the referrer fee if any
-    /// @param _collateral different collateral used for payment
+    /// @param _collateral different collateral used for paymentAmount
     function requestLiveTrade(
-        bytes32 gameId,
-        uint16 sportId,
+        bytes32 _gameId,
+        uint16 _sportId,
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
@@ -73,14 +79,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _referrer,
         address _collateral
     ) external whenNotPaused {
-        require(sportsAMM.riskManager().liveTradingPerSportEnabled(sportId), "Live trading not enabled on sportId");
+        require(sportsAMM.riskManager().liveTradingPerSportEnabled(_sportId), "Live trading not enabled on _sportId");
 
         Chainlink.Request memory req;
 
-        req = buildChainlinkRequest(specId, address(this), this.fulfillLiveTrade.selector);
+        req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
-        req.add("gameId", string(abi.encodePacked(gameId)));
-        req.addUint("sportId", sportId);
+        req.add("_gameId", string(abi.encodePacked(_gameId)));
+        req.addUint("_sportId", _sportId);
         req.addUint("_buyInAmount", _buyInAmount);
         req.addUint("_expectedPayout", _expectedPayout);
         req.addUint("_additionalSlippage", _additionalSlippage);
@@ -89,12 +95,12 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _differentRecipient = msg.sender;
         }
 
-        bytes32 requestId = sendChainlinkRequest(req, payment);
+        bytes32 requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;
         requestIdToTradeData[requestId] = LiveTradeData(
             msg.sender,
-            gameId,
-            sportId,
+            _gameId,
+            _sportId,
             _position,
             _buyInAmount,
             _expectedPayout,
@@ -110,8 +116,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             msg.sender,
             requestCounter,
             requestId,
-            gameId,
-            sportId,
+            _gameId,
+            _sportId,
             _position,
             _buyInAmount,
             _expectedPayout,
@@ -150,8 +156,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             ISportsAMMV2.CombinedPosition[][] memory comPositions = new ISportsAMMV2.CombinedPosition[][](3);
 
             tradeData[0] = ISportsAMMV2.TradeData(
-                lTradeData.gameId,
-                lTradeData.sportId,
+                lTradeData._gameId,
+                lTradeData._sportId,
                 0, //type, set moneyline
                 block.timestamp + 60, //maturity, hardcode to timestamp with buffer
                 0, //status
@@ -168,7 +174,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 lTradeData.requester,
                 lTradeData._buyInAmount,
                 approvedPayoutAmount,
-                lTradeData._additionalSlippage,
                 lTradeData._differentRecipient,
                 lTradeData._referrer,
                 lTradeData._collateral
@@ -181,8 +186,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             lTradeData._differentRecipient,
             _requestId,
             allow,
-            lTradeData.gameId,
-            lTradeData.sportId,
+            lTradeData._gameId,
+            lTradeData._sportId,
             lTradeData.position,
             lTradeData._buyInAmount,
             lTradeData._expectedPayout,
@@ -202,25 +207,25 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     /// @notice setConfiguration
-    /// @param _link payment token
+    /// @param _link paymentAmount token
     /// @param _oracle CL node that will execute the requests
     /// @param _sportsAMM address
-    /// @param _specId CL node job spec ID
-    /// @param _payment amount of payment token for each request
+    /// @param _jobSpecId CL node job spec ID
+    /// @param _paymentAmount amount of paymentAmount token for each request
     function setConfiguration(
         address _link,
         address _oracle,
         address _sportsAMM,
-        bytes32 _specId,
-        uint _payment
+        bytes32 _jobSpecId,
+        uint _paymentAmount
     ) external onlyOwner {
         setChainlinkToken(_link);
         setChainlinkOracle(_oracle);
         sportsAMM = ISportsAMMV2(_sportsAMM);
-        specId = _specId;
-        payment = _payment;
+        jobSpecId = _jobSpecId;
+        paymentAmount = _paymentAmount;
 
-        emit ContextReset(_link, _oracle, _sportsAMM, _specId, _payment);
+        emit ContextReset(_link, _oracle, _sportsAMM, _jobSpecId, _paymentAmount);
     }
 
     /// @notice setMaxAllowedExecutionDelay
@@ -231,13 +236,13 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     /////// EVENTS
-    event ContextReset(address _link, address _oracle, address _sportsAMM, bytes32 _specId, uint _payment);
+    event ContextReset(address _link, address _oracle, address _sportsAMM, bytes32 _jobSpecId, uint _paymentAmount);
     event LiveTradeRequested(
         address sender,
         uint requestCounter,
         bytes32 requestId,
-        bytes32 gameId,
-        uint16 sportId,
+        bytes32 _gameId,
+        uint16 _sportId,
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
@@ -250,8 +255,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address recipient,
         bytes32 requestId,
         bool allow,
-        bytes32 gameId,
-        uint16 sportId,
+        bytes32 _gameId,
+        uint16 _sportId,
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
