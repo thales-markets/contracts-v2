@@ -230,18 +230,33 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     /* ========== SETTERS ========== */
 
-    /// @notice sets the cap default value
+    /// @notice sets the max cap and max risk multiplier
+    /// @param _maxCap max cap
+    /// @param _maxRiskMultiplier max risk multiplier
+    function setMaxCapAndMaxRiskMultiplier(uint _maxCap, uint _maxRiskMultiplier) external onlyOwner {
+        require(_maxCap > defaultCap && _maxRiskMultiplier > defaultRiskMultiplier, "Invalid input");
+        maxCap = _maxCap;
+        maxRiskMultiplier = _maxRiskMultiplier;
+        emit SetMaxCapAndMaxRiskMultiplier(_maxCap, _maxRiskMultiplier);
+    }
+
+    /// @notice sets the default cap and default risk multiplier
     /// @param _defaultCap default cap
-    function setDefaultCap(uint _defaultCap) external onlyOwner {
-        require(_defaultCap <= maxCap, "Invalid cap");
+    /// @param _defaultRiskMultiplier default risk multiplier
+    function setDefaultCapAndDefaultRiskMultiplier(uint _defaultCap, uint _defaultRiskMultiplier) external onlyOwner {
+        require(_defaultCap <= maxCap && _defaultRiskMultiplier <= maxRiskMultiplier, "Invalid input");
         defaultCap = _defaultCap;
-        emit SetDefaultCap(_defaultCap);
+        defaultRiskMultiplier = _defaultRiskMultiplier;
+        emit SetDefaultCapAndDefaultRiskMultiplier(_defaultCap, _defaultRiskMultiplier);
     }
 
     /// @notice sets the cap per sport (batch)
     /// @param _sportIds sport IDs to set cap for
     /// @param _capsPerSport the cap amounts
-    function setCapsPerSport(uint[] memory _sportIds, uint[] memory _capsPerSport) external onlyOwner {
+    function setCapsPerSport(
+        uint[] memory _sportIds,
+        uint[] memory _capsPerSport
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _sportIds.length; i++) {
             _setCapPerSport(_sportIds[i], _capsPerSport[i]);
         }
@@ -250,7 +265,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice sets the cap per all child markets of specific sport (batch)
     /// @param _sportIds sport IDs to set cap for
     /// @param _capsPerSportChild the cap amounts
-    function setCapsPerSportChild(uint[] memory _sportIds, uint[] memory _capsPerSportChild) external onlyOwner {
+    function setCapsPerSportChild(
+        uint[] memory _sportIds,
+        uint[] memory _capsPerSportChild
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _sportIds.length; i++) {
             _setCapPerSportChild(_sportIds[i], _capsPerSportChild[i]);
         }
@@ -264,7 +282,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _sportIds,
         uint[] memory _typeIds,
         uint[] memory _capsPerType
-    ) external onlyOwner {
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _sportIds.length; i++) {
             _setCapPerSportAndType(_sportIds[i], _typeIds[i], _capsPerType[i]);
         }
@@ -282,8 +300,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16[] memory _playerIds,
         int24[] memory _lines,
         uint[] memory _capsPerMarket
-    ) external {
-        require(msg.sender == owner || manager.isWhitelistedAddress(msg.sender), "Invalid sender");
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             require(_capsPerMarket[i] <= maxCap, "Invalid cap");
             capPerMarket[_gameIds[i]][_typeIds[i]][_playerIds[i]][_lines[i]] = _capsPerMarket[i];
@@ -307,7 +324,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _sportIdsForType,
         uint[] memory _typeIds,
         uint[] memory _capsPerSportAndType
-    ) external onlyOwner {
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _sportIds.length; i++) {
             _setCapPerSport(_sportIds[i], _capsPerSport[i]);
         }
@@ -319,18 +336,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
-    /// @notice sets default risk multiplier
-    /// @param _defaultRiskMultiplier default risk multiplier
-    function setDefaultRiskMultiplier(uint _defaultRiskMultiplier) external onlyOwner {
-        require(_defaultRiskMultiplier <= maxRiskMultiplier, "Invalid multiplier");
-        defaultRiskMultiplier = _defaultRiskMultiplier;
-        emit SetDefaultRiskMultiplier(_defaultRiskMultiplier);
-    }
-
     /// @notice sets the risk multiplier per sport (batch)
     /// @param _sportIds sport IDs to set risk multiplier for
     /// @param _riskMultipliersPerSport the risk multiplier amounts
-    function setRiskMultipliersPerSport(uint[] memory _sportIds, uint[] memory _riskMultipliersPerSport) external onlyOwner {
+    function setRiskMultipliersPerSport(
+        uint[] memory _sportIds,
+        uint[] memory _riskMultipliersPerSport
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _sportIds.length; i++) {
             require(_sportIds[i] > MIN_SPORT_NUMBER, "Invalid ID for sport");
             require(_riskMultipliersPerSport[i] <= maxRiskMultiplier, "Invalid multiplier");
@@ -351,8 +363,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16[] memory _playerIds,
         int24[] memory _lines,
         uint[] memory _riskMultipliersPerMarket
-    ) external {
-        require(msg.sender == owner || manager.isWhitelistedAddress(msg.sender), "Invalid sender");
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             require(_riskMultipliersPerMarket[i] <= maxRiskMultiplier, "Invalid multiplier");
             riskMultiplierPerMarket[_gameIds[i]][_typeIds[i]][_playerIds[i]][_lines[i]] = _riskMultipliersPerMarket[i];
@@ -366,16 +377,6 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
-    /// @notice sets the max cap and max risk per game
-    /// @param _maxCap max cap
-    /// @param _maxRisk max risk multiplier
-    function setMaxCapAndRisk(uint _maxCap, uint _maxRisk) external onlyOwner {
-        require(_maxCap > defaultCap && _maxRisk > defaultRiskMultiplier, "Invalid input");
-        maxCap = _maxCap;
-        maxRiskMultiplier = _maxRisk;
-        emit SetMaxCapAndRisk(_maxCap, _maxRisk);
-    }
-
     /// @notice sets the dynamic liquidity params
     /// @param _sportId the ID used for sport
     /// @param _dynamicLiquidityCutoffTime when to start increasing the liquidity linearly, if 0 assume 100% liquidity all the time since game creation
@@ -384,7 +385,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint _sportId,
         uint _dynamicLiquidityCutoffTime,
         uint _dynamicLiquidityCutoffDivider
-    ) external onlyOwner {
+    ) external onlyWhitelistedAddresses(msg.sender) {
         require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
         dynamicLiquidityCutoffTimePerSport[_sportId] = _dynamicLiquidityCutoffTime;
         dynamicLiquidityCutoffDividerPerSport[_sportId] = _dynamicLiquidityCutoffDivider;
@@ -425,18 +426,25 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetCapPerSportAndType(_sportId, _typeId, _capPerType);
     }
 
+    /* ========== MODIFIERS ========== */
+
+    modifier onlyWhitelistedAddresses(address sender) {
+        require(sender == owner || manager.isWhitelistedAddress(sender), "Invalid sender");
+        _;
+    }
+
     /* ========== EVENTS ========== */
 
-    event SetDefaultCap(uint cap);
+    event SetMaxCapAndMaxRiskMultiplier(uint maxCap, uint maxRiskMultiplier);
+    event SetDefaultCapAndDefaultRiskMultiplier(uint defaultCap, uint defaultRiskMultiplier);
+
     event SetCapPerSport(uint sportId, uint cap);
     event SetCapPerSportChild(uint sportId, uint cap);
     event SetCapPerSportAndType(uint sportId, uint typeId, uint cap);
     event SetCapPerMarket(bytes32 gameId, uint16 typeId, uint16 playerId, int24 line, uint cap);
 
-    event SetDefaultRiskMultiplier(uint riskMultiplier);
     event SetRiskMultiplierPerSport(uint sportId, uint riskMultiplier);
     event SetRiskMultiplierPerMarket(bytes32 gameId, uint16 typeId, uint16 playerId, int24 line, uint riskMultiplier);
-    event SetMaxCapAndRisk(uint maxCap, uint maxRisk);
 
     event SetDynamicLiquidityParams(uint sportId, uint dynamicLiquidityCutoffTime, uint dynamicLiquidityCutoffDivider);
     event SetSportsManager(address manager);
