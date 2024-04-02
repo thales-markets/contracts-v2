@@ -131,12 +131,12 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     /// @notice fulfillLiveTrade
     /// @param _requestId which is being fulfilled
-    /// @param allow whether the live trade should go through
-    /// @param approvedPayoutAmount what will be the actual payout
+    /// @param _allow whether the live trade should go through
+    /// @param _approvedPayoutAmount what will be the actual payout
     function fulfillLiveTrade(
         bytes32 _requestId,
-        bool allow,
-        uint approvedPayoutAmount
+        bool _allow,
+        uint _approvedPayoutAmount
     ) external whenNotPaused recordChainlinkFulfillment(_requestId) {
         //might be redundant as already done by Chainlink Client, but making double sure
         require(!requestIdToFulfillAllowed[_requestId], "Request ID already fulfilled");
@@ -145,11 +145,11 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
 
         require(
-            ((ONE * lTradeData._expectedPayout) / approvedPayoutAmount) <= (ONE + lTradeData._additionalSlippage),
+            ((ONE * lTradeData._expectedPayout) / _approvedPayoutAmount) <= (ONE + lTradeData._additionalSlippage),
             "Slippage too high"
         );
 
-        if (allow) {
+        if (_allow) {
             ISportsAMMV2.TradeData[] memory tradeData = new ISportsAMMV2.TradeData[](1);
             bytes32[] memory merkleProofs;
             uint[] memory odds = new uint[](3);
@@ -173,19 +173,19 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 tradeData,
                 lTradeData.requester,
                 lTradeData._buyInAmount,
-                approvedPayoutAmount,
+                _approvedPayoutAmount,
                 lTradeData._differentRecipient,
                 lTradeData._referrer,
                 lTradeData._collateral
             );
         }
-        requestIdToFulfillAllowed[_requestId] = allow;
+        requestIdToFulfillAllowed[_requestId] = _allow;
         requestIdFulfilled[_requestId] = true;
 
         emit LiveTradeFulfilled(
             lTradeData._differentRecipient,
             _requestId,
-            allow,
+            _allow,
             lTradeData._gameId,
             lTradeData._sportId,
             lTradeData.position,
@@ -254,7 +254,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     event LiveTradeFulfilled(
         address recipient,
         bytes32 requestId,
-        bool allow,
+        bool _allow,
         bytes32 _gameId,
         uint16 _sportId,
         uint8 _position,
