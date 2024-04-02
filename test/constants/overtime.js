@@ -22,6 +22,7 @@ const ETH_BUY_IN_AMOUNT = ethers.parseEther('0.0028571428571429');
 const ADDITIONAL_SLIPPAGE = ethers.parseEther('0.02');
 
 const DEFAULT_AMOUNT = ethers.parseEther('10000');
+const ETH_DEFAULT_AMOUNT = ethers.parseEther('5');
 
 module.exports = {
 	INVALID_SPORT_ID,
@@ -39,5 +40,6 @@ module.exports = {
 	ETH_BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
 	DEFAULT_AMOUNT,
+	ETH_DEFAULT_AMOUNT,
 	TOTAL_LINE,
 };

@@ -5,7 +5,12 @@ const {
 	SPORTS_AMM_LP_INITAL_PARAMS,
 	SPORTS_AMM_LP_ETH_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
-const { GAME_ID_1, DEFAULT_AMOUNT, GAME_ID_2 } = require('../../constants/overtime');
+const {
+	GAME_ID_1,
+	DEFAULT_AMOUNT,
+	ETH_DEFAULT_AMOUNT,
+	GAME_ID_2,
+} = require('../../constants/overtime');
 const { createMerkleTree, getTicketTradeData } = require('../overtime');
 const { ZERO_ADDRESS } = require('../../constants/general');
 
@@ -320,6 +325,9 @@ async function deploySportsAMMV2Fixture() {
 
 	const defaultLiquidityProviderETHAddress = await defaultLiquidityProviderETH.getAddress();
 	await sportsAMMV2LiquidityPoolETH.setDefaultLiquidityProvider(defaultLiquidityProviderETHAddress);
+
+	await weth.deposit({ value: ETH_DEFAULT_AMOUNT });
+	await weth.transfer(defaultLiquidityProviderETHAddress, ETH_DEFAULT_AMOUNT);
 
 	return {
 		owner,

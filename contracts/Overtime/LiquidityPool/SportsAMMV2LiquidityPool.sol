@@ -18,8 +18,6 @@ import "../Ticket.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ICollateralUtility.sol";
 
-import "hardhat/console.sol";
-
 contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradeable, ProxyReentrancyGuard {
     /* ========== LIBRARIES ========== */
 
@@ -240,11 +238,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice transfer collateral amount from AMM to LP (ticket liquidity pool round)
     /// @param _ticket to trade
     function transferToPool(address _ticket, uint _amount) external whenNotPaused roundClosingNotPrepared onlyAMM {
-        uint amountInSportsAMM = collateral.balanceOf(address(sportsAMM));
-        console.log(">>> amount: ", _amount);
-        console.log(">>> amount Sport: ", amountInSportsAMM);
-        console.logAddress(address(collateral));
-        console.logAddress(address(this));
         uint ticketRound = getTicketRound(_ticket);
         address liquidityPoolRound = ticketRound <= 1 ? defaultLiquidityProvider : _getOrCreateRoundPool(ticketRound);
         collateral.safeTransferFrom(address(sportsAMM), liquidityPoolRound, _amount);

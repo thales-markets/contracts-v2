@@ -26,8 +26,6 @@ import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../interfaces/ICollateralUtility.sol";
 
-import "hardhat/console.sol";
-
 /// @title Sports AMM V2 contract
 /// @author vladan
 contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
@@ -296,7 +294,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, _isEth);
         }
         if (useLPpool != address(0)) {
-            console.log("USING ETH");
             _tradeWithDifferentCollateral(
                 _tradeData,
                 ISportsAMMV2.TradeParams(
@@ -580,9 +577,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
-        console.logAddress(params._collateral);
-        console.log("----- ^ on buy collateral");
-
         ticket.initialize(
             Ticket.TicketInit(
                 markets,
@@ -808,11 +802,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _exerciseTicket(address _ticket) internal {
         Ticket ticket = Ticket(_ticket);
         ticket.exercise();
-        console.logAddress(address(ticket.collateral()));
-        console.log("---- ^ on exercise address");
-        uint amount = ticket.collateral().balanceOf(address(this));
+        IERC20 ticketCollateral = ticket.collateral();
+        uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
-            liquidityPool.transferToPool(_ticket, amount);
+            ISportsAMMV2LiquidityPool(collateralPool[address(ticketCollateral)]).transferToPool(_ticket, amount);
         }
     }
 
