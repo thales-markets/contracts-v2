@@ -210,7 +210,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function commitTrade(address ticket, uint amount) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
         require(started, "Pool has not started");
         require(amount > 0, "Can't commit a zero trade");
-        console.log("amount: ", amount);
         uint ticketRound = getTicketRound(ticket);
         roundPerTicket[ticket] = ticketRound;
         address liquidityPoolRound = _getOrCreateRoundPool(ticketRound);
@@ -234,7 +233,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             require(ticketRound == 1, "Invalid round");
             _provideAsDefault(amount);
         }
-        console.log("Reached here");
         tradingTicketsPerRound[ticketRound].push(ticket);
         isTradingTicketInARound[ticketRound][ticket] = true;
     }
@@ -242,6 +240,11 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice transfer collateral amount from AMM to LP (ticket liquidity pool round)
     /// @param _ticket to trade
     function transferToPool(address _ticket, uint _amount) external whenNotPaused roundClosingNotPrepared onlyAMM {
+        uint amountInSportsAMM = collateral.balanceOf(address(sportsAMM));
+        console.log(">>> amount: ", _amount);
+        console.log(">>> amount Sport: ", amountInSportsAMM);
+        console.logAddress(address(collateral));
+        console.logAddress(address(this));
         uint ticketRound = getTicketRound(_ticket);
         address liquidityPoolRound = ticketRound <= 1 ? defaultLiquidityProvider : _getOrCreateRoundPool(ticketRound);
         collateral.safeTransferFrom(address(sportsAMM), liquidityPoolRound, _amount);
