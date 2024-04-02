@@ -647,18 +647,24 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(defaultLpBalanceBeforeTrade).to.equal(ETH_DEFAULT_AMOUNT);
 
 			// create a ticket for cross rounds - use defaul LP
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCrossRounds, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			// create a ticket
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				ETH_BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
 					tradeDataCrossRounds,
-					BUY_IN_AMOUNT,
+					ETH_BUY_IN_AMOUNT,
 					quote.payout,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
-					false
+					weth,
+					true,
+					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
 			// difference between payout and buy-in (amount taken from default LP)
