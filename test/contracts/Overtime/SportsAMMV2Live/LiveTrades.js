@@ -80,7 +80,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 						ZERO_ADDRESS,
 						ZERO_ADDRESS
 					)
-			).to.be.revertedWith('Live trading not enabled on sportId');
+			).to.be.revertedWith('Live trading not enabled on _sportId');
 		});
 
 		it('Fail for double fulfillment', async () => {

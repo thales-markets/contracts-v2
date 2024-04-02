@@ -18,12 +18,12 @@
       },
       {
         "internalType": "bytes32",
-        "name": "_specId",
+        "name": "_jobSpecId",
         "type": "bytes32"
       },
       {
         "internalType": "uint256",
-        "name": "_payment",
+        "name": "_paymentAmount",
         "type": "uint256"
       }
     ],
@@ -125,13 +125,13 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "_specId",
+        "name": "_jobSpecId",
         "type": "bytes32"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_payment",
+        "name": "_paymentAmount",
         "type": "uint256"
       }
     ],
@@ -162,13 +162,13 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "gameId",
+        "name": "_gameId",
         "type": "bytes32"
       },
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "sportId",
+        "name": "_sportId",
         "type": "uint16"
       },
       {
@@ -241,13 +241,13 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "gameId",
+        "name": "_gameId",
         "type": "bytes32"
       },
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "sportId",
+        "name": "_sportId",
         "type": "uint16"
       },
       {
@@ -398,6 +398,19 @@
   },
   {
     "inputs": [],
+    "name": "jobSpecId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "owner",
     "outputs": [
       {
@@ -424,7 +437,7 @@
   },
   {
     "inputs": [],
-    "name": "payment",
+    "name": "paymentAmount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -510,12 +523,12 @@
       },
       {
         "internalType": "bytes32",
-        "name": "gameId",
+        "name": "_gameId",
         "type": "bytes32"
       },
       {
         "internalType": "uint16",
-        "name": "sportId",
+        "name": "_sportId",
         "type": "uint16"
       },
       {
@@ -561,12 +574,12 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "gameId",
+        "name": "_gameId",
         "type": "bytes32"
       },
       {
         "internalType": "uint16",
-        "name": "sportId",
+        "name": "_sportId",
         "type": "uint16"
       },
       {
@@ -629,12 +642,12 @@
       },
       {
         "internalType": "bytes32",
-        "name": "_specId",
+        "name": "_jobSpecId",
         "type": "bytes32"
       },
       {
         "internalType": "uint256",
-        "name": "_payment",
+        "name": "_paymentAmount",
         "type": "uint256"
       }
     ],
@@ -667,19 +680,6 @@
     "name": "setPaused",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "specId",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
