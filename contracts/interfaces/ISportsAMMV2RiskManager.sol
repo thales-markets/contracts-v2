@@ -44,5 +44,5 @@ interface ISportsAMMV2RiskManager {
         uint _maturity
     ) external view returns (bool _isNotRisky);
 
-    function liveTradingPerSportEnabled(uint sportId) external view returns (bool enabled);
+    function liveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId) external view returns (bool _enabled);
 }

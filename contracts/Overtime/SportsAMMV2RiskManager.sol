@@ -62,7 +62,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // divider on how much liquidity is available before cut off time
     mapping(uint => uint) public dynamicLiquidityCutoffDividerPerSport;
 
-    mapping(uint => bool) public liveTradingPerSportEnabled;
+    mapping(uint => mapping(uint => bool)) public liveTradingPerSportAndTypeEnabled;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -399,10 +399,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     /// @notice Setting whether live trading per sport is enabled
     /// @param _sportId to set live trading for
+    /// @param _typeId to set live trading for
     /// @param _enabled self explanatory
-    function setLiveTradingPerSportEnabled(uint _sportId, bool _enabled) external onlyOwner {
-        liveTradingPerSportEnabled[_sportId] = _enabled;
-        emit SetLiveTradingPerSportEnabled(_sportId, _enabled);
+    function setLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled) external onlyOwner {
+        liveTradingPerSportAndTypeEnabled[_sportId][_typeId] = _enabled;
+        emit SetLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -446,5 +447,5 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     event SetDynamicLiquidityParams(uint sportId, uint dynamicLiquidityCutoffTime, uint dynamicLiquidityCutoffDivider);
     event SetSportsManager(address manager);
-    event SetLiveTradingPerSportEnabled(uint _sportId, bool _enabled);
+    event SetLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled);
 }

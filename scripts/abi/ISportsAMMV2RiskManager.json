@@ -96,15 +96,20 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "sportId",
+        "name": "_sportId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_typeId",
         "type": "uint256"
       }
     ],
-    "name": "liveTradingPerSportEnabled",
+    "name": "liveTradingPerSportAndTypeEnabled",
     "outputs": [
       {
         "internalType": "bool",
-        "name": "enabled",
+        "name": "_enabled",
         "type": "bool"
       }
     ],

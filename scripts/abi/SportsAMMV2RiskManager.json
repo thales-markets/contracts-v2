@@ -229,12 +229,18 @@
       },
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "bool",
         "name": "_enabled",
         "type": "bool"
       }
     ],
-    "name": "SetLiveTradingPerSportEnabled",
+    "name": "SetLiveTradingPerSportAndTypeEnabled",
     "type": "event"
   },
   {
@@ -775,9 +781,14 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
-    "name": "liveTradingPerSportEnabled",
+    "name": "liveTradingPerSportAndTypeEnabled",
     "outputs": [
       {
         "internalType": "bool",
@@ -1114,12 +1125,17 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
         "internalType": "bool",
         "name": "_enabled",
         "type": "bool"
       }
     ],
-    "name": "setLiveTradingPerSportEnabled",
+    "name": "setLiveTradingPerSportAndTypeEnabled",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

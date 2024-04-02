@@ -512,10 +512,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _trade(ISportsAMMV2.TradeData[] memory _tradeData, TradeDataInternal memory _tradeDataInternal) internal {
         uint payout = _tradeDataInternal._expectedPayout;
-        uint totalQuote = (ONE * ONE) / ((_tradeDataInternal._expectedPayout * ONE) / _tradeDataInternal._buyInAmount);
-        uint payoutWithFees = _tradeDataInternal._expectedPayout;
+        uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
         uint[] memory amountsToBuy = new uint[](_tradeData.length);
-        uint fees = _tradeDataInternal._buyInAmount;
+        uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
+        uint payoutWithFees = _tradeDataInternal._expectedPayout + fees;
         if (!_tradeDataInternal._isLive) {
             (fees, payout, totalQuote, , amountsToBuy, payoutWithFees) = _tradeQuote(
                 _tradeData,

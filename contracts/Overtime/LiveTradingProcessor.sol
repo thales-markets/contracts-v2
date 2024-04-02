@@ -22,13 +22,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint public paymentAmount;
 
-    uint maxAllowedExecutionDelay = 60;
+    uint public maxAllowedExecutionDelay = 60;
 
     struct LiveTradeData {
         address requester;
         bytes32 _gameId;
         uint16 _sportId;
-        uint8 position;
+        uint16 _typeId;
+        uint8 _position;
         uint _buyInAmount;
         uint _expectedPayout;
         uint _additionalSlippage;
@@ -62,6 +63,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /// @notice requestLiveTrade
     /// @param _gameId for which to request a live trade
     /// @param _sportId for which to request a live trade
+    /// @param _typeId for which to request a live trade
     /// @param _position for which to request a live trade
     /// @param _buyInAmount ticket buy-in amount
     /// @param _expectedPayout expected payout
@@ -71,6 +73,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     function requestLiveTrade(
         bytes32 _gameId,
         uint16 _sportId,
+        uint16 _typeId,
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
@@ -79,7 +82,10 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _referrer,
         address _collateral
     ) external whenNotPaused {
-        require(sportsAMM.riskManager().liveTradingPerSportEnabled(_sportId), "Live trading not enabled on _sportId");
+        require(
+            sportsAMM.riskManager().liveTradingPerSportAndTypeEnabled(_sportId, _typeId),
+            "Live trading not enabled on _sportId"
+        );
 
         Chainlink.Request memory req;
 
@@ -87,6 +93,9 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         req.add("_gameId", string(abi.encodePacked(_gameId)));
         req.addUint("_sportId", _sportId);
+        req.addUint("_typeId", _typeId);
+        req.addUint("_position", _position);
+        req.add("_collateral", string(abi.encodePacked(_collateral)));
         req.addUint("_buyInAmount", _buyInAmount);
         req.addUint("_expectedPayout", _expectedPayout);
         req.addUint("_additionalSlippage", _additionalSlippage);
@@ -101,6 +110,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             msg.sender,
             _gameId,
             _sportId,
+            _typeId,
             _position,
             _buyInAmount,
             _expectedPayout,
@@ -118,6 +128,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             requestId,
             _gameId,
             _sportId,
+            _typeId,
             _position,
             _buyInAmount,
             _expectedPayout,
@@ -158,14 +169,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             tradeData[0] = ISportsAMMV2.TradeData(
                 lTradeData._gameId,
                 lTradeData._sportId,
-                0, //type, set moneyline
+                lTradeData._typeId, //type
                 block.timestamp + 60, //maturity, hardcode to timestamp with buffer
                 0, //status
                 0, //line
                 0, //playerId
                 odds, //odds[]
                 merkleProofs, //merkleProof[]
-                lTradeData.position,
+                lTradeData._position,
                 comPositions //combinedPositions[]
             );
 
@@ -188,7 +199,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _allow,
             lTradeData._gameId,
             lTradeData._sportId,
-            lTradeData.position,
+            lTradeData._typeId,
+            lTradeData._position,
             lTradeData._buyInAmount,
             lTradeData._expectedPayout,
             lTradeData._additionalSlippage,
@@ -243,6 +255,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         bytes32 requestId,
         bytes32 _gameId,
         uint16 _sportId,
+        uint16 _typeId,
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
@@ -257,6 +270,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         bool _allow,
         bytes32 _gameId,
         uint16 _sportId,
+        uint16 _typeId,
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,

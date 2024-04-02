@@ -43,13 +43,14 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		it('Should buy a live trade', async () => {
 			expect(quote.payout).to.equal(ethers.parseEther('20'));
 
-			await sportsAMMV2RiskManager.setLiveTradingPerSportEnabled(SPORT_ID_NBA, true);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
 			await liveTradingProcessor
 				.connect(firstTrader)
 				.requestLiveTrade(
 					tradeDataCurrentRound[0].gameId,
 					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
 					quote.payout,
@@ -72,6 +73,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					.requestLiveTrade(
 						tradeDataCurrentRound[0].gameId,
 						tradeDataCurrentRound[0].sportId,
+						tradeDataCurrentRound[0].typeId,
 						tradeDataCurrentRound[0].position,
 						BUY_IN_AMOUNT,
 						quote.payout,
@@ -84,13 +86,14 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		});
 
 		it('Fail for double fulfillment', async () => {
-			await sportsAMMV2RiskManager.setLiveTradingPerSportEnabled(SPORT_ID_NBA, true);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
 			await liveTradingProcessor
 				.connect(firstTrader)
 				.requestLiveTrade(
 					tradeDataCurrentRound[0].gameId,
 					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
 					quote.payout,
@@ -111,13 +114,14 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		});
 
 		it('Fail with delay on execution', async () => {
-			await sportsAMMV2RiskManager.setLiveTradingPerSportEnabled(SPORT_ID_NBA, true);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
 			await liveTradingProcessor
 				.connect(firstTrader)
 				.requestLiveTrade(
 					tradeDataCurrentRound[0].gameId,
 					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
 					quote.payout,
@@ -139,13 +143,14 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		});
 
 		it('Fail on slippage', async () => {
-			await sportsAMMV2RiskManager.setLiveTradingPerSportEnabled(SPORT_ID_NBA, true);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
 			await liveTradingProcessor
 				.connect(firstTrader)
 				.requestLiveTrade(
 					tradeDataCurrentRound[0].gameId,
 					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
 					quote.payout,
