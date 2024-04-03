@@ -34,11 +34,13 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 	describe('Get data', () => {
 		it('Should get risk data (caps)', async () => {
 			await sportsAMMV2RiskManager.setCaps(
-				[SPORT_ID_NBA, SPORT_ID_EPL, SPORT_ID_EPL],
-				[newCapForSport, 0, 0],
-				[TYPE_ID_POINTS, TYPE_ID_SPREAD, TYPE_ID_TOTAL],
-				[0, 0, newCapForSportChild],
-				[newCapForSportAndType, newCapForSportAndType, 0]
+				[SPORT_ID_NBA],
+				[newCapForSport],
+				[SPORT_ID_EPL],
+				[newCapForSportChild],
+				[SPORT_ID_EPL, SPORT_ID_EPL, SPORT_ID_NBA],
+				[TYPE_ID_SPREAD, TYPE_ID_TOTAL, TYPE_ID_POINTS],
+				[newCapForSportAndType, 0, newCapForSportAndType]
 			);
 
 			const riskData = await sportsAMMV2RiskManager.getRiskData(

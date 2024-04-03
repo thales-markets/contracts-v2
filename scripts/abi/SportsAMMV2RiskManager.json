@@ -173,24 +173,17 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "cap",
+        "name": "defaultCap",
         "type": "uint256"
-      }
-    ],
-    "name": "SetDefaultCap",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
+      },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "riskMultiplier",
+        "name": "defaultRiskMultiplier",
         "type": "uint256"
       }
     ],
-    "name": "SetDefaultRiskMultiplier",
+    "name": "SetDefaultCapAndDefaultRiskMultiplier",
     "type": "event"
   },
   {
@@ -255,11 +248,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "maxRisk",
+        "name": "maxRiskMultiplier",
         "type": "uint256"
       }
     ],
-    "name": "SetMaxCapAndRisk",
+    "name": "SetMaxCapAndMaxRiskMultiplier",
     "type": "event"
   },
   {
@@ -957,12 +950,22 @@
       },
       {
         "internalType": "uint256[]",
-        "name": "_typeIds",
+        "name": "_sportIdsForChild",
         "type": "uint256[]"
       },
       {
         "internalType": "uint256[]",
         "name": "_capsPerSportChild",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_sportIdsForType",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_typeIds",
         "type": "uint256[]"
       },
       {
@@ -1074,22 +1077,14 @@
         "internalType": "uint256",
         "name": "_defaultCap",
         "type": "uint256"
-      }
-    ],
-    "name": "setDefaultCap",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "uint256",
         "name": "_defaultRiskMultiplier",
         "type": "uint256"
       }
     ],
-    "name": "setDefaultRiskMultiplier",
+    "name": "setDefaultCapAndDefaultRiskMultiplier",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1149,11 +1144,11 @@
       },
       {
         "internalType": "uint256",
-        "name": "_maxRisk",
+        "name": "_maxRiskMultiplier",
         "type": "uint256"
       }
     ],
-    "name": "setMaxCapAndRisk",
+    "name": "setMaxCapAndMaxRiskMultiplier",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
