@@ -6,10 +6,8 @@ const {
 } = require('../../../utils/fixtures/overtimeFixtures');
 const { ZERO_ADDRESS } = require('../../../constants/general');
 const {
-	BUY_IN_AMOUNT,
 	ETH_BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
-	DEFAULT_AMOUNT,
 	ETH_DEFAULT_AMOUNT,
 } = require('../../../constants/overtime');
 const { ethers } = require('hardhat');
