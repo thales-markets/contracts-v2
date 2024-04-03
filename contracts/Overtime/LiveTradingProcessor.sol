@@ -132,9 +132,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _position,
             _buyInAmount,
             _expectedPayout,
-            _additionalSlippage,
             _differentRecipient,
-            _referrer,
             _collateral
         );
         requestCounter++;
@@ -203,8 +201,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             lTradeData._position,
             lTradeData._buyInAmount,
             lTradeData._expectedPayout,
-            lTradeData._additionalSlippage,
-            lTradeData._referrer,
             lTradeData._collateral,
             block.timestamp
         );
@@ -259,9 +255,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
-        uint _additionalSlippage,
         address _differentRecipient,
-        address _referrer,
         address _collateral
     );
     event LiveTradeFulfilled(
@@ -274,8 +268,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint8 _position,
         uint _buyInAmount,
         uint _expectedPayout,
-        uint _additionalSlippage,
-        address _referrer,
         address _collateral,
         uint timestamp
     );
