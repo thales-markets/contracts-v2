@@ -25,7 +25,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     uint public maxAllowedExecutionDelay = 60;
 
     struct LiveTradeData {
-        address requester;
+        address _requester;
         bytes32 _gameId;
         uint16 _sportId;
         uint16 _typeId;
@@ -182,7 +182,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
             sportsAMM.tradeLive(
                 tradeData,
-                lTradeData.requester,
+                lTradeData._requester,
                 lTradeData._buyInAmount,
                 _approvedPayoutAmount,
                 lTradeData._differentRecipient,
