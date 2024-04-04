@@ -329,6 +329,29 @@ async function deploySportsAMMV2Fixture() {
 	await weth.deposit({ value: ETH_DEFAULT_AMOUNT });
 	await weth.transfer(defaultLiquidityProviderETHAddress, ETH_DEFAULT_AMOUNT);
 
+	// deploy LiveTradingProcessor
+
+	const MockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
+	const mockChainlinkOracle = await MockChainlinkOracle.deploy();
+
+	const mockChainlinkOracleAddress = mockChainlinkOracle.getAddress();
+
+	const mockSpecId = '0x7370656349640000000000000000000000000000000000000000000000000000';
+	const LiveTradingProcessor = await ethers.getContractFactory('LiveTradingProcessor');
+	//	//constructor(address _link, address _oracle, address _sportsAMM, bytes32 _specId, uint _payment) Ownable(msg.sender) {
+	const liveTradingProcessor = await LiveTradingProcessor.deploy(
+		collateralAddress, //link
+		mockChainlinkOracleAddress, //_oracle
+		sportsAMMV2Address, // _sportsAMM
+		mockSpecId, // _specId
+		0 // payment
+	);
+
+	const liveTradingProcessorAddress = liveTradingProcessor.getAddress();
+
+	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
+	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
+
 	return {
 		owner,
 		sportsAMMV2Manager,
@@ -352,6 +375,8 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		liveTradingProcessor,
+		mockChainlinkOracle,
 	};
 }
 

@@ -66,6 +66,17 @@ contract ExoticUSD is ERC20, Ownable {
         emit PausedChanged(_paused);
     }
 
+    /**
+     * @dev transfer token to a contract address with additional data if the recipient is a contact.
+     * @param _to The address to transfer to.
+     * @param _value The amount to be transferred.
+     * @param _data The extra data to be passed to the receiving contract.
+     */
+    function transferAndCall(address _to, uint _value, bytes calldata _data) public returns (bool success) {
+        super.transfer(_to, _value);
+        return true;
+    }
+
     event NewDefaultAmount(uint amount);
     event PausedChanged(bool paused);
     event NameChanged(string name);

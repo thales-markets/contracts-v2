@@ -73,7 +73,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				ZERO_ADDRESS
 			);
 
-			expect(quote.payout).to.equal('28106125509765924870');
+			expect(quote.payout).to.equal('28679719907924413133');
 
 			await sportsAMMV2
 				.connect(firstTrader)

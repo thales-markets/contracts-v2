@@ -13,6 +13,7 @@ const RISK_MANAGER_PARAMS = {
 	invalidMaxCap: ethers.parseEther('900'),
 	newMaxCap: ethers.parseEther('10000'),
 	newCapForSport: ethers.parseEther('10000'),
+	newCapForSportChild: ethers.parseEther('950'),
 	newCapForSportAndType: ethers.parseEther('900'),
 	newCapForMarket: ethers.parseEther('5000'),
 

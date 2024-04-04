@@ -257,7 +257,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "buyInAmountAfterFees",
+        "name": "buyInAmount",
         "type": "uint256"
       },
       {
@@ -403,6 +403,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "liveTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "SetLiveTradingProcessor",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "onOffRamper",
         "type": "address"
       },
@@ -440,7 +453,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "buyInAmountAfterFees",
+        "name": "fees",
         "type": "uint256"
       },
       {
@@ -798,6 +811,19 @@
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2LiquidityPool",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "liveTradingProcessor",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -1327,6 +1353,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_liveTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "setLiveTradingProcessor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_onOffRamper",
         "type": "address"
       },
@@ -1702,7 +1741,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "buyInAmountAfterFees",
+        "name": "fees",
         "type": "uint256"
       },
       {

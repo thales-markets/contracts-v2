@@ -45,7 +45,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     // manager address
     ISportsAMMV2Manager public manager;
 
-    // stores market scores, market defined with gameId -> typeId -> playerId
+    // stores market results, market defined with gameId -> typeId -> playerId
     mapping(bytes32 => mapping(uint => mapping(uint => int24[]))) public resultsPerMarket;
 
     // indicates are results set for market, market defined with gameId -> typeId -> playerId

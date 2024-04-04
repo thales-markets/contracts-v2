@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
+import "../interfaces/ISportsAMMV2RiskManager.sol";
 
 interface ISportsAMMV2 {
     struct CombinedPosition {
@@ -30,7 +31,6 @@ interface ISportsAMMV2 {
         uint _expectedPayout;
         uint _additionalSlippage;
         address _differentRecipient;
-        // bool _sendDefaultCollateral;
         address _collateral;
         address _collateralPool;
         uint _collateralPriceInUSD;
@@ -72,4 +72,16 @@ interface ISportsAMMV2 {
     function getResolvedTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory);
 
     function numOfResolvedTicketsPerUser(address _user) external view returns (uint);
+
+    function riskManager() external view returns (ISportsAMMV2RiskManager);
+
+    function tradeLive(
+        TradeData[] calldata _tradeData,
+        address _requester,
+        uint _buyInAmount,
+        uint _expectedPayout,
+        address _differentRecipient,
+        address _referrer,
+        address _collateral
+    ) external;
 }

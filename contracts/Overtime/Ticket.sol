@@ -30,7 +30,7 @@ contract Ticket is OwnedWithInit {
     struct TicketInit {
         MarketData[] _markets;
         uint _buyInAmount;
-        uint _buyInAmountAfterFees;
+        uint _fees;
         uint _totalQuote;
         address _sportsAMM;
         address _ticketOwner;
@@ -45,7 +45,7 @@ contract Ticket is OwnedWithInit {
     IERC20 public collateral;
 
     uint public buyInAmount;
-    uint public buyInAmountAfterFees;
+    uint public fees;
     uint public totalQuote;
     uint public numOfMarkets;
     uint public expiry;
@@ -72,7 +72,7 @@ contract Ticket is OwnedWithInit {
             markets[i] = params._markets[i];
         }
         buyInAmount = params._buyInAmount;
-        buyInAmountAfterFees = params._buyInAmountAfterFees;
+        fees = params._fees;
         totalQuote = params._totalQuote;
         ticketOwner = params._ticketOwner;
         ticketCreator = params._ticketCreator;
@@ -165,7 +165,7 @@ contract Ticket is OwnedWithInit {
         require(isExercisable, "Ticket not exercisable yet");
 
         uint payoutWithFees = collateral.balanceOf(address(this));
-        uint payout = payoutWithFees - (buyInAmount - buyInAmountAfterFees);
+        uint payout = payoutWithFees - fees;
         bool isCancelled = false;
 
         if (isTicketLost()) {
