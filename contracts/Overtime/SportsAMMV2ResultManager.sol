@@ -33,6 +33,11 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         CombinedPositions
     }
 
+    enum OverUnderType {
+        Over,
+        Under
+    }
+
     /* ========== CONST VARIABLES ========== */
 
     uint private constant ONE = 1e18;
@@ -261,17 +266,16 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         }
     }
 
-    /// @notice set result for specific markets
-    /// @param _marketTypeIds markets results data
-    function setResultTypesPerMarketTypes(
-        uint16[] memory _marketTypeIds,
-        ResultType[] memory _resultTypes
-    ) external onlyOwner {
+    /// @notice set result types for specific markets
+    /// @param _marketTypeIds market type IDs to set result type for
+    /// @param _resultTypes result types to set
+    function setResultTypesPerMarketTypes(uint16[] memory _marketTypeIds, uint[] memory _resultTypes) external onlyOwner {
         for (uint i; i < _marketTypeIds.length; i++) {
             uint16 marketTypeId = _marketTypeIds[i];
-            ResultType resultType = _resultTypes[i];
+            uint resultType = _resultTypes[i];
 
-            resultTypePerMarketType[marketTypeId] = resultType;
+            require(resultType <= uint(ResultType.CombinedPositions), "Invalid result type");
+            resultTypePerMarketType[marketTypeId] = ResultType(resultType);
             emit ResultTypePerMarketTypeSet(marketTypeId, resultType);
         }
     }
@@ -316,41 +320,35 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         if (_isMarketCancelled(_gameId, _typeId, _playerId, _line)) {
             return ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
         }
-        if (!areResultsPerMarketSet[_gameId][_typeId][_playerId]) {
-            return ISportsAMMV2ResultManager.MarketPositionStatus.Open;
-        }
 
-        int24[] memory marketResults = resultsPerMarket[_gameId][_typeId][_playerId];
-        ResultType resultType = resultTypePerMarketType[_typeId];
+        if (areResultsPerMarketSet[_gameId][_typeId][_playerId]) {
+            int24[] memory marketResults = resultsPerMarket[_gameId][_typeId][_playerId];
+            ResultType resultType = resultTypePerMarketType[_typeId];
 
-        bool isWinning = false;
-
-        for (uint i = 0; i < marketResults.length; i++) {
-            int marketResult = marketResults[i];
-            if (resultType == ResultType.ExactPosition) {
-                if (marketResult == int(position)) {
-                    isWinning = true;
-                    break;
-                }
-            } else if (resultType == ResultType.OverUnder) {
-                if (marketResult == _line) {
-                    return ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
+            for (uint i = 0; i < marketResults.length; i++) {
+                int marketResult = marketResults[i];
+                if (resultType == ResultType.OverUnder) {
+                    if (marketResult == _line) {
+                        return ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
+                    } else {
+                        OverUnderType winningPosition = _typeId == TYPE_ID_SPREAD
+                            ? (marketResult < _line ? OverUnderType.Over : OverUnderType.Under)
+                            : (marketResult > _line ? OverUnderType.Over : OverUnderType.Under);
+                        if (uint(winningPosition) == position) {
+                            return ISportsAMMV2ResultManager.MarketPositionStatus.Winning;
+                        }
+                    }
                 } else {
-                    uint winningPosition = _typeId == TYPE_ID_SPREAD
-                        ? (marketResult < _line ? 0 : 1)
-                        : (marketResult > _line ? 0 : 1);
-                    if (winningPosition == position) {
-                        isWinning = true;
-                        break;
+                    if (marketResult == int(position)) {
+                        return ISportsAMMV2ResultManager.MarketPositionStatus.Winning;
                     }
                 }
             }
+
+            return ISportsAMMV2ResultManager.MarketPositionStatus.Losing;
         }
 
-        return
-            isWinning
-                ? ISportsAMMV2ResultManager.MarketPositionStatus.Winning
-                : ISportsAMMV2ResultManager.MarketPositionStatus.Losing;
+        return ISportsAMMV2ResultManager.MarketPositionStatus.Open;
     }
 
     function _getMarketCombinedPositionsStatus(
@@ -401,7 +399,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     event ResultsPerMarketSet(bytes32 gameId, uint16 typeId, uint16 playerId, int24[] result);
     event GameCancelled(bytes32 gameId);
     event MarketExplicitlyCancelled(bytes32 gameId, uint16 typeId, uint16 playerId, int24 line);
-    event ResultTypePerMarketTypeSet(uint16 marketTypeId, ResultType resultType);
+    event ResultTypePerMarketTypeSet(uint16 marketTypeId, uint resultType);
 
     event SetSportsManager(address manager);
 }

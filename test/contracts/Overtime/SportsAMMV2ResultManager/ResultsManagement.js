@@ -60,6 +60,15 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 				.to.emit(sportsAMMV2ResultManager, 'ResultTypePerMarketTypeSet')
 				.withArgs(TYPE_ID_WINNER_TOTAL, RESULT_TYPE.CombinedPositions);
 		});
+
+		it('Should fail with "Invalid result type"', async () => {
+			await expect(
+				sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+					[TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
+					[RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions + 1]
+				)
+			).to.be.revertedWith('Invalid result type');
+		});
 	});
 
 	describe('Results setters', () => {

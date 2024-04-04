@@ -122,9 +122,9 @@
       },
       {
         "indexed": false,
-        "internalType": "enum SportsAMMV2ResultManager.ResultType",
+        "internalType": "uint256",
         "name": "resultType",
-        "type": "uint8"
+        "type": "uint256"
       }
     ],
     "name": "ResultTypePerMarketTypeSet",
@@ -831,9 +831,9 @@
         "type": "uint16[]"
       },
       {
-        "internalType": "enum SportsAMMV2ResultManager.ResultType[]",
+        "internalType": "uint256[]",
         "name": "_resultTypes",
-        "type": "uint8[]"
+        "type": "uint256[]"
       }
     ],
     "name": "setResultTypesPerMarketTypes",
