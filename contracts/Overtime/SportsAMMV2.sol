@@ -90,9 +90,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // is multi-collateral enabled
     bool public multicollateralEnabled;
 
-    // stores current risk per market and position, market defined with gameId -> typeId -> playerId -> line
+    // stores current risk per market type and position, defined with gameId -> typeId -> playerId
     mapping(bytes32 => mapping(uint => mapping(uint => mapping(int => mapping(uint => int)))))
-        public riskPerMarketAndPosition;
+        public riskPerMarketTypeAndPosition;
 
     // the period of time in seconds before a market is matured and begins to be restricted for AMM trading
     uint public minimalTimeLeftToMaturity;
@@ -447,7 +447,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
                         uint marketRiskAmount = amountsToBuy[i] - _buyInAmount;
                         if (
-                            riskPerMarketAndPosition[marketTradeData.gameId][marketTradeData.typeId][
+                            riskPerMarketTypeAndPosition[marketTradeData.gameId][marketTradeData.typeId][
                                 marketTradeData.playerId
                             ][marketTradeData.line][marketTradeData.position] +
                                 int256(marketRiskAmount) >
@@ -644,22 +644,24 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (_amountsToBuy[i] > _buyInAmount) {
                 uint marketRiskAmount = _amountsToBuy[i] - _buyInAmount;
 
-                int currentRiskPerMarketAndPosition = riskPerMarketAndPosition[gameId][typeId][playerId][line][position];
+                int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][line][
+                    position
+                ];
                 for (uint j = 0; j < odds.length; j++) {
                     if (j == position) {
-                        riskPerMarketAndPosition[gameId][typeId][playerId][line][j] =
-                            currentRiskPerMarketAndPosition +
+                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][line][j] =
+                            currentRiskPerMarketTypeAndPosition +
                             int256(marketRiskAmount);
                     } else {
-                        riskPerMarketAndPosition[gameId][typeId][playerId][line][j] =
-                            currentRiskPerMarketAndPosition -
+                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][line][j] =
+                            currentRiskPerMarketTypeAndPosition -
                             int256(marketRiskAmount);
                     }
                 }
                 spentOnGame[gameId] += marketRiskAmount;
 
                 require(
-                    currentRiskPerMarketAndPosition <
+                    currentRiskPerMarketTypeAndPosition <
                         int256(riskManager.calculateCapToBeUsed(gameId, sportId, typeId, playerId, line, maturity)),
                     "Risk per market and position exceeded"
                 );
