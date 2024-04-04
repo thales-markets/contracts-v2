@@ -7,11 +7,10 @@ const {
 const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, SPORT_ID_NBA } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
 
-describe('SportsAMMV2 Quotes And Trades', () => {
+describe('SportsAMMV2Live Live Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
-		tradeDataTenMarketsCurrentRound,
 		firstLiquidityProvider,
 		firstTrader,
 		liveTradingProcessor,
@@ -24,7 +23,6 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			sportsAMMV2,
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
-			tradeDataTenMarketsCurrentRound,
 			liveTradingProcessor,
 			mockChainlinkOracle,
 			sportsAMMV2RiskManager,
