@@ -15,12 +15,9 @@ const { ethers } = require('hardhat');
 describe('SportsAMMV2LiquidityPool User Actions', () => {
 	let sportsAMMV2,
 		sportsAMMV2ResultManager,
-		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolETH,
-		defaultLiquidityProviderETH,
 		collateral,
 		weth,
-		priceFeed,
 		tradeDataCurrentRound,
 		secondAccount,
 		firstLiquidityProvider,
@@ -32,11 +29,8 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 		({
 			sportsAMMV2,
 			sportsAMMV2ResultManager,
-			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
-			defaultLiquidityProviderETH,
 			weth,
-			priceFeed,
 			safeBox,
 			tradeDataCurrentRound,
 		} = await loadFixture(deploySportsAMMV2Fixture));
