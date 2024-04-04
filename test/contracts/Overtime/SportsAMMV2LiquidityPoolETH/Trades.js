@@ -83,8 +83,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				ETH_BUY_IN_AMOUNT,
 				ZERO_ADDRESS
 			);
-			console.log('quote: ', quote);
-			console.log('quote.payout: ', quote.payout.toString());
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -111,10 +109,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			const diffCurrentRoundPoolBalance =
 				ethers.formatEther(currentRoundPoolBalanceBeforeTrade) -
 				ethers.formatEther(currentRoundPoolBalanceAfterTrade);
-			console.log(
-				'currentRoundPoolBalanceAfterTrade: ',
-				currentRoundPoolBalanceAfterTrade.toString()
-			);
 			expect(currentRoundPoolBalanceAfterTrade).to.equal(ethers.parseEther('0.997085714285714242'));
 			expect(diffPayoutBuyIn.toFixed(4)).to.equal(diffCurrentRoundPoolBalance.toFixed(4));
 
@@ -287,9 +281,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
-			console.log('Pool Collateral: ', await sportsAMMV2LiquidityPoolETH.collateral());
-			console.log('weth: ', collateral.target);
-
 			// check ticket data on LP
 			expect(await sportsAMMV2LiquidityPoolETH.roundPerTicket(ticketAddress)).to.equal(
 				currentRound
@@ -323,8 +314,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				[ticketMarket1.playerId],
 				[[1]]
 			);
-			console.log('LP address: ', sportsAMMV2LiquidityPoolETH.target);
-			console.log('current collateral: ', await sportsAMMV2LiquidityPoolETH.collateral());
 
 			// exercise ticket on LP
 			expect(await sportsAMMV2LiquidityPoolETH.hasTicketsReadyToBeExercised()).to.equal(true);
