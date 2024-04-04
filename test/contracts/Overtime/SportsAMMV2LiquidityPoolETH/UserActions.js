@@ -12,7 +12,7 @@ const {
 } = require('../../../constants/overtime');
 const { ethers } = require('hardhat');
 
-describe('SportsAMMV2LiquidityPool User Actions', () => {
+describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 	let sportsAMMV2,
 		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPoolETH,
@@ -446,7 +446,6 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
-					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -612,7 +611,6 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
-					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -725,7 +723,6 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
-					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 

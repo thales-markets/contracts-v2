@@ -8,7 +8,7 @@ const { MAX_NUMBER } = require('../../../constants/general');
 const { ETH_DEFAULT_AMOUNT } = require('../../../constants/overtime');
 const { ethers } = require('hardhat');
 
-describe('DefaultLiquidityProvider', () => {
+describe('DefaultLiquidityProviderETH', () => {
 	let defaultLiquidityProviderETH,
 		sportsAMMV2LiquidityPoolETH,
 		collateral,

@@ -12,7 +12,7 @@ const {
 } = require('../../../constants/overtime');
 const { ethers } = require('hardhat');
 
-describe('SportsAMMV2LiquidityPool Trades', () => {
+describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
@@ -93,7 +93,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
-					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -102,7 +101,9 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// // payout: 20
 			// // diff taken from LP: 10.8
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(ETH_BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
@@ -256,7 +257,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
-					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -265,7 +265,9 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// payout: 20
 			// diff taken from LP: 10.8
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(ETH_BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
@@ -432,7 +434,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
-					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -441,7 +442,9 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// payout: 20
 			// diff taken from LP: 10.2
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(ETH_BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 			let defaultLpBalanceAfterTrade = await collateral.balanceOf(defaultLpAddress);
@@ -650,7 +653,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
-					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -659,7 +661,9 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// payout: 40
 			// diff taken from LP: 30.2
 			const diffPayoutBuyIn =
-				ethers.formatEther(quote.payout) - ethers.formatEther(quote.buyInAmountAfterFees);
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(ETH_BUY_IN_AMOUNT));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 			let defaultLpBalanceAfterTrade = await collateral.balanceOf(defaultLpAddress);
@@ -824,9 +828,11 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			let defaultLpProfit =
 				ethers.formatEther(defaultLpBalanceAfterExercise) -
 				ethers.formatEther(defaultLpBalanceBeforeTrade);
-			expect(defaultLpProfit.toFixed(8)).to.equal(
-				Number(ethers.formatEther(quote.buyInAmountAfterFees)).toFixed(8)
-			);
+			let buyInAmountAfterFees =
+				parseInt(ETH_BUY_IN_AMOUNT.toString()) - parseInt(quote.fees.toString());
+			const convert = buyInAmountAfterFees.toString();
+			const buyInAmountAfterFeesConverted = ethers.formatEther(convert);
+			expect(defaultLpProfit.toFixed(8)).to.equal(Number(buyInAmountAfterFeesConverted).toFixed(8));
 		});
 	});
 });

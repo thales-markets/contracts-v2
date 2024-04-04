@@ -127,7 +127,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout;
         uint _additionalSlippage;
         address _differentRecipient;
-        // bool _sendDefaultCollateral;
         bool _isLive;
         address _requester;
         address _collateral;
@@ -282,7 +281,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _differentRecipient different recipent of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
-    /// @param _isEth pay with ETH
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -290,8 +288,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
-        address _collateral,
-        bool _isEth
+        address _collateral
     ) external payable nonReentrant notPaused {
         address useLPpool;
         uint collateralPriceInUSD;
@@ -304,7 +301,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, _isEth, msg.sender);
+            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender);
         }
         if (useLPpool != address(0)) {
             _tradeWithDifferentCollateral(
@@ -331,6 +328,68 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _differentRecipient,
                     false,
                     msg.sender,
+                    address(0),
+                    address(0),
+                    0
+                )
+            );
+        }
+    }
+
+    /// @notice make a live trade and create a ticket
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _expectedPayout expected payout got from LiveTradingProcessor method
+    /// @param _differentRecipient different recipient of the ticket
+    /// @param _referrer referrer to get referral fee
+    /// @param _collateral different collateral used for payment
+    function tradeLive(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        address _requester,
+        uint _buyInAmount,
+        uint _expectedPayout,
+        address _differentRecipient,
+        address _referrer,
+        address _collateral
+    ) external payable nonReentrant notPaused {
+        require(msg.sender == liveTradingProcessor, "Only Live Proc");
+
+        if (_referrer != address(0)) {
+            referrals.setReferrer(_referrer, _requester);
+        }
+
+        require(_differentRecipient != address(0), "recipient has to be defined");
+        address useLPpool;
+        uint collateralPriceInUSD;
+        if (_collateral != address(0)) {
+            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender);
+        }
+
+        if (useLPpool != address(0)) {
+            _tradeWithDifferentCollateral(
+                _tradeData,
+                TradeDataInternal(
+                    _buyInAmount,
+                    _expectedPayout,
+                    0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
+                    _differentRecipient,
+                    true,
+                    _requester,
+                    _collateral,
+                    useLPpool,
+                    collateralPriceInUSD
+                )
+            );
+        } else {
+            _trade(
+                _tradeData,
+                TradeDataInternal(
+                    _buyInAmount,
+                    _expectedPayout,
+                    0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
+                    _differentRecipient,
+                    true,
+                    _requester,
                     address(0),
                     address(0),
                     0
@@ -470,16 +529,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _handleDifferentCollateral(
         uint _buyInAmount,
         address _collateral,
-        bool _isEth,
         address _fromAddress
-    ) internal nonReentrant notPaused returns (address lpPool, uint ethUsdPrice) {
-        require(multicollateralEnabled, "Multi collateral not enabled");
+    ) internal returns (address lpPool, uint ethUsdPrice) {
+        require(multicollateralEnabled, "Multi-collat not enabled");
         uint exactReceived;
         lpPool = collateralPool[_collateral];
         if (lpPool != address(0)) {
             if (_collateral == multiCollateralOnOffRamp.WETH9()) {
                 // WETH specific case
-                require(msg.value >= _buyInAmount, "Not enough ETH sent");
+                require(msg.value >= _buyInAmount, "Insuff ETH sent");
                 uint balanceBefore = IERC20(_collateral).balanceOf(address(this));
                 ICollateralUtility(_collateral).deposit{value: msg.value}();
                 uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
@@ -500,7 +558,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             exactReceived = multiCollateralOnOffRamp.onramp(_collateral, collateralQuote);
         }
 
-        require(exactReceived >= _buyInAmount, "Not enough default payment token received");
+        require(exactReceived >= _buyInAmount, "Insuff payment received");
 
         //send the surplus to SB
         if (exactReceived > _buyInAmount) {
@@ -604,10 +662,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         _checkLimits(
-            _tradeDataInternal._buyInAmount,
+            _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD),
             totalQuote,
-            payout,
-            _tradeDataInternal._expectedPayout,
+            _transformToUSD(payout, _tradeDataInternal._collateralPriceInUSD),
+            _transformToUSD(_tradeDataInternal._expectedPayout, _tradeDataInternal._collateralPriceInUSD),
             _tradeDataInternal._additionalSlippage
         );
 
@@ -707,9 +765,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _additionalSlippage
     ) internal view {
         // apply all checks
-        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
-        require(_totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
-        require((_payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
+        require(_buyInAmount >= minBuyInAmount, "Low buy-in");
+        require(_totalQuote >= maxSupportedOdds, "Exceed max odds");
+        require((_payout - _buyInAmount) <= maxSupportedAmount, "Exceed max amount");
         require(((ONE * _expectedPayout) / _payout) <= (ONE + _additionalSlippage), "Slippage too high");
     }
 

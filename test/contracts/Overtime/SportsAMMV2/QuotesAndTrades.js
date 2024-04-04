@@ -61,8 +61,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
-					false
+					ZERO_ADDRESS
 				);
 		});
 
@@ -84,8 +83,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
-					false
+					ZERO_ADDRESS
 				);
 		});
 	});
