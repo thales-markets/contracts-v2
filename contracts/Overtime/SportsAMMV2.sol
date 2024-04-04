@@ -91,8 +91,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     bool public multicollateralEnabled;
 
     // stores current risk per market type and position, defined with gameId -> typeId -> playerId
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(int => mapping(uint => int)))))
-        public riskPerMarketTypeAndPosition;
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => int)))) public riskPerMarketTypeAndPosition;
 
     // the period of time in seconds before a market is matured and begins to be restricted for AMM trading
     uint public minimalTimeLeftToMaturity;
@@ -449,7 +448,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                         if (
                             riskPerMarketTypeAndPosition[marketTradeData.gameId][marketTradeData.typeId][
                                 marketTradeData.playerId
-                            ][marketTradeData.line][marketTradeData.position] +
+                            ][marketTradeData.position] +
                                 int256(marketRiskAmount) >
                             int256(
                                 riskManager.calculateCapToBeUsed(
@@ -644,16 +643,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (_amountsToBuy[i] > _buyInAmount) {
                 uint marketRiskAmount = _amountsToBuy[i] - _buyInAmount;
 
-                int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][line][
-                    position
-                ];
+                int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][position];
                 for (uint j = 0; j < odds.length; j++) {
                     if (j == position) {
-                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][line][j] =
+                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
                             currentRiskPerMarketTypeAndPosition +
                             int256(marketRiskAmount);
                     } else {
-                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][line][j] =
+                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
                             currentRiskPerMarketTypeAndPosition -
                             int256(marketRiskAmount);
                     }
