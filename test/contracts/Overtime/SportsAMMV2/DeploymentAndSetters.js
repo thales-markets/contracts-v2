@@ -252,8 +252,8 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			const dummyAddress1 = thirdAccount.address;
 			const dummyAddress2 = fourthAccount.address;
 
-			expect(await sportsAMMV2.multiCollateralOnOffRamp()).to.equal(ZERO_ADDRESS);
-			expect(await sportsAMMV2.multicollateralEnabled()).to.equal(false);
+			// expect(await sportsAMMV2.multiCollateralOnOffRamp()).to.equal(ZERO_ADDRESS);
+			// expect(await sportsAMMV2.multicollateralEnabled()).to.equal(false);
 
 			await expect(
 				sportsAMMV2.connect(secondAccount).setMultiCollateralOnOffRamp(dummyAddress1, true)

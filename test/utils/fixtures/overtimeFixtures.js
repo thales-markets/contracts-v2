@@ -309,8 +309,8 @@ async function deploySportsAMMV2Fixture() {
 
 	const sportsAMMV2LiquidityPoolETHAddress = await sportsAMMV2LiquidityPoolETH.getAddress();
 
+	// await sportsAMMV2.setCollateralLiquidityPool(collateralAddress, sportsAMMV2LiquidityPoolAddress);
 	await sportsAMMV2.setCollateralLiquidityPool(wethAddress, sportsAMMV2LiquidityPoolETHAddress);
-	console.log('ETH LP addr: ', sportsAMMV2LiquidityPoolETHAddress);
 
 	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
