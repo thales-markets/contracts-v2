@@ -40,15 +40,23 @@ contract MockMultiCollateralOnOffRamp {
     function onrampWithEth(uint amount) external payable returns (uint) {}
 
     function getMinimumReceived(address collateral, uint collateralAmount) public view returns (uint amountInUSD) {
-        uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);
-        amountInUSD = (collateralAmount * collateralInUSD) / 1e18;
+        if (collateral == collateralAddress["USDC"]) {
+            amountInUSD = collateralAmount * (10 ** 12);
+        } else {
+            uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);
+            amountInUSD = (collateralAmount * collateralInUSD) / 1e18;
+        }
     }
 
     function getMinimumNeeded(address collateral, uint amount) public view returns (uint collateralQuote) {
         // amount is buyInAmount,
         // take priceFeed from collateral and generate the collateralQuote = pricePerUSD/buyInAmount
-        uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);
-        collateralQuote = (amount * 1e18) / collateralInUSD;
+        if (collateral == collateralAddress["USDC"]) {
+            collateralQuote = amount / (10 ** 12);
+        } else {
+            uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);
+            collateralQuote = (amount * 1e18) / collateralInUSD;
+        }
     }
 
     function WETH9() external view returns (address) {

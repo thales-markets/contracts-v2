@@ -8,6 +8,7 @@ const {
 const {
 	GAME_ID_1,
 	DEFAULT_AMOUNT,
+	DEFAULT_AMOUNT_SIX_DECIMALS,
 	ETH_DEFAULT_AMOUNT,
 	GAME_ID_2,
 } = require('../../constants/overtime');
@@ -73,7 +74,7 @@ async function deploySportsAMMV2Fixture() {
 		firstTrader,
 		secondTrader,
 	} = await deployAccountsFixture();
-	const { collateral } = await deployTokenFixture();
+	const { collateral, collateralSixDecimals } = await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
 	// deploy Address Manager
 	const AddressManager = await ethers.getContractFactory('AddressManagerExtension');
@@ -106,10 +107,17 @@ async function deploySportsAMMV2Fixture() {
 	const weth = await WETH.deploy();
 	const wethAddress = await weth.getAddress();
 
+	const collateralSixDecimalsAddress = await collateralSixDecimals.getAddress();
+
 	await priceFeed.setPriceFeedForCollateral(
 		ethers.encodeBytes32String('WETH'),
 		wethAddress,
 		ethers.parseEther('3500')
+	);
+	await priceFeed.setPriceFeedForCollateral(
+		ethers.encodeBytes32String('USDC'),
+		collateralSixDecimalsAddress,
+		ethers.parseEther('1')
 	);
 	await priceFeed.setWETH9(wethAddress);
 
@@ -119,6 +127,10 @@ async function deploySportsAMMV2Fixture() {
 	await multiCollateral.setPriceFeed(priceFeedAddress);
 	await multiCollateral.setSUSD(collateralAddress);
 	await multiCollateral.setCollateralKey(wethAddress, ethers.encodeBytes32String('WETH'));
+	await multiCollateral.setCollateralKey(
+		collateralSixDecimalsAddress,
+		ethers.encodeBytes32String('USDC')
+	);
 	const multiCollateralAddress = await multiCollateral.getAddress();
 
 	// deploy Sports AMM manager
@@ -267,7 +279,9 @@ async function deploySportsAMMV2Fixture() {
 	await sportsAMMV2.setRootsPerGames(gameIds, roots);
 
 	await collateral.setDefaultAmount(DEFAULT_AMOUNT);
+	await collateralSixDecimals.setDefaultAmount(DEFAULT_AMOUNT_SIX_DECIMALS);
 	await collateral.mintForUser(firstLiquidityProvider);
+	await collateralSixDecimals.mintForUser(firstLiquidityProvider);
 	await collateral.mintForUser(secondLiquidityProvider);
 	await collateral.mintForUser(thirdLiquidityProvider);
 	await collateral
@@ -281,12 +295,24 @@ async function deploySportsAMMV2Fixture() {
 		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
 
 	await collateral.mintForUser(firstTrader);
+	await collateralSixDecimals.mintForUser(firstTrader);
 	await collateral.mintForUser(secondTrader);
 	await collateral.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+	await collateralSixDecimals.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 	await collateral.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+	await collateralSixDecimals.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 
 	await collateral.mintForUser(owner);
+	await collateralSixDecimals.mintForUser(owner);
 	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
+	await collateralSixDecimals.transfer(
+		await defaultLiquidityProvider.getAddress(),
+		DEFAULT_AMOUNT_SIX_DECIMALS
+	);
+
+	// send collateral to multicollateral so it can convert other collaterals
+	await collateral.mintForUser(owner);
+	await collateral.transfer(multiCollateralAddress, DEFAULT_AMOUNT);
 
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 
@@ -366,6 +392,8 @@ async function deploySportsAMMV2Fixture() {
 		defaultLiquidityProviderETH,
 		weth,
 		collateral,
+		collateralSixDecimals,
+		multiCollateral,
 		priceFeed,
 		referrals,
 		stakingThales,
