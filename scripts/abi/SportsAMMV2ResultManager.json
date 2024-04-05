@@ -14,6 +14,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "gameId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "GameCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -50,7 +63,7 @@
         "type": "int24"
       }
     ],
-    "name": "MarketCancelled",
+    "name": "MarketExplicitlyCancelled",
     "type": "event"
   },
   {
@@ -103,6 +116,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint16",
+        "name": "marketTypeId",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "resultType",
+        "type": "uint256"
+      }
+    ],
+    "name": "ResultTypePerMarketTypeSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "bytes32",
         "name": "gameId",
         "type": "bytes32"
@@ -126,7 +158,7 @@
         "type": "int24[]"
       }
     ],
-    "name": "ResultPerMarketSet",
+    "name": "ResultsPerMarketSet",
     "type": "event"
   },
   {
@@ -134,18 +166,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
-        "name": "marketTypeId",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SportsAMMV2ResultManager.ResultType",
-        "name": "resultType",
-        "type": "uint8"
+        "internalType": "address",
+        "name": "manager",
+        "type": "address"
       }
     ],
-    "name": "ResultTypePerMarketTypeSet",
+    "name": "SetSportsManager",
     "type": "event"
   },
   {
@@ -195,6 +221,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "cancelGames",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -407,6 +446,81 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "name": "isGameCancelled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+        "name": "combinedPositions",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "isMarketCancelled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isCancelled",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -424,7 +538,7 @@
         "type": "int256"
       }
     ],
-    "name": "isMarketCancelled",
+    "name": "isMarketExplicitlyCancelled",
     "outputs": [
       {
         "internalType": "bool",
@@ -717,9 +831,9 @@
         "type": "uint16[]"
       },
       {
-        "internalType": "enum SportsAMMV2ResultManager.ResultType[]",
+        "internalType": "uint256[]",
         "name": "_resultTypes",
-        "type": "uint8[]"
+        "type": "uint256[]"
       }
     ],
     "name": "setResultTypesPerMarketTypes",
@@ -751,6 +865,19 @@
       }
     ],
     "name": "setResultsPerMarkets",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_manager",
+        "type": "address"
+      }
+    ],
+    "name": "setSportsManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

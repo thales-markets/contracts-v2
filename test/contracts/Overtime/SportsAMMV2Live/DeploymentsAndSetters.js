@@ -1,33 +1,11 @@
-const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
-const { expect } = require('chai');
-const {
-	deployAccountsFixture,
-	deploySportsAMMV2Fixture,
-} = require('../../../utils/fixtures/overtimeFixtures');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, SPORT_ID_NBA } = require('../../../constants/overtime');
-const { ZERO_ADDRESS } = require('../../../constants/general');
+const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { deploySportsAMMV2Fixture } = require('../../../utils/fixtures/overtimeFixtures');
 
-describe('SportsAMMV2 Quotes And Trades', () => {
-	let sportsAMMV2,
-		sportsAMMV2LiquidityPool,
-		tradeDataCurrentRound,
-		tradeDataTenMarketsCurrentRound,
-		liveTradingProcessor,
-		mockChainlinkOracle,
-		sportsAMMV2RiskManager,
-		collateral;
+describe('SportsAMMV2Live Deployment and Setters', () => {
+	let liveTradingProcessor, collateral;
 
 	beforeEach(async () => {
-		({
-			sportsAMMV2,
-			sportsAMMV2LiquidityPool,
-			tradeDataCurrentRound,
-			tradeDataTenMarketsCurrentRound,
-			liveTradingProcessor,
-			mockChainlinkOracle,
-			sportsAMMV2RiskManager,
-			collateral,
-		} = await loadFixture(deploySportsAMMV2Fixture));
+		({ liveTradingProcessor, collateral } = await loadFixture(deploySportsAMMV2Fixture));
 	});
 
 	describe('Live Trade', () => {
