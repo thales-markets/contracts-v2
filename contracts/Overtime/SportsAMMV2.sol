@@ -596,14 +596,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _tradeDataInternal._expectedPayout,
                 _tradeDataInternal._additionalSlippage
             );
-
-            _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount, 0);
+            _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount);
             defaultCollateral.safeTransferFrom(
                 _tradeDataInternal._requester,
                 address(this),
                 _tradeDataInternal._buyInAmount
             );
         } else {
+            amountsToBuy = _transformAmountsToUSD(amountsToBuy, _tradeDataInternal._collateralPriceInUSD);
             _checkLimits(
                 _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD),
                 totalQuote,
@@ -611,8 +611,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _transformToUSD(_tradeDataInternal._expectedPayout, _tradeDataInternal._collateralPriceInUSD),
                 _tradeDataInternal._additionalSlippage
             );
-
-            _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD);
+            _checkRisk(
+                _tradeData,
+                amountsToBuy,
+                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD)
+            );
         }
 
         // clone a ticket
@@ -677,6 +680,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / ONE;
     }
 
+    function _transformAmountsToUSD(
+        uint[] memory _amountInCollateral,
+        uint _collateralPriceInUSD
+    ) internal pure returns (uint[] memory amountsInUSD) {
+        amountsInUSD = new uint[](_amountInCollateral.length);
+        for (uint i = 0; i < _amountInCollateral.length; i++) {
+            amountsInUSD[i] = _transformToUSD(_amountInCollateral[i], _collateralPriceInUSD);
+        }
+    }
+
     function _saveTicketData(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) internal {
         knownTickets.add(ticket);
         activeTicketsPerUser[user].add(ticket);
@@ -726,10 +739,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _checkRisk(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint[] memory _amountsToBuy,
-        uint _buyInAmount,
-        uint _collateralPriceInUSD
+        uint _buyInAmount
     ) internal {
-        uint riskPerMarket;
         for (uint i = 0; i < _tradeData.length; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
             bytes32 gameId = marketTradeData.gameId;
@@ -745,13 +756,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             require(odds.length > position, "Invalid position");
 
             if (_amountsToBuy[i] > _buyInAmount) {
-                uint marketRiskAmount;
-                if (_collateralPriceInUSD > 0) {
-                    marketRiskAmount = _transformToUSD(_amountsToBuy[i], _collateralPriceInUSD) -
-                    _transformToUSD(_buyInAmount, _collateralPriceInUSD);
-                } else {
-                    marketRiskAmount = _amountsToBuy[i] - _buyInAmount;
-                }
+                uint marketRiskAmount = _amountsToBuy[i] - _buyInAmount;
 
                 int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][position];
                 for (uint j = 0; j < odds.length; j++) {
