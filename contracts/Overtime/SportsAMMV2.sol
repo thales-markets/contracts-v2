@@ -90,9 +90,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // is multi-collateral enabled
     bool public multicollateralEnabled;
 
-    // stores current risk per market and position, market defined with gameId -> sportId -> typeId -> playerId -> line
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => mapping(int => mapping(uint => uint))))))
-        public riskPerMarketAndPosition;
+    // stores current risk per market type and position, defined with gameId -> typeId -> playerId
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => int)))) public riskPerMarketTypeAndPosition;
 
     // the period of time in seconds before a market is matured and begins to be restricted for AMM trading
     uint public minimalTimeLeftToMaturity;
@@ -106,8 +105,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // staking thales address
     IStakingThales public stakingThales;
 
-    // spent on parent market together with all children markets
-    mapping(bytes32 => uint) public spentPerParent;
+    // spent on game (parent market together with all child markets)
+    mapping(bytes32 => uint) public spentOnGame;
 
     // stores active tickets per user
     mapping(address => AddressSetLib.AddressSet) internal activeTicketsPerUser;
@@ -167,12 +166,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
     /// @param _collateral different collateral used for payment
-    /// @return collateralQuote buy-in amount in different collateral
-    /// @return fees ticket fees
-    /// @return payout expected payout
     /// @return totalQuote total ticket quote
+    /// @return payout expected payout
+    /// @return fees ticket fees
     /// @return finalQuotes final quotes per market
     /// @return amountsToBuy amounts per market
+    /// @return collateralQuote buy-in amount in different collateral
     function tradeQuote(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -181,15 +180,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         external
         view
         returns (
-            uint collateralQuote,
-            uint fees,
-            uint payout,
             uint totalQuote,
+            uint payout,
+            uint fees,
             uint[] memory finalQuotes,
-            uint[] memory amountsToBuy
+            uint[] memory amountsToBuy,
+            uint collateralQuote
         )
     {
-        (fees, payout, totalQuote, finalQuotes, amountsToBuy, ) = _tradeQuote(_tradeData, _buyInAmount);
+        (totalQuote, payout, fees, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount, true);
 
         collateralQuote = _collateral == address(0)
             ? _buyInAmount
@@ -407,31 +406,24 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _tradeQuote(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        uint _buyInAmount
+        uint _buyInAmount,
+        bool _shouldCheckRisk
     )
         internal
         view
-        returns (
-            uint fees,
-            uint payout,
-            uint totalQuote,
-            uint[] memory finalQuotes,
-            uint[] memory amountsToBuy,
-            uint payoutWithFees
-        )
+        returns (uint totalQuote, uint payout, uint fees, uint[] memory finalQuotes, uint[] memory amountsToBuy)
     {
         uint numOfMarkets = _tradeData.length;
         finalQuotes = new uint[](numOfMarkets);
         amountsToBuy = new uint[](numOfMarkets);
-        fees = (safeBoxFee * _buyInAmount) / ONE;
 
         for (uint i = 0; i < numOfMarkets; i++) {
-            ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
+            ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
-            _verifyMerkleTree(tradeDataItem);
+            _verifyMerkleTree(marketTradeData);
 
-            if (tradeDataItem.odds.length > tradeDataItem.position) {
-                finalQuotes[i] = tradeDataItem.odds[tradeDataItem.position];
+            if (marketTradeData.odds.length > marketTradeData.position) {
+                finalQuotes[i] = marketTradeData.odds[marketTradeData.position];
             }
             if (finalQuotes[i] == 0) {
                 totalQuote = 0;
@@ -445,42 +437,49 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 totalQuote = maxSupportedOdds;
             }
             payout = (_buyInAmount * ONE) / totalQuote;
-            payoutWithFees = payout + fees;
-        }
+            fees = (safeBoxFee * _buyInAmount) / ONE;
 
-        // check if any market breaches cap
-        for (uint i = 0; i < numOfMarkets; i++) {
-            ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
-            uint riskPerMarket = amountsToBuy[i] - _buyInAmount;
-            if (
-                riskPerMarketAndPosition[tradeDataItem.gameId][tradeDataItem.sportId][tradeDataItem.typeId][
-                    tradeDataItem.playerId
-                ][tradeDataItem.line][tradeDataItem.position] +
-                    riskPerMarket >
-                riskManager.calculateCapToBeUsed(
-                    tradeDataItem.gameId,
-                    tradeDataItem.sportId,
-                    tradeDataItem.typeId,
-                    tradeDataItem.playerId,
-                    tradeDataItem.line,
-                    tradeDataItem.maturity
-                ) ||
-                !riskManager.isTotalSpendingLessThanTotalRisk(
-                    spentPerParent[tradeDataItem.gameId] + riskPerMarket,
-                    tradeDataItem.gameId,
-                    tradeDataItem.sportId,
-                    tradeDataItem.typeId,
-                    tradeDataItem.playerId,
-                    tradeDataItem.line,
-                    tradeDataItem.maturity
-                )
-            ) {
-                finalQuotes[i] = 0;
-                totalQuote = 0;
+            if (_shouldCheckRisk) {
+                for (uint i = 0; i < _tradeData.length; i++) {
+                    if (amountsToBuy[i] > _buyInAmount) {
+                        ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+
+                        uint marketRiskAmount = amountsToBuy[i] - _buyInAmount;
+                        if (
+                            riskPerMarketTypeAndPosition[marketTradeData.gameId][marketTradeData.typeId][
+                                marketTradeData.playerId
+                            ][marketTradeData.position] +
+                                int256(marketRiskAmount) >
+                            int256(
+                                riskManager.calculateCapToBeUsed(
+                                    marketTradeData.gameId,
+                                    marketTradeData.sportId,
+                                    marketTradeData.typeId,
+                                    marketTradeData.playerId,
+                                    marketTradeData.line,
+                                    marketTradeData.maturity
+                                )
+                            ) ||
+                            !riskManager.isTotalSpendingLessThanTotalRisk(
+                                spentOnGame[marketTradeData.gameId] + marketRiskAmount,
+                                marketTradeData.gameId,
+                                marketTradeData.sportId,
+                                marketTradeData.typeId,
+                                marketTradeData.playerId,
+                                marketTradeData.line,
+                                marketTradeData.maturity
+                            )
+                        ) {
+                            totalQuote = 0;
+                            finalQuotes[i] = 0;
+                            amountsToBuy[i] = 0;
+                        }
+                    }
+                }
             }
         }
 
-        if (riskManager.hasIllegalCombinationsOnTicket(_tradeData)) {
+        if (_shouldCheckRisk && riskManager.hasIllegalCombinationsOnTicket(_tradeData)) {
             totalQuote = 0;
         }
     }
@@ -515,20 +514,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     function _trade(ISportsAMMV2.TradeData[] memory _tradeData, TradeDataInternal memory _tradeDataInternal) internal {
-        uint payout = _tradeDataInternal._expectedPayout;
         uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
-        uint[] memory amountsToBuy = new uint[](_tradeData.length);
+        uint payout = _tradeDataInternal._expectedPayout;
         //TODO: include this in the tradeQuote method for live trading
         uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
-        uint payoutWithFees = _tradeDataInternal._expectedPayout + fees;
+        uint[] memory amountsToBuy = new uint[](_tradeData.length);
+
         if (!_tradeDataInternal._isLive) {
-            (fees, payout, totalQuote, , amountsToBuy, payoutWithFees) = _tradeQuote(
-                _tradeData,
-                _tradeDataInternal._buyInAmount
-            );
+            (totalQuote, payout, fees, , amountsToBuy) = _tradeQuote(_tradeData, _tradeDataInternal._buyInAmount, false);
         } else {
-            amountsToBuy[0] = (ONE * _tradeDataInternal._buyInAmount) / totalQuote;
+            amountsToBuy[0] = payout;
         }
+
+        uint payoutWithFees = payout + fees;
 
         _checkLimits(
             _tradeDataInternal._buyInAmount,
@@ -537,7 +535,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeDataInternal._expectedPayout,
             _tradeDataInternal._additionalSlippage
         );
-
         _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount);
 
         if (_tradeDataInternal._sendDefaultCollateral) {
@@ -568,7 +565,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             stakingThales.updateVolume(_tradeDataInternal._differentRecipient, _tradeDataInternal._buyInAmount);
         }
 
-        liquidityPool.commitTrade(address(ticket), payout + fees - _tradeDataInternal._buyInAmount);
+        liquidityPool.commitTrade(address(ticket), payoutWithFees - _tradeDataInternal._buyInAmount);
         defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
 
         emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout);
@@ -597,19 +594,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         markets = new Ticket.MarketData[](_tradeData.length);
 
         for (uint i = 0; i < _tradeData.length; i++) {
-            ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
+            ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
             markets[i] = Ticket.MarketData(
-                tradeDataItem.gameId,
-                tradeDataItem.sportId,
-                tradeDataItem.typeId,
-                tradeDataItem.maturity,
-                tradeDataItem.status,
-                tradeDataItem.line,
-                tradeDataItem.playerId,
-                tradeDataItem.position,
-                tradeDataItem.odds[tradeDataItem.position],
-                tradeDataItem.combinedPositions[tradeDataItem.position]
+                marketTradeData.gameId,
+                marketTradeData.sportId,
+                marketTradeData.typeId,
+                marketTradeData.maturity,
+                marketTradeData.status,
+                marketTradeData.line,
+                marketTradeData.playerId,
+                marketTradeData.position,
+                marketTradeData.odds[marketTradeData.position],
+                marketTradeData.combinedPositions[marketTradeData.position]
             );
         }
     }
@@ -634,44 +631,56 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmount
     ) internal {
         for (uint i = 0; i < _tradeData.length; i++) {
-            require(_isMarketInAMMTrading(_tradeData[i]), "Not trading");
-            require(_tradeData[i].odds.length > _tradeData[i].position, "Invalid position");
+            ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+            bytes32 gameId = marketTradeData.gameId;
+            uint16 sportId = marketTradeData.sportId;
+            uint16 typeId = marketTradeData.typeId;
+            uint maturity = marketTradeData.maturity;
+            int24 line = marketTradeData.line;
+            uint16 playerId = marketTradeData.playerId;
+            uint[] memory odds = marketTradeData.odds;
+            uint8 position = marketTradeData.position;
 
-            uint riskPerMarket = _amountsToBuy[i] - _buyInAmount;
+            require(_isMarketInAMMTrading(marketTradeData), "Not trading");
+            require(odds.length > position, "Invalid position");
 
-            riskPerMarketAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].typeId][
-                _tradeData[i].playerId
-            ][_tradeData[i].line][_tradeData[i].position] += riskPerMarket;
-            spentPerParent[_tradeData[i].gameId] += riskPerMarket;
+            if (_amountsToBuy[i] > _buyInAmount) {
+                uint marketRiskAmount = _amountsToBuy[i] - _buyInAmount;
 
-            require(
-                riskPerMarketAndPosition[_tradeData[i].gameId][_tradeData[i].sportId][_tradeData[i].typeId][
-                    _tradeData[i].playerId
-                ][_tradeData[i].line][_tradeData[i].position] <
-                    riskManager.calculateCapToBeUsed(
-                        _tradeData[i].gameId,
-                        _tradeData[i].sportId,
-                        _tradeData[i].typeId,
-                        _tradeData[i].playerId,
-                        _tradeData[i].line,
-                        _tradeData[i].maturity
+                int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][position];
+                for (uint j = 0; j < odds.length; j++) {
+                    if (j == position) {
+                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
+                            currentRiskPerMarketTypeAndPosition +
+                            int256(marketRiskAmount);
+                    } else {
+                        riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
+                            currentRiskPerMarketTypeAndPosition -
+                            int256(marketRiskAmount);
+                    }
+                }
+                spentOnGame[gameId] += marketRiskAmount;
+
+                require(
+                    currentRiskPerMarketTypeAndPosition <
+                        int256(riskManager.calculateCapToBeUsed(gameId, sportId, typeId, playerId, line, maturity)),
+                    "Risk per market and position exceeded"
+                );
+                require(
+                    riskManager.isTotalSpendingLessThanTotalRisk(
+                        spentOnGame[gameId],
+                        gameId,
+                        sportId,
+                        typeId,
+                        playerId,
+                        line,
+                        maturity
                     ),
-                "Risk per individual market and position exceeded"
-            );
-            require(
-                riskManager.isTotalSpendingLessThanTotalRisk(
-                    spentPerParent[_tradeData[i].gameId],
-                    _tradeData[i].gameId,
-                    _tradeData[i].sportId,
-                    _tradeData[i].typeId,
-                    _tradeData[i].playerId,
-                    _tradeData[i].line,
-                    _tradeData[i].maturity
-                ),
-                "Risk is to high"
-            );
+                    "Risk is to high"
+                );
+            }
+            require(!riskManager.hasIllegalCombinationsOnTicket(_tradeData), "Illegal combination detected");
         }
-        require(!riskManager.hasIllegalCombinationsOnTicket(_tradeData), "Illegal combination detected");
     }
 
     function _isMarketInAMMTrading(ISportsAMMV2.TradeData memory tradeData) internal view returns (bool isTrading) {
@@ -714,26 +723,26 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         return safeBoxFeePerAddress[_toCheck] > 0 ? safeBoxFeePerAddress[_toCheck] : safeBoxFee;
     }
 
-    function _verifyMerkleTree(ISportsAMMV2.TradeData memory tradeDataItem) internal view {
+    function _verifyMerkleTree(ISportsAMMV2.TradeData memory marketTradeData) internal view {
         // Compute the merkle leaf from trade data
         bytes memory encodePackedOutput = abi.encodePacked(
-            tradeDataItem.gameId,
-            uint(tradeDataItem.sportId),
-            uint(tradeDataItem.typeId),
-            tradeDataItem.maturity,
-            uint(tradeDataItem.status),
-            int(tradeDataItem.line),
-            uint(tradeDataItem.playerId),
-            tradeDataItem.odds
+            marketTradeData.gameId,
+            uint(marketTradeData.sportId),
+            uint(marketTradeData.typeId),
+            marketTradeData.maturity,
+            uint(marketTradeData.status),
+            int(marketTradeData.line),
+            uint(marketTradeData.playerId),
+            marketTradeData.odds
         );
 
-        for (uint i; i < tradeDataItem.combinedPositions.length; i++) {
-            for (uint j; j < tradeDataItem.combinedPositions[i].length; j++) {
+        for (uint i; i < marketTradeData.combinedPositions.length; i++) {
+            for (uint j; j < marketTradeData.combinedPositions[i].length; j++) {
                 encodePackedOutput = abi.encodePacked(
                     encodePackedOutput,
-                    uint(tradeDataItem.combinedPositions[i][j].typeId),
-                    uint(tradeDataItem.combinedPositions[i][j].position),
-                    int(tradeDataItem.combinedPositions[i][j].line)
+                    uint(marketTradeData.combinedPositions[i][j].typeId),
+                    uint(marketTradeData.combinedPositions[i][j].position),
+                    int(marketTradeData.combinedPositions[i][j].line)
                 );
             }
         }
@@ -741,7 +750,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bytes32 leaf = keccak256(encodePackedOutput);
         // verify the proof is valid
         require(
-            MerkleProof.verify(tradeDataItem.merkleProof, rootPerGame[tradeDataItem.gameId], leaf),
+            MerkleProof.verify(marketTradeData.merkleProof, rootPerGame[marketTradeData.gameId], leaf),
             "Proof is not valid"
         );
     }

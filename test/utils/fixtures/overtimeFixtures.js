@@ -4,7 +4,7 @@ const {
 	SPORTS_AMM_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
-const { GAME_ID_1, DEFAULT_AMOUNT, GAME_ID_2 } = require('../../constants/overtime');
+const { DEFAULT_AMOUNT } = require('../../constants/overtime');
 const { createMerkleTree, getTicketTradeData } = require('../overtime');
 
 // We define a fixture to reuse the same setup in every test.
