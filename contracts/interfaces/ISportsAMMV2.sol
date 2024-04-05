@@ -83,5 +83,5 @@ interface ISportsAMMV2 {
         address _differentRecipient,
         address _referrer,
         address _collateral
-    ) external;
+    ) external payable;
 }

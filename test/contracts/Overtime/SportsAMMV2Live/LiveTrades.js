@@ -4,12 +4,19 @@ const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, SPORT_ID_NBA } = require('../../../constants/overtime');
+const {
+	BUY_IN_AMOUNT,
+	ETH_BUY_IN_AMOUNT,
+	ADDITIONAL_SLIPPAGE,
+	SPORT_ID_NBA,
+} = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
+const { ethers } = require('hardhat');
 
 describe('SportsAMMV2 Quotes And Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2LiquidityPool,
+		sportsAMMV2LiquidityPoolETH,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
 		firstLiquidityProvider,
@@ -17,16 +24,19 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		liveTradingProcessor,
 		mockChainlinkOracle,
 		sportsAMMV2RiskManager,
+		weth,
 		quote;
 
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
 			sportsAMMV2LiquidityPool,
+			sportsAMMV2LiquidityPoolETH,
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
 			liveTradingProcessor,
 			mockChainlinkOracle,
+			weth,
 			sportsAMMV2RiskManager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
@@ -36,7 +46,13 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			.deposit(ethers.parseEther('1000'));
 		await sportsAMMV2LiquidityPool.start();
 
+		await sportsAMMV2LiquidityPoolETH.connect(firstLiquidityProvider).depositWithEth({
+			value: ethers.parseEther('1'),
+		});
+		await sportsAMMV2LiquidityPoolETH.start();
+
 		quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
+		quoteETH = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, ETH_BUY_IN_AMOUNT, ZERO_ADDRESS);
 	});
 
 	describe('Live Trade', () => {
@@ -64,6 +80,34 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			console.log('requestId is ' + requestId);
 
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
+		});
+
+		it('Should buy a live trade with ETH', async () => {
+			console.log('quoteETH.payout : ', quoteETH.payout.toString());
+			expect(quoteETH.payout).to.equal(ethers.parseEther('0.0057142857142858'));
+
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+
+			await liveTradingProcessor
+				.connect(firstTrader)
+				.requestLiveTrade(
+					tradeDataCurrentRound[0].gameId,
+					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].typeId,
+					tradeDataCurrentRound[0].position,
+					ETH_BUY_IN_AMOUNT,
+					quoteETH.payout,
+					ADDITIONAL_SLIPPAGE,
+					firstTrader,
+					ZERO_ADDRESS,
+					weth,
+					{ value: ETH_BUY_IN_AMOUNT }
+				);
+
+			let requestId = await liveTradingProcessor.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quoteETH.payout);
 		});
 
 		it('Fail for unsupported sports', async () => {
