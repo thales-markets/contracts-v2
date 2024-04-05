@@ -6,11 +6,9 @@ const {
 	SPORTS_AMM_LP_ETH_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
 const {
-	GAME_ID_1,
 	DEFAULT_AMOUNT,
 	DEFAULT_AMOUNT_SIX_DECIMALS,
 	ETH_DEFAULT_AMOUNT,
-	GAME_ID_2,
 } = require('../../constants/overtime');
 const { createMerkleTree, getTicketTradeData } = require('../overtime');
 const { ZERO_ADDRESS } = require('../../constants/general');
@@ -251,12 +249,23 @@ async function deploySportsAMMV2Fixture() {
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
 
+	// deploy Sports AMM Data
+
+	const SportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
+	const sportsAMMV2Data = await upgrades.deployProxy(SportsAMMV2Data, [
+		owner.address,
+		sportsAMMV2Address,
+	]);
+
 	const root = await createMerkleTree();
 	const {
 		tradeDataCurrentRound,
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeIllegalCombinationCurrentRound,
+		sameGameDifferentPlayerProps,
+		sameGameSamePlayersDifferentProps,
 	} = getTicketTradeData();
 
 	const gameIds = [];
@@ -405,6 +414,10 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataTenMarketsCurrentRound,
 		liveTradingProcessor,
 		mockChainlinkOracle,
+		sportsAMMV2Data,
+		tradeIllegalCombinationCurrentRound,
+		sameGameDifferentPlayerProps,
+		sameGameSamePlayersDifferentProps,
 	};
 }
 

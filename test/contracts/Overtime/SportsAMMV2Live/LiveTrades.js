@@ -13,12 +13,11 @@ const {
 const { ZERO_ADDRESS } = require('../../../constants/general');
 const { ethers } = require('hardhat');
 
-describe('SportsAMMV2 Quotes And Trades', () => {
+describe('SportsAMMV2Live Live Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolETH,
 		tradeDataCurrentRound,
-		tradeDataTenMarketsCurrentRound,
 		firstLiquidityProvider,
 		firstTrader,
 		liveTradingProcessor,
@@ -33,7 +32,6 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
 			tradeDataCurrentRound,
-			tradeDataTenMarketsCurrentRound,
 			liveTradingProcessor,
 			mockChainlinkOracle,
 			weth,

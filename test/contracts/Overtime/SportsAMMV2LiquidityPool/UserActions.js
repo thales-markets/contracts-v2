@@ -5,7 +5,14 @@ const {
 	deploySportsAMMV2Fixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
 const { ZERO_ADDRESS } = require('../../../constants/general');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('../../../constants/overtime');
+const {
+	BUY_IN_AMOUNT,
+	ADDITIONAL_SLIPPAGE,
+	TYPE_ID_TOTAL,
+	TYPE_ID_SPREAD,
+	TYPE_ID_WINNER_TOTAL,
+	RESULT_TYPE,
+} = require('../../../constants/overtime');
 
 describe('SportsAMMV2LiquidityPool User Actions', () => {
 	let sportsAMMV2,
@@ -34,6 +41,16 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 			thirdLiquidityProvider,
 			firstTrader,
 		} = await loadFixture(deployAccountsFixture));
+
+		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+			[0, TYPE_ID_TOTAL, TYPE_ID_SPREAD, TYPE_ID_WINNER_TOTAL],
+			[
+				RESULT_TYPE.ExactPosition,
+				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.CombinedPositions,
+			]
+		);
 	});
 
 	describe('Start liquidity pool', () => {
