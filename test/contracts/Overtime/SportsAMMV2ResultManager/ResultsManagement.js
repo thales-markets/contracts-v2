@@ -68,11 +68,19 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 					[RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions + 1]
 				)
 			).to.be.revertedWith('Invalid result type');
+			await expect(
+				sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+					[TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
+					[RESULT_TYPE.OverUnder, RESULT_TYPE.Unassigned]
+				)
+			).to.be.revertedWith('Invalid result type');
 		});
 	});
 
 	describe('Results setters', () => {
 		it('Should set results per markets', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
 			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_1, 0, 0)).to.equal(
 				false
 			);
@@ -146,10 +154,18 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 		});
 
 		it('Should fail with "Results already set per market"', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
 			await sportsAMMV2ResultManager.setResultsPerMarkets([GAME_ID_1], [0], [0], [[1]]);
 			await expect(
 				sportsAMMV2ResultManager.setResultsPerMarkets([GAME_ID_1], [0], [0], [[1]])
 			).to.be.revertedWith('Results already set per market');
+		});
+
+		it('Should fail with "Result type not set"', async () => {
+			await expect(
+				sportsAMMV2ResultManager.setResultsPerMarkets([GAME_ID_1], [0], [0], [[1]])
+			).to.be.revertedWith('Result type not set');
 		});
 	});
 

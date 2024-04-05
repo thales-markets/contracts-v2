@@ -19,11 +19,20 @@ const {
 } = require('../../../constants/overtime');
 
 describe('SportsAMMV2ResultManager Results Check', () => {
-	let sportsAMMV2ResultManager, secondAccount;
+	let sportsAMMV2ResultManager;
 
 	beforeEach(async () => {
 		({ sportsAMMV2ResultManager } = await loadFixture(deploySportsAMMV2Fixture));
-		({ secondAccount } = await loadFixture(deployAccountsFixture));
+
+		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+			[0, TYPE_ID_TOTAL, TYPE_ID_SPREAD, TYPE_ID_WINNER_TOTAL],
+			[
+				RESULT_TYPE.ExactPosition,
+				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.CombinedPositions,
+			]
+		);
 	});
 
 	describe('Resolve check', () => {
@@ -44,11 +53,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market as resolved (combined positions)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.isMarketResolved(
 					GAME_ID_1,
@@ -106,11 +110,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market as cancelled (combined positions)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.isMarketCancelled(
 					GAME_ID_1,
@@ -147,8 +146,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 
 	describe('Market positions check', () => {
 		it('Should return market position (single positions) as winning - status: WINNING, result type: EXACT POSITION', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(GAME_ID_1, 0, 0, 0, 1, [])
 			).to.equal(MARKET_POSITION_STATUS.Open);
@@ -168,8 +165,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as winning - status: CANCELLED, result type: EXACT POSITION', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(GAME_ID_1, 0, 0, 0, 1, [])
 			).to.equal(MARKET_POSITION_STATUS.Open);
@@ -189,8 +184,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as losing - status: LOSING, result type: EXACT POSITION', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(GAME_ID_1, 0, 0, 0, 0, [])
 			).to.equal(MARKET_POSITION_STATUS.Open);
@@ -210,11 +203,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as winning - status: WINNING, result type: OVER/UNDER (total)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_TOTAL],
-				[RESULT_TYPE.OverUnder]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -267,11 +255,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as winning - status: WINNING, result type: OVER/UNDER (spread)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_SPREAD],
-				[RESULT_TYPE.OverUnder]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -324,11 +307,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as winning - status: CANCELLED (cancelled game), result type: OVER/UNDER', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_TOTAL],
-				[RESULT_TYPE.OverUnder]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -376,11 +354,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as winning - status: CANCELLED (by results), result type: OVER/UNDER', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_TOTAL],
-				[RESULT_TYPE.OverUnder]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -433,11 +406,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as losing - status: LOSING, result type: OVER/UNDER (total)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_TOTAL],
-				[RESULT_TYPE.OverUnder]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -490,11 +458,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (single positions) as losing - status: LOSING, result type: OVER/UNDER (spread)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[TYPE_ID_SPREAD],
-				[RESULT_TYPE.OverUnder]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -547,11 +510,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as winning - status: WINNING', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -619,11 +577,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as winning - status: CANCELLED (position #1: open, position #2: cancelled)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -677,11 +630,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as winning - status: CANCELLED (position #1: winning, position #2: cancelled)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -735,11 +683,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as winning - status: CANCELLED (position #1: cancelled, position #2: cancelled)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -788,11 +731,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as losing - status: LOSING (position #1: open, position #2: losing)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -846,11 +784,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as losing - status: LOSING (position #1: winning, position #2: losing)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -904,11 +837,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as losing - status: LOSING (position #1: losing, position #2: cancelled)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,
@@ -962,11 +890,6 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 		});
 
 		it('Should return market position (combined positions) as losing - status: LOSING (position #1: losing, position #2: losing)', async () => {
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
-				[0, TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-				[RESULT_TYPE.ExactPosition, RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions]
-			);
-
 			expect(
 				await sportsAMMV2ResultManager.getMarketPositionStatus(
 					GAME_ID_1,

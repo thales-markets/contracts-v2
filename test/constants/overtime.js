@@ -50,9 +50,10 @@ const ADDITIONAL_SLIPPAGE = ethers.parseEther('0.02');
 const DEFAULT_AMOUNT = ethers.parseEther('10000');
 
 const RESULT_TYPE = {
-	ExactPosition: 0,
-	OverUnder: 1,
-	CombinedPositions: 2,
+	Unassigned: 0,
+	ExactPosition: 1,
+	OverUnder: 2,
+	CombinedPositions: 3,
 };
 
 const MARKET_POSITION_STATUS = {

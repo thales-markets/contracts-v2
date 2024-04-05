@@ -28,6 +28,7 @@ import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 /// @author vladan
 contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     enum ResultType {
+        Unassigned,
         ExactPosition,
         OverUnder,
         CombinedPositions
@@ -223,7 +224,9 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint16 typeId = _typeIds[i];
             uint16 playerId = _playerIds[i];
             int24[] memory results = _results[i];
+            ResultType resultType = resultTypePerMarketType[typeId];
 
+            require(resultType != ResultType.Unassigned, "Result type not set");
             require(!areResultsPerMarketSet[gameId][typeId][playerId], "Results already set per market");
 
             resultsPerMarket[gameId][typeId][playerId] = results;
@@ -274,7 +277,10 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint16 marketTypeId = _marketTypeIds[i];
             uint resultType = _resultTypes[i];
 
-            require(resultType <= uint(ResultType.CombinedPositions), "Invalid result type");
+            require(
+                resultType > uint(ResultType.Unassigned) && resultType <= uint(ResultType.CombinedPositions),
+                "Invalid result type"
+            );
             resultTypePerMarketType[marketTypeId] = ResultType(resultType);
             emit ResultTypePerMarketTypeSet(marketTypeId, resultType);
         }
