@@ -1109,11 +1109,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
         "internalType": "int256",
         "name": "",
         "type": "int256"
@@ -1127,9 +1122,9 @@
     "name": "riskPerMarketAndPosition",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "int256",
         "name": "",
-        "type": "uint256"
+        "type": "int256"
       }
     ],
     "stateMutability": "view",
@@ -1420,7 +1415,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "spentPerParent",
+    "name": "spentOnGame",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1792,12 +1787,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "collateralQuote",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fees",
+        "name": "totalQuote",
         "type": "uint256"
       },
       {
@@ -1807,7 +1797,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "totalQuote",
+        "name": "fees",
         "type": "uint256"
       },
       {
@@ -1819,6 +1809,11 @@
         "internalType": "uint256[]",
         "name": "amountsToBuy",
         "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "collateralQuote",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
