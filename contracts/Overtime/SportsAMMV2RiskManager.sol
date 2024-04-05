@@ -10,6 +10,7 @@ import "../utils/proxy/ProxyPausable.sol";
 
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
+import "../interfaces/ISportsAMMV2.sol";
 
 /// @title Sports AMM V2 Risk Manager contract
 /// @author vladan
@@ -63,6 +64,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     mapping(uint => uint) public dynamicLiquidityCutoffDividerPerSport;
 
     mapping(uint => mapping(uint => bool)) public liveTradingPerSportAndTypeEnabled;
+
+    mapping(uint => bool) public combiningPerSportEnabled;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -125,6 +128,30 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, _typeId, _playerId, _line, _maturity);
         uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId, _typeId, _playerId, _line);
         return _totalSpent <= capToBeUsed * riskMultiplier;
+    }
+
+    /// @notice returns if parlay has any illegal combinations
+    /// @param _tradeData the parlay to check
+    function hasIllegalCombinationsOnTicket(ISportsAMMV2.TradeData[] memory _tradeData) external view returns (bool) {
+        for (uint i = 0; i < _tradeData.length; i++) {
+            ISportsAMMV2.TradeData memory tradeDataItemCurrent = _tradeData[i];
+            for (uint j = i + 1; j < _tradeData.length; j++) {
+                ISportsAMMV2.TradeData memory tradeDataItemToCheckAgainst = _tradeData[j];
+                if (
+                    tradeDataItemCurrent.gameId == tradeDataItemToCheckAgainst.gameId &&
+                    tradeDataItemCurrent.sportId == tradeDataItemToCheckAgainst.sportId
+                ) {
+                    if (!combiningPerSportEnabled[tradeDataItemCurrent.sportId]) {
+                        return true;
+                    } else if (tradeDataItemCurrent.playerId == tradeDataItemToCheckAgainst.playerId) {
+                        return true;
+                    } else if (tradeDataItemCurrent.playerId == 0 || tradeDataItemToCheckAgainst.playerId == 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /// @notice returns risk data for given sports and types

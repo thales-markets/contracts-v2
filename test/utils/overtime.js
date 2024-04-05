@@ -48,11 +48,16 @@ const getTicketTradeData = () => {
 	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[10], 0));
 	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[11], 0));
 
+	const tradeIllegalCombinationCurrentRound = [];
+	tradeIllegalCombinationCurrentRound.push(getTradeDataItem(marketsTree[2], 0));
+	tradeIllegalCombinationCurrentRound.push(getTradeDataItem(marketsTree[2], 0));
+
 	return {
 		tradeDataCurrentRound,
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeIllegalCombinationCurrentRound,
 	};
 };
 

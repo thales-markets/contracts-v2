@@ -197,18 +197,6 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "_additionalSlippage",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_referrer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
@@ -282,20 +270,8 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "_additionalSlippage",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
         "name": "_differentRecipient",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_referrer",
         "type": "address"
       },
       {

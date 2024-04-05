@@ -449,7 +449,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         // check if any market breaches cap
-        for (uint i = 0; i < _tradeData.length; i++) {
+        for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory tradeDataItem = _tradeData[i];
             uint riskPerMarket = amountsToBuy[i] - _buyInAmount;
             if (
@@ -478,6 +478,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 finalQuotes[i] = 0;
                 totalQuote = 0;
             }
+        }
+
+        if (riskManager.hasIllegalCombinationsOnTicket(_tradeData)) {
+            totalQuote = 0;
         }
     }
 
@@ -667,6 +671,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 "Risk is to high"
             );
         }
+        require(!riskManager.hasIllegalCombinationsOnTicket(_tradeData), "Illegal combination detected");
     }
 
     function _isMarketInAMMTrading(ISportsAMMV2.TradeData memory tradeData) internal view returns (bool isTrading) {

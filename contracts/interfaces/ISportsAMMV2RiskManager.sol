@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "./ISportsAMMV2.sol";
+
 interface ISportsAMMV2RiskManager {
     struct TypeCap {
         uint typeId;
@@ -45,4 +47,6 @@ interface ISportsAMMV2RiskManager {
     ) external view returns (bool _isNotRisky);
 
     function liveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId) external view returns (bool _enabled);
+
+    function hasIllegalCombinationsOnTicket(ISportsAMMV2.TradeData[] memory _tradeData) external view returns (bool);
 }
