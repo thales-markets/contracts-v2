@@ -190,6 +190,8 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
 		tradeIllegalCombinationCurrentRound,
+		sameGameDifferentPlayerProps,
+		sameGameSamePlayersDifferentProps,
 	} = getTicketTradeData();
 
 	const gameIds = [];
@@ -277,6 +279,8 @@ async function deploySportsAMMV2Fixture() {
 		liveTradingProcessor,
 		mockChainlinkOracle,
 		tradeIllegalCombinationCurrentRound,
+		sameGameDifferentPlayerProps,
+		sameGameSamePlayersDifferentProps,
 	};
 }
 

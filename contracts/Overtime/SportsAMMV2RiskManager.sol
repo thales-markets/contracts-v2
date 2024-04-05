@@ -259,6 +259,14 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     /* ========== SETTERS ========== */
 
+    /// @notice sets whether props SGPs are allowed on the given sport
+    /// @param _sportID sport to set enabled for
+    /// @param _enabled true/false
+    function setCombiningPerSportEnabled(uint _sportID, bool _enabled) external onlyOwner {
+        combiningPerSportEnabled[_sportID] = _enabled;
+        emit SetCombiningPerSportEnabled(_sportID, _enabled);
+    }
+
     /// @notice sets the max cap and max risk multiplier
     /// @param _maxCap max cap
     /// @param _maxRiskMultiplier max risk multiplier
@@ -487,4 +495,5 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetDynamicLiquidityParams(uint sportId, uint dynamicLiquidityCutoffTime, uint dynamicLiquidityCutoffDivider);
     event SetSportsManager(address manager);
     event SetLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled);
+    event SetCombiningPerSportEnabled(uint _sportID, bool _enabled);
 }

@@ -102,6 +102,26 @@
 			{
 				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
 				"sportId": 9004,
+				"typeId": 11039,
+				"maturity": 1706206332,
+				"homeTeam": "Milwaukee Bucks",
+				"awayTeam": "Indiana Pacers",
+				"homeScore": 0,
+				"awayScore": 0,
+				"finalResult": 0,
+				"status": 0,
+				"line": 3350,
+				"playerProps": {
+					"playerId": 16429,
+					"playerName": "Giannis Antetokounmpo",
+					"outcome": 0,
+					"score": 0
+				},
+				"odds": [0.52, 0.48, 0]
+			},
+			{
+				"gameId": "0x3063613139613935343563616437636230393634613865623435363366336666",
+				"sportId": 9004,
 				"typeId": 11087,
 				"maturity": 1706206332,
 				"homeTeam": "Milwaukee Bucks",

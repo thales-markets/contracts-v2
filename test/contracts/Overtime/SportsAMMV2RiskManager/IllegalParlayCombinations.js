@@ -17,7 +17,9 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 	let sportsAMMV2RiskManager,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
-		tradeIllegalCombinationCurrentRound;
+		tradeIllegalCombinationCurrentRound,
+		sameGameDifferentPlayerProps,
+		sameGameSamePlayersDifferentProps;
 
 	const {
 		newCapForSport,
@@ -36,6 +38,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
 			tradeIllegalCombinationCurrentRound,
+			sameGameDifferentPlayerProps,
+			sameGameSamePlayersDifferentProps,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 	});
 
@@ -57,11 +61,40 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 
 	describe('Illegal parlays', () => {
 		it('Should fail', async () => {
-			console.log('tradeDataTenMarketsCurrentRound:' + tradeDataTenMarketsCurrentRound);
-			console.log('tradeIllegalCombinationCurrentRound:' + tradeIllegalCombinationCurrentRound);
-
 			const allowed = await sportsAMMV2RiskManager.hasIllegalCombinationsOnTicket(
 				tradeIllegalCombinationCurrentRound
+			);
+
+			expect(allowed).to.equal(true);
+		});
+
+		it('Should fail if combining not set on sport', async () => {
+			let allowed = await sportsAMMV2RiskManager.hasIllegalCombinationsOnTicket(
+				sameGameDifferentPlayerProps
+			);
+
+			expect(allowed).to.equal(true);
+
+			await sportsAMMV2RiskManager.setCombiningPerSportEnabled(SPORT_ID_NBA, true);
+
+			allowed = await sportsAMMV2RiskManager.hasIllegalCombinationsOnTicket(
+				sameGameDifferentPlayerProps
+			);
+
+			expect(allowed).to.equal(false);
+		});
+
+		it('Should fail with same players on same game', async () => {
+			let allowed = await sportsAMMV2RiskManager.hasIllegalCombinationsOnTicket(
+				sameGameSamePlayersDifferentProps
+			);
+
+			expect(allowed).to.equal(true);
+
+			await sportsAMMV2RiskManager.setCombiningPerSportEnabled(SPORT_ID_NBA, true);
+
+			allowed = await sportsAMMV2RiskManager.hasIllegalCombinationsOnTicket(
+				sameGameSamePlayersDifferentProps
 			);
 
 			expect(allowed).to.equal(true);

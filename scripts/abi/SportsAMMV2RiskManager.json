@@ -173,6 +173,25 @@
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "_sportID",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "_enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "SetCombiningPerSportEnabled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "defaultCap",
         "type": "uint256"
       },
@@ -1179,6 +1198,24 @@
       }
     ],
     "name": "setCapsPerSportChild",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_sportID",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "setCombiningPerSportEnabled",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
