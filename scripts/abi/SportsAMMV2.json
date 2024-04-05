@@ -1109,17 +1109,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "int256",
-        "name": "",
-        "type": "int256"
-      },
-      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
     ],
-    "name": "riskPerMarketAndPosition",
+    "name": "riskPerMarketTypeAndPosition",
     "outputs": [
       {
         "internalType": "int256",
