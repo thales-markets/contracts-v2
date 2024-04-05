@@ -304,7 +304,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender);
         }
         if (useLPpool != address(0)) {
-            _tradeWithDifferentCollateral(
+            _trade(
                 _tradeData,
                 TradeDataInternal(
                     _buyInAmount,
@@ -366,7 +366,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         if (useLPpool != address(0)) {
-            _tradeWithDifferentCollateral(
+            _trade(
                 _tradeData,
                 TradeDataInternal(
                     _buyInAmount,
@@ -587,89 +587,32 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             amountsToBuy[0] = (ONE * _tradeDataInternal._buyInAmount) / totalQuote;
         }
 
-        _checkLimits(
-            _tradeDataInternal._buyInAmount,
-            totalQuote,
-            payout,
-            _tradeDataInternal._expectedPayout,
-            _tradeDataInternal._additionalSlippage
-        );
-
-        _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount, 0);
-
         if (_tradeDataInternal._collateral == address(0)) {
+            _checkLimits(
+                _tradeDataInternal._buyInAmount,
+                totalQuote,
+                payout,
+                _tradeDataInternal._expectedPayout,
+                _tradeDataInternal._additionalSlippage
+            );
+
+            _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount, 0);
             defaultCollateral.safeTransferFrom(
                 _tradeDataInternal._requester,
                 address(this),
                 _tradeDataInternal._buyInAmount
             );
-        }
-
-        // clone a ticket
-        Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
-        Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
-
-        ticket.initialize(
-            Ticket.TicketInit(
-                markets,
-                _tradeDataInternal._buyInAmount,
-                fees,
-                totalQuote,
-                address(this),
-                _tradeDataInternal._differentRecipient,
-                msg.sender,
-                defaultCollateral,
-                (block.timestamp + expiryDuration)
-            )
-        );
-        _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
-
-        if (address(stakingThales) != address(0)) {
-            stakingThales.updateVolume(_tradeDataInternal._differentRecipient, _tradeDataInternal._buyInAmount);
-        }
-
-        liquidityPool.commitTrade(address(ticket), payout + fees - _tradeDataInternal._buyInAmount);
-        defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
-
-        emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout);
-        emit TicketCreated(
-            address(ticket),
-            _tradeDataInternal._differentRecipient,
-            _tradeDataInternal._buyInAmount,
-            fees,
-            payout,
-            totalQuote
-        );
-    }
-
-    function _tradeWithDifferentCollateral(
-        ISportsAMMV2.TradeData[] memory _tradeData,
-        TradeDataInternal memory _tradeDataInternal
-    ) internal {
-        uint payout = _tradeDataInternal._expectedPayout;
-        uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
-        uint[] memory amountsToBuy = new uint[](_tradeData.length);
-        //TODO: include this in the tradeQuote method for live trading
-        uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
-        uint payoutWithFees = _tradeDataInternal._expectedPayout + fees;
-        if (!_tradeDataInternal._isLive) {
-            (fees, payout, totalQuote, , amountsToBuy, payoutWithFees) = _tradeQuote(
-                _tradeData,
-                _tradeDataInternal._buyInAmount
-            );
         } else {
-            amountsToBuy[0] = (ONE * _tradeDataInternal._buyInAmount) / totalQuote;
+            _checkLimits(
+                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD),
+                totalQuote,
+                _transformToUSD(payout, _tradeDataInternal._collateralPriceInUSD),
+                _transformToUSD(_tradeDataInternal._expectedPayout, _tradeDataInternal._collateralPriceInUSD),
+                _tradeDataInternal._additionalSlippage
+            );
+
+            _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD);
         }
-
-        _checkLimits(
-            _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD),
-            totalQuote,
-            _transformToUSD(payout, _tradeDataInternal._collateralPriceInUSD),
-            _transformToUSD(_tradeDataInternal._expectedPayout, _tradeDataInternal._collateralPriceInUSD),
-            _tradeDataInternal._additionalSlippage
-        );
-
-        _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD);
 
         // clone a ticket
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
@@ -684,23 +627,31 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 address(this),
                 _tradeDataInternal._differentRecipient,
                 msg.sender,
-                IERC20(_tradeDataInternal._collateral),
+                _tradeDataInternal._collateral == address(0) ? defaultCollateral : IERC20(_tradeDataInternal._collateral),
                 (block.timestamp + expiryDuration)
             )
         );
         _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
-        if (address(stakingThales) != address(0)) {
-            stakingThales.updateVolume(
-                _tradeDataInternal._differentRecipient,
-                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD)
+        if (_tradeDataInternal._collateral == address(0)) {
+            if (address(stakingThales) != address(0)) {
+                stakingThales.updateVolume(_tradeDataInternal._differentRecipient, _tradeDataInternal._buyInAmount);
+            }
+            liquidityPool.commitTrade(address(ticket), payout + fees - _tradeDataInternal._buyInAmount);
+            defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
+        } else {
+            if (address(stakingThales) != address(0)) {
+                stakingThales.updateVolume(
+                    _tradeDataInternal._differentRecipient,
+                    _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD)
+                );
+            }
+            ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
+                address(ticket),
+                payout + fees - _tradeDataInternal._buyInAmount
             );
+            IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), payoutWithFees);
         }
-        ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
-            address(ticket),
-            payout + fees - _tradeDataInternal._buyInAmount
-        );
-        IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), payoutWithFees);
 
         emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout);
         emit TicketCreated(
