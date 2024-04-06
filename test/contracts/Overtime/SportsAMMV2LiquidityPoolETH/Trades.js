@@ -9,6 +9,10 @@ const {
 	ETH_BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
 	ETH_DEFAULT_AMOUNT,
+	TYPE_ID_TOTAL,
+	TYPE_ID_SPREAD,
+	TYPE_ID_WINNER_TOTAL,
+	RESULT_TYPE,
 } = require('../../../constants/overtime');
 const { ethers } = require('hardhat');
 
@@ -44,6 +48,16 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 		collateral = weth;
+
+		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+			[0, TYPE_ID_TOTAL, TYPE_ID_SPREAD, TYPE_ID_WINNER_TOTAL],
+			[
+				RESULT_TYPE.ExactPosition,
+				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.CombinedPositions,
+			]
+		);
 	});
 
 	describe('Trades', () => {

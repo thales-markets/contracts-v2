@@ -49,8 +49,7 @@ describe('SportsAMMV2Data Read Data', () => {
 				ADDITIONAL_SLIPPAGE,
 				ZERO_ADDRESS,
 				ZERO_ADDRESS,
-				ZERO_ADDRESS,
-				false
+				ZERO_ADDRESS
 			);
 
 		const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
