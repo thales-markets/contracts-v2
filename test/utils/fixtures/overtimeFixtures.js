@@ -4,6 +4,7 @@ const {
 	SPORTS_AMM_INITAL_PARAMS,
 	SPORTS_AMM_LP_INITAL_PARAMS,
 	SPORTS_AMM_LP_ETH_INITAL_PARAMS,
+	SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS,
 } = require('../../constants/overtimeContractParams');
 const {
 	DEFAULT_AMOUNT,
@@ -224,7 +225,27 @@ async function deploySportsAMMV2Fixture() {
 		},
 	]);
 
+	const sportsAMMV2LiquidityPoolSixDecimals = await upgrades.deployProxy(SportsAMMV2LiquidityPool, [
+		{
+			_owner: owner.address,
+			_sportsAMM: sportsAMMV2Address,
+			_addressManager: addressManagerAddress,
+			_collateral: collateralSixDecimalsAddress,
+			_collateralKey: ethers.encodeBytes32String('USDC'),
+			_roundLength: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.roundLength,
+			_maxAllowedDeposit: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.maxAllowedDeposit,
+			_minDepositAmount: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.minDepositAmount,
+			_maxAllowedUsers: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.maxAllowedUsers,
+			_utilizationRate: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.utilizationRate,
+			_safeBox: safeBox.address,
+			_safeBoxImpact: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.safeBoxImpact,
+		},
+	]);
+
 	const sportsAMMV2LiquidityPoolAddress = await sportsAMMV2LiquidityPool.getAddress();
+	const sportsAMMV2LiquidityPoolSixDecimalsAddress =
+		await sportsAMMV2LiquidityPoolSixDecimals.getAddress();
+
 	await sportsAMMV2.setLiquidityPool(sportsAMMV2LiquidityPoolAddress);
 
 	// deploy Sports AMM liqudity pool round mastercopy
@@ -237,6 +258,9 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2LiquidityPoolRoundMastercopyAddress =
 		await sportsAMMV2LiquidityPoolRoundMastercopy.getAddress();
 	sportsAMMV2LiquidityPool.setPoolRoundMastercopy(sportsAMMV2LiquidityPoolRoundMastercopyAddress);
+	sportsAMMV2LiquidityPoolSixDecimals.setPoolRoundMastercopy(
+		sportsAMMV2LiquidityPoolRoundMastercopyAddress
+	);
 
 	// deploy default liqudity provider
 	const DefaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
@@ -245,9 +269,20 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2LiquidityPoolAddress,
 		collateralAddress,
 	]);
+	const defaultLiquidityProviderSixDecimals = await upgrades.deployProxy(DefaultLiquidityProvider, [
+		owner.address,
+		sportsAMMV2LiquidityPoolSixDecimalsAddress,
+		collateralSixDecimalsAddress,
+	]);
 
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
+
+	const defaultLiquidityProviderSixDecimalsAddress =
+		defaultLiquidityProviderSixDecimals.getAddress();
+	await sportsAMMV2LiquidityPoolSixDecimals.setDefaultLiquidityProvider(
+		defaultLiquidityProviderSixDecimalsAddress
+	);
 
 	// deploy Sports AMM Data
 
@@ -290,7 +325,6 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.setDefaultAmount(DEFAULT_AMOUNT);
 	await collateralSixDecimals.setDefaultAmount(DEFAULT_AMOUNT_SIX_DECIMALS);
 	await collateral.mintForUser(firstLiquidityProvider);
-	await collateralSixDecimals.mintForUser(firstLiquidityProvider);
 	await collateral.mintForUser(secondLiquidityProvider);
 	await collateral.mintForUser(thirdLiquidityProvider);
 	await collateral
@@ -303,25 +337,48 @@ async function deploySportsAMMV2Fixture() {
 		.connect(thirdLiquidityProvider)
 		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
 
+	await collateralSixDecimals.mintForUser(firstLiquidityProvider);
+	await collateralSixDecimals.mintForUser(secondLiquidityProvider);
+	await collateralSixDecimals.mintForUser(thirdLiquidityProvider);
+	await collateralSixDecimals
+		.connect(firstLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolSixDecimals, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals
+		.connect(secondLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolSixDecimals, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals
+		.connect(thirdLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolSixDecimals, DEFAULT_AMOUNT_SIX_DECIMALS);
+
 	await collateral.mintForUser(firstTrader);
-	await collateralSixDecimals.mintForUser(firstTrader);
 	await collateral.mintForUser(secondTrader);
 	await collateral.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
-	await collateralSixDecimals.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 	await collateral.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
-	await collateralSixDecimals.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+
+	await collateralSixDecimals.mintForUser(firstTrader);
+	await collateralSixDecimals.mintForUser(secondTrader);
+	await collateralSixDecimals
+		.connect(firstTrader)
+		.approve(sportsAMMV2, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals
+		.connect(secondTrader)
+		.approve(sportsAMMV2, DEFAULT_AMOUNT_SIX_DECIMALS);
 
 	await collateral.mintForUser(owner);
-	await collateralSixDecimals.mintForUser(owner);
 	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
+
+	await collateralSixDecimals.mintForUser(owner);
 	await collateralSixDecimals.transfer(
-		await defaultLiquidityProvider.getAddress(),
+		await defaultLiquidityProviderSixDecimals.getAddress(),
 		DEFAULT_AMOUNT_SIX_DECIMALS
 	);
 
 	// send collateral to multicollateral so it can convert other collaterals
 	await collateral.mintForUser(owner);
 	await collateral.transfer(multiCollateralAddress, DEFAULT_AMOUNT);
+
+	await collateralSixDecimals.mintForUser(owner);
+	await collateralSixDecimals.transfer(multiCollateralAddress, DEFAULT_AMOUNT_SIX_DECIMALS);
 
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 
@@ -395,8 +452,10 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2,
 		ticketMastercopy,
 		sportsAMMV2LiquidityPool,
+		sportsAMMV2LiquidityPoolSixDecimals,
 		sportsAMMV2LiquidityPoolRoundMastercopy,
 		defaultLiquidityProvider,
+		defaultLiquidityProviderSixDecimals,
 		sportsAMMV2LiquidityPoolETH,
 		defaultLiquidityProviderETH,
 		weth,

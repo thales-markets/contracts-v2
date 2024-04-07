@@ -1480,6 +1480,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "updateDefaultCollateral",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",

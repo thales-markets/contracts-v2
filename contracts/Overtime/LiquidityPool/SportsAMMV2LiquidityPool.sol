@@ -436,6 +436,10 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
+    function updateDefaultCollateral() external {
+        isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(collateral);
+    }
+
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
     /// @notice whether the user is currently LPing
