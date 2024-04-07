@@ -16,7 +16,7 @@ const {
 	RESULT_TYPE,
 } = require('../../../constants/overtime');
 
-describe('SportsAMMV2LiquidityPool Trades', () => {
+describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
@@ -55,7 +55,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 		);
 	});
 
-	describe('Trades', () => {
+	describe('Six decimal Collateral trade', () => {
 		let sportsAMMV2LiquidityPoolWithFirstLiquidityProvider;
 
 		beforeEach(async () => {
@@ -78,9 +78,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				collateralSixDecimals.target,
 				BUY_IN_AMOUNT
 			);
-			console.log('multiCollateralMinimumNeeded: ', multiCollateralMinimumNeeded.toString());
+			expect(multiCollateralMinimumNeeded).to.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			expect(currentRoundPoolBalanceBeforeTrade).to.equal(initialDeposit);
-
 			// create a ticket
 			const quote1 = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
@@ -92,8 +91,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				BUY_IN_AMOUNT,
 				ZERO_ADDRESS
 			);
-			console.log('quote1: ', quote1.payout.toString());
-			console.log('quote: ', quote.payout.toString());
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(

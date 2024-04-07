@@ -45,7 +45,7 @@ const WINNER_TOTAL_COMBINED_POSTIONS = [
 ];
 
 const BUY_IN_AMOUNT = ethers.parseEther('10');
-const BUY_IN_AMOUNT_SIX_DECIMALS = Number(1000000);
+const BUY_IN_AMOUNT_SIX_DECIMALS = Number(10000000);
 const ETH_BUY_IN_AMOUNT = ethers.parseEther('0.0028571428571429');
 const ADDITIONAL_SLIPPAGE = ethers.parseEther('0.02');
 
