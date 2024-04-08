@@ -475,7 +475,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /* ========== MODIFIERS ========== */
 
     modifier onlyWhitelistedAddresses(address sender) {
-        require(sender == owner || manager.isWhitelistedAddress(sender), "Invalid sender");
+        require(
+            sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.RISK_MANAGING),
+            "Invalid sender"
+        );
         _;
     }
 

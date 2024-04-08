@@ -27,41 +27,61 @@ describe('SportsAMMV2Manager Deployment and Setters', () => {
 			await expect(
 				sportsAMMV2Manager
 					.connect(secondAccount)
-					.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted)
+					.setWhitelistedAddresses(whitelistedAddresses, 2, isWhitelisted)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 			await expect(
-				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted)
+				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, 2, isWhitelisted)
 			).to.be.revertedWith('Whitelisted addresses cannot be empty');
 
 			whitelistedAddresses = [thirdAccount, fourthAccount];
 
-			await sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount)).to.equal(false);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount)).to.equal(isWhitelisted);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount)).to.equal(isWhitelisted);
+			await sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, 2, isWhitelisted);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount, 2)).to.equal(false);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount, 2)).to.equal(
+				isWhitelisted
+			);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount, 2)).to.equal(
+				isWhitelisted
+			);
 
-			await expect(sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, !isWhitelisted))
+			await expect(
+				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, 2, !isWhitelisted)
+			)
 				.to.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
-				.withArgs(thirdAccount.address, !isWhitelisted)
+				.withArgs(thirdAccount.address, 2, !isWhitelisted)
 				.to.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
-				.withArgs(fourthAccount.address, !isWhitelisted);
+				.withArgs(fourthAccount.address, 2, !isWhitelisted);
 		});
 
 		it('Should not change the whitelisted addresses', async () => {
 			const isWhitelisted = false;
 			let whitelistedAddresses = [thirdAccount, fourthAccount];
 
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount)).to.equal(isWhitelisted);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount)).to.equal(isWhitelisted);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount)).to.equal(isWhitelisted);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount, 2)).to.equal(
+				isWhitelisted
+			);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount, 2)).to.equal(
+				isWhitelisted
+			);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount, 2)).to.equal(
+				isWhitelisted
+			);
 
-			await sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted);
+			await sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, 2, isWhitelisted);
 
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount)).to.equal(isWhitelisted);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount)).to.equal(isWhitelisted);
-			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount)).to.equal(isWhitelisted);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount, 2)).to.equal(
+				isWhitelisted
+			);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(thirdAccount, 2)).to.equal(
+				isWhitelisted
+			);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(fourthAccount, 2)).to.equal(
+				isWhitelisted
+			);
 
-			await expect(sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, isWhitelisted))
+			await expect(
+				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, 2, isWhitelisted)
+			)
 				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
 				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist');
 		});

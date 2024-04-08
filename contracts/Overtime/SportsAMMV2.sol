@@ -769,7 +769,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice set roots of merkle tree
     /// @param _games game IDs
     /// @param _roots new roots
-    function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) public onlyOwner {
+    function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) public onlyWhitelistedAddresses(msg.sender) {
         require(_games.length == _roots.length, "Invalid length");
         for (uint i; i < _games.length; i++) {
             rootPerGame[_games[i]] = _roots[i];
@@ -884,6 +884,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     modifier onlyKnownTickets(address _ticket) {
         require(knownTickets.contains(_ticket), "Unknown ticket");
+        _;
+    }
+
+    modifier onlyWhitelistedAddresses(address sender) {
+        require(
+            sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.ROOT_SETTING),
+            "Invalid sender"
+        );
         _;
     }
 
