@@ -279,27 +279,22 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "resultManager",
+        "type": "address"
+      }
+    ],
+    "name": "SetResultManager",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "bytes32",
         "name": "gameId",
         "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "typeId",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "playerId",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "int24",
-        "name": "line",
-        "type": "int24"
       },
       {
         "indexed": false,
@@ -308,7 +303,7 @@
         "type": "uint256"
       }
     ],
-    "name": "SetRiskMultiplierPerMarket",
+    "name": "SetRiskMultiplierPerGame",
     "type": "event"
   },
   {
@@ -336,11 +331,74 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "SetSportsAMM",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "manager",
         "type": "address"
       }
     ],
     "name": "SetSportsManager",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minBuyInAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxTicketSize",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSupportedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxSupportedOdds",
+        "type": "uint256"
+      }
+    ],
+    "name": "TicketParamsUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minimalTimeLeftToMaturity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "expiryDuration",
+        "type": "uint256"
+      }
+    ],
+    "name": "TimesUpdated",
     "type": "event"
   },
   {
@@ -532,6 +590,234 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint16",
+            "name": "playerId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "_tradeData",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkAndUpdateRisks",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_totalQuote",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_payout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_expectedPayout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_additionalSlippage",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkLimits",
+    "outputs": [],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint16",
+            "name": "playerId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "_tradeData",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkRisks",
+    "outputs": [
+      {
+        "internalType": "enum ISportsAMMV2RiskManager.RiskStatus",
+        "name": "riskStatus",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "isMarketOutOfLiquidity",
+        "type": "bool[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -602,6 +888,19 @@
       }
     ],
     "name": "dynamicLiquidityCutoffTimePerSport",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "expiryDuration",
     "outputs": [
       {
         "internalType": "uint256",
@@ -700,99 +999,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "bytes32",
-            "name": "gameId",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint16",
-            "name": "sportId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "typeId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maturity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "int24",
-            "name": "line",
-            "type": "int24"
-          },
-          {
-            "internalType": "uint16",
-            "name": "playerId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "odds",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "merkleProof",
-            "type": "bytes32[]"
-          },
-          {
-            "internalType": "uint8",
-            "name": "position",
-            "type": "uint8"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint16",
-                "name": "typeId",
-                "type": "uint16"
-              },
-              {
-                "internalType": "uint8",
-                "name": "position",
-                "type": "uint8"
-              },
-              {
-                "internalType": "int24",
-                "name": "line",
-                "type": "int24"
-              }
-            ],
-            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
-            "name": "combinedPositions",
-            "type": "tuple[][]"
-          }
-        ],
-        "internalType": "struct ISportsAMMV2.TradeData[]",
-        "name": "_tradeData",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "hasIllegalCombinationsOnTicket",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "initNonReentrant",
     "outputs": [],
@@ -807,8 +1013,13 @@
         "type": "address"
       },
       {
-        "internalType": "address",
+        "internalType": "contract ISportsAMMV2Manager",
         "name": "_manager",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISportsAMMV2ResultManager",
+        "name": "_resultManager",
         "type": "address"
       },
       {
@@ -835,55 +1046,6 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_totalSpent",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_sportId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_typeId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "_playerId",
-        "type": "uint16"
-      },
-      {
-        "internalType": "int24",
-        "name": "_line",
-        "type": "int24"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maturity",
-        "type": "uint256"
-      }
-    ],
-    "name": "isTotalSpendingLessThanTotalRisk",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "isNotRisky",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -963,6 +1125,71 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "maxSupportedAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxSupportedOdds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxTicketSize",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minBuyInAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minimalTimeLeftToMaturity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1015,29 +1242,27 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "resultManager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2ResultManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "int256",
-        "name": "",
-        "type": "int256"
       }
     ],
-    "name": "riskMultiplierPerMarket",
+    "name": "riskMultiplierPerGame",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1062,6 +1287,40 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "riskPerMarketTypeAndPosition",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
       }
     ],
     "stateMutability": "view",
@@ -1331,32 +1590,30 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_resultManager",
+        "type": "address"
+      }
+    ],
+    "name": "setResultManager",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32[]",
         "name": "_gameIds",
         "type": "bytes32[]"
       },
       {
-        "internalType": "uint16[]",
-        "name": "_typeIds",
-        "type": "uint16[]"
-      },
-      {
-        "internalType": "uint16[]",
-        "name": "_playerIds",
-        "type": "uint16[]"
-      },
-      {
-        "internalType": "int24[]",
-        "name": "_lines",
-        "type": "int24[]"
-      },
-      {
         "internalType": "uint256[]",
-        "name": "_riskMultipliersPerMarket",
+        "name": "_riskMultipliersPerGame",
         "type": "uint256[]"
       }
     ],
-    "name": "setRiskMultipliersPerMarket",
+    "name": "setRiskMultipliersPerGame",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1383,6 +1640,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "setSportsAMM",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_manager",
         "type": "address"
       }
@@ -1390,6 +1660,84 @@
     "name": "setSportsManager",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_minBuyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxTicketSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxSupportedAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxSupportedOdds",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTicketParams",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_minimalTimeLeftToMaturity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_expiryDuration",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTimes",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "spentOnGame",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sportsAMM",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

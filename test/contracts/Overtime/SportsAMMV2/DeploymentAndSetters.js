@@ -11,6 +11,7 @@ const { GAME_ID_1 } = require('../../../constants/overtime');
 describe('SportsAMMV2 Deployment and Setters', () => {
 	let sportsAMMV2Manager,
 		sportsAMMV2RiskManager,
+		sportsAMMV2ResultManager,
 		sportsAMMV2,
 		ticketMastercopy,
 		sportsAMMV2LiquidityPool,
@@ -27,6 +28,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 		({
 			sportsAMMV2Manager,
 			sportsAMMV2RiskManager,
+			sportsAMMV2ResultManager,
 			sportsAMMV2,
 			ticketMastercopy,
 			sportsAMMV2LiquidityPool,
@@ -48,6 +50,9 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(await sportsAMMV2.defaultCollateral()).to.equal(await collateral.getAddress());
 			expect(await sportsAMMV2.manager()).to.equal(await sportsAMMV2Manager.getAddress());
 			expect(await sportsAMMV2.riskManager()).to.equal(await sportsAMMV2RiskManager.getAddress());
+			expect(await sportsAMMV2.resultManager()).to.equal(
+				await sportsAMMV2ResultManager.getAddress()
+			);
 			expect(await sportsAMMV2.referrals()).to.equal(await referrals.getAddress());
 			expect(await sportsAMMV2.stakingThales()).to.equal(await stakingThales.getAddress());
 			expect(await sportsAMMV2.safeBox()).to.equal(safeBox.address);
@@ -55,21 +60,6 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 
 		it('Should set the right amounts', async () => {
 			expect(await sportsAMMV2.safeBoxFee()).to.equal(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);
-			expect(await sportsAMMV2.minBuyInAmount()).to.equal(SPORTS_AMM_INITAL_PARAMS.minBuyInAmount);
-			expect(await sportsAMMV2.maxTicketSize()).to.equal(SPORTS_AMM_INITAL_PARAMS.maxTicketSize);
-			expect(await sportsAMMV2.maxSupportedAmount()).to.equal(
-				SPORTS_AMM_INITAL_PARAMS.maxSupportedAmount
-			);
-			expect(await sportsAMMV2.maxSupportedOdds()).to.equal(
-				SPORTS_AMM_INITAL_PARAMS.maxSupportedOdds
-			);
-		});
-
-		it('Should set the right times', async () => {
-			expect(await sportsAMMV2.minimalTimeLeftToMaturity()).to.equal(
-				SPORTS_AMM_INITAL_PARAMS.minimalTimeLeftToMaturity
-			);
-			expect(await sportsAMMV2.expiryDuration()).to.equal(SPORTS_AMM_INITAL_PARAMS.expiryDuration);
 		});
 
 		it('Should set the right ticket mastercopy', async () => {
@@ -85,64 +75,17 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 	describe('Setters', () => {
 		it('Should set the new amounts', async () => {
 			const safeBoxFee = ethers.parseEther('0.01');
-			const minBuyInAmount = ethers.parseEther('5');
-			const maxTicketSize = 15;
-			const maxSupportedAmount = ethers.parseEther('30000');
-			const maxSupportedOdds = ethers.parseEther('0.001');
 
-			await expect(
-				sportsAMMV2
-					.connect(secondAccount)
-					.setAmounts(
-						safeBoxFee,
-						minBuyInAmount,
-						maxTicketSize,
-						maxSupportedAmount,
-						maxSupportedOdds
-					)
-			).to.be.revertedWith('Only the contract owner may perform this action');
-
-			await sportsAMMV2.setAmounts(
-				safeBoxFee,
-				minBuyInAmount,
-				maxTicketSize,
-				maxSupportedAmount,
-				maxSupportedOdds
+			await expect(sportsAMMV2.connect(secondAccount).setAmounts(safeBoxFee)).to.be.revertedWith(
+				'Only the contract owner may perform this action'
 			);
+
+			await sportsAMMV2.setAmounts(safeBoxFee);
 			expect(await sportsAMMV2.safeBoxFee()).to.equal(safeBoxFee);
-			expect(await sportsAMMV2.minBuyInAmount()).to.equal(minBuyInAmount);
-			expect(await sportsAMMV2.maxTicketSize()).to.equal(maxTicketSize);
-			expect(await sportsAMMV2.maxSupportedAmount()).to.equal(maxSupportedAmount);
-			expect(await sportsAMMV2.maxSupportedOdds()).to.equal(maxSupportedOdds);
 
-			await expect(
-				sportsAMMV2.setAmounts(
-					safeBoxFee,
-					minBuyInAmount,
-					maxTicketSize,
-					maxSupportedAmount,
-					maxSupportedOdds
-				)
-			)
+			await expect(sportsAMMV2.setAmounts(safeBoxFee))
 				.to.emit(sportsAMMV2, 'AmountsUpdated')
-				.withArgs(safeBoxFee, minBuyInAmount, maxTicketSize, maxSupportedAmount, maxSupportedOdds);
-		});
-
-		it('Should set the new times', async () => {
-			const minimalTimeLeftToMaturity = 20;
-			const expiryDuration = 15552000;
-
-			await expect(
-				sportsAMMV2.connect(secondAccount).setTimes(minimalTimeLeftToMaturity, expiryDuration)
-			).to.be.revertedWith('Only the contract owner may perform this action');
-
-			await sportsAMMV2.setTimes(minimalTimeLeftToMaturity, expiryDuration);
-			expect(await sportsAMMV2.minimalTimeLeftToMaturity()).to.equal(minimalTimeLeftToMaturity);
-			expect(await sportsAMMV2.expiryDuration()).to.equal(expiryDuration);
-
-			await expect(sportsAMMV2.setTimes(minimalTimeLeftToMaturity, expiryDuration))
-				.to.emit(sportsAMMV2, 'TimesUpdated')
-				.withArgs(minimalTimeLeftToMaturity, expiryDuration);
+				.withArgs(safeBoxFee);
 		});
 
 		it('Should set the new addresses', async () => {

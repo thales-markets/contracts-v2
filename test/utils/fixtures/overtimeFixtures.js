@@ -79,19 +79,7 @@ async function deploySportsAMMV2Fixture() {
 	// deploy Sports AMM manager
 	const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
 	const sportsAMMV2Manager = await upgrades.deployProxy(SportsAMMV2Manager, [owner.address]);
-
-	// deploy Sports AMM risk manager
 	const sportsAMMV2ManagerAddress = await sportsAMMV2Manager.getAddress();
-
-	const SportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
-	const sportsAMMV2RiskManager = await upgrades.deployProxy(SportsAMMV2RiskManager, [
-		owner.address,
-		sportsAMMV2ManagerAddress,
-		RISK_MANAGER_INITAL_PARAMS.defaultCap,
-		RISK_MANAGER_INITAL_PARAMS.defaultRiskMultiplier,
-		RISK_MANAGER_INITAL_PARAMS.maxCap,
-		RISK_MANAGER_INITAL_PARAMS.maxRiskMultiplier,
-	]);
 
 	// deploy Sports AMM result manager
 	const SportsAMMV2ResultManager = await ethers.getContractFactory('SportsAMMV2ResultManager');
@@ -99,11 +87,34 @@ async function deploySportsAMMV2Fixture() {
 		owner.address,
 		sportsAMMV2ManagerAddress,
 	]);
+	const sportsAMMV2ResultManagerAddress = await sportsAMMV2ResultManager.getAddress();
+
+	// deploy Sports AMM risk manager
+	const SportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
+	const sportsAMMV2RiskManager = await upgrades.deployProxy(SportsAMMV2RiskManager, [
+		owner.address,
+		sportsAMMV2ManagerAddress,
+		sportsAMMV2ResultManagerAddress,
+		RISK_MANAGER_INITAL_PARAMS.defaultCap,
+		RISK_MANAGER_INITAL_PARAMS.defaultRiskMultiplier,
+		RISK_MANAGER_INITAL_PARAMS.maxCap,
+		RISK_MANAGER_INITAL_PARAMS.maxRiskMultiplier,
+	]);
+	const sportsAMMV2RiskManagerAddress = await sportsAMMV2RiskManager.getAddress();
+
+	await sportsAMMV2RiskManager.setTicketParams(
+		RISK_MANAGER_INITAL_PARAMS.minBuyInAmount,
+		RISK_MANAGER_INITAL_PARAMS.maxTicketSize,
+		RISK_MANAGER_INITAL_PARAMS.maxSupportedAmount,
+		RISK_MANAGER_INITAL_PARAMS.maxSupportedOdds
+	);
+	await sportsAMMV2RiskManager.setTimes(
+		RISK_MANAGER_INITAL_PARAMS.minimalTimeLeftToMaturity,
+		RISK_MANAGER_INITAL_PARAMS.expiryDuration
+	);
 
 	// deploy Sports AMM
 	const collateralAddress = await collateral.getAddress();
-	const sportsAMMV2RiskManagerAddress = await sportsAMMV2RiskManager.getAddress();
-	const sportsAMMV2ResultManagerAddress = await sportsAMMV2ResultManager.getAddress();
 	const stakingThalesAddress = await stakingThales.getAddress();
 	const referralsAddress = await referrals.getAddress();
 
@@ -118,18 +129,10 @@ async function deploySportsAMMV2Fixture() {
 		stakingThalesAddress,
 		safeBox.address,
 	]);
+	const sportsAMMV2Address = await sportsAMMV2.getAddress();
 
-	await sportsAMMV2.setAmounts(
-		SPORTS_AMM_INITAL_PARAMS.safeBoxFee,
-		SPORTS_AMM_INITAL_PARAMS.minBuyInAmount,
-		SPORTS_AMM_INITAL_PARAMS.maxTicketSize,
-		SPORTS_AMM_INITAL_PARAMS.maxSupportedAmount,
-		SPORTS_AMM_INITAL_PARAMS.maxSupportedOdds
-	);
-	await sportsAMMV2.setTimes(
-		SPORTS_AMM_INITAL_PARAMS.minimalTimeLeftToMaturity,
-		SPORTS_AMM_INITAL_PARAMS.expiryDuration
-	);
+	await sportsAMMV2.setAmounts(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);
+	await sportsAMMV2RiskManager.setSportsAMM(sportsAMMV2Address);
 
 	// deploy ticket mastercopy
 	const TicketMastercopy = await ethers.getContractFactory('TicketMastercopy');
@@ -139,8 +142,6 @@ async function deploySportsAMMV2Fixture() {
 	sportsAMMV2.setTicketMastercopy(ticketMastercopyAddress);
 
 	// deploy Sports AMM liqudity pool
-	const sportsAMMV2Address = await sportsAMMV2.getAddress();
-
 	const SportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 	const sportsAMMV2LiquidityPool = await upgrades.deployProxy(SportsAMMV2LiquidityPool, [
 		{
@@ -157,8 +158,8 @@ async function deploySportsAMMV2Fixture() {
 			_safeBoxImpact: SPORTS_AMM_LP_INITAL_PARAMS.safeBoxImpact,
 		},
 	]);
-
 	const sportsAMMV2LiquidityPoolAddress = await sportsAMMV2LiquidityPool.getAddress();
+
 	await sportsAMMV2.setLiquidityPool(sportsAMMV2LiquidityPoolAddress);
 
 	// deploy Sports AMM liqudity pool round mastercopy
@@ -179,16 +180,16 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2LiquidityPoolAddress,
 		collateralAddress,
 	]);
-
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
+
 	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderAddress);
 
 	// deploy Sports AMM Data
-
 	const SportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
 	const sportsAMMV2Data = await upgrades.deployProxy(SportsAMMV2Data, [
 		owner.address,
 		sportsAMMV2Address,
+		sportsAMMV2RiskManagerAddress,
 	]);
 
 	const root = await createMerkleTree();
