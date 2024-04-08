@@ -2,7 +2,13 @@
 pragma solidity ^0.8.20;
 
 interface ISportsAMMV2Manager {
-    function isWhitelistedAddress(address _address) external view returns (bool);
+    enum Role {
+        ROOT_SETTING,
+        RISK_MANAGING,
+        MARKET_RESOLVING
+    }
+
+    function isWhitelistedAddress(address _address, Role role) external view returns (bool);
 
     function transformCollateral(uint value, address collateral) external view returns (uint);
 

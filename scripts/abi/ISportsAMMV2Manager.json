@@ -18,6 +18,11 @@
         "internalType": "address",
         "name": "_address",
         "type": "address"
+      },
+      {
+        "internalType": "enum ISportsAMMV2Manager.Role",
+        "name": "role",
+        "type": "uint8"
       }
     ],
     "name": "isWhitelistedAddress",
