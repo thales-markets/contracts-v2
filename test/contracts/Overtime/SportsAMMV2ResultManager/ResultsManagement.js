@@ -159,7 +159,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 			await sportsAMMV2ResultManager.setResultsPerMarkets([GAME_ID_1], [0], [0], [[1]]);
 			await expect(
 				sportsAMMV2ResultManager.setResultsPerMarkets([GAME_ID_1], [0], [0], [[1]])
-			).to.be.revertedWith('Results already set per market');
+			).to.not.emit(sportsAMMV2ResultManager, 'ResultsPerMarketSet');
 		});
 
 		it('Should fail with "Result type not set"', async () => {

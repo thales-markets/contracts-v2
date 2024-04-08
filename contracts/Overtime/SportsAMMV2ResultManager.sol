@@ -230,11 +230,11 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             ResultType resultType = resultTypePerMarketType[typeId];
 
             require(resultType != ResultType.Unassigned, "Result type not set");
-            require(!areResultsPerMarketSet[gameId][typeId][playerId], "Results already set per market");
-
-            resultsPerMarket[gameId][typeId][playerId] = results;
-            areResultsPerMarketSet[gameId][typeId][playerId] = true;
-            emit ResultsPerMarketSet(gameId, typeId, playerId, results);
+            if (!areResultsPerMarketSet[gameId][typeId][playerId]) {
+                resultsPerMarket[gameId][typeId][playerId] = results;
+                areResultsPerMarketSet[gameId][typeId][playerId] = true;
+                emit ResultsPerMarketSet(gameId, typeId, playerId, results);
+            }
         }
     }
 
