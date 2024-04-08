@@ -237,7 +237,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     /// @notice cancel specific games
     /// @param _gameIds game IDs to cancel
-    function cancelGames(bytes32[] memory _gameIds) external onlyOwner {
+    function cancelGames(bytes32[] memory _gameIds) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
 

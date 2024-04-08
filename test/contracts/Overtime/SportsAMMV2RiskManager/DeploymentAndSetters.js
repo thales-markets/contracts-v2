@@ -164,7 +164,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				sportsAMMV2RiskManagerWithSecondAccount.setCapsPerSport([SPORT_ID_NBA], [newCapForSport])
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setCapsPerSport(
@@ -203,7 +203,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					.setCapsPerSportChild([SPORT_ID_NBA], [newCapForSportChild])
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setCapsPerSportChild([SPORT_ID_NBA], [invalidCap])
@@ -251,7 +251,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				)
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setCapsPerSportAndType(
@@ -321,7 +321,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				)
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setCapsPerMarket(
@@ -391,7 +391,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				)
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setCaps(
@@ -521,7 +521,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				)
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setRiskMultipliersPerSport(
@@ -576,7 +576,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				)
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setRiskMultipliersPerMarket(
@@ -639,7 +639,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				)
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setRiskMultipliersPerSport(
@@ -698,7 +698,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 				)
 			).to.be.revertedWith('Invalid sender');
 
-			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 1, true);
 
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setDynamicLiquidityParamsPerSport(

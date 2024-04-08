@@ -98,7 +98,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 				sportsAMMV2ResultManager
 					.connect(secondAccount)
 					.setResultsPerMarkets([GAME_ID_1, GAME_ID_2], [0, 0], [0, 0], [[1], [2]])
-			).to.be.revertedWith('Only the contract owner may perform this action');
+			).to.be.revertedWith('Invalid sender');
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
 				[GAME_ID_1, GAME_ID_2],
@@ -176,7 +176,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 
 			await expect(
 				sportsAMMV2ResultManager.connect(secondAccount).cancelGames([GAME_ID_1, GAME_ID_2])
-			).to.be.revertedWith('Only the contract owner may perform this action');
+			).to.be.revertedWith('Invalid sender');
 
 			await sportsAMMV2ResultManager.cancelGames([GAME_ID_1, GAME_ID_2]);
 
@@ -240,7 +240,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 				sportsAMMV2ResultManager
 					.connect(secondAccount)
 					.cancelMarkets([GAME_ID_1, GAME_ID_2], [0, 0], [0, 0], [0, 0])
-			).to.be.revertedWith('Only the contract owner may perform this action');
+			).to.be.revertedWith('Invalid sender');
 
 			await sportsAMMV2ResultManager.cancelMarkets([GAME_ID_1, GAME_ID_2], [0, 0], [0, 0], [0, 0]);
 
