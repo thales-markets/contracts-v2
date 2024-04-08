@@ -15,10 +15,10 @@ const {
 } = require('../../../constants/overtime');
 
 describe('SportsAMMV2ResultManager Results Management', () => {
-	let sportsAMMV2ResultManager, firstTrader, chainlinkResolver, mockChainlinkOracle;
+	let sportsAMMV2ResultManager, firstTrader, chainlinkResolver, mockChainlinkOracle, collateral;
 
 	beforeEach(async () => {
-		({ sportsAMMV2ResultManager, chainlinkResolver, mockChainlinkOracle } =
+		({ sportsAMMV2ResultManager, chainlinkResolver, mockChainlinkOracle, collateral } =
 			await loadFixture(deploySportsAMMV2Fixture));
 		({ firstTrader } = await loadFixture(deployAccountsFixture));
 	});
@@ -37,6 +37,21 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 			await expect(mockChainlinkOracle.fulfillMarketResolve(requestId, [[0], [1]])).to.emit(
 				sportsAMMV2ResultManager,
 				'ResultsPerMarketSet'
+			);
+		});
+
+		it('Setters', async () => {
+			await chainlinkResolver.setPaused(true);
+
+			const collateralAddress = await collateral.getAddress();
+			const mockSpecId = '0x7370656349640000000000000000000000000000000000000000000000000000';
+			await chainlinkResolver.setConfiguration(
+				collateralAddress, //link
+				collateralAddress, //_oracle
+				collateralAddress, // _sportsAMM
+				collateralAddress, // _riskManager
+				mockSpecId, // _specId
+				0 // payment
 			);
 		});
 	});
