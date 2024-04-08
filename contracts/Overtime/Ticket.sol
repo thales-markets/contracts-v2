@@ -145,7 +145,8 @@ contract Ticket is OwnedWithInit {
     /// @notice gets current phase of the ticket
     /// @return phase ticket phase
     function phase() public view returns (Phase) {
-        return resolved ? ((expiry < block.timestamp) ? Phase.Expiry : Phase.Maturity) : Phase.Trading;
+        return
+            isTicketExercisable() || resolved ? ((expiry < block.timestamp) ? Phase.Expiry : Phase.Maturity) : Phase.Trading;
     }
 
     /// @notice gets combined positions of the game
