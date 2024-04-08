@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 
-contract ChainklinkResolver is ChainlinkClient, Ownable, Pausable {
+contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
     using SafeERC20 for IERC20;
 
@@ -36,6 +36,9 @@ contract ChainklinkResolver is ChainlinkClient, Ownable, Pausable {
     }
 
     mapping(bytes32 => MarketResolveData) public requestIdToMarketResolveData;
+
+    uint public requestCounter;
+    mapping(uint => bytes32) public counterToRequestId;
 
     constructor(
         address _link,
@@ -77,6 +80,8 @@ contract ChainklinkResolver is ChainlinkClient, Ownable, Pausable {
 
         MarketResolveData memory data = MarketResolveData(requestId, _gameIds, _typeIds, _playerIds);
         requestIdToMarketResolveData[requestId] = data;
+
+        counterToRequestId[requestCounter++] = requestId;
 
         emit MarketResolvingRequested(msg.sender, _gameIds, _typeIds, _playerIds);
     }
