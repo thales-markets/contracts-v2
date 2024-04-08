@@ -478,6 +478,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 }
             }
         }
+
+        if (_shouldCheckRisk && riskManager.hasIllegalCombinationsOnTicket(_tradeData)) {
+            totalQuote = 0;
+        }
     }
 
     function _handleDifferentCollateral(
@@ -675,6 +679,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     "Risk is to high"
                 );
             }
+            require(!riskManager.hasIllegalCombinationsOnTicket(_tradeData), "Illegal combination detected");
         }
     }
 
