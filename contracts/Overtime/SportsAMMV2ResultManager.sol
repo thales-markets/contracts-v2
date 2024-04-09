@@ -218,7 +218,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         uint16[] memory _typeIds,
         uint16[] memory _playerIds,
         int24[][] memory _results
-    ) external onlyOwner {
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
             uint16 typeId = _typeIds[i];
@@ -237,7 +237,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     /// @notice cancel specific games
     /// @param _gameIds game IDs to cancel
-    function cancelGames(bytes32[] memory _gameIds) external onlyOwner {
+    function cancelGames(bytes32[] memory _gameIds) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
 
@@ -256,7 +256,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         uint16[] memory _typeIds,
         uint16[] memory _playerIds,
         int24[] memory _lines
-    ) external onlyOwner {
+    ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
             uint16 typeId = _typeIds[i];
@@ -388,6 +388,14 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                         ? ISportsAMMV2ResultManager.MarketPositionStatus.Open
                         : ISportsAMMV2ResultManager.MarketPositionStatus.Winning
                 );
+    }
+
+    modifier onlyWhitelistedAddresses(address sender) {
+        require(
+            sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
+            "Invalid sender"
+        );
+        _;
     }
 
     /* ========== SETTERS ========== */

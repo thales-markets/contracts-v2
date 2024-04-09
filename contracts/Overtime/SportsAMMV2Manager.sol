@@ -7,11 +7,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
+import "../interfaces/ISportsAMMV2RiskManager.sol";
 
 contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     uint private constant COLLATERAL_DEFAULT_DECIMALS = 18;
 
-    mapping(address => bool) public whitelistedAddresses;
+    mapping(address => mapping(ISportsAMMV2Manager.Role => bool)) public whitelistedAddresses;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -24,8 +25,8 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     /// @notice checks if address is whitelisted
     /// @param _address address to be checked
     /// @return bool
-    function isWhitelistedAddress(address _address) external view returns (bool) {
-        return whitelistedAddresses[_address];
+    function isWhitelistedAddress(address _address, ISportsAMMV2Manager.Role _role) external view returns (bool) {
+        return whitelistedAddresses[_address][_role];
     }
 
     /// @notice transforms collateral if needed - divide by 12 decimals (18 -> 6)
@@ -52,18 +53,23 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
     /// @notice enables whitelist addresses of given array
     /// @param _whitelistedAddresses array of whitelisted addresses
+    /// @param _role adding or removing from whitelist (true: add, false: remove)
     /// @param _flag adding or removing from whitelist (true: add, false: remove)
-    function setWhitelistedAddresses(address[] calldata _whitelistedAddresses, bool _flag) external onlyOwner {
+    function setWhitelistedAddresses(
+        address[] calldata _whitelistedAddresses,
+        ISportsAMMV2Manager.Role _role,
+        bool _flag
+    ) external onlyOwner {
         require(_whitelistedAddresses.length > 0, "Whitelisted addresses cannot be empty");
         for (uint256 index = 0; index < _whitelistedAddresses.length; index++) {
-            if (whitelistedAddresses[_whitelistedAddresses[index]] != _flag) {
-                whitelistedAddresses[_whitelistedAddresses[index]] = _flag;
-                emit AddedIntoWhitelist(_whitelistedAddresses[index], _flag);
+            if (whitelistedAddresses[_whitelistedAddresses[index]][_role] != _flag) {
+                whitelistedAddresses[_whitelistedAddresses[index]][_role] = _flag;
+                emit AddedIntoWhitelist(_whitelistedAddresses[index], _role, _flag);
             }
         }
     }
 
     /* ========== EVENTS ========== */
 
-    event AddedIntoWhitelist(address whitelistedAddresses, bool flag);
+    event AddedIntoWhitelist(address whitelistedAddresses, ISportsAMMV2Manager.Role role, bool flag);
 }
