@@ -557,7 +557,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _tradeDataInternal._additionalSlippage
             );
             riskManager.checkAndUpdateRisks(_tradeData, _tradeDataInternal._buyInAmount);
-            if(_tradeDataInternal._collateral == address(0)) {
+            if (_tradeDataInternal._collateral == address(0)) {
                 defaultCollateral.safeTransferFrom(
                     _tradeDataInternal._requester,
                     address(this),
@@ -634,7 +634,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     // Transform collateral to USD
-    // _defaultCollateralDecimalConverter is used sustain function as pure 
+    // _defaultCollateralDecimalConverter is used sustain function as pure
     // _defaultCollateralDecimalConverter value is '12' for USDC (6 decimals)
     function _transformToUSD(
         uint _amountInCollateral,
@@ -695,7 +695,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleReferrerAndSB(uint _buyInAmount, address _tickerCreator, address _collateral) internal returns (uint safeBoxAmount) {
+    function _handleReferrerAndSB(
+        uint _buyInAmount,
+        address _tickerCreator,
+        address _collateral
+    ) internal returns (uint safeBoxAmount) {
         uint referrerShare;
         address referrer = referrals.sportReferrals(_tickerCreator);
         IERC20 useCollateral = IERC20(_collateral);
