@@ -22,7 +22,7 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 		newCapForSportAndType,
 		newCapForMarket,
 		newRiskMultiplierForSport,
-		newRiskMultiplierForMarket,
+		newRiskMultiplierForGame,
 		newDynamicLiquidityCutoffTime,
 		newDynamicLiquidityCutoffDivider,
 	} = RISK_MANAGER_PARAMS;
@@ -79,6 +79,19 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 		beforeEach(async () => {
 			maturity = (await time.latest()) + ONE_DAY_IN_SECS;
 			defaultCap = await sportsAMMV2RiskManager.defaultCap();
+		});
+
+		it('Should get cap 0 for market maturity in past', async () => {
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				(await time.latest()) - ONE_DAY_IN_SECS
+			);
+
+			expect(cap).to.equal(0);
 		});
 
 		it('Should get cap for market (MONEYLINE) - default cap', async () => {
@@ -293,90 +306,84 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 	});
 
 	describe('Get risk', () => {
-		let maturity, totalSpent;
+		let maturity, defaultCap, defaultRiskMultiplier;
 
 		beforeEach(async () => {
 			maturity = (await time.latest()) + ONE_DAY_IN_SECS;
-			totalSpent = ethers.parseEther('4000');
+			defaultCap = await sportsAMMV2RiskManager.defaultCap();
+			defaultRiskMultiplier = Number(await sportsAMMV2RiskManager.defaultRiskMultiplier());
 		});
 
-		it('Should get total spending is more than total risk - default cap, default risk', async () => {
-			const isTotalSpendingLessThanTotalRisk =
-				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
-					totalSpent,
-					GAME_ID_1,
-					SPORT_ID_NBA,
-					0,
-					0,
-					0,
-					maturity
-				);
+		it('Should get total risk on game - default cap, default risk', async () => {
+			const formattedDefaultCap = Number(ethers.formatEther(defaultCap));
 
-			expect(isTotalSpendingLessThanTotalRisk).to.equal(false);
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
+
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedDefaultCap * defaultRiskMultiplier
+			);
 		});
 
-		it('Should get total spending is less than total risk - cap per sport, default risk', async () => {
+		it('Should get total risk on game - cap per sport, default risk', async () => {
+			const formattedNewCapForSport = Number(ethers.formatEther(newCapForSport));
+
 			await sportsAMMV2RiskManager.setCapsPerSport([SPORT_ID_NBA], [newCapForSport]);
 
-			const isTotalSpendingLessThanTotalRisk =
-				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
-					totalSpent,
-					GAME_ID_1,
-					SPORT_ID_NBA,
-					0,
-					0,
-					0,
-					maturity
-				);
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
 
-			expect(isTotalSpendingLessThanTotalRisk).to.equal(true);
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedNewCapForSport * defaultRiskMultiplier
+			);
 		});
 
-		it('Should get total spending is less than total risk - default cap, risk per sport', async () => {
+		it('Should get total risk on game - default cap, risk per sport', async () => {
+			const formattedDefaultCap = Number(ethers.formatEther(defaultCap));
+
 			await sportsAMMV2RiskManager.setRiskMultipliersPerSport(
 				[SPORT_ID_NBA],
 				[newRiskMultiplierForSport]
 			);
 
-			const isTotalSpendingLessThanTotalRisk =
-				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
-					totalSpent,
-					GAME_ID_1,
-					SPORT_ID_NBA,
-					0,
-					0,
-					0,
-					maturity
-				);
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
 
-			expect(isTotalSpendingLessThanTotalRisk).to.equal(true);
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedDefaultCap * newRiskMultiplierForSport
+			);
 		});
 
-		it('Should get total spending is more than total risk - default cap, risk per sport, risk per market', async () => {
+		it('Should get total risk on game - default cap, risk per sport, risk per game', async () => {
+			const formattedDefaultCap = Number(ethers.formatEther(defaultCap));
+
 			await sportsAMMV2RiskManager.setRiskMultipliersPerSport(
 				[SPORT_ID_NBA],
 				[newRiskMultiplierForSport]
 			);
-			await sportsAMMV2RiskManager.setRiskMultipliersPerMarket(
+			await sportsAMMV2RiskManager.setRiskMultipliersPerGame(
 				[GAME_ID_1],
-				[0],
-				[0],
-				[0],
-				[newRiskMultiplierForMarket]
+				[newRiskMultiplierForGame]
 			);
 
-			const isTotalSpendingLessThanTotalRisk =
-				await sportsAMMV2RiskManager.isTotalSpendingLessThanTotalRisk(
-					totalSpent,
-					GAME_ID_1,
-					SPORT_ID_NBA,
-					0,
-					0,
-					0,
-					maturity
-				);
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
 
-			expect(isTotalSpendingLessThanTotalRisk).to.equal(false);
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedDefaultCap * newRiskMultiplierForGame
+			);
 		});
 	});
 });

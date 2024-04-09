@@ -36,5 +36,18 @@ describe('SportsAMMV2Data Deployment And Setters', () => {
 				.to.emit(sportsAMMV2Data, 'SportAMMChanged')
 				.withArgs(thirdAccount.address);
 		});
+
+		it('Should set the new risk manager', async () => {
+			await expect(
+				sportsAMMV2Data.connect(secondAccount).setRiskManager(thirdAccount)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+
+			await sportsAMMV2Data.setRiskManager(thirdAccount);
+			expect(await sportsAMMV2Data.riskManager()).to.equal(thirdAccount.address);
+
+			await expect(sportsAMMV2Data.setRiskManager(thirdAccount))
+				.to.emit(sportsAMMV2Data, 'RiskManagerChanged')
+				.withArgs(thirdAccount.address);
+		});
 	});
 });
