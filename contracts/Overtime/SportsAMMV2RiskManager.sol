@@ -259,8 +259,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             uint[] memory odds = marketTradeData.odds;
             uint8 position = marketTradeData.position;
 
-            require(_isMarketInAMMTrading(marketTradeData), "Not trading");
             require(odds.length > position, "Invalid position");
+            require(_isMarketInAMMTrading(marketTradeData), "Not trading");
 
             uint amountToBuy = odds[position] == 0 ? 0 : (ONE * _buyInAmount) / odds[position];
             if (amountToBuy > _buyInAmount) {
@@ -305,7 +305,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16 playerId = _marketTradeData.playerId;
 
         return
-            riskPerMarketTypeAndPosition[gameId][typeId][playerId][_marketTradeData.position] + int(marketRiskAmount) >=
+            riskPerMarketTypeAndPosition[gameId][typeId][playerId][_marketTradeData.position] + int(marketRiskAmount) >
             int(
                 _calculateCapToBeUsed(
                     gameId,

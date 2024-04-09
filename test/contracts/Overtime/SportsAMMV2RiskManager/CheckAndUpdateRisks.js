@@ -21,7 +21,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 		sameGameDifferentPlayersDifferentProps,
 		firstTrader,
 		firstLiquidityProvider,
-		buyInAmount;
+		tradeDataNotActive;
 
 	beforeEach(async () => {
 		({
@@ -31,6 +31,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
 			sameGameDifferentPlayersDifferentProps,
+			tradeDataNotActive,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstTrader, firstLiquidityProvider } = await loadFixture(deployAccountsFixture));
 
@@ -128,83 +129,64 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 	});
 
 	describe('Ticket with risks', () => {
-		let buyInAmount;
-
-		beforeEach(async () => {
-			buyInAmount = ethers.parseEther('1000');
+		beforeEach(() => {
+			for (let i = 0; i < tradeDataTenMarketsCurrentRound.length; i++) {
+				tradeDataTenMarketsCurrentRound[i].position = 0;
+			}
 		});
 
 		it('Should fail with "Only the AMM may perform these methods"', async () => {
 			await expect(
-				sportsAMMV2RiskManager.checkAndUpdateRisks(tradeDataTenMarketsCurrentRound, buyInAmount)
+				sportsAMMV2RiskManager.checkAndUpdateRisks(tradeDataTenMarketsCurrentRound, BUY_IN_AMOUNT)
 			).to.be.revertedWith('Only the AMM may perform these methods');
 		});
 
-		// it('Should fail with "Not trading"', async () => {
-		// 	const quote = await sportsAMMV2.tradeQuote(
-		// 		tradeDataTenMarketsCurrentRound,
-		// 		buyInAmount,
-		// 		ZERO_ADDRESS
-		// 	);
+		it('Should fail with "Not trading"', async () => {
+			const quote = await sportsAMMV2.tradeQuote(tradeDataNotActive, BUY_IN_AMOUNT, ZERO_ADDRESS);
 
-		// 	tradeDataTenMarketsCurrentRound[0].status = 1;
-		// 	await expect(
-		// 		sportsAMMV2
-		// 			.connect(firstTrader)
-		// 			.trade(
-		// 				tradeDataTenMarketsCurrentRound,
-		// 				buyInAmount,
-		// 				quote.payout,
-		// 				ADDITIONAL_SLIPPAGE,
-		// 				ZERO_ADDRESS,
-		// 				ZERO_ADDRESS,
-		// 				ZERO_ADDRESS,
-		// 				false
-		// 			)
-		// 	).to.be.revertedWith('Not trading');
+			await expect(
+				sportsAMMV2
+					.connect(firstTrader)
+					.trade(
+						tradeDataNotActive,
+						BUY_IN_AMOUNT,
+						quote.payout,
+						ADDITIONAL_SLIPPAGE,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						false
+					)
+			).to.be.revertedWith('Not trading');
+		});
 
-		// 	tradeDataTenMarketsCurrentRound[0].maturity = (await time.latest()) - ONE_DAY_IN_SECS;
-		// 	await expect(
-		// 		sportsAMMV2
-		// 			.connect(firstTrader)
-		// 			.trade(
-		// 				tradeDataTenMarketsCurrentRound,
-		// 				buyInAmount,
-		// 				quote.payout,
-		// 				ADDITIONAL_SLIPPAGE,
-		// 				ZERO_ADDRESS,
-		// 				ZERO_ADDRESS,
-		// 				ZERO_ADDRESS,
-		// 				false
-		// 			)
-		// 	).to.be.revertedWith('Not trading');
-		// });
+		it('Should fail with "Invalid position"', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
 
-		// it('Should fail with "Invalid position"', async () => {
-		// 	const quote = await sportsAMMV2.tradeQuote(
-		// 		tradeDataTenMarketsCurrentRound,
-		// 		buyInAmount,
-		// 		ZERO_ADDRESS
-		// 	);
-
-		// 	tradeDataTenMarketsCurrentRound[0].position = 3;
-		// 	await expect(
-		// 		sportsAMMV2
-		// 			.connect(firstTrader)
-		// 			.trade(
-		// 				tradeDataTenMarketsCurrentRound,
-		// 				buyInAmount,
-		// 				quote.payout,
-		// 				ADDITIONAL_SLIPPAGE,
-		// 				ZERO_ADDRESS,
-		// 				ZERO_ADDRESS,
-		// 				ZERO_ADDRESS,
-		// 				false
-		// 			)
-		// 	).to.be.revertedWith('Invalid position');
-		// });
+			tradeDataTenMarketsCurrentRound[0].position = 3;
+			await expect(
+				sportsAMMV2
+					.connect(firstTrader)
+					.trade(
+						tradeDataTenMarketsCurrentRound,
+						BUY_IN_AMOUNT,
+						quote.payout,
+						ADDITIONAL_SLIPPAGE,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						false
+					)
+			).to.be.revertedWith('Invalid position');
+		});
 
 		it('Should fail with "Risk per market and position exceeded"', async () => {
+			const buyInAmount = ethers.parseEther('1000');
+
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
@@ -233,6 +215,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 		});
 
 		it('Should fail with "Risk per game exceeded"', async () => {
+			const buyInAmount = ethers.parseEther('1000');
+
 			let quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
@@ -282,12 +266,12 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			).to.be.revertedWith('Risk per game exceeded');
 		});
 
-		it('Should fail with "Risk per market and position exceeded"', async () => {
+		it('Should fail with "Invalid combination detected"', async () => {
 			await sportsAMMV2RiskManager.setCombiningPerSportEnabled(SPORT_ID_NBA, true);
 
 			const quote = await sportsAMMV2.tradeQuote(
 				sameGameDifferentPlayersDifferentProps,
-				buyInAmount,
+				BUY_IN_AMOUNT,
 				ZERO_ADDRESS
 			);
 
@@ -298,7 +282,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					.connect(firstTrader)
 					.trade(
 						sameGameDifferentPlayersDifferentProps,
-						buyInAmount,
+						BUY_IN_AMOUNT,
 						quote.payout,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
@@ -306,7 +290,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Risk per market and position exceeded');
+			).to.be.revertedWith('Invalid combination detected');
 		});
 	});
 });
