@@ -140,6 +140,18 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         return _calculateCapToBeUsed(_gameId, _sportId, _typeId, _playerId, _line, _maturity);
     }
 
+    /// @notice calculate max available total risk on game
+    /// @param _gameId to total risk for
+    /// @param _sportId to total risk for
+    /// @return totalRisk total risk
+    function calculateTotalRiskOnGame(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint _maturity
+    ) external view returns (uint totalRisk) {
+        return _calculateTotalRiskOnGame(_gameId, _sportId, _maturity);
+    }
+
     /// @notice check risk for ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
@@ -311,13 +323,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint marketRiskAmount
     ) internal view returns (bool) {
         bytes32 gameId = _marketTradeData.gameId;
-        uint16 sportId = _marketTradeData.sportId;
-
-        // get cap for parent market
-        uint capToBeUsed = _calculateCapToBeUsed(gameId, sportId, 0, 0, 0, _marketTradeData.maturity);
-        uint riskMultiplier = _calculateRiskMultiplier(gameId, sportId);
-
-        return (spentOnGame[gameId] + marketRiskAmount) > (capToBeUsed * riskMultiplier);
+        return
+            (spentOnGame[gameId] + marketRiskAmount) >
+            _calculateTotalRiskOnGame(gameId, _marketTradeData.sportId, _marketTradeData.maturity);
     }
 
     function _isInvalidCombinationOnTicket(
@@ -417,6 +425,18 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 }
             }
         }
+    }
+
+    function _calculateTotalRiskOnGame(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint _maturity
+    ) internal view returns (uint totalRisk) {
+        // get cap for parent market
+        uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity);
+        uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId);
+
+        return (capToBeUsed * riskMultiplier);
     }
 
     /* ========== SETTERS ========== */

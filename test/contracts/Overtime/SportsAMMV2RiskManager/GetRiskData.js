@@ -22,7 +22,7 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 		newCapForSportAndType,
 		newCapForMarket,
 		newRiskMultiplierForSport,
-		newRiskMultiplierForMarket,
+		newRiskMultiplierForGame,
 		newDynamicLiquidityCutoffTime,
 		newDynamicLiquidityCutoffDivider,
 	} = RISK_MANAGER_PARAMS;
@@ -289,6 +289,88 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				maturity
 			);
 			expect(cap).to.equal(defaultCap);
+		});
+	});
+
+	describe('Get risk', () => {
+		let maturity, defaultCap, defaultRiskMultiplier;
+
+		beforeEach(async () => {
+			maturity = (await time.latest()) + ONE_DAY_IN_SECS;
+			defaultCap = await sportsAMMV2RiskManager.defaultCap();
+			defaultRiskMultiplier = Number(await sportsAMMV2RiskManager.defaultRiskMultiplier());
+		});
+
+		it('Should get total risk on game - default cap, default risk', async () => {
+			const formattedDefaultCap = Number(ethers.formatEther(defaultCap));
+
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
+
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedDefaultCap * defaultRiskMultiplier
+			);
+		});
+
+		it('Should get total risk on game - cap per sport, default risk', async () => {
+			const formattedNewCapForSport = Number(ethers.formatEther(newCapForSport));
+
+			await sportsAMMV2RiskManager.setCapsPerSport([SPORT_ID_NBA], [newCapForSport]);
+
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
+
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedNewCapForSport * defaultRiskMultiplier
+			);
+		});
+
+		it('Should get total risk on game - default cap, risk per sport', async () => {
+			const formattedDefaultCap = Number(ethers.formatEther(defaultCap));
+
+			await sportsAMMV2RiskManager.setRiskMultipliersPerSport(
+				[SPORT_ID_NBA],
+				[newRiskMultiplierForSport]
+			);
+
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
+
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedDefaultCap * newRiskMultiplierForSport
+			);
+		});
+
+		it('Should get total risk on game - default cap, risk per sport, risk per game', async () => {
+			const formattedDefaultCap = Number(ethers.formatEther(defaultCap));
+
+			await sportsAMMV2RiskManager.setRiskMultipliersPerSport(
+				[SPORT_ID_NBA],
+				[newRiskMultiplierForSport]
+			);
+			await sportsAMMV2RiskManager.setRiskMultipliersPerGame(
+				[GAME_ID_1],
+				[newRiskMultiplierForGame]
+			);
+
+			const totalRiskOnGame = await sportsAMMV2RiskManager.calculateTotalRiskOnGame(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				maturity
+			);
+
+			expect(Number(ethers.formatEther(totalRiskOnGame))).to.equal(
+				formattedDefaultCap * newRiskMultiplierForGame
+			);
 		});
 	});
 });
