@@ -50,6 +50,11 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
 		});
+		it('Should pass with 0 buy-in amount', async () => {
+			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(tradeDataCurrentRound, 0);
+
+			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
+		});
 	});
 
 	describe('Ticket with out of liquidity', () => {

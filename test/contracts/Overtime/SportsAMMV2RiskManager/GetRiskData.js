@@ -81,6 +81,19 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			defaultCap = await sportsAMMV2RiskManager.defaultCap();
 		});
 
+		it('Should get cap 0 for market maturity in past', async () => {
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				(await time.latest()) - ONE_DAY_IN_SECS
+			);
+
+			expect(cap).to.equal(0);
+		});
+
 		it('Should get cap for market (MONEYLINE) - default cap', async () => {
 			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 				GAME_ID_1,
