@@ -170,14 +170,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             ISportsAMMV2RiskManager.RiskStatus riskStatus
         )
     {
-        // TODO always convert collateral to default collateral
-        // TODO if no LP pool, payout in USD, if pool exist payout in collateral
-        // TODO check for collateral risk
-        (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, _buyInAmount, true);
-
-        collateralQuote = _collateral == address(0)
-            ? _buyInAmount
-            : multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
+        if (_collateral != address(0)) {
+            collateralQuote = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+            if (collateralPool[_collateral] == address(0)) {
+                (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, collateralQuote, true);
+            }
+        } else {
+            (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, _buyInAmount, true);
+        }
     }
 
     /// @notice is provided ticket active

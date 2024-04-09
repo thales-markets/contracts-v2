@@ -82,29 +82,31 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			let currentRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(currentRound);
 			let currentRoundPoolBalanceBeforeTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
+			let multiCollateralMinimumReceived = await multiCollateral.getMinimumReceived(
+				collateralSixDecimals.target,
+				BUY_IN_AMOUNT_SIX_DECIMALS
+			);
+
 			let multiCollateralMinimumNeeded = await multiCollateral.getMinimumNeeded(
 				collateralSixDecimals.target,
 				BUY_IN_AMOUNT
 			);
+			expect(multiCollateralMinimumReceived).to.equal(BUY_IN_AMOUNT);
 			expect(multiCollateralMinimumNeeded).to.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			expect(currentRoundPoolBalanceBeforeTrade).to.equal(initialDeposit);
 			// create a ticket
-			const quote1 = await sportsAMMV2.tradeQuote(
-				tradeDataCurrentRound,
-				BUY_IN_AMOUNT,
-				collateralSixDecimals
-			);
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
-				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				BUY_IN_AMOUNT_SIX_DECIMALS,
+				collateralSixDecimals
 			);
+
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
 					tradeDataCurrentRound,
-					BUY_IN_AMOUNT,
-					quote1.payout,
+					quote.collateralQuote,
+					quote.payout,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -120,7 +122,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const diffPayoutBuyIn =
 				Number(ethers.formatEther(quote.payout)) +
 				Number(ethers.formatEther(quote.fees)) -
-				Number(ethers.formatEther(BUY_IN_AMOUNT));
+				Number(ethers.formatEther(quote.collateralQuote));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
