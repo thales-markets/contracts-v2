@@ -51,9 +51,13 @@ const getTicketTradeData = () => {
 	tradeDataSameGames.push(getTradeDataItem(marketsTree[0], 0));
 	tradeDataSameGames.push(getTradeDataItem(marketsTree[0], 0));
 
-	const sameGamesWithOnePlayerProps = [];
-	sameGamesWithOnePlayerProps.push(getTradeDataItem(marketsTree[0].childMarkets[3], 0));
-	sameGamesWithOnePlayerProps.push(getTradeDataItem(marketsTree[0], 0));
+	const sameGameWithFirstPlayerProps = [];
+	sameGameWithFirstPlayerProps.push(getTradeDataItem(marketsTree[0].childMarkets[3], 0));
+	sameGameWithFirstPlayerProps.push(getTradeDataItem(marketsTree[0], 0));
+
+	const sameGameWithSecondPlayerProps = [];
+	sameGameWithSecondPlayerProps.push(getTradeDataItem(marketsTree[0], 0));
+	sameGameWithSecondPlayerProps.push(getTradeDataItem(marketsTree[0].childMarkets[3], 0));
 
 	const sameGameDifferentPlayersDifferentProps = [];
 	sameGameDifferentPlayersDifferentProps.push(getTradeDataItem(marketsTree[0].childMarkets[3], 0));
@@ -69,7 +73,8 @@ const getTicketTradeData = () => {
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
 		tradeDataSameGames,
-		sameGamesWithOnePlayerProps,
+		sameGameWithFirstPlayerProps,
+		sameGameWithSecondPlayerProps,
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
 	};

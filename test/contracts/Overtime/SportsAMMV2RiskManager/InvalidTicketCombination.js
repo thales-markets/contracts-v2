@@ -11,7 +11,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
 		tradeDataSameGames,
-		sameGamesWithOnePlayerProps,
+		sameGameWithFirstPlayerProps,
+		sameGameWithSecondPlayerProps,
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
 		secondAccount;
@@ -22,7 +23,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
 			tradeDataSameGames,
-			sameGamesWithOnePlayerProps,
+			sameGameWithFirstPlayerProps,
+			sameGameWithSecondPlayerProps,
 			sameGameDifferentPlayersDifferentProps,
 			sameGameSamePlayersDifferentProps,
 		} = await loadFixture(deploySportsAMMV2Fixture));
@@ -92,8 +94,15 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 		it('Should fail with same games with one player props on ticket', async () => {
 			await sportsAMMV2RiskManager.setCombiningPerSportEnabled(SPORT_ID_NBA, true);
 
-			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
-				sameGamesWithOnePlayerProps,
+			let checkRisksData = await sportsAMMV2RiskManager.checkRisks(
+				sameGameWithFirstPlayerProps,
+				BUY_IN_AMOUNT
+			);
+
+			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.InvalidCombination);
+
+			checkRisksData = await sportsAMMV2RiskManager.checkRisks(
+				sameGameWithSecondPlayerProps,
 				BUY_IN_AMOUNT
 			);
 

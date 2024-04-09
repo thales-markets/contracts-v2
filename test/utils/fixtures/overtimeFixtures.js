@@ -199,7 +199,8 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
 		tradeDataSameGames,
-		sameGamesWithOnePlayerProps,
+		sameGameWithFirstPlayerProps,
+		sameGameWithSecondPlayerProps,
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
 	} = getTicketTradeData();
@@ -290,7 +291,8 @@ async function deploySportsAMMV2Fixture() {
 		mockChainlinkOracle,
 		sportsAMMV2Data,
 		tradeDataSameGames,
-		sameGamesWithOnePlayerProps,
+		sameGameWithFirstPlayerProps,
+		sameGameWithSecondPlayerProps,
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
 	};
