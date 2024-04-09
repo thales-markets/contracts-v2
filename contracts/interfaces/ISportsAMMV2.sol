@@ -74,6 +74,7 @@ interface ISportsAMMV2 {
         uint _expectedPayout,
         address _differentRecipient,
         address _referrer,
-        address _collateral
+        address _collateral,
+        bool _isEth
     ) external payable;
 }

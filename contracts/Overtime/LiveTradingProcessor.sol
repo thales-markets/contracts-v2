@@ -191,7 +191,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 _approvedPayoutAmount,
                 lTradeData._differentRecipient,
                 lTradeData._referrer,
-                lTradeData._collateral
+                lTradeData._collateral,
+                lTradeData._ethDeposited > 0
             );
         }
         requestIdToFulfillAllowed[_requestId] = _allow;

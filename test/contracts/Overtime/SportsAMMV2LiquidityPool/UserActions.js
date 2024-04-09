@@ -415,7 +415,8 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 
 			// resolve ticket market as loss for the user
@@ -574,7 +575,8 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 
 			// resolve ticket market as loss for the user
@@ -682,7 +684,8 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 
 			const ticketMarket1 = tradeDataCurrentRound[0];

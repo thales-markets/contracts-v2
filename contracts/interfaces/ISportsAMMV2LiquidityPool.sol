@@ -7,4 +7,6 @@ interface ISportsAMMV2LiquidityPool {
     function transferToPool(address ticket, uint amount) external;
 
     function getTicketPool(address _ticket) external returns (address);
+
+    function collateralKey() external returns (bytes32);
 }

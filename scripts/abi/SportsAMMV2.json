@@ -1406,6 +1406,11 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isEth",
+        "type": "bool"
       }
     ],
     "name": "trade",
@@ -1523,6 +1528,11 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isETH",
+        "type": "bool"
       }
     ],
     "name": "tradeLive",

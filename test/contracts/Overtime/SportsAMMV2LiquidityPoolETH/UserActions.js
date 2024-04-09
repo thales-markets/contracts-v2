@@ -460,6 +460,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
+					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -625,6 +626,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
+					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
@@ -737,6 +739,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
+					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 

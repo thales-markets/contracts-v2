@@ -87,7 +87,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 
 			// difference between payout and buy-in (amount taken from LP)
@@ -245,7 +246,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 
 			// difference between payout and buy-in (amount taken from LP)
@@ -410,7 +412,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 
 			// difference between payout and buy-in (amount taken from LP)
@@ -620,7 +623,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 
 			// difference between payout and buy-in (amount taken from LP)

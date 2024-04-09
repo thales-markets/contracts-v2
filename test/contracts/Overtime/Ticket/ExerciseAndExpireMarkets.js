@@ -79,7 +79,8 @@ describe('Ticket Exercise and Expire', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
@@ -136,7 +137,8 @@ describe('Ticket Exercise and Expire', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS
+					ZERO_ADDRESS,
+					false
 				);
 			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];

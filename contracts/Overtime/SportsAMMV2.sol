@@ -266,7 +266,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
-        address _collateral
+        address _collateral,
+        bool _isEth
     ) external payable nonReentrant notPaused {
         address useLPpool;
         uint collateralPriceInUSD;
@@ -279,7 +280,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender);
+            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender, _isEth);
         }
         if (useLPpool != address(0)) {
             _trade(
@@ -329,7 +330,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout,
         address _differentRecipient,
         address _referrer,
-        address _collateral
+        address _collateral,
+        bool _isETH
     ) external payable nonReentrant notPaused {
         require(msg.sender == liveTradingProcessor, "Only Live");
 
@@ -341,7 +343,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address useLPpool;
         uint collateralPriceInUSD;
         if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender);
+            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender, _isETH);
         }
 
         if (useLPpool != address(0)) {
@@ -399,7 +401,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _collateral
     ) external notPaused onlyKnownTickets(msg.sender) {
         if (!_cancelled) {
-            _handleReferrerAndSB(_buyInAmount, _ticketCreator, _collateral);
+            _handleReferrerAndSB(_buyInAmount, _ticketCreator, IERC20(_collateral));
         }
         knownTickets.remove(msg.sender);
         if (activeTicketsPerUser[_ticketOwner].contains(msg.sender)) {
@@ -494,31 +496,29 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _handleDifferentCollateral(
         uint _buyInAmount,
         address _collateral,
-        address _fromAddress
-    ) internal returns (address lqPool, uint collateralPPrice) {
+        address _fromAddress,
+        bool _isEth
+    ) internal returns (address lqPool, uint collateralPrice) {
         require(multicollateralEnabled, "Multi-collat not enabled");
         uint exactReceived;
         lqPool = collateralPool[_collateral];
         if (lqPool != address(0)) {
-            // TODO revert to old isEth
-            // if (_collateral == multiCollateralOnOffRamp.WETH9() && isEth) {
-            if (_collateral == multiCollateralOnOffRamp.WETH9()) {
+            if (_collateral == multiCollateralOnOffRamp.WETH9() && _isEth) {
                 // WETH specific case
                 require(msg.value >= _buyInAmount, "Insuff ETH sent");
                 uint balanceBefore = IERC20(_collateral).balanceOf(address(this));
                 ICollateralUtility(_collateral).deposit{value: msg.value}();
                 uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
                 require(balanceDiff == msg.value, "Insuff WETH");
-
-                // TODO move in a general purpose to obtain price feed
-                collateralPPrice = ICollateralUtility(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
-                    .rateForCurrency("ETH");
                 exactReceived = balanceDiff;
             } else {
                 // Generic case
                 IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _buyInAmount);
                 exactReceived = _buyInAmount;
             }
+
+            collateralPrice = ICollateralUtility(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
+                .rateForCurrency(ISportsAMMV2LiquidityPool(lqPool).collateralKey());
         } else {
             uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
             IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), collateralQuote);
@@ -544,7 +544,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint payout = _tradeDataInternal._expectedPayout;
         uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
 
-        (totalQuote, payout, fees, , ) = _tradeQuote(_tradeData, _tradeDataInternal._buyInAmount, false);
+        if (!_tradeDataInternal._isLive) {
+            (totalQuote, payout, fees, , ) = _tradeQuote(_tradeData, _tradeDataInternal._buyInAmount, false);
+        }
 
         uint payoutWithFees = payout + fees;
         uint transformDecimal = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
@@ -698,21 +700,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _handleReferrerAndSB(
         uint _buyInAmount,
         address _tickerCreator,
-        address _collateral
+        IERC20 _collateral
     ) internal returns (uint safeBoxAmount) {
         uint referrerShare;
         address referrer = referrals.sportReferrals(_tickerCreator);
-        IERC20 useCollateral = IERC20(_collateral);
         if (referrer != address(0)) {
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
-                useCollateral.safeTransfer(referrer, referrerShare);
+                _collateral.safeTransfer(referrer, referrerShare);
                 emit ReferrerPaid(referrer, _tickerCreator, referrerShare, _buyInAmount);
             }
         }
         safeBoxAmount = _getSafeBoxAmount(_buyInAmount, _tickerCreator);
-        useCollateral.safeTransfer(safeBox, safeBoxAmount - referrerShare);
+        _collateral.safeTransfer(safeBox, safeBoxAmount - referrerShare);
         emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
     }
 
