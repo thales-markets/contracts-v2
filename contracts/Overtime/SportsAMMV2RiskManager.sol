@@ -11,6 +11,7 @@ import "../utils/proxy/ProxyPausable.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2.sol";
+import "../interfaces/ISportsAMMV2ResultManager.sol";
 
 /// @title Sports AMM V2 Risk Manager contract
 /// @author vladan
@@ -26,6 +27,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     // sports manager contract address
     ISportsAMMV2Manager public manager;
+
+    // result manager address
+    ISportsAMMV2ResultManager public resultManager;
+
+    // sports AMM address
+    ISportsAMMV2 public sportsAMM;
 
     // default cap for all sports
     uint public defaultCap;
@@ -48,8 +55,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // risk multiplier per sport used to calculate total risk on the game
     mapping(uint => uint) public riskMultiplierPerSport;
 
-    // risk multiplier per market used to calculate total risk on the game
-    mapping(bytes32 => mapping(uint => mapping(uint => mapping(int => uint)))) public riskMultiplierPerMarket;
+    // risk multiplier per game used to calculate total risk on the game
+    mapping(bytes32 => uint) public riskMultiplierPerGame;
 
     // max available cap
     uint public maxCap;
@@ -67,11 +74,36 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     mapping(uint => bool) public combiningPerSportEnabled;
 
+    // stores current risk per market type and position, defined with gameId -> typeId -> playerId
+    mapping(bytes32 => mapping(uint => mapping(uint => mapping(uint => int)))) public riskPerMarketTypeAndPosition;
+
+    // spent on game (parent market together with all child markets)
+    mapping(bytes32 => uint) public spentOnGame;
+
+    // minimum ticket buy-in amount
+    uint public minBuyInAmount;
+
+    // maximum ticket size
+    uint public maxTicketSize;
+
+    // maximum supported payout amount
+    uint public maxSupportedAmount;
+
+    // maximum supported ticket odds
+    uint public maxSupportedOdds;
+
+    // the period of time in seconds before a market is matured and begins to be restricted for AMM trading
+    uint public minimalTimeLeftToMaturity;
+
+    // the period of time in seconds after mauturity when ticket expires
+    uint public expiryDuration;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
         address _owner,
-        address _manager,
+        ISportsAMMV2Manager _manager,
+        ISportsAMMV2ResultManager _resultManager,
         uint _defaultCap,
         uint _defaultRiskMultiplier,
         uint _maxCap,
@@ -79,11 +111,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) public initializer {
         setOwner(_owner);
         initNonReentrant();
+        manager = _manager;
+        resultManager = _resultManager;
         defaultCap = _defaultCap;
         defaultRiskMultiplier = _defaultRiskMultiplier;
         maxCap = _maxCap;
         maxRiskMultiplier = _maxRiskMultiplier;
-        manager = ISportsAMMV2Manager(_manager);
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -107,51 +140,68 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         return _calculateCapToBeUsed(_gameId, _sportId, _typeId, _playerId, _line, _maturity);
     }
 
-    /// @notice returns if game is in to much of a risk
-    /// @param _totalSpent total spent on game
-    /// @param _gameId for which is calculation done
-    /// @param _sportId for which is calculation done
-    /// @param _typeId for which is calculation done
-    /// @param _playerId for which is calculation done
-    /// @param _line for which is calculation done
-    /// @param _maturity used for dynamic liquidity check
-    /// @return isNotRisky true/false
-    function isTotalSpendingLessThanTotalRisk(
-        uint _totalSpent,
+    /// @notice calculate max available total risk on game
+    /// @param _gameId to total risk for
+    /// @param _sportId to total risk for
+    /// @return totalRisk total risk
+    function calculateTotalRiskOnGame(
         bytes32 _gameId,
         uint16 _sportId,
-        uint16 _typeId,
-        uint16 _playerId,
-        int24 _line,
         uint _maturity
-    ) external view returns (bool isNotRisky) {
-        uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, _typeId, _playerId, _line, _maturity);
-        uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId, _typeId, _playerId, _line);
-        return _totalSpent <= capToBeUsed * riskMultiplier;
+    ) external view returns (uint totalRisk) {
+        return _calculateTotalRiskOnGame(_gameId, _sportId, _maturity);
     }
 
-    /// @notice returns if parlay has any illegal combinations
-    /// @param _tradeData the parlay to check
-    function hasIllegalCombinationsOnTicket(ISportsAMMV2.TradeData[] memory _tradeData) external view returns (bool) {
-        for (uint i = 0; i < _tradeData.length; i++) {
-            ISportsAMMV2.TradeData memory tradeDataItemCurrent = _tradeData[i];
-            for (uint j = i + 1; j < _tradeData.length; j++) {
-                ISportsAMMV2.TradeData memory tradeDataItemToCheckAgainst = _tradeData[j];
+    /// @notice check risk for ticket
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @return riskStatus risk status
+    /// @return isMarketOutOfLiquidity array of boolean values that indicates if some market is out of liquidity
+    function checkRisks(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _buyInAmount
+    ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity) {
+        uint numOfMarkets = _tradeData.length;
+        isMarketOutOfLiquidity = new bool[](numOfMarkets);
+
+        for (uint i = 0; i < numOfMarkets; i++) {
+            ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+
+            uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
+            if (amountToBuy > _buyInAmount) {
+                uint marketRiskAmount = amountToBuy - _buyInAmount;
+
                 if (
-                    tradeDataItemCurrent.gameId == tradeDataItemToCheckAgainst.gameId &&
-                    tradeDataItemCurrent.sportId == tradeDataItemToCheckAgainst.sportId
+                    _isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount) ||
+                    _isRiskPerGameExceeded(marketTradeData, marketRiskAmount)
                 ) {
-                    if (!combiningPerSportEnabled[tradeDataItemCurrent.sportId]) {
-                        return true;
-                    } else if (tradeDataItemCurrent.playerId == tradeDataItemToCheckAgainst.playerId) {
-                        return true;
-                    } else if (tradeDataItemCurrent.playerId == 0 || tradeDataItemToCheckAgainst.playerId == 0) {
-                        return true;
-                    }
+                    isMarketOutOfLiquidity[i] = true;
+                    riskStatus = ISportsAMMV2RiskManager.RiskStatus.OutOfLiquidity;
+                } else if (_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
+                    riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
                 }
             }
         }
-        return false;
+    }
+
+    /// @notice check limits for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _totalQuote ticket quote
+    /// @param _payout actual payout
+    /// @param _expectedPayout expected payout got from quote method
+    /// @param _additionalSlippage slippage tolerance
+    function checkLimits(
+        uint _buyInAmount,
+        uint _totalQuote,
+        uint _payout,
+        uint _expectedPayout,
+        uint _additionalSlippage
+    ) external view {
+        // apply all checks
+        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
+        require(_totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
+        require((_payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
+        require(((ONE * _expectedPayout) / _payout) <= (ONE + _additionalSlippage), "Slippage too high");
     }
 
     /// @notice returns risk data for given sports and types
@@ -195,20 +245,140 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
-    /* ========== INTERNALS ========== */
+    /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
-    function _calculateRiskMultiplier(
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _typeId,
-        uint16 _playerId,
-        int24 _line
-    ) internal view returns (uint marketRisk) {
-        marketRisk = riskMultiplierPerMarket[_gameId][_typeId][_playerId][_line];
+    /// @notice check and update risks for ticket
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    function checkAndUpdateRisks(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _buyInAmount
+    ) external onlySportsAMM(msg.sender) {
+        for (uint i = 0; i < _tradeData.length; i++) {
+            ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+            uint[] memory odds = marketTradeData.odds;
+            uint8 position = marketTradeData.position;
 
-        if (marketRisk == 0) {
+            require(_isMarketInAMMTrading(marketTradeData), "Not trading");
+            require(odds.length > position, "Invalid position");
+
+            uint amountToBuy = odds[position] == 0 ? 0 : (ONE * _buyInAmount) / odds[position];
+            if (amountToBuy > _buyInAmount) {
+                uint marketRiskAmount = amountToBuy - _buyInAmount;
+
+                require(
+                    !_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount),
+                    "Risk per market and position exceeded"
+                );
+                require(!_isRiskPerGameExceeded(marketTradeData, marketRiskAmount), "Risk per game exceeded");
+                require(!_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i), "Invalid combination detected");
+                _updateRisk(marketTradeData, marketRiskAmount);
+            }
+        }
+    }
+
+    /* ========== INTERNAL FUNCTIONS ========== */
+
+    function _isMarketInAMMTrading(ISportsAMMV2.TradeData memory _marketTradeData) internal view returns (bool isTrading) {
+        uint maturity = _marketTradeData.maturity;
+
+        bool isResolved = resultManager.isMarketResolved(
+            _marketTradeData.gameId,
+            _marketTradeData.typeId,
+            _marketTradeData.playerId,
+            _marketTradeData.line,
+            _marketTradeData.combinedPositions[_marketTradeData.position]
+        );
+        if (_marketTradeData.status == 0 && !isResolved) {
+            if (maturity >= block.timestamp) {
+                isTrading = (maturity - block.timestamp) > minimalTimeLeftToMaturity;
+            }
+        }
+    }
+
+    function _isRiskPerMarketAndPositionExceeded(
+        ISportsAMMV2.TradeData memory _marketTradeData,
+        uint marketRiskAmount
+    ) internal view returns (bool) {
+        bytes32 gameId = _marketTradeData.gameId;
+        uint16 typeId = _marketTradeData.typeId;
+        uint16 playerId = _marketTradeData.playerId;
+
+        return
+            riskPerMarketTypeAndPosition[gameId][typeId][playerId][_marketTradeData.position] + int(marketRiskAmount) >=
+            int(
+                _calculateCapToBeUsed(
+                    gameId,
+                    _marketTradeData.sportId,
+                    typeId,
+                    playerId,
+                    _marketTradeData.line,
+                    _marketTradeData.maturity
+                )
+            );
+    }
+
+    function _isRiskPerGameExceeded(
+        ISportsAMMV2.TradeData memory _marketTradeData,
+        uint marketRiskAmount
+    ) internal view returns (bool) {
+        bytes32 gameId = _marketTradeData.gameId;
+        return
+            (spentOnGame[gameId] + marketRiskAmount) >
+            _calculateTotalRiskOnGame(gameId, _marketTradeData.sportId, _marketTradeData.maturity);
+    }
+
+    function _isInvalidCombinationOnTicket(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        ISportsAMMV2.TradeData memory _currentTradaData,
+        uint currentIndex
+    ) internal view returns (bool) {
+        for (uint j = currentIndex + 1; j < _tradeData.length; j++) {
+            ISportsAMMV2.TradeData memory tradeDataToCheckAgainst = _tradeData[j];
+            if (
+                _currentTradaData.gameId == tradeDataToCheckAgainst.gameId &&
+                _currentTradaData.sportId == tradeDataToCheckAgainst.sportId
+            ) {
+                if (
+                    !combiningPerSportEnabled[_currentTradaData.sportId] ||
+                    _currentTradaData.playerId == tradeDataToCheckAgainst.playerId ||
+                    _currentTradaData.playerId == 0 ||
+                    tradeDataToCheckAgainst.playerId == 0
+                ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function _updateRisk(ISportsAMMV2.TradeData memory _marketTradeData, uint marketRiskAmount) internal {
+        bytes32 gameId = _marketTradeData.gameId;
+        uint16 typeId = _marketTradeData.typeId;
+        uint16 playerId = _marketTradeData.playerId;
+        uint8 position = _marketTradeData.position;
+
+        int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][position];
+        for (uint j = 0; j < _marketTradeData.odds.length; j++) {
+            if (j == position) {
+                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
+                    currentRiskPerMarketTypeAndPosition +
+                    int(marketRiskAmount);
+            } else {
+                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
+                    currentRiskPerMarketTypeAndPosition -
+                    int(marketRiskAmount);
+            }
+        }
+        spentOnGame[gameId] += marketRiskAmount;
+    }
+
+    function _calculateRiskMultiplier(bytes32 _gameId, uint16 _sportId) internal view returns (uint gameRisk) {
+        gameRisk = riskMultiplierPerGame[_gameId];
+
+        if (gameRisk == 0) {
             uint riskPerSport = riskMultiplierPerSport[_sportId];
-            marketRisk = riskPerSport > 0 ? riskPerSport : defaultRiskMultiplier;
+            gameRisk = riskPerSport > 0 ? riskPerSport : defaultRiskMultiplier;
         }
     }
 
@@ -255,6 +425,18 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 }
             }
         }
+    }
+
+    function _calculateTotalRiskOnGame(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint _maturity
+    ) internal view returns (uint totalRisk) {
+        // get cap for parent market
+        uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity);
+        uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId);
+
+        return (capToBeUsed * riskMultiplier);
     }
 
     /* ========== SETTERS ========== */
@@ -388,29 +570,17 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
-    /// @notice sets the risk multiplier per spec. markets
+    /// @notice sets the risk multiplier per spec. games
     /// @param _gameIds game IDs to set risk multiplier for
-    /// @param _typeIds type IDs to set risk multiplier for
-    /// @param _playerIds player IDs to set risk multiplier for
-    /// @param _lines lines to set risk multiplier for
-    /// @param _riskMultipliersPerMarket the risk multiplier amounts used for the specific markets
-    function setRiskMultipliersPerMarket(
+    /// @param _riskMultipliersPerGame the risk multiplier amounts used for the specific games
+    function setRiskMultipliersPerGame(
         bytes32[] memory _gameIds,
-        uint16[] memory _typeIds,
-        uint16[] memory _playerIds,
-        int24[] memory _lines,
-        uint[] memory _riskMultipliersPerMarket
+        uint[] memory _riskMultipliersPerGame
     ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
-            require(_riskMultipliersPerMarket[i] <= maxRiskMultiplier, "Invalid multiplier");
-            riskMultiplierPerMarket[_gameIds[i]][_typeIds[i]][_playerIds[i]][_lines[i]] = _riskMultipliersPerMarket[i];
-            emit SetRiskMultiplierPerMarket(
-                _gameIds[i],
-                _typeIds[i],
-                _playerIds[i],
-                _lines[i],
-                _riskMultipliersPerMarket[i]
-            );
+            require(_riskMultipliersPerGame[i] <= maxRiskMultiplier, "Invalid multiplier");
+            riskMultiplierPerGame[_gameIds[i]] = _riskMultipliersPerGame[i];
+            emit SetRiskMultiplierPerGame(_gameIds[i], _riskMultipliersPerGame[i]);
         }
     }
 
@@ -437,6 +607,22 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetSportsManager(_manager);
     }
 
+    /// @notice sets the result manager contract address
+    /// @param _resultManager the address of result manager contract
+    function setResultManager(address _resultManager) external onlyOwner {
+        require(_resultManager != address(0), "Invalid address");
+        resultManager = ISportsAMMV2ResultManager(_resultManager);
+        emit SetResultManager(_resultManager);
+    }
+
+    /// @notice sets the Sports AMM contract address
+    /// @param _sportsAMM the address of Sports AMM contract
+    function setSportsAMM(address _sportsAMM) external onlyOwner {
+        require(_sportsAMM != address(0), "Invalid address");
+        sportsAMM = ISportsAMMV2(_sportsAMM);
+        emit SetSportsAMM(_sportsAMM);
+    }
+
     /// @notice Setting whether live trading per sport is enabled
     /// @param _sportId to set live trading for
     /// @param _typeId to set live trading for
@@ -446,7 +632,34 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
     }
 
-    /* ========== INTERNAL FUNCTIONS ========== */
+    /// @notice sets different ticket parameters
+    /// @param _minBuyInAmount minimum ticket buy-in amount
+    /// @param _maxTicketSize maximum ticket size
+    /// @param _maxSupportedAmount maximum supported payout amount
+    /// @param _maxSupportedOdds  maximum supported ticket odds
+    function setTicketParams(
+        uint _minBuyInAmount,
+        uint _maxTicketSize,
+        uint _maxSupportedAmount,
+        uint _maxSupportedOdds
+    ) external onlyOwner {
+        minBuyInAmount = _minBuyInAmount;
+        maxTicketSize = _maxTicketSize;
+        maxSupportedAmount = _maxSupportedAmount;
+        maxSupportedOdds = _maxSupportedOdds;
+        emit TicketParamsUpdated(_minBuyInAmount, _maxTicketSize, _maxSupportedAmount, _maxSupportedOdds);
+    }
+
+    /// @notice sets different times/periods
+    /// @param _minimalTimeLeftToMaturity  the period of time in seconds before a game is matured and begins to be restricted for AMM trading
+    /// @param _expiryDuration the period of time in seconds after mauturity when ticket expires
+    function setTimes(uint _minimalTimeLeftToMaturity, uint _expiryDuration) external onlyOwner {
+        minimalTimeLeftToMaturity = _minimalTimeLeftToMaturity;
+        expiryDuration = _expiryDuration;
+        emit TimesUpdated(_minimalTimeLeftToMaturity, _expiryDuration);
+    }
+
+    /* ========== INTERNAL SETTERS ========== */
 
     function _setCapPerSport(uint _sportId, uint _capPerSport) internal {
         require(_sportId > MIN_SPORT_NUMBER, "Invalid ID for sport");
@@ -482,6 +695,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         _;
     }
 
+    modifier onlySportsAMM(address sender) {
+        require(sender == address(sportsAMM));
+        _;
+    }
+
     /* ========== EVENTS ========== */
 
     event SetMaxCapAndMaxRiskMultiplier(uint maxCap, uint maxRiskMultiplier);
@@ -493,10 +711,14 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetCapPerMarket(bytes32 gameId, uint16 typeId, uint16 playerId, int24 line, uint cap);
 
     event SetRiskMultiplierPerSport(uint sportId, uint riskMultiplier);
-    event SetRiskMultiplierPerMarket(bytes32 gameId, uint16 typeId, uint16 playerId, int24 line, uint riskMultiplier);
+    event SetRiskMultiplierPerGame(bytes32 gameId, uint riskMultiplier);
 
     event SetDynamicLiquidityParams(uint sportId, uint dynamicLiquidityCutoffTime, uint dynamicLiquidityCutoffDivider);
     event SetSportsManager(address manager);
+    event SetResultManager(address resultManager);
+    event SetSportsAMM(address sportsAMM);
     event SetLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled);
     event SetCombiningPerSportEnabled(uint _sportID, bool _enabled);
+    event TicketParamsUpdated(uint minBuyInAmount, uint maxTicketSize, uint maxSupportedAmount, uint maxSupportedOdds);
+    event TimesUpdated(uint minimalTimeLeftToMaturity, uint expiryDuration);
 }

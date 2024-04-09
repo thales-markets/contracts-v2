@@ -109,30 +109,6 @@
         "internalType": "uint256",
         "name": "safeBoxFee",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "minBuyInAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxTicketSize",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxSupportedAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxSupportedOdds",
-        "type": "uint256"
       }
     ],
     "name": "AmountsUpdated",
@@ -511,25 +487,6 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "minimalTimeLeftToMaturity",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "expiryDuration",
-        "type": "uint256"
-      }
-    ],
-    "name": "TimesUpdated",
-    "type": "event"
-  },
-  {
     "inputs": [],
     "name": "acceptOwnership",
     "outputs": [],
@@ -592,19 +549,6 @@
     "name": "expireTickets",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "expiryDuration",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -846,71 +790,6 @@
   },
   {
     "inputs": [],
-    "name": "maxSupportedAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxSupportedOdds",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxTicketSize",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minBuyInAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minimalTimeLeftToMaturity",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "multiCollateralOnOffRamp",
     "outputs": [
       {
@@ -1140,40 +1019,6 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "riskPerMarketTypeAndPosition",
-    "outputs": [
-      {
-        "internalType": "int256",
-        "name": "",
-        "type": "int256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "name": "rootPerGame",
@@ -1280,26 +1125,6 @@
       {
         "internalType": "uint256",
         "name": "_safeBoxFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_minBuyInAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxTicketSize",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxSupportedAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxSupportedOdds",
         "type": "uint256"
       }
     ],
@@ -1443,43 +1268,6 @@
     "name": "setTicketMastercopy",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_minimalTimeLeftToMaturity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_expiryDuration",
-        "type": "uint256"
-      }
-    ],
-    "name": "setTimes",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "spentOnGame",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1853,11 +1641,6 @@
       },
       {
         "internalType": "uint256[]",
-        "name": "finalQuotes",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
         "name": "amountsToBuy",
         "type": "uint256[]"
       },
@@ -1865,6 +1648,11 @@
         "internalType": "uint256",
         "name": "collateralQuote",
         "type": "uint256"
+      },
+      {
+        "internalType": "enum ISportsAMMV2RiskManager.RiskStatus",
+        "name": "riskStatus",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",

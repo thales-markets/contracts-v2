@@ -67,6 +67,12 @@ const MARKET_POSITION_STATUS = {
 	Losing: 3,
 };
 
+const RISK_STATUS = {
+	NoRisk: 0,
+	OutOfLiquidity: 1,
+	InvalidCombination: 2,
+};
+
 module.exports = {
 	INVALID_SPORT_ID,
 	SPORT_ID_NBA,
@@ -99,4 +105,5 @@ module.exports = {
 	SPREAD_LINE,
 	OVER_SPREAD_LINE,
 	UNDER_SPREAD_LINE,
+	RISK_STATUS,
 };

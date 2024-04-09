@@ -5,6 +5,14 @@ const RISK_MANAGER_INITAL_PARAMS = {
 	defaultRiskMultiplier: 3,
 	maxCap: ethers.parseEther('20000'),
 	maxRiskMultiplier: 5,
+
+	minBuyInAmount: ethers.parseEther('3'),
+	maxTicketSize: 10,
+	maxSupportedAmount: ethers.parseEther('20000'),
+	maxSupportedOdds: ethers.parseEther('0.01'),
+
+	minimalTimeLeftToMaturity: 10,
+	expiryDuration: 7776000,
 };
 
 const RISK_MANAGER_PARAMS = {
@@ -22,7 +30,7 @@ const RISK_MANAGER_PARAMS = {
 	invalidMaxRiskMultiplier: 3,
 	newMaxRiskMultiplier: 5,
 	newRiskMultiplierForSport: 5,
-	newRiskMultiplierForMarket: 3,
+	newRiskMultiplierForGame: 3,
 
 	newDynamicLiquidityCutoffTime: 6 * 60 * 60, // 6 hours
 	newDynamicLiquidityCutoffDivider: ethers.parseEther('4'),
@@ -30,13 +38,6 @@ const RISK_MANAGER_PARAMS = {
 
 const SPORTS_AMM_INITAL_PARAMS = {
 	safeBoxFee: ethers.parseEther('0.02'),
-	minBuyInAmount: ethers.parseEther('3'),
-	maxTicketSize: 10,
-	maxSupportedAmount: ethers.parseEther('20000'),
-	maxSupportedOdds: ethers.parseEther('0.01'),
-
-	minimalTimeLeftToMaturity: 10,
-	expiryDuration: 7776000,
 };
 
 const SPORTS_AMM_SIX_DEC_INITAL_PARAMS = {

@@ -73,6 +73,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "riskManager",
+        "type": "address"
+      }
+    ],
+    "name": "RiskManagerChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "sportsAMM",
         "type": "address"
       }
@@ -863,8 +876,13 @@
         "type": "address"
       },
       {
-        "internalType": "address",
+        "internalType": "contract ISportsAMMV2",
         "name": "_sportsAMM",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "_riskManager",
         "type": "address"
       }
     ],
@@ -939,6 +957,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "riskManager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -960,6 +991,19 @@
       }
     ],
     "name": "setPaused",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "_riskManager",
+        "type": "address"
+      }
+    ],
+    "name": "setRiskManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

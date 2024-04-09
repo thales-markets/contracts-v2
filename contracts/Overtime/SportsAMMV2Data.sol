@@ -6,11 +6,14 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../interfaces/ISportsAMMV2.sol";
+import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "./Ticket.sol";
 
 contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     ISportsAMMV2 public sportsAMM;
+
+    ISportsAMMV2RiskManager public riskManager;
 
     struct SportsAMMParameters {
         uint minBuyInAmount;
@@ -57,18 +60,19 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isExercisable;
     }
 
-    function initialize(address _owner, address _sportsAMM) external initializer {
+    function initialize(address _owner, ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external initializer {
         setOwner(_owner);
-        sportsAMM = ISportsAMMV2(_sportsAMM);
+        sportsAMM = _sportsAMM;
+        riskManager = _riskManager;
     }
 
     function getSportsAMMParameters() external view returns (SportsAMMParameters memory) {
         return
             SportsAMMParameters(
-                sportsAMM.minBuyInAmount(),
-                sportsAMM.maxTicketSize(),
-                sportsAMM.maxSupportedAmount(),
-                sportsAMM.maxSupportedOdds(),
+                riskManager.minBuyInAmount(),
+                riskManager.maxTicketSize(),
+                riskManager.maxSupportedAmount(),
+                riskManager.maxSupportedOdds(),
                 sportsAMM.safeBoxFee()
             );
     }
@@ -178,5 +182,11 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         emit SportAMMChanged(address(_sportsAMM));
     }
 
+    function setRiskManager(ISportsAMMV2RiskManager _riskManager) external onlyOwner {
+        riskManager = _riskManager;
+        emit RiskManagerChanged(address(_riskManager));
+    }
+
     event SportAMMChanged(address sportsAMM);
+    event RiskManagerChanged(address riskManager);
 }

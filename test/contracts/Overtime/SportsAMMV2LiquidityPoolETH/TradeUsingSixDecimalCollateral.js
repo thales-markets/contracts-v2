@@ -21,6 +21,7 @@ const { SPORTS_AMM_SIX_DEC_INITAL_PARAMS } = require('../../../constants/overtim
 describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2ResultManager,
+		sportsAMMV2RiskManager,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolSixDecimals,
 		defaultLiquidityProviderSixDecimals,
@@ -38,6 +39,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 		({
 			sportsAMMV2,
 			sportsAMMV2ResultManager,
+			sportsAMMV2RiskManager,
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolSixDecimals,
 			defaultLiquidityProviderSixDecimals,
@@ -252,8 +254,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await sportsAMMV2.setLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await sportsAMMV2LiquidityPoolSixDecimals.updateDefaultCollateral();
 
-			await sportsAMMV2.setAmounts(
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.safeBoxFee,
+			await sportsAMMV2RiskManager.setTicketParams(
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
