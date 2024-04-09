@@ -327,7 +327,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _differentRecipient,
                     false,
                     msg.sender,
-                    address(0),
+                    _collateral,
                     address(0),
                     0
                 )
@@ -390,7 +390,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _differentRecipient,
                     true,
                     _requester,
-                    address(0),
+                    _collateral,
                     address(0),
                     0
                 )
@@ -566,7 +566,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         //send the surplus to SB
         if (exactReceived > _buyInAmount) {
             if (lpPool != address(0)) {
-                // TODO: if needed add the logic to convert the surplus to default collateral and send to safeBox
+                // Note: if needed add the logic to convert the surplus to default collateral and send to safeBox
                 IERC20(_collateral).safeTransfer(safeBox, exactReceived - _buyInAmount);
             } else {
                 defaultCollateral.safeTransfer(safeBox, exactReceived - _buyInAmount);
@@ -577,7 +577,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _trade(ISportsAMMV2.TradeData[] memory _tradeData, TradeDataInternal memory _tradeDataInternal) internal {
         uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
         uint payout = _tradeDataInternal._expectedPayout;
-        //TODO: include this in the tradeQuote method for live trading
         uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
         uint[] memory amountsToBuy = new uint[](_tradeData.length);
         if (!_tradeDataInternal._isLive) {
@@ -588,7 +587,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         uint payoutWithFees = payout + fees;
         uint transformDecimal = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
-        if (_tradeDataInternal._collateral == address(0)) {
+        if (_tradeDataInternal._collateralPool == address(0)) {
             _checkLimits(
                 _tradeDataInternal._buyInAmount,
                 totalQuote,
@@ -597,11 +596,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _tradeDataInternal._additionalSlippage
             );
             _checkRisk(_tradeData, amountsToBuy, _tradeDataInternal._buyInAmount);
-            defaultCollateral.safeTransferFrom(
-                _tradeDataInternal._requester,
-                address(this),
-                _tradeDataInternal._buyInAmount
-            );
+            if(_tradeDataInternal._collateral == address(0)) {
+                defaultCollateral.safeTransferFrom(
+                    _tradeDataInternal._requester,
+                    address(this),
+                    _tradeDataInternal._buyInAmount
+                );
+            }
         } else {
             amountsToBuy = _transformAmountsToUSD(amountsToBuy, _tradeDataInternal._collateralPriceInUSD, transformDecimal);
             _checkLimits(
@@ -641,7 +642,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
         _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
-        if (_tradeDataInternal._collateral == address(0)) {
+        if (_tradeDataInternal._collateralPool == address(0)) {
             if (address(stakingThales) != address(0)) {
                 stakingThales.updateVolume(_tradeDataInternal._differentRecipient, _tradeDataInternal._buyInAmount);
             }
@@ -676,6 +677,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
+    // Transform collateral to USD
+    // _defaultCollateralDecimalConverter is used sustain function as pure 
+    // _defaultCollateralDecimalConverter value is '12' for USDC (6 decimals)
     function _transformToUSD(
         uint _amountInCollateral,
         uint _collateralPriceInUSD,
@@ -803,7 +807,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     "Risk is to high"
                 );
             }
-            require(!riskManager.hasIllegalCombinationsOnTicket(_tradeData), "Illegal combination detected");
+            require(!riskManager.hasIllegalCombinationsOnTicket(_tradeData), "Bad combo");
         }
     }
 
