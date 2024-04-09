@@ -14,6 +14,8 @@ const {
 	GAME_ID_4,
 } = require('../../../constants/overtime');
 
+const bytes32 = require('bytes32');
+
 describe('SportsAMMV2ResultManager Results Management', () => {
 	let sportsAMMV2ResultManager, firstTrader, chainlinkResolver, mockChainlinkOracle, collateral;
 
@@ -29,15 +31,20 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 
 			await chainlinkResolver
 				.connect(firstTrader)
-				.requestMarketResolving([GAME_ID_3, GAME_ID_4], ['0', '0'], ['0', '0']);
+				.requestMarketResolving(
+					[bytes32({ input: GAME_ID_3 }), bytes32({ input: GAME_ID_4 })],
+					['0', '0'],
+					['0', '0']
+				);
 
 			let requestId = await chainlinkResolver.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await expect(mockChainlinkOracle.fulfillMarketResolve(requestId, [[0], [1]])).to.emit(
-				sportsAMMV2ResultManager,
-				'ResultsPerMarketSet'
-			);
+			await expect(mockChainlinkOracle.fulfillMarketResolve(requestId, [[0], [1]]))
+				.to.emit(sportsAMMV2ResultManager, 'ResultsPerMarketSet')
+				.withArgs(GAME_ID_3, 0, 0, [0])
+				.to.emit(sportsAMMV2ResultManager, 'ResultsPerMarketSet')
+				.withArgs(GAME_ID_4, 0, 0, [1]);
 		});
 
 		it('Setters', async () => {
