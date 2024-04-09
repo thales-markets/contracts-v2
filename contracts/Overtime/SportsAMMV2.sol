@@ -193,6 +193,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint collateralQuote
         )
     {
+        // TODO always convert collateral to default collateral
+        // TODO if no LP pool, payout in USD, if pool exist payout in collateral
+        // TODO check for collateral risk
         (totalQuote, payout, fees, finalQuotes, amountsToBuy) = _tradeQuote(_tradeData, _buyInAmount, true);
 
         collateralQuote = _collateral == address(0)
@@ -534,11 +537,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmount,
         address _collateral,
         address _fromAddress
-    ) internal returns (address lpPool, uint ethUsdPrice) {
+    ) internal returns (address lqPool, uint collateralPPrice) {
         require(multicollateralEnabled, "Multi-collat not enabled");
         uint exactReceived;
-        lpPool = collateralPool[_collateral];
-        if (lpPool != address(0)) {
+        lqPool = collateralPool[_collateral];
+        if (lqPool != address(0)) {
+            // TODO revert to old isEth
+            // if (_collateral == multiCollateralOnOffRamp.WETH9() && isEth) {
             if (_collateral == multiCollateralOnOffRamp.WETH9()) {
                 // WETH specific case
                 require(msg.value >= _buyInAmount, "Insuff ETH sent");
@@ -546,7 +551,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 ICollateralUtility(_collateral).deposit{value: msg.value}();
                 uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
                 require(balanceDiff == msg.value, "Insuff WETH");
-                ethUsdPrice = ICollateralUtility(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
+
+                // TODO move in a general purpose to obtain price feed
+                collateralPPrice = ICollateralUtility(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
                     .rateForCurrency("ETH");
                 exactReceived = balanceDiff;
             } else {
@@ -565,7 +572,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         //send the surplus to SB
         if (exactReceived > _buyInAmount) {
-            if (lpPool != address(0)) {
+            if (lqPool != address(0)) {
                 // Note: if needed add the logic to convert the surplus to default collateral and send to safeBox
                 IERC20(_collateral).safeTransfer(safeBox, exactReceived - _buyInAmount);
             } else {

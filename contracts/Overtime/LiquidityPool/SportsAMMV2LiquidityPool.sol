@@ -148,6 +148,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     }
 
     function depositWithEth() external payable canDeposit(msg.value) nonReentrant whenNotPaused roundClosingNotPrepared {
+        // TODO: better checks for deposit
         require(msg.value > 0 && canDepositETH, "Can not deposit ETH");
         uint balanceBefore = collateral.balanceOf(address(this));
         ICollateralUtility(address(collateral)).deposit{value: msg.value}();
