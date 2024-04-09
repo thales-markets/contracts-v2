@@ -358,8 +358,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16 playerId = _marketTradeData.playerId;
         uint8 position = _marketTradeData.position;
 
-        int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][position];
         for (uint j = 0; j < _marketTradeData.odds.length; j++) {
+            int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
             if (j == position) {
                 riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
                     currentRiskPerMarketTypeAndPosition +
@@ -696,7 +696,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     }
 
     modifier onlySportsAMM(address sender) {
-        require(sender == address(sportsAMM));
+        require(sender == address(sportsAMM), "Only the AMM may perform these methods");
         _;
     }
 
