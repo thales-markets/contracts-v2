@@ -650,21 +650,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _transformAmountsToUSD(
-        uint[] memory _amountInCollateral,
-        uint _collateralPriceInUSD,
-        uint _defaultCollateralDecimalConverter
-    ) internal pure returns (uint[] memory amountsInUSD) {
-        amountsInUSD = new uint[](_amountInCollateral.length);
-        for (uint i = 0; i < _amountInCollateral.length; i++) {
-            amountsInUSD[i] = _transformToUSD(
-                _amountInCollateral[i],
-                _collateralPriceInUSD,
-                _defaultCollateralDecimalConverter
-            );
-        }
-    }
-
     function _saveTicketData(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) internal {
         knownTickets.add(ticket);
         activeTicketsPerUser[user].add(ticket);
