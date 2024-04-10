@@ -67,6 +67,9 @@ const getTicketTradeData = () => {
 	sameGameSamePlayersDifferentProps.push(getTradeDataItem(marketsTree[0].childMarkets[3], 0));
 	sameGameSamePlayersDifferentProps.push(getTradeDataItem(marketsTree[0].childMarkets[4], 0));
 
+	const tradeDataNotActive = [];
+	tradeDataNotActive.push(getTradeDataItem(marketsTree[0].childMarkets[1], 0));
+
 	return {
 		tradeDataCurrentRound,
 		tradeDataNextRound,
@@ -77,6 +80,7 @@ const getTicketTradeData = () => {
 		sameGameWithSecondPlayerProps,
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
+		tradeDataNotActive,
 	};
 };
 

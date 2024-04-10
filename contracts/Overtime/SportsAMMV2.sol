@@ -486,6 +486,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         uint payoutWithFees = payout + fees;
 
+        riskManager.checkAndUpdateRisks(_tradeData, _tradeDataInternal._buyInAmount);
         riskManager.checkLimits(
             _tradeDataInternal._buyInAmount,
             totalQuote,
@@ -493,7 +494,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeDataInternal._expectedPayout,
             _tradeDataInternal._additionalSlippage
         );
-        riskManager.checkAndUpdateRisks(_tradeData, _tradeDataInternal._buyInAmount);
 
         if (_tradeDataInternal._sendDefaultCollateral) {
             defaultCollateral.safeTransferFrom(
