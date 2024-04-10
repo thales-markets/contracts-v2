@@ -83,6 +83,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _referrer,
         address _collateral
     ) external payable whenNotPaused {
+        //TODO: consider how to prevent someone spamming this method
         require(
             sportsAMM.riskManager().liveTradingPerSportAndTypeEnabled(_sportId, _typeId),
             "Live trading not enabled on _sportId"
@@ -154,7 +155,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint _approvedPayoutAmount
     ) external whenNotPaused recordChainlinkFulfillment(_requestId) {
         //might be redundant as already done by Chainlink Client, but making double sure
-        require(!requestIdToFulfillAllowed[_requestId], "Request ID already fulfilled");
+        require(!requestIdFulfilled[_requestId], "Request ID already fulfilled");
         require((timestampPerRequest[_requestId] + maxAllowedExecutionDelay) > block.timestamp, "Request timed out");
 
         LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];

@@ -450,6 +450,22 @@ async function deploySportsAMMV2Fixture() {
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
 
+	const ChainlinkResolver = await ethers.getContractFactory('ChainlinkResolver');
+	const sportsAMMV2ResultManagerAddreess = sportsAMMV2ResultManager.getAddress();
+	const chainlinkResolver = await ChainlinkResolver.deploy(
+		collateralAddress, //link
+		mockChainlinkOracleAddress, //_oracle
+		sportsAMMV2Address, // _sportsAMM
+		sportsAMMV2ResultManagerAddreess, // sportsAMMV2ResultManager
+		mockSpecId, // _specId
+		0 // payment
+	);
+
+	const chainlinkResolverAddress = chainlinkResolver.getAddress();
+
+	await mockChainlinkOracle.setChainlinkResolver(chainlinkResolverAddress);
+	await sportsAMMV2ResultManager.setChainlinkResolver(chainlinkResolverAddress);
+
 	return {
 		owner,
 		sportsAMMV2Manager,
@@ -485,6 +501,7 @@ async function deploySportsAMMV2Fixture() {
 		sameGameWithSecondPlayerProps,
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
+		chainlinkResolver,
 		tradeDataNotActive,
 	};
 }

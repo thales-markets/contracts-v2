@@ -66,6 +66,9 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     // stores result type per market type
     mapping(uint => ResultType) public resultTypePerMarketType;
 
+    // the address that can resolve markets
+    address public chainlinkResolver;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @param _manager the address of manager
@@ -227,11 +230,11 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             ResultType resultType = resultTypePerMarketType[typeId];
 
             require(resultType != ResultType.Unassigned, "Result type not set");
-            require(!areResultsPerMarketSet[gameId][typeId][playerId], "Results already set per market");
-
-            resultsPerMarket[gameId][typeId][playerId] = results;
-            areResultsPerMarketSet[gameId][typeId][playerId] = true;
-            emit ResultsPerMarketSet(gameId, typeId, playerId, results);
+            if (!areResultsPerMarketSet[gameId][typeId][playerId]) {
+                resultsPerMarket[gameId][typeId][playerId] = results;
+                areResultsPerMarketSet[gameId][typeId][playerId] = true;
+                emit ResultsPerMarketSet(gameId, typeId, playerId, results);
+            }
         }
     }
 
@@ -392,7 +395,9 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     modifier onlyWhitelistedAddresses(address sender) {
         require(
-            sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
+            sender == owner ||
+                sender == chainlinkResolver ||
+                manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
             "Invalid sender"
         );
         _;
@@ -408,6 +413,13 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         emit SetSportsManager(_manager);
     }
 
+    /// @notice sets the address of a contract that can resolve markets via chainlink node
+    /// @param _chainlinkResolver the address of chainlink node client
+    function setChainlinkResolver(address _chainlinkResolver) external onlyOwner {
+        chainlinkResolver = _chainlinkResolver;
+        emit SetChainlinkResolver(_chainlinkResolver);
+    }
+
     /* ========== EVENTS ========== */
 
     event ResultsPerMarketSet(bytes32 gameId, uint16 typeId, uint16 playerId, int24[] result);
@@ -416,4 +428,5 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     event ResultTypePerMarketTypeSet(uint16 marketTypeId, uint resultType);
 
     event SetSportsManager(address manager);
+    event SetChainlinkResolver(address resolver);
 }
