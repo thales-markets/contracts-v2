@@ -172,12 +172,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     {
         if (_collateral != address(0)) {
             collateralQuote = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
-            if (collateralPool[_collateral] == address(0)) {
-                (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, collateralQuote, true);
-            }
-        } else {
-            (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, _buyInAmount, true);
         }
+        uint useAmount = collateralQuote > 0 && collateralPool[_collateral] == address(0) ? collateralQuote : _buyInAmount;
+        (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, useAmount, true);
     }
 
     /// @notice is provided ticket active
