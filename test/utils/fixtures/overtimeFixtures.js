@@ -203,6 +203,7 @@ async function deploySportsAMMV2Fixture() {
 		sameGameWithSecondPlayerProps,
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
+		tradeDataNotActive,
 	} = getTicketTradeData();
 
 	const gameIds = [];
@@ -312,6 +313,7 @@ async function deploySportsAMMV2Fixture() {
 		sameGameDifferentPlayersDifferentProps,
 		sameGameSamePlayersDifferentProps,
 		chainlinkResolver,
+		tradeDataNotActive,
 	};
 }
 

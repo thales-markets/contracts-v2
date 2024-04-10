@@ -58,6 +58,12 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 	});
 
 	describe('Ticket with out of liquidity', () => {
+		beforeEach(() => {
+			for (let i = 0; i < tradeDataTenMarketsCurrentRound.length; i++) {
+				tradeDataTenMarketsCurrentRound[i].position = 0;
+			}
+		});
+
 		it('Should fail for all markets on ticket (market cap exceeded)', async () => {
 			const buyInAmount = ethers.parseEther('1000');
 
