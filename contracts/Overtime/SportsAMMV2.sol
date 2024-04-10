@@ -562,6 +562,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint payoutWithFees = payout + fees;
         uint transformDecimal = (18 - defaultCollateralDecimals);
         if (_tradeDataInternal._collateralPool == address(0)) {
+            riskManager.checkAndUpdateRisks(_tradeData, _tradeDataInternal._buyInAmount);
             riskManager.checkLimits(
                 _tradeDataInternal._buyInAmount,
                 totalQuote,
@@ -569,7 +570,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _tradeDataInternal._expectedPayout,
                 _tradeDataInternal._additionalSlippage
             );
-            riskManager.checkAndUpdateRisks(_tradeData, _tradeDataInternal._buyInAmount);
             if (_tradeDataInternal._collateral == address(0)) {
                 defaultCollateral.safeTransferFrom(
                     _tradeDataInternal._requester,
@@ -578,6 +578,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 );
             }
         } else {
+            riskManager.checkAndUpdateRisks(
+                _tradeData,
+                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD, transformDecimal)
+            );
             riskManager.checkLimits(
                 _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD, transformDecimal),
                 totalQuote,
@@ -588,10 +592,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     transformDecimal
                 ),
                 _tradeDataInternal._additionalSlippage
-            );
-            riskManager.checkAndUpdateRisks(
-                _tradeData,
-                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD, transformDecimal)
             );
         }
 
