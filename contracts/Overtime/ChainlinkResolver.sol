@@ -57,6 +57,10 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
         paymentAmount = _paymentAmount;
     }
 
+    /// @notice requestMarketResolving
+    /// @param _gameIds for which to request resolving
+    /// @param _typeIds for which to request resolving
+    /// @param _playerIds for which to request resolving
     function requestMarketResolving(
         string[] calldata _gameIds,
         string[] calldata _typeIds,
@@ -86,6 +90,9 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
         emit MarketResolvingRequested(msg.sender, _gameIds, _typeIds, _playerIds);
     }
 
+    /// @notice fulfillMarketResolve
+    /// @param _requestId which is being responded to
+    /// @param _results to use for resolving
     function fulfillMarketResolve(
         bytes32 _requestId,
         int24[][] calldata _results
@@ -93,20 +100,16 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
         //might be redundant as already done by Chainlink Client, but making double sure
         require(!requestIdFulfilled[_requestId], "Request ID already fulfilled");
 
+        //TODO: validate that results are matching the requested data length
+
         MarketResolveData memory marketData = requestIdToMarketResolveData[_requestId];
 
         bytes32[] memory _gameIds = new bytes32[](marketData._gameIds.length);
+        uint16[] memory _typeIds = new uint16[](marketData._typeIds.length);
+        uint16[] memory _playerIds = new uint16[](marketData._playerIds.length);
         for (uint i = 0; i < marketData._gameIds.length; i++) {
             _gameIds[i] = stringToBytes32(marketData._gameIds[i]);
-        }
-
-        uint16[] memory _typeIds = new uint16[](marketData._typeIds.length);
-        for (uint i = 0; i < marketData._typeIds.length; i++) {
             _typeIds[i] = uint16(st2num(marketData._typeIds[i]));
-        }
-
-        uint16[] memory _playerIds = new uint16[](marketData._playerIds.length);
-        for (uint i = 0; i < marketData._playerIds.length; i++) {
             _playerIds[i] = uint16(st2num(marketData._playerIds[i]));
         }
 
@@ -148,7 +151,7 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
 
     //////////// SETTERS
 
-    /// @notice pause live trading
+    /// @notice pause resolving
     /// @param _setPausing whether to pause or unpause
     function setPaused(bool _setPausing) external onlyOwner {
         _setPausing ? _pause() : _unpause();
