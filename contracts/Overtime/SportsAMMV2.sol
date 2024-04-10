@@ -109,6 +109,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     mapping(address => address) public collateralPool;
+    uint public defaultCollateralDecimals;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -140,6 +141,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         referrals = _referrals;
         stakingThales = _stakingThales;
         safeBox = _safeBox;
+        defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -171,9 +173,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         )
     {
         if (_collateral != address(0)) {
+            // getMinimumReceived returns the USD amount for the buyInAmount in the collateral (USD in 18 decimals)
             collateralQuote = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+            // If USDC is default collateral needs to be transformed
+            // Note this better to be done on multiCollateralOnOffRamp side
+            collateralQuote = collateralQuote / (10 ** (18 - defaultCollateralDecimals));
         }
+        // If a collateral is defined, a collateral quote is received and there is no collateral pool defined,
+        // use the collateralQuote to obtain quotes in the defaultCollateral
         uint useAmount = collateralQuote > 0 && collateralPool[_collateral] == address(0) ? collateralQuote : _buyInAmount;
+
+        // To check the risks in USD always pass the collateralQuote
         (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, useAmount, true, collateralQuote);
     }
 
@@ -550,7 +560,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         uint payoutWithFees = payout + fees;
-        uint transformDecimal = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
+        uint transformDecimal = (18 - defaultCollateralDecimals);
         if (_tradeDataInternal._collateralPool == address(0)) {
             riskManager.checkLimits(
                 _tradeDataInternal._buyInAmount,
