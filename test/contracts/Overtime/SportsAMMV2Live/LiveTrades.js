@@ -13,6 +13,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 		tradeDataCurrentRound,
 		firstLiquidityProvider,
 		firstTrader,
+		secondAccount,
 		liveTradingProcessor,
 		mockChainlinkOracle,
 		sportsAMMV2RiskManager,
@@ -27,7 +28,8 @@ describe('SportsAMMV2Live Live Trades', () => {
 			mockChainlinkOracle,
 			sportsAMMV2RiskManager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
+		({ firstLiquidityProvider, firstTrader, secondAccount } =
+			await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
@@ -168,6 +170,14 @@ describe('SportsAMMV2Live Live Trades', () => {
 					ethers.parseEther((ethers.formatEther(quote.payout) / 2).toString())
 				)
 			).to.be.revertedWith('Slippage too high');
+		});
+
+		it('Should fail with "Only the contract owner may perform this action"', async () => {
+			await expect(
+				sportsAMMV2RiskManager
+					.connect(secondAccount)
+					.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true)
+			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 	});
 });

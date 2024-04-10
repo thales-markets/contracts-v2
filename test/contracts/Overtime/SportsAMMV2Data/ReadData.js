@@ -6,7 +6,10 @@ const {
 } = require('../../../utils/fixtures/overtimeFixtures');
 const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, RESULT_TYPE } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
-const { SPORTS_AMM_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
+const {
+	SPORTS_AMM_INITAL_PARAMS,
+	RISK_MANAGER_INITAL_PARAMS,
+} = require('../../../constants/overtimeContractParams');
 
 describe('SportsAMMV2Data Read Data', () => {
 	let sportsAMMV2Data,
@@ -62,10 +65,10 @@ describe('SportsAMMV2Data Read Data', () => {
 		it('Should return Sports AMM parameters', async () => {
 			const params = await sportsAMMV2Data.getSportsAMMParameters();
 
-			expect(params.minBuyInAmount).to.be.equal(SPORTS_AMM_INITAL_PARAMS.minBuyInAmount);
-			expect(params.maxTicketSize).to.be.equal(SPORTS_AMM_INITAL_PARAMS.maxTicketSize);
-			expect(params.maxSupportedAmount).to.be.equal(SPORTS_AMM_INITAL_PARAMS.maxSupportedAmount);
-			expect(params.maxSupportedOdds).to.be.equal(SPORTS_AMM_INITAL_PARAMS.maxSupportedOdds);
+			expect(params.minBuyInAmount).to.be.equal(RISK_MANAGER_INITAL_PARAMS.minBuyInAmount);
+			expect(params.maxTicketSize).to.be.equal(RISK_MANAGER_INITAL_PARAMS.maxTicketSize);
+			expect(params.maxSupportedAmount).to.be.equal(RISK_MANAGER_INITAL_PARAMS.maxSupportedAmount);
+			expect(params.maxSupportedOdds).to.be.equal(RISK_MANAGER_INITAL_PARAMS.maxSupportedOdds);
 			expect(params.safeBoxFee).to.be.equal(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);
 		});
 	});

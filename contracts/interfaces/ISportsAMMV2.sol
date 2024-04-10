@@ -30,14 +30,6 @@ interface ISportsAMMV2 {
 
     function resultManager() external view returns (ISportsAMMV2ResultManager);
 
-    function minBuyInAmount() external view returns (uint);
-
-    function maxTicketSize() external view returns (uint);
-
-    function maxSupportedAmount() external view returns (uint);
-
-    function maxSupportedOdds() external view returns (uint);
-
     function safeBoxFee() external view returns (uint);
 
     function resolveTicket(

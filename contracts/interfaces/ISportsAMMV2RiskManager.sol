@@ -27,6 +27,24 @@ interface ISportsAMMV2RiskManager {
         DynamicLiquidityData dynamicLiquidityData;
     }
 
+    enum RiskStatus {
+        NoRisk,
+        OutOfLiquidity,
+        InvalidCombination
+    }
+
+    function minBuyInAmount() external view returns (uint);
+
+    function maxTicketSize() external view returns (uint);
+
+    function maxSupportedAmount() external view returns (uint);
+
+    function maxSupportedOdds() external view returns (uint);
+
+    function expiryDuration() external view returns (uint);
+
+    function liveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId) external view returns (bool _enabled);
+
     function calculateCapToBeUsed(
         bytes32 _gameId,
         uint16 _sportId,
@@ -36,17 +54,18 @@ interface ISportsAMMV2RiskManager {
         uint _maturity
     ) external view returns (uint cap);
 
-    function isTotalSpendingLessThanTotalRisk(
-        uint _totalSpent,
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _typeId,
-        uint16 _playerId,
-        int24 _line,
-        uint _maturity
-    ) external view returns (bool _isNotRisky);
+    function checkRisks(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _buyInAmount
+    ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity);
 
-    function liveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId) external view returns (bool _enabled);
+    function checkLimits(
+        uint _buyInAmount,
+        uint _totalQuote,
+        uint _payout,
+        uint _expectedPayout,
+        uint _additionalSlippage
+    ) external view;
 
-    function hasIllegalCombinationsOnTicket(ISportsAMMV2.TradeData[] memory _tradeData) external view returns (bool);
+    function checkAndUpdateRisks(ISportsAMMV2.TradeData[] memory _tradeData, uint _buyInAmount) external;
 }
