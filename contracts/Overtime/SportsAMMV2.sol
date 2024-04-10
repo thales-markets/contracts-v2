@@ -174,7 +174,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             collateralQuote = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
         }
         uint useAmount = collateralQuote > 0 && collateralPool[_collateral] == address(0) ? collateralQuote : _buyInAmount;
-        (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, useAmount, true);
+        (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, useAmount, true, collateralQuote);
     }
 
     /// @notice is provided ticket active
@@ -432,7 +432,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _tradeQuote(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
-        bool _shouldCheckRisks
+        bool _shouldCheckRisks,
+        uint _collateralQuote
     )
         internal
         view
@@ -472,6 +473,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             fees = (safeBoxFee * _buyInAmount) / ONE;
 
             if (_shouldCheckRisks) {
+                if (_collateralQuote > 0 && _buyInAmount != _collateralQuote) {
+                    _buyInAmount = _collateralQuote;
+                }
                 (ISportsAMMV2RiskManager.RiskStatus rStatus, bool[] memory isMarketOutOfLiquidity) = riskManager.checkRisks(
                     _tradeData,
                     _buyInAmount
@@ -542,7 +546,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
 
         if (!_tradeDataInternal._isLive) {
-            (totalQuote, payout, fees, , ) = _tradeQuote(_tradeData, _tradeDataInternal._buyInAmount, false);
+            (totalQuote, payout, fees, , ) = _tradeQuote(_tradeData, _tradeDataInternal._buyInAmount, false, 0);
         }
 
         uint payoutWithFees = payout + fees;
