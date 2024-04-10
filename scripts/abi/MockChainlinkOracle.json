@@ -5,6 +5,19 @@
     "type": "constructor"
   },
   {
+    "inputs": [],
+    "name": "chainlinkResolver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -28,6 +41,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "int24[][]",
+        "name": "_results",
+        "type": "int24[][]"
+      }
+    ],
+    "name": "fulfillMarketResolve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "liveTradingProcessor",
     "outputs": [
@@ -38,6 +69,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_chainlinkResolver",
+        "type": "address"
+      }
+    ],
+    "name": "setChainlinkResolver",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
