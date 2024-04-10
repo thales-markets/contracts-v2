@@ -47,6 +47,7 @@ describe('Ticket Exercise and Expire', () => {
 
 	describe('Exercise and expire', () => {
 		it('Exercise market', async () => {
+			tradeDataCurrentRound[0].position = 0;
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 
 			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_1, 0, 0)).to.equal(
@@ -105,6 +106,7 @@ describe('Ticket Exercise and Expire', () => {
 		});
 
 		it('Expire market', async () => {
+			tradeDataCurrentRound.position = 0;
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 
 			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_1, 0, 0)).to.equal(
