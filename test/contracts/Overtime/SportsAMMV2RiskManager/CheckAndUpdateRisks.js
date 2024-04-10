@@ -1,16 +1,11 @@
-const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const {
-	BUY_IN_AMOUNT,
-	RISK_STATUS,
-	ADDITIONAL_SLIPPAGE,
-	SPORT_ID_NBA,
-} = require('../../../constants/overtime');
-const { ZERO_ADDRESS, ONE_DAY_IN_SECS } = require('../../../constants/general');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, SPORT_ID_NBA } = require('../../../constants/overtime');
+const { ZERO_ADDRESS, ONE_WEEK_IN_SECS } = require('../../../constants/general');
 
 describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 	let sportsAMMV2RiskManager,
@@ -141,25 +136,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			).to.be.revertedWith('Only the AMM may perform these methods');
 		});
 
-		it('Should fail with "Not trading"', async () => {
-			const quote = await sportsAMMV2.tradeQuote(tradeDataNotActive, BUY_IN_AMOUNT, ZERO_ADDRESS);
-
-			await expect(
-				sportsAMMV2
-					.connect(firstTrader)
-					.trade(
-						tradeDataNotActive,
-						BUY_IN_AMOUNT,
-						quote.payout,
-						ADDITIONAL_SLIPPAGE,
-						ZERO_ADDRESS,
-						ZERO_ADDRESS,
-						ZERO_ADDRESS,
-						false
-					)
-			).to.be.revertedWith('Not trading');
-		});
-
 		it('Should fail with "Invalid position"', async () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
@@ -182,6 +158,48 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						false
 					)
 			).to.be.revertedWith('Invalid position');
+		});
+
+		it('Should fail with "Not trading"', async () => {
+			let quote = await sportsAMMV2.tradeQuote(tradeDataNotActive, BUY_IN_AMOUNT, ZERO_ADDRESS);
+
+			await expect(
+				sportsAMMV2
+					.connect(firstTrader)
+					.trade(
+						tradeDataNotActive,
+						BUY_IN_AMOUNT,
+						quote.payout,
+						ADDITIONAL_SLIPPAGE,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						false
+					)
+			).to.be.revertedWith('Not trading');
+
+			await time.increase((await time.latest()) + ONE_WEEK_IN_SECS);
+
+			quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
+
+			await expect(
+				sportsAMMV2
+					.connect(firstTrader)
+					.trade(
+						tradeDataTenMarketsCurrentRound,
+						BUY_IN_AMOUNT,
+						quote.payout,
+						ADDITIONAL_SLIPPAGE,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						false
+					)
+			).to.be.revertedWith('Not trading');
 		});
 
 		it('Should fail with "Risk per market and position exceeded"', async () => {
