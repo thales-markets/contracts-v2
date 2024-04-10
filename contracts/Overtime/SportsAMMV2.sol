@@ -589,7 +589,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 ),
                 _tradeDataInternal._additionalSlippage
             );
-            riskManager.checkAndUpdateRisks(_tradeData, _tradeDataInternal._buyInAmount);
+            riskManager.checkAndUpdateRisks(
+                _tradeData,
+                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD, transformDecimal)
+            );
         }
 
         // clone a ticket

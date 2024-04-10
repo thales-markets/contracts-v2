@@ -718,7 +718,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     }
 
     modifier onlyAMM() {
-        require(msg.sender == address(sportsAMM), "only the AMM may perform these methods");
+        require(msg.sender == address(sportsAMM), "Only the AMM may perform these methods");
         _;
     }
 

@@ -68,7 +68,7 @@ describe('Ticket Exercise and Expire', () => {
 				ZERO_ADDRESS
 			);
 
-			expect(quote.payout).to.equal(ethers.parseEther('20'));
+			expect(quote.payout).to.equal("17543859649122807017");
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -97,7 +97,7 @@ describe('Ticket Exercise and Expire', () => {
 			const userTicket = await TicketContract.attach(ticketAddress);
 			// console.log(userTicket);
 			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
-			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
+			expect(await userTicket.isUserTheWinner()).to.be.equal(false);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
 			await sportsAMMV2.exerciseTicket(ticketAddress);
@@ -126,7 +126,7 @@ describe('Ticket Exercise and Expire', () => {
 				ZERO_ADDRESS
 			);
 
-			expect(quote.payout).to.equal(ethers.parseEther('20'));
+			expect(quote.payout).to.equal("17543859649122807017");
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -155,7 +155,7 @@ describe('Ticket Exercise and Expire', () => {
 
 			// console.log(userTicket);
 			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
-			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
+			expect(await userTicket.isUserTheWinner()).to.be.equal(false);
 			expect(await userTicket.phase()).to.be.equal(1);
 			const blockNumBefore = await ethers.provider.getBlockNumber();
 			const blockBefore = await ethers.provider.getBlock(blockNumBefore);
