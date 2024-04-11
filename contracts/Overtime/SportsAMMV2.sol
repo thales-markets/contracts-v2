@@ -16,6 +16,7 @@ import "../utils/libraries/AddressSetLib.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
+import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
@@ -108,7 +109,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _collateralPriceInUSD;
     }
 
-    mapping(address => address) public collateralPool;
+    mapping(address => address) public liquidityPoolForCollateral;
     uint public defaultCollateralDecimals;
 
     /* ========== CONSTRUCTOR ========== */
@@ -173,6 +174,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         )
     {
         if (_collateral != address(0)) {
+            require(
+                _collateral != address(defaultCollateral),
+                "Use 0x for collateral parameter if the default collateral is used"
+            );
             // getMinimumReceived returns the USD amount for the buyInAmount in the collateral (USD in 18 decimals)
             // Note the method to obtain the collateralQuote can be modified to use (priceFeed.rateForCurrency * _buyInAmount)
             // For using the price feed, it is better to merge this branch and add addressManager accross all contracts
@@ -183,7 +188,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
         // If a collateral is defined, a collateral quote is received and there is no collateral pool defined,
         // use the collateralQuote to obtain quotes in the defaultCollateral
-        uint useAmount = collateralQuote > 0 && collateralPool[_collateral] == address(0) ? collateralQuote : _buyInAmount;
+        uint useAmount = collateralQuote > 0 && liquidityPoolForCollateral[_collateral] == address(0)
+            ? collateralQuote
+            : _buyInAmount;
 
         // To check the risks in USD always pass the collateralQuote
         (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, useAmount, true, collateralQuote);
@@ -287,41 +294,23 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_differentRecipient == address(0)) {
             _differentRecipient = msg.sender;
         }
-
         if (_collateral != address(0)) {
             (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender, _isEth);
         }
-        if (useLPpool != address(0)) {
-            _trade(
-                _tradeData,
-                TradeDataInternal(
-                    _buyInAmount,
-                    _expectedPayout,
-                    _additionalSlippage,
-                    _differentRecipient,
-                    false,
-                    msg.sender,
-                    _collateral,
-                    useLPpool,
-                    collateralPriceInUSD
-                )
-            );
-        } else {
-            _trade(
-                _tradeData,
-                TradeDataInternal(
-                    _buyInAmount,
-                    _expectedPayout,
-                    _additionalSlippage,
-                    _differentRecipient,
-                    false,
-                    msg.sender,
-                    _collateral,
-                    address(0),
-                    0
-                )
-            );
-        }
+        _trade(
+            _tradeData,
+            TradeDataInternal(
+                _buyInAmount,
+                _expectedPayout,
+                _additionalSlippage,
+                _differentRecipient,
+                false,
+                msg.sender,
+                _collateral,
+                useLPpool,
+                collateralPriceInUSD
+            )
+        );
     }
 
     /// @notice make a live trade and create a ticket
@@ -352,38 +341,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_collateral != address(0)) {
             (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, _requester, false);
         }
-
-        if (useLPpool != address(0)) {
-            _trade(
-                _tradeData,
-                TradeDataInternal(
-                    _buyInAmount,
-                    _expectedPayout,
-                    0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
-                    _differentRecipient,
-                    true,
-                    _requester,
-                    _collateral,
-                    useLPpool,
-                    collateralPriceInUSD
-                )
-            );
-        } else {
-            _trade(
-                _tradeData,
-                TradeDataInternal(
-                    _buyInAmount,
-                    _expectedPayout,
-                    0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
-                    _differentRecipient,
-                    true,
-                    _requester,
-                    _collateral,
-                    address(0),
-                    0
-                )
-            );
-        }
+        _trade(
+            _tradeData,
+            TradeDataInternal(
+                _buyInAmount,
+                _expectedPayout,
+                0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
+                _differentRecipient,
+                true,
+                _requester,
+                _collateral,
+                useLPpool,
+                collateralPriceInUSD
+            )
+        );
     }
 
     /// @notice exercise specific ticket
@@ -483,7 +454,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             if (_shouldCheckRisks) {
                 // Note it can be reduced to only check (_collateralQuote > 0)
-                // This way saves an inicialization step when multicollateral is used without collateralPool
+                // This way saves an initialization step when multicollateral is used without collateralPool
                 if (_collateralQuote > 0 && _buyInAmount != _collateralQuote) {
                     _buyInAmount = _collateralQuote;
                 }
@@ -513,7 +484,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal returns (address lqPool, uint collateralPrice) {
         require(multicollateralEnabled, "Multi-collat not enabled");
         uint exactReceived;
-        lqPool = collateralPool[_collateral];
+        lqPool = liquidityPoolForCollateral[_collateral];
         if (lqPool != address(0)) {
             if (_collateral == multiCollateralOnOffRamp.WETH9() && _isEth) {
                 // WETH specific case
@@ -529,8 +500,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 exactReceived = _buyInAmount;
             }
 
-            collateralPrice = ICollateralUtility(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
-                .rateForCurrency(ISportsAMMV2LiquidityPool(lqPool).collateralKey());
+            collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
+                ISportsAMMV2LiquidityPool(lqPool).collateralKey()
+            );
+            require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
         } else {
             uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
             IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), collateralQuote);
@@ -540,18 +513,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         require(exactReceived >= _buyInAmount, "Insuff payment");
 
-        //send the surplus to SB
+        // send the surplus to SB
+        // occurs only in multicollateral onramp case
         if (exactReceived > _buyInAmount) {
-            if (lqPool != address(0)) {
-                // Note: if needed add the logic to convert the surplus to default collateral and send to safeBox
-                IERC20(_collateral).safeTransfer(safeBox, exactReceived - _buyInAmount);
-            } else {
-                defaultCollateral.safeTransfer(safeBox, exactReceived - _buyInAmount);
-            }
+            defaultCollateral.safeTransfer(safeBox, exactReceived - _buyInAmount);
         }
     }
 
     function _trade(ISportsAMMV2.TradeData[] memory _tradeData, TradeDataInternal memory _tradeDataInternal) internal {
+        require(
+            _tradeDataInternal._collateral != address(defaultCollateral),
+            "Use 0x for collateral parameter if the default collateral is used"
+        );
         uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
         uint payout = _tradeDataInternal._expectedPayout;
         uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
@@ -764,16 +737,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         IERC20 ticketCollateral = ticket.collateral();
         uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
-            ISportsAMMV2LiquidityPool(collateralPool[address(ticketCollateral)]).transferToPool(_ticket, amount);
+            // ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
             // Note: Following code can be used in case:
             // the default collateral is not added to the collateralPool mapping.
             // In test and production, it safer to add it.
-            // address usePool = collateralPool[address(ticketCollateral)];
-            // if(usePool != address(0)) {
-            //     ISportsAMMV2LiquidityPool(collateralPool[address(ticketCollateral)]).transferToPool(_ticket, amount);
-            // } else {
-            //     liquidityPool.transferToPool(_ticket, amount);
-            // }
+            address usePool = liquidityPoolForCollateral[address(ticketCollateral)];
+            if (usePool != address(0)) {
+                ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(
+                    _ticket,
+                    amount
+                );
+            } else {
+                liquidityPool.transferToPool(_ticket, amount);
+            }
         }
     }
 
@@ -852,6 +828,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             defaultCollateral.approve(address(liquidityPool), 0);
         }
         liquidityPool = ISportsAMMV2LiquidityPool(_liquidityPool);
+        liquidityPoolForCollateral[address(defaultCollateral)] = _liquidityPool;
         defaultCollateral.approve(_liquidityPool, MAX_APPROVAL);
         emit SetLiquidityPool(_liquidityPool);
     }
@@ -859,11 +836,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice sets new LP Pool with LP address and the supported collateral
     /// @param _collateralAddress collateral address that is supported by the pool
     /// @param _liquidityPool new LP address
-    function setCollateralLiquidityPool(address _collateralAddress, address _liquidityPool) external onlyOwner {
-        if (collateralPool[_collateralAddress] != address(0)) {
+    function setLiquidityPoolForCollateral(address _collateralAddress, address _liquidityPool) external onlyOwner {
+        if (liquidityPoolForCollateral[_collateralAddress] != address(0)) {
             IERC20(_collateralAddress).approve(_liquidityPool, 0);
         }
-        collateralPool[_collateralAddress] = _liquidityPool;
+        liquidityPoolForCollateral[_collateralAddress] = _liquidityPool;
         IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
         emit SetLiquidityPoolForCollateral(_liquidityPool, _collateralAddress);
     }

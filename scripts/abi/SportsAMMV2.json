@@ -494,25 +494,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "collateralPool",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "defaultCollateral",
     "outputs": [
@@ -768,6 +749,25 @@
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2LiquidityPool",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "liquidityPoolForCollateral",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -1150,6 +1150,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_liquidityPool",
+        "type": "address"
+      }
+    ],
+    "name": "setLiquidityPool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_collateralAddress",
         "type": "address"
       },
@@ -1159,20 +1172,7 @@
         "type": "address"
       }
     ],
-    "name": "setCollateralLiquidityPool",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_liquidityPool",
-        "type": "address"
-      }
-    ],
-    "name": "setLiquidityPool",
+    "name": "setLiquidityPoolForCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

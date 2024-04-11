@@ -9,10 +9,4 @@ interface ICollateralUtility {
     function withdraw(uint256) external;
 
     function priceFeed() external view returns (address);
-
-    function commitTrade(address ticket, uint amount) external;
-
-    function getAddress(string calldata _contractName) external view returns (address);
-
-    function rateForCurrency(bytes32 currencyKey) external view returns (uint);
 }

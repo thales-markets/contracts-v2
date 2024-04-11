@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 // external
 import "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol";
 
-contract AddressManagerExtension is AddressManager {
+contract MockAddressManager is AddressManager {
     /// @notice Get address from the addressBook based on the contract name
     /// @param _contractName name of the contract
     /// @return contract_ the address of the contract
