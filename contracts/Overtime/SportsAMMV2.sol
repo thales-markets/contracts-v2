@@ -110,7 +110,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     mapping(address => address) public liquidityPoolForCollateral;
-    uint public defaultCollateralDecimals;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -142,7 +141,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         referrals = _referrals;
         stakingThales = _stakingThales;
         safeBox = _safeBox;
-        defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -184,7 +182,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             collateralQuote = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
             // If USDC is default collateral needs to be transformed
             // Note this better to be done on multiCollateralOnOffRamp side
-            collateralQuote = collateralQuote / (10 ** (18 - defaultCollateralDecimals));
+            collateralQuote = collateralQuote / (10 ** (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals()));
         }
         // If a collateral is defined, a collateral quote is received and there is no collateral pool defined,
         // use the collateralQuote to obtain quotes in the defaultCollateral
@@ -623,7 +621,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint payout;
         uint expectedPayout;
         if (_collateralPriceInUSD > 0) {
-            uint transformDecimal = (18 - defaultCollateralDecimals);
+            uint transformDecimal = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
             buyInAmount = _transformToUSD(_buyInAmount, _collateralPriceInUSD, transformDecimal);
             payout = _transformToUSD(_payout, _collateralPriceInUSD, transformDecimal);
             expectedPayout = _transformToUSD(_expectedPayout, _collateralPriceInUSD, transformDecimal);
