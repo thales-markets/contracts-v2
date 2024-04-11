@@ -534,7 +534,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         uint payoutWithFees = payout + fees;
-        _checkRisksAndUpdateStakingVolume(
+        _checkRisksLimitsAndUpdateStakingVolume(
             _tradeData,
             _tradeDataInternal._buyInAmount,
             totalQuote,
@@ -609,7 +609,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     // Checks risk and updates Staking Volume
-    function _checkRisksAndUpdateStakingVolume(
+    function _checkRisksLimitsAndUpdateStakingVolume(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
         uint _totalQuote,
