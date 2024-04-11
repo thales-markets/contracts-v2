@@ -174,6 +174,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     {
         if (_collateral != address(0)) {
             // getMinimumReceived returns the USD amount for the buyInAmount in the collateral (USD in 18 decimals)
+            // Note the method to obtain the collateralQuote can be modified to use (priceFeed.rateForCurrency * _buyInAmount)
+            // For using the price feed, it is better to merge this branch and add addressManager accross all contracts
             collateralQuote = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
             // If USDC is default collateral needs to be transformed
             // Note this better to be done on multiCollateralOnOffRamp side
@@ -302,7 +304,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _collateral,
                     useLPpool,
                     collateralPriceInUSD
-                    // (ONE-ISportsAMMV2Manager(address(defaultCollateral)).decimals())
                 )
             );
         } else {
@@ -366,7 +367,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _collateral,
                     useLPpool,
                     collateralPriceInUSD
-                    // (ONE-ISportsAMMV2Manager(address(defaultCollateral)).decimals())
                 )
             );
         } else {
@@ -483,6 +483,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             fees = (safeBoxFee * _buyInAmount) / ONE;
 
             if (_shouldCheckRisks) {
+                // Note it can be reduced to only check (_collateralQuote > 0)
+                // This way saves an inicialization step when multicollateral is used without collateralPool
                 if (_collateralQuote > 0 && _buyInAmount != _collateralQuote) {
                     _buyInAmount = _collateralQuote;
                 }
@@ -523,7 +525,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 require(balanceDiff == msg.value, "Insuff WETH");
                 exactReceived = balanceDiff;
             } else {
-                // Generic case
+                // Generic case for any collateral used (THALES/ARB/OP)
                 IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _buyInAmount);
                 exactReceived = _buyInAmount;
             }
