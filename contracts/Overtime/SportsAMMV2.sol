@@ -534,40 +534,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         uint payoutWithFees = payout + fees;
-        uint transformDecimal = (18 - defaultCollateralDecimals);
-        if (_tradeDataInternal._collateralPool == address(0)) {
-            riskManager.checkAndUpdateRisks(_tradeData, _tradeDataInternal._buyInAmount);
-            riskManager.checkLimits(
-                _tradeDataInternal._buyInAmount,
-                totalQuote,
-                payout,
-                _tradeDataInternal._expectedPayout,
-                _tradeDataInternal._additionalSlippage
-            );
-            if (_tradeDataInternal._collateral == address(0)) {
-                defaultCollateral.safeTransferFrom(
-                    _tradeDataInternal._requester,
-                    address(this),
-                    _tradeDataInternal._buyInAmount
-                );
-            }
-        } else {
-            riskManager.checkAndUpdateRisks(
-                _tradeData,
-                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD, transformDecimal)
-            );
-            riskManager.checkLimits(
-                _transformToUSD(_tradeDataInternal._buyInAmount, _tradeDataInternal._collateralPriceInUSD, transformDecimal),
-                totalQuote,
-                _transformToUSD(payout, _tradeDataInternal._collateralPriceInUSD, transformDecimal),
-                _transformToUSD(
-                    _tradeDataInternal._expectedPayout,
-                    _tradeDataInternal._collateralPriceInUSD,
-                    transformDecimal
-                ),
-                _tradeDataInternal._additionalSlippage
-            );
-        }
+        _checkRisksAndUpdateStakingVolume(
+            _tradeData,
+            _tradeDataInternal._buyInAmount,
+            totalQuote,
+            payout,
+            _tradeDataInternal._expectedPayout,
+            _tradeDataInternal._additionalSlippage,
+            _tradeDataInternal._collateralPriceInUSD,
+            _tradeDataInternal._differentRecipient
+        );
 
         // clone a ticket
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
@@ -589,22 +565,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
         if (_tradeDataInternal._collateralPool == address(0)) {
-            if (address(stakingThales) != address(0)) {
-                stakingThales.updateVolume(_tradeDataInternal._differentRecipient, _tradeDataInternal._buyInAmount);
+            if (_tradeDataInternal._collateral == address(0)) {
+                defaultCollateral.safeTransferFrom(
+                    _tradeDataInternal._requester,
+                    address(this),
+                    _tradeDataInternal._buyInAmount
+                );
             }
             liquidityPool.commitTrade(address(ticket), payoutWithFees - _tradeDataInternal._buyInAmount);
             defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
         } else {
-            if (address(stakingThales) != address(0)) {
-                stakingThales.updateVolume(
-                    _tradeDataInternal._differentRecipient,
-                    _transformToUSD(
-                        _tradeDataInternal._buyInAmount,
-                        _tradeDataInternal._collateralPriceInUSD,
-                        transformDecimal
-                    )
-                );
-            }
             ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
                 address(ticket),
                 payoutWithFees - _tradeDataInternal._buyInAmount
@@ -635,6 +605,37 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / (ONE * 10 ** _defaultCollateralDecimalConverter);
         } else {
             amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / ONE;
+        }
+    }
+
+    // Checks risk and updates Staking Volume
+    function _checkRisksAndUpdateStakingVolume(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _buyInAmount,
+        uint _totalQuote,
+        uint _payout,
+        uint _expectedPayout,
+        uint _additionalSlippage,
+        uint _collateralPriceInUSD,
+        address _differentRecipient
+    ) internal {
+        uint buyInAmount;
+        uint payout;
+        uint expectedPayout;
+        if (_collateralPriceInUSD > 0) {
+            uint transformDecimal = (18 - defaultCollateralDecimals);
+            buyInAmount = _transformToUSD(_buyInAmount, _collateralPriceInUSD, transformDecimal);
+            payout = _transformToUSD(_payout, _collateralPriceInUSD, transformDecimal);
+            expectedPayout = _transformToUSD(_expectedPayout, _collateralPriceInUSD, transformDecimal);
+        } else {
+            buyInAmount = _buyInAmount;
+            payout = _payout;
+            expectedPayout = _expectedPayout;
+        }
+        riskManager.checkAndUpdateRisks(_tradeData, buyInAmount);
+        riskManager.checkLimits(buyInAmount, _totalQuote, payout, expectedPayout, _additionalSlippage);
+        if (address(stakingThales) != address(0)) {
+            stakingThales.updateVolume(_differentRecipient, buyInAmount);
         }
     }
 
