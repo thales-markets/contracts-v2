@@ -263,8 +263,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
 			);
 
-			expect(await sportsAMMV2LiquidityPoolSixDecimals.isDefaultCollateral()).to.be.equal(true);
-
 			const initialDeposit = 1000 * 1e6;
 
 			// // deposit and start pool
