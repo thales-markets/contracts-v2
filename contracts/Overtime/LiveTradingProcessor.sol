@@ -36,7 +36,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _differentRecipient;
         address _referrer;
         address _collateral;
-        uint _ethDeposited;
     }
 
     mapping(bytes32 => LiveTradeData) public requestIdToTradeData;
@@ -82,7 +81,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _differentRecipient, // in case a voucher is used
         address _referrer,
         address _collateral
-    ) external payable whenNotPaused {
+    ) external whenNotPaused {
         //TODO: consider how to prevent someone spamming this method
         require(
             sportsAMM.riskManager().liveTradingPerSportAndTypeEnabled(_sportId, _typeId),
@@ -105,9 +104,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         if (_differentRecipient == address(0)) {
             _differentRecipient = msg.sender;
         }
-        if (msg.value > 0) {
-            require(msg.value == _buyInAmount, "Insuff ETH sent");
-        }
 
         bytes32 requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;
@@ -122,8 +118,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _additionalSlippage,
             _differentRecipient,
             _referrer,
-            _collateral,
-            msg.value
+            _collateral
         );
 
         counterToRequestId[requestCounter] = requestId;
@@ -139,8 +134,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _buyInAmount,
             _expectedPayout,
             _differentRecipient,
-            _collateral,
-            msg.value
+            _collateral
         );
         requestCounter++;
     }
@@ -185,15 +179,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 comPositions //combinedPositions[]
             );
 
-            sportsAMM.tradeLive{value: lTradeData._ethDeposited}(
+            sportsAMM.tradeLive(
                 tradeData,
                 lTradeData._requester,
                 lTradeData._buyInAmount,
                 _approvedPayoutAmount,
                 lTradeData._differentRecipient,
                 lTradeData._referrer,
-                lTradeData._collateral,
-                lTradeData._ethDeposited > 0
+                lTradeData._collateral
             );
         }
         requestIdToFulfillAllowed[_requestId] = _allow;
@@ -264,8 +257,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint _buyInAmount,
         uint _expectedPayout,
         address _differentRecipient,
-        address _collateral,
-        uint _ethDeposited
+        address _collateral
     );
     event LiveTradeFulfilled(
         address recipient,

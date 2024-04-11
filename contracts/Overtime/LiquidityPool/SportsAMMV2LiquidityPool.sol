@@ -38,7 +38,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         address _safeBox;
         uint _safeBoxImpact;
         bytes32 _collateralKey;
-        bool _canDepositETH;
     }
 
     /* ========== CONSTANTS ========== */
@@ -102,8 +101,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     bytes32 public collateralKey;
 
-    bool public canDepositETH;
-
     bool public isDefaultCollateral;
 
     /* ========== CONSTRUCTOR ========== */
@@ -123,7 +120,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         utilizationRate = params._utilizationRate;
         safeBox = params._safeBox;
         safeBoxImpact = params._safeBoxImpact;
-        canDepositETH = params._canDepositETH;
         isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(params._collateral);
 
         collateral.approve(params._sportsAMM, MAX_APPROVAL);
@@ -147,31 +143,18 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         emit PoolStarted();
     }
 
-    function depositWithEth() external payable canDeposit(msg.value) nonReentrant whenNotPaused roundClosingNotPrepared {
-        require(msg.value > 0 && canDepositETH, "Can not deposit ETH");
-        uint balanceBefore = collateral.balanceOf(address(this));
-        ICollateralUtility(address(collateral)).deposit{value: msg.value}();
-        uint balanceDiff = collateral.balanceOf(address(this)) - balanceBefore;
-        require(balanceDiff > 0 && balanceDiff == msg.value, "Not enough WETH received");
-        _deposit(balanceDiff, true);
-    }
-
     /// @notice deposit funds from user into pool for the next round
     /// @param amount value to be deposited
     function deposit(uint amount) external canDeposit(amount) nonReentrant whenNotPaused roundClosingNotPrepared {
-        _deposit(amount, false);
+        _deposit(amount);
     }
 
     /// @notice deposit funds from user into pool for the next round
     /// @param amount value to be deposited
-    function _deposit(uint amount, bool _isEthReceived) internal {
+    function _deposit(uint amount) internal {
         uint nextRound = round + 1;
         address roundPool = _getOrCreateRoundPool(nextRound);
-        if (_isEthReceived) {
-            collateral.safeTransfer(roundPool, amount);
-        } else {
-            collateral.safeTransferFrom(msg.sender, roundPool, amount);
-        }
+        collateral.safeTransferFrom(msg.sender, roundPool, amount);
 
         require(msg.sender != defaultLiquidityProvider, "Can't deposit directly as default LP");
 
@@ -330,7 +313,15 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 balancesPerRound[round + 1][user] = balancesPerRound[round + 1][user] + balanceAfterCurRound;
                 usersPerRound[round + 1].push(user);
                 if (address(stakingThales) != address(0)) {
-                    stakingThales.updateVolume(user, balanceAfterCurRound);
+                    if (isDefaultCollateral) {
+                        IStakingThales(stakingThales).updateVolume(msg.sender, balanceAfterCurRound);
+                    } else {
+                        uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
+                            collateralKey
+                        );
+                        uint amountInUSD = _transformToUSD(balanceAfterCurRound, collateralPriceInUSD);
+                        IStakingThales(stakingThales).updateVolume(msg.sender, amountInUSD);
+                    }
                 }
             } else {
                 if (withdrawalShare[user] > 0) {
@@ -647,13 +638,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         emit MaxAllowedUsersChanged(_maxAllowedUsers);
     }
 
-    /// @notice Set if deposits can be made with ETH
-    /// @param _canDepositETH flag true users can deposit using ETH
-    function setCanDepositETH(bool _canDepositETH) external onlyOwner {
-        canDepositETH = _canDepositETH;
-        emit CanDepositETH(_canDepositETH);
-    }
-
     /// @notice Set SportsAMM contract
     /// @param _sportsAMM SportsAMM address
     function setSportsAMM(ISportsAMMV2 _sportsAMM) external onlyOwner {
@@ -748,7 +732,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     event MaxAllowedDepositChanged(uint maxAllowedDeposit);
     event MinAllowedDepositChanged(uint minAllowedDeposit);
     event MaxAllowedUsersChanged(uint maxAllowedUsersChanged);
-    event CanDepositETH(bool canDepositETH);
     event UtilizationRateChanged(uint utilizationRate);
     event SetSafeBoxParams(address safeBox, uint safeBoxImpact);
 }

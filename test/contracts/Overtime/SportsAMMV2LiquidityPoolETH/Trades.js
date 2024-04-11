@@ -71,22 +71,11 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 		it('Should not be using default collateral (isDefaultCollateral == false)', async () => {
 			expect(await sportsAMMV2LiquidityPoolETH.isDefaultCollateral()).to.equal(false);
 		});
-		it('Should revert - can not deposit with ETH', async () => {
-			const initialDeposit = ethers.parseEther('1');
-			await sportsAMMV2LiquidityPoolETH.setCanDepositETH(false);
-			await expect(
-				sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.depositWithEth({
-					value: initialDeposit,
-				})
-			).to.be.revertedWith('Can not deposit ETH');
-		});
 		it('Should be ticket in the current round (negative round)', async () => {
 			const initialDeposit = ethers.parseEther('1');
 
 			// deposit and start pool
-			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.depositWithEth({
-				value: initialDeposit,
-			});
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
 
 			await sportsAMMV2LiquidityPoolETH.start();
 
@@ -253,9 +242,7 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			const initialDeposit = ethers.parseEther('1');
 
 			// deposit and start pool
-			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.depositWithEth({
-				value: initialDeposit,
-			});
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
 
 			await sportsAMMV2LiquidityPoolETH.start();
 
@@ -429,9 +416,7 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			const initialDeposit = ethers.parseEther('1');
 
 			// deposit and start pool
-			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.depositWithEth({
-				value: initialDeposit,
-			});
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
 			await sportsAMMV2LiquidityPoolETH.start();
 
 			let currentRound = Number(await sportsAMMV2LiquidityPoolETH.round());
@@ -649,10 +634,7 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			const initialDeposit = ethers.parseEther('1');
 
 			// deposit and start pool
-			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.depositWithEth({
-				value: initialDeposit,
-			});
-
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
 			await sportsAMMV2LiquidityPoolETH.start();
 
 			let currentRound = Number(await sportsAMMV2LiquidityPoolETH.round());

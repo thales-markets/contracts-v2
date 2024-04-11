@@ -338,20 +338,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout,
         address _differentRecipient,
         address _referrer,
-        address _collateral,
-        bool _isETH
-    ) external payable nonReentrant notPaused {
-        require(msg.sender == liveTradingProcessor, "Only Live");
+        address _collateral
+    ) external nonReentrant notPaused {
+        require(msg.sender == liveTradingProcessor, "OnlyLiveTradingProcessor");
 
         if (_referrer != address(0)) {
             referrals.setReferrer(_referrer, _requester);
         }
 
-        require(_differentRecipient != address(0), "undef Recip");
+        require(_differentRecipient != address(0), "UndefinedRecipient");
         address useLPpool;
         uint collateralPriceInUSD;
         if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender, _isETH);
+            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, _requester, false);
         }
 
         if (useLPpool != address(0)) {
@@ -526,7 +525,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 exactReceived = balanceDiff;
             } else {
                 // Generic case for any collateral used (THALES/ARB/OP)
-                IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _buyInAmount);
+                IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
                 exactReceived = _buyInAmount;
             }
 

@@ -46,9 +46,9 @@ describe('SportsAMMV2Live Live Trades', () => {
 			.deposit(ethers.parseEther('1000'));
 		await sportsAMMV2LiquidityPool.start();
 
-		await sportsAMMV2LiquidityPoolETH.connect(firstLiquidityProvider).depositWithEth({
-			value: ethers.parseEther('1'),
-		});
+		await sportsAMMV2LiquidityPoolETH
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1'));
 		await sportsAMMV2LiquidityPoolETH.start();
 
 		quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
@@ -82,7 +82,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
 		});
 
-		it('Should buy a live trade with ETH', async () => {
+		it('Should buy a live trade with WETH collateral', async () => {
 			console.log('quoteETH.payout : ', quoteETH.payout.toString());
 			expect(quoteETH.payout).to.equal(ethers.parseEther('0.0057142857142858'));
 
@@ -100,8 +100,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					ZERO_ADDRESS,
-					weth,
-					{ value: ETH_BUY_IN_AMOUNT }
+					weth
 				);
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);

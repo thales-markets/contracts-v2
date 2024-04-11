@@ -1541,16 +1541,11 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_isETH",
-        "type": "bool"
       }
     ],
     "name": "tradeLive",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

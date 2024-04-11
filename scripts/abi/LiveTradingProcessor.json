@@ -279,12 +279,6 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_ethDeposited",
-        "type": "uint256"
       }
     ],
     "name": "LiveTradeRequested",
@@ -577,11 +571,6 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_ethDeposited",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -642,7 +631,7 @@
     ],
     "name": "requestLiveTrade",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

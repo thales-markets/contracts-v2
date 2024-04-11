@@ -73,9 +73,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 		it('Should start liquidity pool', async () => {
 			const initialDeposit = ethers.parseEther('1');
-			await sportsAMMV2LiquidityPoolETH.connect(firstLiquidityProvider).depositWithEth({
-				value: initialDeposit,
-			});
+			await sportsAMMV2LiquidityPoolETH.connect(firstLiquidityProvider).deposit(initialDeposit);
 
 			await sportsAMMV2LiquidityPoolETH.start();
 
@@ -101,9 +99,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 		it('Should emit PoolStarted event', async () => {
 			const initialDeposit = ethers.parseEther('1');
-			await sportsAMMV2LiquidityPoolETH.connect(firstLiquidityProvider).depositWithEth({
-				value: initialDeposit,
-			});
+			await sportsAMMV2LiquidityPoolETH.connect(firstLiquidityProvider).deposit(initialDeposit);
 			await expect(sportsAMMV2LiquidityPoolETH.start()).to.emit(
 				sportsAMMV2LiquidityPoolETH,
 				'PoolStarted'
@@ -135,17 +131,13 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 		it('Should fail with "Amount less than minDepositAmount"', async () => {
 			await expect(
-				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-					value: ethers.parseEther('0.000001'),
-				})
+				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('0.000001'))
 			).to.be.revertedWith('Amount less than minDepositAmount');
 		});
 
 		it('Should fail with "Deposit amount exceeds AMM LP cap"', async () => {
 			await expect(
-				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-					value: ethers.parseEther('30'),
-				})
+				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('30'))
 			).to.be.revertedWith('Deposit amount exceeds AMM LP cap');
 		});
 
@@ -153,29 +145,21 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			await sportsAMMV2LiquidityPoolETH.setDefaultLiquidityProvider(firstLiquidityProvider);
 
 			await expect(
-				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-					value: defaultDepositAmount,
-				})
+				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount)
 			).to.be.revertedWith("Can't deposit directly as default LP");
 		});
 
 		it('Should fail with "Max amount of users reached"', async () => {
 			await sportsAMMV2LiquidityPoolETH.setMaxAllowedUsers(1);
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 
 			expect(await sportsAMMV2LiquidityPoolETH.usersCurrentlyInPool()).to.equal(1);
 
 			await expect(
-				sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.depositWithEth({
-					value: defaultDepositAmount,
-				})
+				sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.deposit(defaultDepositAmount)
 			).to.be.revertedWith('Max amount of users reached');
 
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 			expect(await sportsAMMV2LiquidityPoolETH.usersCurrentlyInPool()).to.equal(1);
 		});
 
@@ -183,9 +167,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			const firstRoundAfterStart = 2;
 
 			// firstLiquidityProvider deposit for round 2
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 			// users and balances check
 			expect(await sportsAMMV2LiquidityPoolETH.isUserLPing(firstLiquidityProvider)).to.equal(true);
 			expect(await sportsAMMV2LiquidityPoolETH.usersCurrentlyInPool()).to.equal(1);
@@ -214,9 +196,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			);
 
 			// secondLiquidityProvider deposit for round 2
-			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.depositWithEth({
-				value: ethers.parseEther('2'),
-			});
+			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.deposit(ethers.parseEther('2'));
 			// users and balances check
 			expect(await sportsAMMV2LiquidityPoolETH.isUserLPing(secondLiquidityProvider)).to.equal(true);
 			expect(await sportsAMMV2LiquidityPoolETH.usersCurrentlyInPool()).to.equal(2);
@@ -248,9 +228,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			let nextRound = Number(currentRound) + 1;
 
 			// firstLiquidityProvider deposit for round 3
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: ethers.parseEther('1.5'),
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('1.5'));
 			// users and balances check
 			expect(await sportsAMMV2LiquidityPoolETH.isUserLPing(firstLiquidityProvider)).to.equal(true);
 			expect(await sportsAMMV2LiquidityPoolETH.usersCurrentlyInPool()).to.equal(2);
@@ -267,9 +245,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			).to.equal(ethers.parseEther('1.5'));
 
 			// thirdLiquidityProvider deposit for round 3
-			await sportsAMMV2LiquidityPoolETHWithThirdLiquidityProvider.depositWithEth({
-				value: ethers.parseEther('3'),
-			});
+			await sportsAMMV2LiquidityPoolETHWithThirdLiquidityProvider.deposit(ethers.parseEther('3'));
 			// users and balances check
 			expect(await sportsAMMV2LiquidityPoolETH.isUserLPing(thirdLiquidityProvider)).to.equal(true);
 			expect(await sportsAMMV2LiquidityPoolETH.usersCurrentlyInPool()).to.equal(3);
@@ -304,9 +280,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 		it('Should emit "Deposited" event', async () => {
 			await expect(
-				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-					value: defaultDepositAmount,
-				})
+				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount)
 			)
 				.to.emit(sportsAMMV2LiquidityPoolETH, 'Deposited')
 				.withArgs(firstLiquidityProvider.address, defaultDepositAmount, 1);
@@ -339,9 +313,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should fail with "Nothing to withdraw"', async () => {
-			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.deposit(defaultDepositAmount);
 
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
@@ -358,17 +330,11 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should fail with "Can\'t withdraw as you already deposited for next round"', async () => {
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
-
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
 
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
-
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()
 			).to.be.revertedWith("Can't withdraw as you already deposited for next round");
@@ -381,9 +347,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should fail with "Withdrawal already requested"', async () => {
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
@@ -402,9 +366,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Deposit should fail with "Withdrawal is requested, cannot deposit"', async () => {
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
@@ -412,21 +374,19 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest();
 
 			await expect(
-				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-					value: defaultDepositAmount,
-				})
+				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount)
 			).to.be.revertedWith('Withdrawal is requested, cannot deposit');
 		});
 
 		it('Should withdraw full amount', async () => {
 			const firstDepositAmount = 1;
 			const secondDepositAmount = 2;
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: ethers.parseEther(`${firstDepositAmount}`),
-			});
-			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.depositWithEth({
-				value: ethers.parseEther(`${secondDepositAmount}`),
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(
+				ethers.parseEther(`${firstDepositAmount}`)
+			);
+			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.deposit(
+				ethers.parseEther(`${secondDepositAmount}`)
+			);
 
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
@@ -524,9 +484,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should withdraw full amount as last user', async () => {
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
@@ -564,9 +522,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should fail with "Share has to be between 10% and 90%"', async () => {
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: defaultDepositAmount,
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
@@ -584,12 +540,12 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			const withdrawalShare = 0.3;
 			const parsedWithdrawalShare = ethers.parseEther(`${withdrawalShare}`);
 
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: ethers.parseEther(`${firstDepositAmount}`),
-			});
-			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.depositWithEth({
-				value: ethers.parseEther(`${secondDepositAmount}`),
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(
+				ethers.parseEther(`${firstDepositAmount}`)
+			);
+			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.deposit(
+				ethers.parseEther(`${secondDepositAmount}`)
+			);
 			// start pool
 			await sportsAMMV2LiquidityPoolETH.start();
 
@@ -714,12 +670,8 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 				sportsAMMV2LiquidityPoolETH.connect(secondLiquidityProvider);
 
 			// deposit and start pool
-			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-				value: ethers.parseEther('5'),
-			});
-			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.depositWithEth({
-				value: ethers.parseEther('5'),
-			});
+			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('5'));
+			await sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.deposit(ethers.parseEther('5'));
 			await sportsAMMV2LiquidityPoolETH.start();
 
 			currentRound = await sportsAMMV2LiquidityPoolETH.round();
@@ -816,9 +768,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			await sportsAMMV2LiquidityPoolETH.prepareRoundClosing();
 
 			await expect(
-				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.depositWithEth({
-					value: ethers.parseEther('1'),
-				})
+				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('1'))
 			).to.be.revertedWith('Not allowed during roundClosingPrepared');
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()

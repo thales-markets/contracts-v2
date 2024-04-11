@@ -328,6 +328,15 @@ async function deploySportsAMMV2Fixture() {
 	// set new roots on Sports AMM contract
 	await sportsAMMV2.setRootsPerGames(gameIds, roots);
 
+	await weth.connect(firstLiquidityProvider).deposit({ value: ETH_DEFAULT_AMOUNT });
+	await weth.connect(secondLiquidityProvider).deposit({ value: ETH_DEFAULT_AMOUNT });
+	await weth.connect(thirdLiquidityProvider).deposit({ value: ETH_DEFAULT_AMOUNT });
+	await weth.connect(firstTrader).deposit({ value: ETH_DEFAULT_AMOUNT });
+	await weth.connect(secondTrader).deposit({ value: ETH_DEFAULT_AMOUNT });
+
+	await weth.connect(firstTrader).approve(sportsAMMV2, ETH_DEFAULT_AMOUNT);
+	await weth.connect(secondTrader).approve(sportsAMMV2, ETH_DEFAULT_AMOUNT);
+
 	await collateral.setDefaultAmount(DEFAULT_AMOUNT);
 	await collateralSixDecimals.setDefaultAmount(DEFAULT_AMOUNT_SIX_DECIMALS);
 	await collateral.mintForUser(firstLiquidityProvider);
@@ -413,7 +422,6 @@ async function deploySportsAMMV2Fixture() {
 	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
 	);
-	await sportsAMMV2LiquidityPoolETH.setCanDepositETH(true);
 	// deploy default liqudity provider
 	const defaultLiquidityProviderETH = await upgrades.deployProxy(DefaultLiquidityProvider, [
 		owner.address,
@@ -426,6 +434,16 @@ async function deploySportsAMMV2Fixture() {
 
 	await weth.deposit({ value: ETH_DEFAULT_AMOUNT });
 	await weth.transfer(defaultLiquidityProviderETHAddress, ETH_DEFAULT_AMOUNT);
+
+	await weth
+		.connect(firstLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolETH, ETH_DEFAULT_AMOUNT);
+	await weth
+		.connect(secondLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolETH, ETH_DEFAULT_AMOUNT);
+	await weth
+		.connect(thirdLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolETH, ETH_DEFAULT_AMOUNT);
 
 	// deploy LiveTradingProcessor
 
