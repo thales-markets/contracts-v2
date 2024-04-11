@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
-const { setTargetAddress, getTargetAddress } = require('../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -21,13 +21,6 @@ async function main() {
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
 
 	const safeBoxFee = ethers.parseEther('0.02');
-	const minBuyInAmount = ethers.parseEther('3');
-	const maxTicketSize = 10;
-	const maxSupportedAmount = ethers.parseEther('20000');
-	const maxSupportedOdds = ethers.parseEther('0.01');
-
-	const minimalTimeLeftToMaturity = 10;
-	const expiryDuration = 7776000;
 
 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2Deployed = await upgrades.deployProxy(
@@ -52,22 +45,10 @@ async function main() {
 	setTargetAddress('SportsAMMV2', network, sportsAMMV2Address);
 	await delay(5000);
 
-	await sportsAMMV2Deployed.setAmounts(
-		safeBoxFee,
-		minBuyInAmount,
-		maxTicketSize,
-		maxSupportedAmount,
-		maxSupportedOdds,
-		{
-			from: owner.address,
-		}
-	);
-	console.log('Amounts set in SportsAMMV2');
-
-	await sportsAMMV2Deployed.setTimes(minimalTimeLeftToMaturity, expiryDuration, {
+	await sportsAMMV2Deployed.setAmounts(safeBoxFee, {
 		from: owner.address,
 	});
-	console.log('Times set in SportsAMMV2');
+	console.log('Amounts set in SportsAMMV2');
 
 	const sportsAMMV2ImplementationAddress = await getImplementationAddress(
 		ethers.provider,
@@ -79,6 +60,17 @@ async function main() {
 	const sportsAMMV2ProxyAdminAddress = await getAdminAddress(ethers.provider, sportsAMMV2Address);
 	console.log('SportsAMMV2 Proxy Admin:', sportsAMMV2ProxyAdminAddress);
 	setTargetAddress('SportsAMMV2ProxyAdmin', network, sportsAMMV2ProxyAdminAddress);
+
+	if (isTestNetwork(networkObj.chainId)) {
+		const sportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
+		const sportsAMMV2RiskManagerDeployed = sportsAMMV2RiskManager.attach(
+			sportsAMMV2RiskManagerAddress
+		);
+		await sportsAMMV2RiskManagerDeployed.setSportsAMM(sportsAMMV2Address, {
+			from: owner.address,
+		});
+		console.log('SportsAMMV2 set in SportsAMMV2RiskManager');
+	}
 
 	await delay(5000);
 
@@ -97,9 +89,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}

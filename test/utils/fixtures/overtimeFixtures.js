@@ -247,16 +247,14 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.mintForUser(owner);
 	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
 
-	// deploy LiveTradingProcessor
-
+	// deploy MockChainlinkOracle
 	const MockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
 	const mockChainlinkOracle = await MockChainlinkOracle.deploy();
-
 	const mockChainlinkOracleAddress = mockChainlinkOracle.getAddress();
 
+	// deploy LiveTradingProcessor
 	const mockSpecId = '0x7370656349640000000000000000000000000000000000000000000000000000';
 	const LiveTradingProcessor = await ethers.getContractFactory('LiveTradingProcessor');
-	//	//constructor(address _link, address _oracle, address _sportsAMM, bytes32 _specId, uint _payment) Ownable(msg.sender) {
 	const liveTradingProcessor = await LiveTradingProcessor.deploy(
 		collateralAddress, //link
 		mockChainlinkOracleAddress, //_oracle
@@ -264,19 +262,18 @@ async function deploySportsAMMV2Fixture() {
 		mockSpecId, // _specId
 		0 // payment
 	);
-
 	const liveTradingProcessorAddress = liveTradingProcessor.getAddress();
 
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
 
+	// deploy ChainlinkResolver
 	const ChainlinkResolver = await ethers.getContractFactory('ChainlinkResolver');
-	const sportsAMMV2ResultManagerAddreess = sportsAMMV2ResultManager.getAddress();
 	const chainlinkResolver = await ChainlinkResolver.deploy(
 		collateralAddress, //link
 		mockChainlinkOracleAddress, //_oracle
 		sportsAMMV2Address, // _sportsAMM
-		sportsAMMV2ResultManagerAddreess, // sportsAMMV2ResultManager
+		sportsAMMV2ResultManagerAddress, // sportsAMMV2ResultManager
 		mockSpecId, // _specId
 		0 // payment
 	);

@@ -19,8 +19,15 @@ const isTestNetwork = (network) =>
 	Number(network) === 10 ||
 	Number(network) === 42161;
 
+const delay = (time) => {
+	return new Promise(function (resolve) {
+		setTimeout(resolve, time);
+	});
+};
+
 module.exports = {
 	getTargetAddress,
 	setTargetAddress,
 	isTestNetwork,
+	delay,
 };

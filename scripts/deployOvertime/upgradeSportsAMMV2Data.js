@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
-const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -51,9 +51,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}

@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
-const { setTargetAddress, getTargetAddress } = require('../helpers');
+const { setTargetAddress, getTargetAddress, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -13,11 +13,20 @@ async function main() {
 
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
+	const sportsAMMV2ResultManagerAddress = getTargetAddress('SportsAMMV2ResultManager', network);
 
 	let defaultCap = ethers.parseEther('1000');
 	let defaultRiskMultiplier = 3;
 	let maxCap = ethers.parseEther('20000');
 	let maxRiskMultiplier = 5;
+
+	const minBuyInAmount = ethers.parseEther('3');
+	const maxTicketSize = 10;
+	const maxSupportedAmount = ethers.parseEther('20000');
+	const maxSupportedOdds = ethers.parseEther('0.01');
+
+	const minimalTimeLeftToMaturity = 10;
+	const expiryDuration = 7776000;
 
 	const sportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
 	const sportsAMMV2RiskManagerDeployed = await upgrades.deployProxy(
@@ -25,6 +34,7 @@ async function main() {
 		[
 			owner.address,
 			sportsAMMV2ManagerAddress,
+			sportsAMMV2ResultManagerAddress,
 			defaultCap,
 			defaultRiskMultiplier,
 			maxCap,
@@ -39,6 +49,22 @@ async function main() {
 	console.log('SportsAMMV2RiskManager deployed on:', sportsAMMV2RiskManagerAddress);
 	setTargetAddress('SportsAMMV2RiskManager', network, sportsAMMV2RiskManagerAddress);
 	await delay(5000);
+
+	await sportsAMMV2RiskManagerDeployed.setTicketParams(
+		minBuyInAmount,
+		maxTicketSize,
+		maxSupportedAmount,
+		maxSupportedOdds,
+		{
+			from: owner.address,
+		}
+	);
+	console.log('Ticket params set in SportsAMMV2');
+
+	await sportsAMMV2RiskManagerDeployed.setTimes(minimalTimeLeftToMaturity, expiryDuration, {
+		from: owner.address,
+	});
+	console.log('Times set in SportsAMMV2');
 
 	const sportsAMMV2RiskManagerImplementationAddress = await getImplementationAddress(
 		ethers.provider,
@@ -82,9 +108,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}

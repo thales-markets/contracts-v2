@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
-const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -54,8 +54,6 @@ async function main() {
 		defaultLiquidityProviderProxyAdminAddress
 	);
 
-	await delay(5000);
-
 	if (isTestNetwork(networkObj.chainId)) {
 		const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 		const sportsAMMV2LiquidityPoolDeployed = sportsAMMV2LiquidityPool.attach(
@@ -87,9 +85,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}
