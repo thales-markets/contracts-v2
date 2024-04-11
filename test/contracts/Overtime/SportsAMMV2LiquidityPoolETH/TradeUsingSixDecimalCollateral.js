@@ -29,6 +29,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 		collateralSixDecimals,
 		multiCollateral,
 		safeBox,
+		priceFeed,
 		firstLiquidityProvider,
 		firstTrader,
 		tradeDataCurrentRound,
@@ -46,6 +47,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			collateral,
 			collateralSixDecimals,
 			multiCollateral,
+			priceFeed,
 			safeBox,
 			tradeDataCurrentRound,
 			tradeDataNextRound,
@@ -255,6 +257,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				await sportsAMMV2.safeBox()
 			);
 			await sportsAMMV2.setLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
+			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,

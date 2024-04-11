@@ -119,6 +119,7 @@ async function deploySportsAMMV2Fixture() {
 		ethers.parseEther('1')
 	);
 	await priceFeed.setWETH9(wethAddress);
+	await priceFeed.setDefaultCollateralDecimals(18);
 
 	// deploy mock PriceFeed
 	const MultiCollateral = await ethers.getContractFactory('MockMultiCollateralOnOffRamp');

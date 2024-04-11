@@ -11,6 +11,7 @@ contract MockPriceFeed {
     address public WETH9;
 
     uint public priceForETHinUSD;
+    uint public defaultCollateralDecimals;
 
     mapping(address => uint) public collateralPriceInUSD;
     mapping(bytes32 => address) public collateralAddressForKey;
@@ -33,6 +34,10 @@ contract MockPriceFeed {
         return _getRateAndUpdatedTime(currencyKey).rate;
     }
 
+    function transformCollateral(address _collateral, uint _collateralAmount) external view returns (uint amountInUSD) {
+        amountInUSD = (_collateralAmount * collateralPriceInUSD[_collateral]) / (10 ** (18 - defaultCollateralDecimals));
+    }
+
     function setPriceFeedForCollateral(bytes32 _collateralKey, address _collateral, uint _priceInUSD) external {
         currencyKeys.push(_collateralKey);
         collateralAddressForKey[_collateralKey] = _collateral;
@@ -45,6 +50,10 @@ contract MockPriceFeed {
 
     function setPriceForETH(uint _priceInUSD) external {
         priceForETHinUSD = _priceInUSD;
+    }
+
+    function setDefaultCollateralDecimals(uint _decimals) external {
+        defaultCollateralDecimals = _decimals;
     }
 
     function _getRateAndUpdatedTime(bytes32 currencyKey) internal view returns (RateAndUpdatedTime memory) {
