@@ -68,9 +68,6 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 				sportsAMMV2LiquidityPoolETH.connect(firstLiquidityProvider);
 		});
 
-		it('Should not be using default collateral (isDefaultCollateral == false)', async () => {
-			expect(await sportsAMMV2LiquidityPoolETH.isDefaultCollateral()).to.equal(false);
-		});
 		it('Should be ticket in the current round (negative round)', async () => {
 			const initialDeposit = ethers.parseEther('1');
 

@@ -255,7 +255,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				await sportsAMMV2.safeBox()
 			);
 			await sportsAMMV2.setLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
-			await sportsAMMV2LiquidityPoolSixDecimals.updateDefaultCollateral();
 
 			await sportsAMMV2RiskManager.setTicketParams(
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,

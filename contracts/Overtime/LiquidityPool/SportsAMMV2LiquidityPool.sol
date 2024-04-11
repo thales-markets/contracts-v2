@@ -12,11 +12,11 @@ import "../../utils/proxy/ProxyOwned.sol";
 
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
+import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
 import "./SportsAMMV2LiquidityPoolRound.sol";
 import "../Ticket.sol";
 import "../../interfaces/ISportsAMMV2.sol";
-import "../../interfaces/ICollateralUtility.sol";
 
 contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradeable, ProxyReentrancyGuard {
     /* ========== LIBRARIES ========== */
@@ -97,11 +97,9 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     address public safeBox;
     uint public safeBoxImpact;
 
-    ICollateralUtility public addressManager;
+    IAddressManager public addressManager;
 
     bytes32 public collateralKey;
-
-    bool public isDefaultCollateral;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -109,7 +107,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         setOwner(params._owner);
         initNonReentrant();
         sportsAMM = ISportsAMMV2(params._sportsAMM);
-        addressManager = ICollateralUtility(params._addressManager);
+        addressManager = IAddressManager(params._addressManager);
 
         collateral = params._collateral;
         collateralKey = params._collateralKey;
@@ -120,7 +118,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         utilizationRate = params._utilizationRate;
         safeBox = params._safeBox;
         safeBoxImpact = params._safeBoxImpact;
-        isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(params._collateral);
 
         collateral.approve(params._sportsAMM, MAX_APPROVAL);
         round = 1;
@@ -171,7 +168,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         totalDeposited += amount;
         address stakingThales = addressManager.getAddress("StakingThales");
         if (stakingThales != address(0)) {
-            if (isDefaultCollateral) {
+            if (address(sportsAMM.defaultCollateral()) == address(collateral)) {
                 IStakingThales(stakingThales).updateVolume(msg.sender, amount);
             } else {
                 uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
@@ -305,7 +302,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (endCursor > usersPerRound[round].length) {
             endCursor = usersPerRound[round].length;
         }
-
+        bool isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(collateral);
         for (uint i = usersProcessedInRound; i < endCursor; i++) {
             address user = usersPerRound[round][i];
             uint balanceAfterCurRound = (balancesPerRound[round][user] * profitAndLossPerRound[round]) / ONE;
@@ -425,10 +422,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 }
             }
         }
-    }
-
-    function updateDefaultCollateral() external {
-        isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(collateral);
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
