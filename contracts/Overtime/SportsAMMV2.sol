@@ -16,6 +16,7 @@ import "../utils/libraries/AddressSetLib.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
+import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
@@ -24,7 +25,6 @@ import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../interfaces/ICollateralUtility.sol";
-import "../interfaces/IPriceFeedExtension.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -181,9 +181,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             // For using the price feed, it is better to merge this branch and add addressManager accross all contracts
             collateralQuote = liquidityPoolForCollateral[_collateral] == address(0)
                 ? multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount)
-                : IPriceFeedExtension(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).transformCollateral(
-                    _collateral,
-                    _buyInAmount
+                : _transformToUSD(
+                    _buyInAmount,
+                    IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
+                        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey()
+                    ),
+                    (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals())
                 );
         }
         // If a collateral is defined, a collateral quote is received and there is no collateral pool defined,
@@ -500,8 +503,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 exactReceived = _buyInAmount;
             }
 
-            collateralPrice = IPriceFeedExtension(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
-                .rateForCurrency(ISportsAMMV2LiquidityPool(lqPool).collateralKey());
+            collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
+                ISportsAMMV2LiquidityPool(lqPool).collateralKey()
+            );
             require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
         } else {
             uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
