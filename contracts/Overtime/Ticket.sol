@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 // internal
 import "../utils/OwnedWithInit.sol";
 import "../interfaces/ISportsAMMV2.sol";
 
 contract Ticket is OwnedWithInit {
+    using SafeERC20 for IERC20;
     uint private constant ONE = 1e18;
 
     enum Phase {
@@ -171,7 +172,7 @@ contract Ticket is OwnedWithInit {
 
         if (isTicketLost()) {
             if (payoutWithFees > 0) {
-                collateral.transfer(address(sportsAMM), payoutWithFees);
+                collateral.safeTransfer(address(sportsAMM), payoutWithFees);
             }
         } else {
             uint finalPayout = payout;
@@ -191,11 +192,11 @@ contract Ticket is OwnedWithInit {
                     isCancelled = false;
                 }
             }
-            collateral.transfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
+            collateral.safeTransfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
 
             uint balance = collateral.balanceOf(address(this));
             if (balance != 0) {
-                collateral.transfer(address(sportsAMM), collateral.balanceOf(address(this)));
+                collateral.safeTransfer(address(sportsAMM), collateral.balanceOf(address(this)));
             }
         }
 
@@ -212,7 +213,7 @@ contract Ticket is OwnedWithInit {
 
     /// @notice withdraw collateral from the ticket
     function withdrawCollateral(address recipient) external onlyAMM {
-        collateral.transfer(recipient, collateral.balanceOf(address(this)));
+        collateral.safeTransfer(recipient, collateral.balanceOf(address(this)));
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -227,7 +228,7 @@ contract Ticket is OwnedWithInit {
     function _selfDestruct(address payable beneficiary) internal {
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
-            collateral.transfer(beneficiary, balance);
+            collateral.safeTransfer(beneficiary, balance);
         }
     }
 
