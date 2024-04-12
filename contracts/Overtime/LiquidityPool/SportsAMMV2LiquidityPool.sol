@@ -15,7 +15,9 @@ import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
 import "./SportsAMMV2LiquidityPoolRound.sol";
+
 import "../Ticket.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 
 contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradeable, ProxyReentrancyGuard {
@@ -82,8 +84,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     uint public usersCurrentlyInPool;
 
     address public defaultLiquidityProvider;
-
-    // IStakingThales public stakingThales;
 
     address public poolRoundMastercopy;
 
@@ -167,8 +167,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         allocationPerRound[nextRound] += amount;
         totalDeposited += amount;
         IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
-
-        updateStakingVolume(stakingThales, amount, address(sportsAMM.defaultCollateral()) == address(collateral));
+        updateStakingVolume(
+            stakingThales,
+            amount,
+            address(sportsAMM.defaultCollateral()) == address(collateral),
+            (18 - ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals())
+        );
 
         emit Deposited(msg.sender, amount, round);
     }
@@ -287,6 +291,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         require(_batchSize > 0, "Batch size has to be greater than 0");
 
         IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
+        uint defaultCollateralDecimalConverter = (18 -
+            ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals());
         address roundPool = roundPools[round];
 
         uint endCursor = usersProcessedInRound + _batchSize;
@@ -300,7 +306,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             if (!withdrawalRequested[user] && (profitAndLossPerRound[round] > 0)) {
                 balancesPerRound[round + 1][user] = balancesPerRound[round + 1][user] + balanceAfterCurRound;
                 usersPerRound[round + 1].push(user);
-                updateStakingVolume(stakingThales, balanceAfterCurRound, isDefaultCollateral);
+                updateStakingVolume(
+                    stakingThales,
+                    balanceAfterCurRound,
+                    isDefaultCollateral,
+                    defaultCollateralDecimalConverter
+                );
             } else {
                 if (withdrawalShare[user] > 0) {
                     uint amountToClaim = (balanceAfterCurRound * withdrawalShare[user]) / ONE;
@@ -571,19 +582,28 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
-    function _transformToUSD(uint _amountInCollateral, uint _collateralPriceInUSD) internal pure returns (uint amountInUSD) {
-        amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / ONE;
+    function _transformToUSD(
+        uint _amountInCollateral,
+        uint _collateralPriceInUSD,
+        uint _defaultCollateralDecimalConverter
+    ) internal pure returns (uint amountInUSD) {
+        amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / (ONE * 10 ** _defaultCollateralDecimalConverter);
     }
 
-    function updateStakingVolume(IStakingThales stakingThales, uint _amount, bool isDefaultCollateral) internal {
+    function updateStakingVolume(
+        IStakingThales stakingThales,
+        uint _amount,
+        bool _isDefaultCollateral,
+        uint _defaultCollateralDecimalConverter
+    ) internal {
         if (address(stakingThales) != address(0)) {
-            if (isDefaultCollateral) {
+            if (_isDefaultCollateral) {
                 stakingThales.updateVolume(msg.sender, _amount);
             } else {
                 uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
                     collateralKey
                 );
-                uint amountInUSD = _transformToUSD(_amount, collateralPriceInUSD);
+                uint amountInUSD = _transformToUSD(_amount, collateralPriceInUSD, _defaultCollateralDecimalConverter);
                 stakingThales.updateVolume(msg.sender, amountInUSD);
             }
         }
