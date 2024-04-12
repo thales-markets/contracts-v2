@@ -1651,7 +1651,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "collateralQuote",
+        "name": "buyInAmountInDefaultCollateral",
         "type": "uint256"
       },
       {

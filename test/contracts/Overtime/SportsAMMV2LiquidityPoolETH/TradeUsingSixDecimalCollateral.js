@@ -107,7 +107,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.connect(firstTrader)
 				.trade(
 					tradeDataCurrentRound,
-					quote.collateralQuote,
+					quote.buyInAmountInDefaultCollateral,
 					quote.payout,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
@@ -124,7 +124,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const diffPayoutBuyIn =
 				Number(ethers.formatEther(quote.payout)) +
 				Number(ethers.formatEther(quote.fees)) -
-				Number(ethers.formatEther(quote.collateralQuote));
+				Number(ethers.formatEther(quote.buyInAmountInDefaultCollateral));
 
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 

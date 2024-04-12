@@ -153,7 +153,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @return payout expected payout
     /// @return fees ticket fees
     /// @return amountsToBuy amounts per market
-    /// @return collateralQuote buy-in amount in different collateral
+    /// @return buyInAmountInDefaultCollateral buy-in amount in default collateral
     /// @return riskStatus risk status
     function tradeQuote(
         ISportsAMMV2.TradeData[] calldata _tradeData,
@@ -167,36 +167,39 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint payout,
             uint fees,
             uint[] memory amountsToBuy,
-            uint collateralQuote,
+            uint buyInAmountInDefaultCollateral,
             ISportsAMMV2RiskManager.RiskStatus riskStatus
         )
     {
+        uint useAmount = _buyInAmount;
+        buyInAmountInDefaultCollateral = _buyInAmount;
+
         if (_collateral != address(0)) {
             require(
                 _collateral != address(defaultCollateral),
                 "Use 0x for collateral parameter if the default collateral is used"
             );
-            // getMinimumReceived returns the USD amount for the buyInAmount in the collateral (USD in 18 decimals)
-            // Note the method to obtain the collateralQuote can be modified to use (priceFeed.rateForCurrency * _buyInAmount)
-            // For using the price feed, it is better to merge this branch and add addressManager accross all contracts
-            collateralQuote = liquidityPoolForCollateral[_collateral] == address(0)
-                ? multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount)
-                : _transformToUSD(
+
+            if (liquidityPoolForCollateral[_collateral] == address(0)) {
+                buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+                useAmount = buyInAmountInDefaultCollateral;
+            } else {
+                buyInAmountInDefaultCollateral = _transformToUSD(
                     _buyInAmount,
                     IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
                         ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey()
                     ),
                     (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals())
                 );
+            }
         }
-        // If a collateral is defined, a collateral quote is received and there is no collateral pool defined,
-        // use the collateralQuote to obtain quotes in the defaultCollateral
-        uint useAmount = collateralQuote > 0 && liquidityPoolForCollateral[_collateral] == address(0)
-            ? collateralQuote
-            : _buyInAmount;
 
-        // To check the risks in USD always pass the collateralQuote
-        (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(_tradeData, useAmount, true, collateralQuote);
+        (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(
+            _tradeData,
+            useAmount,
+            true,
+            buyInAmountInDefaultCollateral
+        );
     }
 
     /// @notice is provided ticket active
@@ -416,7 +419,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
         bool _shouldCheckRisks,
-        uint _collateralQuote
+        uint _buyInAmountInDefaultCollateral
     )
         internal
         view
@@ -456,14 +459,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             fees = (safeBoxFee * _buyInAmount) / ONE;
 
             if (_shouldCheckRisks) {
-                // Note it can be reduced to only check (_collateralQuote > 0)
-                // This way saves an initialization step when multicollateral is used without collateralPool
-                if (_collateralQuote > 0 && _buyInAmount != _collateralQuote) {
-                    _buyInAmount = _collateralQuote;
-                }
                 (ISportsAMMV2RiskManager.RiskStatus rStatus, bool[] memory isMarketOutOfLiquidity) = riskManager.checkRisks(
                     _tradeData,
-                    _buyInAmount
+                    _buyInAmountInDefaultCollateral
                 );
                 riskStatus = rStatus;
 
