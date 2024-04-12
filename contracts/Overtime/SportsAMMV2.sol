@@ -301,7 +301,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _differentRecipient = msg.sender;
         }
         if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, msg.sender, _isEth);
+            (useLPpool, collateralPriceInUSD, _buyInAmount) = _handleDifferentCollateral(
+                _buyInAmount,
+                _collateral,
+                msg.sender,
+                _isEth
+            );
         }
         _trade(
             _tradeData,
@@ -345,7 +350,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address useLPpool;
         uint collateralPriceInUSD;
         if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD) = _handleDifferentCollateral(_buyInAmount, _collateral, _requester, false);
+            (useLPpool, collateralPriceInUSD, _buyInAmount) = _handleDifferentCollateral(
+                _buyInAmount,
+                _collateral,
+                _requester,
+                false
+            );
         }
         _trade(
             _tradeData,
@@ -482,8 +492,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _collateral,
         address _fromAddress,
         bool _isEth
-    ) internal returns (address lqPool, uint collateralPrice) {
+    ) internal returns (address lqPool, uint collateralPrice, uint buyInAmount) {
         require(multicollateralEnabled, "Multi-collat not enabled");
+        buyInAmount = _buyInAmount;
         uint exactReceived;
         lqPool = liquidityPoolForCollateral[_collateral];
         if (lqPool != address(0)) {
@@ -506,18 +517,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             );
             require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
         } else {
-            uint collateralQuote = multiCollateralOnOffRamp.getMinimumNeeded(_collateral, _buyInAmount);
-            IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), collateralQuote);
-            IERC20(_collateral).approve(address(multiCollateralOnOffRamp), collateralQuote);
-            exactReceived = multiCollateralOnOffRamp.onramp(_collateral, collateralQuote);
-        }
-
-        require(exactReceived >= _buyInAmount, "Insuff payment");
-
-        // send the surplus to SB
-        // occurs only in multicollateral onramp case
-        if (exactReceived > _buyInAmount) {
-            defaultCollateral.safeTransfer(safeBox, exactReceived - _buyInAmount);
+            uint buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+            IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
+            IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
+            exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
+            require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
+            if (exactReceived > buyInAmountInDefaultCollateral) {
+                defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
+            }
+            buyInAmount = buyInAmountInDefaultCollateral;
         }
     }
 

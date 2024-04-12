@@ -107,7 +107,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.connect(firstTrader)
 				.trade(
 					tradeDataCurrentRound,
-					quote.buyInAmountInDefaultCollateral,
+					BUY_IN_AMOUNT_SIX_DECIMALS,
 					quote.payout,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
