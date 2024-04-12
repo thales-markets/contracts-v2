@@ -732,19 +732,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         IERC20 ticketCollateral = ticket.collateral();
         uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
-            // ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
+            ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
             // Note: Following code can be used in case:
             // the default collateral is not added to the collateralPool mapping.
             // In test and production, it safer to add it.
-            address usePool = liquidityPoolForCollateral[address(ticketCollateral)];
-            if (usePool != address(0)) {
-                ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(
-                    _ticket,
-                    amount
-                );
-            } else {
-                defaultLiquidityPool.transferToPool(_ticket, amount);
-            }
+            // address usePool = liquidityPoolForCollateral[address(ticketCollateral)];
+            // if (usePool != address(0)) {
+            //     ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(
+            //         _ticket,
+            //         amount
+            //     );
+            // } else {
+            //     defaultLiquidityPool.transferToPool(_ticket, amount);
+            // }
         }
     }
 
