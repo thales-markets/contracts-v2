@@ -81,7 +81,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     bool public multicollateralEnabled;
 
     // liquidity pool address
-    ISportsAMMV2LiquidityPool public liquidityPool;
+    ISportsAMMV2LiquidityPool public defaultLiquidityPool;
 
     // staking thales address
     IStakingThales public stakingThales;
@@ -573,7 +573,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _tradeDataInternal._buyInAmount
                 );
             }
-            liquidityPool.commitTrade(address(ticket), payoutWithFees - _tradeDataInternal._buyInAmount);
+            defaultLiquidityPool.commitTrade(address(ticket), payoutWithFees - _tradeDataInternal._buyInAmount);
             defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
         } else {
             ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
@@ -743,7 +743,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     amount
                 );
             } else {
-                liquidityPool.transferToPool(_ticket, amount);
+                defaultLiquidityPool.transferToPool(_ticket, amount);
             }
         }
     }
@@ -818,14 +818,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice sets new LP address
     /// @param _liquidityPool new LP address
-    function setLiquidityPool(address _liquidityPool) external onlyOwner {
-        if (address(liquidityPool) != address(0)) {
-            defaultCollateral.approve(address(liquidityPool), 0);
+    function setDefaultLiquidityPool(address _liquidityPool) external onlyOwner {
+        if (address(defaultLiquidityPool) != address(0)) {
+            defaultCollateral.approve(address(defaultLiquidityPool), 0);
         }
-        liquidityPool = ISportsAMMV2LiquidityPool(_liquidityPool);
+        defaultLiquidityPool = ISportsAMMV2LiquidityPool(_liquidityPool);
         liquidityPoolForCollateral[address(defaultCollateral)] = _liquidityPool;
         defaultCollateral.approve(_liquidityPool, MAX_APPROVAL);
-        emit SetLiquidityPool(_liquidityPool);
+        emit SetDefaultLiquidityPool(_liquidityPool);
     }
 
     /// @notice sets new LP Pool with LP address and the supported collateral
@@ -898,7 +898,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address safeBox
     );
     event TicketMastercopyUpdated(address ticketMastercopy);
-    event SetLiquidityPool(address liquidityPool);
+    event SetDefaultLiquidityPool(address liquidityPool);
     event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);

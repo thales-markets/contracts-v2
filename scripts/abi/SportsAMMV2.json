@@ -351,7 +351,7 @@
         "type": "address"
       }
     ],
-    "name": "SetLiquidityPool",
+    "name": "SetDefaultLiquidityPool",
     "type": "event"
   },
   {
@@ -499,6 +499,19 @@
     "outputs": [
       {
         "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "defaultLiquidityPool",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2LiquidityPool",
         "name": "",
         "type": "address"
       }
@@ -725,19 +738,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "liquidityPool",
-    "outputs": [
-      {
-        "internalType": "contract ISportsAMMV2LiquidityPool",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1141,7 +1141,7 @@
         "type": "address"
       }
     ],
-    "name": "setLiquidityPool",
+    "name": "setDefaultLiquidityPool",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

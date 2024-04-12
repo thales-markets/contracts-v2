@@ -249,7 +249,7 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2LiquidityPoolSixDecimalsAddress =
 		await sportsAMMV2LiquidityPoolSixDecimals.getAddress();
 
-	await sportsAMMV2.setLiquidityPool(sportsAMMV2LiquidityPoolAddress);
+	await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolAddress);
 
 	// deploy Sports AMM liqudity pool round mastercopy
 	const SportsAMMV2LiquidityPoolRoundMastercopy = await ethers.getContractFactory(

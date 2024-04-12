@@ -256,7 +256,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				await sportsAMMV2.stakingThales(),
 				await sportsAMMV2.safeBox()
 			);
-			await sportsAMMV2.setLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
+			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
