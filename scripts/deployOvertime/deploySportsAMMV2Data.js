@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
-const { setTargetAddress, getTargetAddress } = require('../helpers');
+const { setTargetAddress, getTargetAddress, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -13,11 +13,12 @@ async function main() {
 
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
+	const sportsAMMV2RiskManagerAddress = getTargetAddress('SportsAMMV2RiskManager', network);
 
 	const sportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
 	const sportsAMMV2DataDeployed = await upgrades.deployProxy(
 		sportsAMMV2Data,
-		[owner.address, sportsAMMV2Address],
+		[owner.address, sportsAMMV2Address, sportsAMMV2RiskManagerAddress],
 		{ initialOwner: protocolDAOAddress }
 	);
 	await sportsAMMV2DataDeployed.waitForDeployment();
@@ -59,9 +60,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}
