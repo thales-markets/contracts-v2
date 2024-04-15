@@ -446,5 +446,196 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				(Number(ethers.formatEther(currentRoundPoolBalanceBeforeTrade)) + roundProfit).toFixed(4)
 			);
 		});
+
+		it('Pool is six decimal and default collateral 18 decimal', async () => {
+			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
+				sportsAMMV2LiquidityPoolSixDecimals.connect(firstLiquidityProvider);
+
+			await sportsAMMV2.setLiquidityPoolForCollateral(
+				collateralSixDecimals.target,
+				sportsAMMV2LiquidityPoolSixDecimals.target
+			);
+
+			const initialDeposit = 1000 * 1e6;
+
+			// // deposit and start pool
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
+			await sportsAMMV2LiquidityPoolSixDecimals.start();
+
+			let currentRound = Number(await sportsAMMV2LiquidityPoolSixDecimals.round());
+			let currentRoundPoolAddress =
+				await sportsAMMV2LiquidityPoolSixDecimals.roundPools(currentRound);
+			let currentRoundPoolBalanceBeforeTrade =
+				await collateralSixDecimals.balanceOf(currentRoundPoolAddress);
+
+			expect(currentRoundPoolBalanceBeforeTrade.toString()).to.equal(initialDeposit.toString());
+			// create a ticket
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT_SIX_DECIMALS,
+				collateralSixDecimals
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT_SIX_DECIMALS,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					collateralSixDecimals,
+					false
+				);
+
+			// difference between payout and buy-in (amount taken from LP)
+			// payout: 20
+			// fees: 0.2
+			// buy-in: 10
+			// diff taken from LP: 10.2
+			const diffPayoutBuyIn =
+				Number(ethers.formatEther(quote.payout)) +
+				Number(ethers.formatEther(quote.fees)) -
+				Number(ethers.formatEther(BUY_IN_AMOUNT_SIX_DECIMALS));
+
+			let currentRoundPoolBalanceAfterTrade =
+				await collateralSixDecimals.balanceOf(currentRoundPoolAddress);
+
+			const diffCurrentRoundPoolBalance =
+				ethers.formatEther(currentRoundPoolBalanceBeforeTrade) -
+				ethers.formatEther(currentRoundPoolBalanceAfterTrade);
+
+			expect(currentRoundPoolBalanceAfterTrade).to.equal(989.8 * 1e6);
+			expect(diffPayoutBuyIn.toFixed(4)).to.equal(diffCurrentRoundPoolBalance.toFixed(4));
+
+			// get active ticket from Sports AMM
+			expect(await sportsAMMV2.numOfActiveTickets()).to.equal(1);
+			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// check ticket data on LP
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.roundPerTicket(ticketAddress)).to.equal(
+				currentRound
+			);
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.getTicketRound(ticketAddress)).to.equal(
+				currentRound
+			);
+			expect(
+				await sportsAMMV2LiquidityPoolSixDecimals.tradingTicketsPerRound(currentRound, 0)
+			).to.equal(ticketAddress);
+			expect(
+				await sportsAMMV2LiquidityPoolSixDecimals.isTradingTicketInARound(
+					currentRound,
+					ticketAddress
+				)
+			).to.equal(true);
+			expect(
+				await sportsAMMV2LiquidityPoolSixDecimals.ticketAlreadyExercisedInRound(
+					currentRound,
+					ticketAddress
+				)
+			).to.equal(false);
+			expect(
+				await sportsAMMV2LiquidityPoolSixDecimals.getNumberOfTradingTicketsPerRound(currentRound)
+			).to.equal(1);
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.getTicketPool(ticketAddress)).to.equal(
+				currentRoundPoolAddress
+			);
+
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.canCloseCurrentRound()).to.equal(false);
+
+			// resolve ticket market as winning for the user
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[0]]
+			);
+
+			// exercise ticket on LP (hasTicketsReadyToBeExercised should be false since it is winning ticket for the user)
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.hasTicketsReadyToBeExercised()).to.equal(
+				false
+			);
+			await sportsAMMV2LiquidityPoolSixDecimals.exerciseTicketsReadyToBeExercised();
+			expect(
+				await sportsAMMV2LiquidityPoolSixDecimals.ticketAlreadyExercisedInRound(
+					currentRound,
+					ticketAddress
+				)
+			).to.equal(true);
+
+			let currentRoundPoolBalanceAfterExercise =
+				await collateralSixDecimals.balanceOf(currentRoundPoolAddress);
+			expect(currentRoundPoolBalanceAfterExercise).to.equal(currentRoundPoolBalanceAfterTrade);
+
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.canCloseCurrentRound()).to.equal(false);
+
+			// increase time to round close time
+			const currentRoundCloseTime =
+				await sportsAMMV2LiquidityPoolSixDecimals.getRoundEndTime(currentRound);
+			await time.increaseTo(currentRoundCloseTime);
+
+			const safeBoxBalanceBeforeClose = await collateralSixDecimals.balanceOf(safeBox);
+
+			// close round
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.canCloseCurrentRound()).to.equal(true);
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.roundClosingPrepared()).to.equal(false);
+			await sportsAMMV2LiquidityPoolSixDecimals.prepareRoundClosing();
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.roundClosingPrepared()).to.equal(true);
+			await sportsAMMV2LiquidityPoolSixDecimals.processRoundClosingBatch(10);
+			expect(await sportsAMMV2LiquidityPoolSixDecimals.usersProcessedInRound()).to.equal(1);
+			await sportsAMMV2LiquidityPoolSixDecimals.closeRound();
+
+			// check safe box profit on negative round
+			const safeBoxBalanceAfterClose = await collateralSixDecimals.balanceOf(safeBox);
+			const diffSafeBoxBalance =
+				ethers.formatEther(safeBoxBalanceAfterClose) -
+				ethers.formatEther(safeBoxBalanceBeforeClose);
+
+			const roundProfit =
+				ethers.formatEther(currentRoundPoolBalanceAfterExercise) -
+				ethers.formatEther(currentRoundPoolBalanceBeforeTrade);
+
+			expect(diffSafeBoxBalance).to.equal(0);
+			expect(roundProfit).to.lessThan(0);
+
+			// check PnL
+			const currentRoundPnl = Number(
+				ethers.formatEther(
+					await sportsAMMV2LiquidityPoolSixDecimals.profitAndLossPerRound(currentRound)
+				)
+			);
+			const currentRoundCumulativePnl = Number(
+				ethers.formatEther(
+					await sportsAMMV2LiquidityPoolSixDecimals.cumulativeProfitAndLoss(currentRound)
+				)
+			);
+			const calculatedPnl =
+				1 + roundProfit / ethers.formatEther(currentRoundPoolBalanceBeforeTrade);
+
+			expect(currentRoundPnl.toFixed(8)).to.equal(calculatedPnl.toFixed(8));
+			expect(currentRoundCumulativePnl.toFixed(8)).to.equal(calculatedPnl.toFixed(8));
+
+			// check next round data
+			const nextRound = await sportsAMMV2LiquidityPoolSixDecimals.round();
+			expect(nextRound).to.equal(3);
+			const nextRoundPoolAddress = await sportsAMMV2LiquidityPoolSixDecimals.roundPools(nextRound);
+			const nextRoundPoolBalance = Number(
+				ethers.formatEther(await collateralSixDecimals.balanceOf(nextRoundPoolAddress))
+			);
+			const nextRoundAllocation = Number(
+				ethers.formatEther(await sportsAMMV2LiquidityPoolSixDecimals.allocationPerRound(nextRound))
+			);
+
+			expect(nextRoundPoolBalance.toFixed(4)).to.equal(
+				(Number(ethers.formatEther(currentRoundPoolBalanceBeforeTrade)) + roundProfit).toFixed(4)
+			);
+			expect(nextRoundAllocation.toFixed(4)).to.equal(
+				(Number(ethers.formatEther(currentRoundPoolBalanceBeforeTrade)) + roundProfit).toFixed(4)
+			);
+		});
 	});
 });

@@ -603,6 +603,14 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
                     collateralKey
                 );
+                if (
+                    (ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals()) >
+                    ISportsAMMV2Manager(address(collateral)).decimals()
+                ) {
+                    collateralPriceInUSD =
+                        collateralPriceInUSD *
+                        10 ** (18 - ISportsAMMV2Manager(address(collateral)).decimals());
+                }
                 uint amountInUSD = _transformToUSD(_amount, collateralPriceInUSD, _defaultCollateralDecimalConverter);
                 stakingThales.updateVolume(msg.sender, amountInUSD);
             }
