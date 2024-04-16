@@ -101,6 +101,12 @@ async function deploySportsAMMV2Fixture() {
 	const stakingThales = await upgrades.deployProxy(StakingThales);
 	stakingThales.setFeeToken(collateralAddress);
 
+	// deploy mock Staking Thales
+	const MockPositionalManager = await ethers.getContractFactory('MockPositionalManager');
+	const positionalManager = await upgrades.deployProxy(MockPositionalManager);
+	positionalManager.setTransformingCollateral(false);
+	const positionalManagerAddress = positionalManager.getAddress();
+
 	// deploy mock Referrals
 	const Referrals = await ethers.getContractFactory('MockReferrals');
 	const referrals = await upgrades.deployProxy(Referrals);
@@ -151,6 +157,7 @@ async function deploySportsAMMV2Fixture() {
 		ethers.encodeBytes32String('USDC2')
 	);
 	const multiCollateralAddress = await multiCollateral.getAddress();
+	await multiCollateral.setPositionalManager(positionalManagerAddress);
 
 	// deploy Sports AMM manager
 	const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
@@ -592,6 +599,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralSixDecimals,
 		collateralSixDecimals2,
 		multiCollateral,
+		positionalManager,
 		priceFeed,
 		referrals,
 		stakingThales,

@@ -532,7 +532,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (exactReceived > buyInAmountInDefaultCollateral) {
                 defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
             }
-            buyInAmount = buyInAmountInDefaultCollateral;
+            uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
+            bool needsTransformCollateral = ISportsAMMV2Manager(
+                ISportsAMMV2Manager(address(multiCollateralOnOffRamp)).manager()
+            ).needsTransformingCollateral();
+            if (needsTransformCollateral && defaultCollateralDecimals != 6) {
+                buyInAmount = buyInAmountInDefaultCollateral * 10 ** 12;
+            } else if (!needsTransformCollateral && defaultCollateralDecimals == 6) {
+                buyInAmount = buyInAmountInDefaultCollateral / 10 ** 12;
+            } else {
+                buyInAmount = buyInAmountInDefaultCollateral;
+            }
         }
     }
 

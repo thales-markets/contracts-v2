@@ -17,4 +17,8 @@ interface ISportsAMMV2Manager {
     function decimals() external view returns (uint);
 
     function feeToken() external view returns (address);
+
+    function manager() external view returns (address);
+
+    function needsTransformingCollateral() external view returns (bool);
 }

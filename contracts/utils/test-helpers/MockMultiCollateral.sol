@@ -11,12 +11,18 @@ contract MockMultiCollateralOnOffRamp {
     using SafeERC20 for IERC20;
 
     address public priceFeed;
+    ISportsAMMV2Manager public manager;
+
     IERC20 public sUSD;
     mapping(address => bytes32) public collateralKey;
     mapping(bytes32 => address) public collateralAddress;
 
     function setPriceFeed(address _priceFeed) external {
         priceFeed = _priceFeed;
+    }
+
+    function setPositionalManager(address _mockPositionalManager) external {
+        manager = ISportsAMMV2Manager(_mockPositionalManager);
     }
 
     function setSUSD(address _sUSD) external {
@@ -43,15 +49,15 @@ contract MockMultiCollateralOnOffRamp {
 
     function getMinimumReceived(address collateral, uint collateralAmount) public view returns (uint amountInUSD) {
         if (collateral == collateralAddress["USDC"] || collateral == collateralAddress["USDC2"]) {
-            ISportsAMMV2Manager(collateral).decimals();
-            if (ISportsAMMV2Manager(collateral).decimals() == ISportsAMMV2Manager(address(sUSD)).decimals()) {
-                amountInUSD = collateralAmount;
-            } else {
-                amountInUSD = collateralAmount * (10 ** 12);
-            }
+            amountInUSD = collateralAmount * (10 ** 12);
         } else {
             uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);
             amountInUSD = (collateralAmount * collateralInUSD) / 1e18;
+        }
+        if (manager.needsTransformingCollateral()) {
+            amountInUSD = amountInUSD / (10 ** 12);
+        } else {
+            amountInUSD = amountInUSD;
         }
     }
 

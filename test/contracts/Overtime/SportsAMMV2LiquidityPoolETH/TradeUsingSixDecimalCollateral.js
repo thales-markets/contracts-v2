@@ -35,6 +35,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 		collateralSixDecimals,
 		collateralSixDecimals2,
 		multiCollateral,
+		positionalManager,
 		stakingThales,
 		safeBox,
 		priceFeed,
@@ -61,6 +62,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			collateralSixDecimals,
 			collateralSixDecimals2,
 			multiCollateral,
+			positionalManager,
 			stakingThales,
 			priceFeed,
 			safeBox,
@@ -2282,6 +2284,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 
 		it('6 decimal - default collateral, 6 decimal - multiCollateral , 6 decimal - staking collateral', async () => {
 			await multiCollateral.setSUSD(collateralSixDecimals);
+			positionalManager.setTransformingCollateral(true);
 
 			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
 				sportsAMMV2LiquidityPoolSixDecimals.connect(firstLiquidityProvider);
@@ -2497,6 +2500,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 		});
 
 		it('6 decimal - default collateral, 6 decimal - multiCollateral , 18 decimal - staking collateral', async () => {
+			positionalManager.setTransformingCollateral(true);
 			await multiCollateral.setSUSD(collateralSixDecimals);
 			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
 				sportsAMMV2LiquidityPoolSixDecimals.connect(firstLiquidityProvider);
