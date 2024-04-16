@@ -5,6 +5,8 @@ import "./MockPriceFeed.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "../../interfaces/ISportsAMMV2Manager.sol";
+
 contract MockMultiCollateralOnOffRamp {
     using SafeERC20 for IERC20;
 
@@ -41,7 +43,12 @@ contract MockMultiCollateralOnOffRamp {
 
     function getMinimumReceived(address collateral, uint collateralAmount) public view returns (uint amountInUSD) {
         if (collateral == collateralAddress["USDC"] || collateral == collateralAddress["USDC2"]) {
-            amountInUSD = collateralAmount * (10 ** 12);
+            ISportsAMMV2Manager(collateral).decimals();
+            if (ISportsAMMV2Manager(collateral).decimals() == ISportsAMMV2Manager(address(sUSD)).decimals()) {
+                amountInUSD = collateralAmount;
+            } else {
+                amountInUSD = collateralAmount * (10 ** 12);
+            }
         } else {
             uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);
             amountInUSD = (collateralAmount * collateralInUSD) / 1e18;
