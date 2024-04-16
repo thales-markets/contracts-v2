@@ -230,17 +230,17 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "user",
+        "name": "_user",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "collateral",
+        "name": "_collateral",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "_amount",
         "type": "uint256"
       }
     ],
@@ -257,12 +257,12 @@
         "type": "address"
       },
       {
-        "internalType": "contract ISportsAMMV2",
+        "internalType": "address",
         "name": "_sportsAMMV2",
         "type": "address"
       },
       {
-        "internalType": "contract ILiveTradingProcessor",
+        "internalType": "address",
         "name": "_liveTradingProcessor",
         "type": "address"
       }
@@ -486,11 +486,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_user",
-        "type": "address"
-      },
-      {
         "components": [
           {
             "internalType": "bytes32",
@@ -602,11 +597,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "_user",
-        "type": "address"
-      },
       {
         "internalType": "bytes32",
         "name": "_gameId",

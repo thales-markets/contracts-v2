@@ -10,6 +10,7 @@ const {
 	DEFAULT_AMOUNT,
 	DEFAULT_AMOUNT_SIX_DECIMALS,
 	ETH_DEFAULT_AMOUNT,
+	BUY_IN_AMOUNT,
 } = require('../../constants/overtime');
 const { createMerkleTree, getTicketTradeData } = require('../overtime');
 const { ZERO_ADDRESS } = require('../../constants/general');
@@ -467,7 +468,7 @@ async function deploySportsAMMV2Fixture() {
 		0 // payment
 	);
 
-	const liveTradingProcessorAddress = liveTradingProcessor.getAddress();
+	const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
 
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
@@ -487,6 +488,21 @@ async function deploySportsAMMV2Fixture() {
 
 	await mockChainlinkOracle.setChainlinkResolver(chainlinkResolverAddress);
 	await sportsAMMV2ResultManager.setChainlinkResolver(chainlinkResolverAddress);
+
+	// deploy Free bets holder
+	const FreeBetsHolder = await ethers.getContractFactory('FreeBetsHolder');
+	const freeBetsHolder = await upgrades.deployProxy(FreeBetsHolder, [
+		owner.address,
+		sportsAMMV2Address,
+		liveTradingProcessorAddress,
+	]);
+	const freeBetsHolderAddress = await freeBetsHolder.getAddress();
+
+	await liveTradingProcessor.setFreeBetsHolder(freeBetsHolderAddress);
+
+	await collateral.connect(owner).approve(freeBetsHolder, DEFAULT_AMOUNT);
+	await freeBetsHolder.addSupportedCollateral(collateralAddress, true);
+	await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);
 
 	return {
 		owner,
@@ -525,6 +541,9 @@ async function deploySportsAMMV2Fixture() {
 		sameGameSamePlayersDifferentProps,
 		chainlinkResolver,
 		tradeDataNotActive,
+		freeBetsHolder,
+		freeBetsHolderAddress,
+		collateralAddress,
 	};
 }
 

@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 interface ILiveTradingProcessor {
     function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedAmount) external;
 
+    //TODO: use a struct
     function requestLiveTrade(
         bytes32 _gameId,
         uint16 _sportId,

@@ -33,32 +33,28 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
 
     /* ========== CONSTRUCTOR ========== */
 
-    function initialize(
-        address _owner,
-        ISportsAMMV2 _sportsAMMV2,
-        ILiveTradingProcessor _liveTradingProcessor
-    ) external initializer {
+    function initialize(address _owner, address _sportsAMMV2, address _liveTradingProcessor) external initializer {
         setOwner(_owner);
-        sportsAMM = _sportsAMMV2;
-        liveTradingProcessor = _liveTradingProcessor;
+        sportsAMM = ISportsAMMV2(_sportsAMMV2);
+        liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
     }
 
-    function fund(address user, address collateral, uint amount) external onlyOwner {
-        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
-        balancePerUserAndCollateral[user][collateral] += amount;
-        emit UserFunded(user, collateral, amount, msg.sender);
+    function fund(address _user, address _collateral, uint _amount) external notPaused {
+        require(supportedCollateral[_collateral], "Unsupported collateral");
+        IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amount);
+        balancePerUserAndCollateral[_user][_collateral] += _amount;
+        emit UserFunded(_user, _collateral, _amount, msg.sender);
     }
 
     function trade(
-        address _user,
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
         uint _expectedPayout,
         uint _additionalSlippage,
         address _referrer,
         address _collateral
-    ) external notPaused canTrade(_user, _collateral, _buyInAmount) {
-        balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
+    ) external notPaused canTrade(msg.sender, _collateral, _buyInAmount) {
+        balancePerUserAndCollateral[msg.sender][_collateral] -= _buyInAmount;
         address createdTicket = sportsAMM.trade(
             _tradeData,
             _buyInAmount,
@@ -66,14 +62,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
             _additionalSlippage,
             address(0),
             _referrer,
-            _collateral,
+            _collateral == address(sportsAMM.defaultCollateral()) ? address(0) : _collateral,
             false
         );
-        ticketToUser[createdTicket] = _user;
+        ticketToUser[createdTicket] = msg.sender;
     }
 
     function tradeLive(
-        address _user,
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _typeId,
@@ -83,7 +78,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         uint _additionalSlippage,
         address _referrer,
         address _collateral
-    ) external notPaused canTrade(_user, _collateral, _buyInAmount) {
+    ) external notPaused canTrade(msg.sender, _collateral, _buyInAmount) {
         bytes32 _requestId = liveTradingProcessor.requestLiveTrade(
             _gameId,
             _sportId,
@@ -96,7 +91,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
             _referrer,
             _collateral
         );
-        liveRequestsPerUser[_requestId] = _user;
+        liveRequestsPerUser[_requestId] = msg.sender;
     }
 
     function confirmLiveTrade(
@@ -109,13 +104,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         require(_user != address(0), "Unknown live ticket");
 
         require(supportedCollateral[_collateral], "Unsupported collateral");
-        require(balancePerUserAndCollateral[_user][_collateral] > _buyInAmount, "Insufficient balance");
+        require(balancePerUserAndCollateral[_user][_collateral] >= _buyInAmount, "Insufficient balance");
 
         balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
         ticketToUser[_createdTicket] = _user;
     }
 
-    function claimTicket(address _ticket) external {
+    function claimTicket(address _ticket) external notPaused {
         address _user = ticketToUser[_ticket];
         require(_user != address(0), "Unknown ticket");
         IERC20 _collateral = Ticket(_ticket).collateral();
@@ -155,7 +150,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         uint _amount
     ) {
         require(supportedCollateral[_collateral], "Unsupported collateral");
-        require(balancePerUserAndCollateral[_user][_collateral] > _amount, "Insufficient balance");
+        require(balancePerUserAndCollateral[_user][_collateral] >= _amount, "Insufficient balance");
         _;
     }
 

@@ -357,6 +357,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         require(_differentRecipient != address(0), "UndefinedRecipient");
         address useLPpool;
         uint collateralPriceInUSD;
+        //TODO: I feel better with enforcing that collateral is always sent as a parameter
         if (_collateral != address(0)) {
             (useLPpool, collateralPriceInUSD, _buyInAmount) = _handleDifferentCollateral(
                 _buyInAmount,
