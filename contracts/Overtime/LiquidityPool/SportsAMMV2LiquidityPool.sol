@@ -603,17 +603,19 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
                     collateralKey
                 );
-                if (
-                    _defaultCollateralDecimals >
-                    ISportsAMMV2Manager(address(collateral)).decimals()
-                ) {
+                uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
+                if (_defaultCollateralDecimals > collateralDecimals) {
                     collateralPriceInUSD =
                         collateralPriceInUSD *
                         10 ** (18 - ISportsAMMV2Manager(address(collateral)).decimals());
                 }
-                _amount = _transformToUSD(_amount, collateralPriceInUSD, (18 - _defaultCollateralDecimals));
+                _amount = _transformToUSD(
+                    _amount,
+                    collateralPriceInUSD,
+                    collateralDecimals != _defaultCollateralDecimals ? (18 - _defaultCollateralDecimals) : 0
+                );
                 if (_defaultCollateralDecimals < stakingCollateralDecimals) {
-                    _amount = _amount * 10 ** (18 - stakingCollateralDecimals);
+                    _amount = _amount * 10 ** (18 - _defaultCollateralDecimals);
                 } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
                     _amount = _amount / 10 ** (18 - stakingCollateralDecimals);
                 }

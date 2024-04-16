@@ -26,7 +26,6 @@ import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../interfaces/ICollateralUtility.sol";
 
-
 /// @title Sports AMM V2 contract
 /// @author vladan
 contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
@@ -640,8 +639,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal {
         uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         if (_collateralPriceInUSD > 0) {
-            uint collateralDecimal = ISportsAMMV2Manager(_collateral).decimals();
-            uint transformDecimal = collateralDecimal != defaultCollateralDecimals ? (18 - defaultCollateralDecimals) : 0;
+            uint collateralDecimals = ISportsAMMV2Manager(_collateral).decimals();
+            uint transformDecimal = collateralDecimals != defaultCollateralDecimals ? (18 - defaultCollateralDecimals) : 0;
             _buyInAmount = _transformToUSD(_buyInAmount, _collateralPriceInUSD, transformDecimal);
             _payout = _transformToUSD(_payout, _collateralPriceInUSD, transformDecimal);
             _expectedPayout = _transformToUSD(_expectedPayout, _collateralPriceInUSD, transformDecimal);

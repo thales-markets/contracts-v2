@@ -119,6 +119,11 @@ async function deploySportsAMMV2Fixture() {
 		ethers.parseEther('3500')
 	);
 	await priceFeed.setPriceFeedForCollateral(
+		ethers.encodeBytes32String('SUSD'),
+		collateralAddress,
+		ethers.parseEther('1')
+	);
+	await priceFeed.setPriceFeedForCollateral(
 		ethers.encodeBytes32String('USDC'),
 		collateralSixDecimalsAddress,
 		ethers.parseEther('1')
