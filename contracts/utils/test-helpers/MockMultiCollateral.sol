@@ -40,7 +40,7 @@ contract MockMultiCollateralOnOffRamp {
     function onrampWithEth(uint amount) external payable returns (uint) {}
 
     function getMinimumReceived(address collateral, uint collateralAmount) public view returns (uint amountInUSD) {
-        if (collateral == collateralAddress["USDC"]) {
+        if (collateral == collateralAddress["USDC"] || collateral == collateralAddress["USDC2"]) {
             amountInUSD = collateralAmount * (10 ** 12);
         } else {
             uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);

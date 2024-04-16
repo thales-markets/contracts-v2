@@ -599,27 +599,19 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
                     _amount = _amount / 10 ** (18 - _defaultCollateralDecimals);
                 }
-                stakingThales.updateVolume(msg.sender, _amount);
             } else {
                 uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
                     collateralKey
                 );
-                if (
-                    (ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals()) >
-                    ISportsAMMV2Manager(address(collateral)).decimals()
-                ) {
-                    collateralPriceInUSD =
-                        collateralPriceInUSD *
-                        10 ** (18 - ISportsAMMV2Manager(address(collateral)).decimals());
+                uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
+                if (collateralDecimals < stakingCollateralDecimals) {
+                    collateralPriceInUSD = collateralPriceInUSD * 10 ** (18 - collateralDecimals);
+                    _amount = _transformToUSD(_amount, collateralPriceInUSD, (18 - stakingCollateralDecimals));
+                } else if (collateralDecimals > stakingCollateralDecimals) {
+                    _amount = _transformToUSD(_amount, collateralPriceInUSD, (18 - stakingCollateralDecimals));
                 }
-                uint amountInUSD = _transformToUSD(_amount, collateralPriceInUSD, (18 - _defaultCollateralDecimals));
-                if (_defaultCollateralDecimals < stakingCollateralDecimals) {
-                    _amount = _amount * 10 ** (18 - _defaultCollateralDecimals);
-                } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
-                    _amount = _amount / 10 ** (18 - _defaultCollateralDecimals);
-                }
-                stakingThales.updateVolume(msg.sender, amountInUSD);
             }
+            stakingThales.updateVolume(msg.sender, _amount);
         }
     }
 

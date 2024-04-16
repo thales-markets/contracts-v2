@@ -650,7 +650,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (defaultCollateralDecimals < stakingCollateralDecimals) {
                 _buyInAmount = _buyInAmount * 10 ** (18 - defaultCollateralDecimals);
             } else if (defaultCollateralDecimals > stakingCollateralDecimals) {
-                _buyInAmount = _buyInAmount / 10 ** (18 - defaultCollateralDecimals);
+                _buyInAmount = _buyInAmount / 10 ** (18 - stakingCollateralDecimals);
             }
             stakingThales.updateVolume(_differentRecipient, _buyInAmount);
         }
