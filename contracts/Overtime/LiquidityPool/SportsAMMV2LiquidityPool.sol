@@ -171,7 +171,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             stakingThales,
             amount,
             address(sportsAMM.defaultCollateral()) == address(collateral),
-            (18 - ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals())
+            ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals()
         );
 
         emit Deposited(msg.sender, amount, round);
@@ -291,8 +291,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         require(_batchSize > 0, "Batch size has to be greater than 0");
 
         IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
-        uint defaultCollateralDecimalConverter = (18 -
-            ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals());
+        uint defaultCollateralDecimals = ISportsAMMV2Manager(address(sportsAMM.defaultCollateral())).decimals();
         address roundPool = roundPools[round];
 
         uint endCursor = usersProcessedInRound + _batchSize;
@@ -306,12 +305,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             if (!withdrawalRequested[user] && (profitAndLossPerRound[round] > 0)) {
                 balancesPerRound[round + 1][user] = balancesPerRound[round + 1][user] + balanceAfterCurRound;
                 usersPerRound[round + 1].push(user);
-                updateStakingVolume(
-                    stakingThales,
-                    balanceAfterCurRound,
-                    isDefaultCollateral,
-                    defaultCollateralDecimalConverter
-                );
+                updateStakingVolume(stakingThales, balanceAfterCurRound, isDefaultCollateral, defaultCollateralDecimals);
             } else {
                 if (withdrawalShare[user] > 0) {
                     uint amountToClaim = (balanceAfterCurRound * withdrawalShare[user]) / ONE;
@@ -594,10 +588,17 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         IStakingThales stakingThales,
         uint _amount,
         bool _isDefaultCollateral,
-        uint _defaultCollateralDecimalConverter
+        uint _defaultCollateralDecimals
     ) internal {
         if (address(stakingThales) != address(0)) {
+            uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
+                .decimals();
             if (_isDefaultCollateral) {
+                if (_defaultCollateralDecimals < stakingCollateralDecimals) {
+                    _amount = _amount * 10 ** (18 - _defaultCollateralDecimals);
+                } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
+                    _amount = _amount / 10 ** (18 - _defaultCollateralDecimals);
+                }
                 stakingThales.updateVolume(msg.sender, _amount);
             } else {
                 uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
@@ -611,7 +612,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                         collateralPriceInUSD *
                         10 ** (18 - ISportsAMMV2Manager(address(collateral)).decimals());
                 }
-                uint amountInUSD = _transformToUSD(_amount, collateralPriceInUSD, _defaultCollateralDecimalConverter);
+                uint amountInUSD = _transformToUSD(_amount, collateralPriceInUSD, (18 - _defaultCollateralDecimals));
+                if (_defaultCollateralDecimals < stakingCollateralDecimals) {
+                    _amount = _amount * 10 ** (18 - _defaultCollateralDecimals);
+                } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
+                    _amount = _amount / 10 ** (18 - _defaultCollateralDecimals);
+                }
                 stakingThales.updateVolume(msg.sender, amountInUSD);
             }
         }

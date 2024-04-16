@@ -96,6 +96,7 @@ async function deploySportsAMMV2Fixture() {
 	// deploy mock Staking Thales
 	const StakingThales = await ethers.getContractFactory('MockStakingThales');
 	const stakingThales = await upgrades.deployProxy(StakingThales);
+	stakingThales.setFeeToken(collateralAddress);
 
 	// deploy mock Referrals
 	const Referrals = await ethers.getContractFactory('MockReferrals');

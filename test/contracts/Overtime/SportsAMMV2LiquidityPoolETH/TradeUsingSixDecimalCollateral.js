@@ -28,6 +28,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 		collateral,
 		collateralSixDecimals,
 		multiCollateral,
+		stakingThales,
 		safeBox,
 		priceFeed,
 		firstLiquidityProvider,
@@ -47,6 +48,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			collateral,
 			collateralSixDecimals,
 			multiCollateral,
+			stakingThales,
 			priceFeed,
 			safeBox,
 			tradeDataCurrentRound,
@@ -247,13 +249,14 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
 				sportsAMMV2LiquidityPoolSixDecimals.connect(firstLiquidityProvider);
 
+			console.log('StakingThales in test: ', stakingThales.target);
 			await sportsAMMV2.setAddresses(
 				collateralSixDecimals.target,
 				await sportsAMMV2.manager(),
 				await sportsAMMV2.riskManager(),
 				await sportsAMMV2.resultManager(),
 				await sportsAMMV2.referrals(),
-				await sportsAMMV2.stakingThales(),
+				stakingThales,
 				await sportsAMMV2.safeBox()
 			);
 			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);

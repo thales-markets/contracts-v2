@@ -635,8 +635,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _collateralPriceInUSD,
         address _differentRecipient
     ) internal {
+        uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         if (_collateralPriceInUSD > 0) {
-            uint transformDecimal = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
+            uint transformDecimal = (18 - defaultCollateralDecimals);
             _buyInAmount = _transformToUSD(_buyInAmount, _collateralPriceInUSD, transformDecimal);
             _payout = _transformToUSD(_payout, _collateralPriceInUSD, transformDecimal);
             _expectedPayout = _transformToUSD(_expectedPayout, _collateralPriceInUSD, transformDecimal);
@@ -644,6 +645,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount);
         riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _additionalSlippage);
         if (address(stakingThales) != address(0)) {
+            uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
+                .decimals();
+            if (defaultCollateralDecimals < stakingCollateralDecimals) {
+                _buyInAmount = _buyInAmount * 10 ** (18 - defaultCollateralDecimals);
+            } else if (defaultCollateralDecimals > stakingCollateralDecimals) {
+                _buyInAmount = _buyInAmount / 10 ** (18 - defaultCollateralDecimals);
+            }
             stakingThales.updateVolume(_differentRecipient, _buyInAmount);
         }
     }
