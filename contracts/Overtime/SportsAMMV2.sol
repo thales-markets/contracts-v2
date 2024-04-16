@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 // internal
+// TODO: why do we still use these synthetix contracts?
 import "../utils/proxy/ProxyReentrancyGuard.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
@@ -18,6 +19,7 @@ import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
+//TODO: wy not use an interface for the ticket?
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
@@ -285,6 +287,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _differentRecipient different recipent of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
+    /// @return _createdTicket the address of the created ticket
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -294,7 +297,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrer,
         address _collateral,
         bool _isEth
-    ) external payable nonReentrant notPaused {
+    ) external payable nonReentrant notPaused returns (address _createdTicket) {
         address useLPpool;
         uint collateralPriceInUSD;
         if (_referrer != address(0)) {
@@ -312,7 +315,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _isEth
             );
         }
-        _trade(
+        _createdTicket = _trade(
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
@@ -335,6 +338,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _differentRecipient different recipient of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
+    /// @return _createdTicket the address of the created ticket
     function tradeLive(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         address _requester,
@@ -343,7 +347,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _differentRecipient,
         address _referrer,
         address _collateral
-    ) external nonReentrant notPaused {
+    ) external nonReentrant notPaused returns (address _createdTicket) {
         require(msg.sender == liveTradingProcessor, "OnlyLiveTradingProcessor");
 
         if (_referrer != address(0)) {
@@ -361,7 +365,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 false
             );
         }
-        _trade(
+        _createdTicket = _trade(
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
@@ -536,7 +540,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _trade(ISportsAMMV2.TradeData[] memory _tradeData, TradeDataInternal memory _tradeDataInternal) internal {
+    function _trade(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        TradeDataInternal memory _tradeDataInternal
+    ) internal returns (address) {
         require(
             _tradeDataInternal._collateral != address(defaultCollateral),
             "Use 0x for collateral parameter if the default collateral is used"
@@ -607,6 +614,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             payout,
             totalQuote
         );
+
+        return address(ticket);
     }
 
     // Transform collateral to USD

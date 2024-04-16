@@ -1414,7 +1414,13 @@
       }
     ],
     "name": "trade",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_createdTicket",
+        "type": "address"
+      }
+    ],
     "stateMutability": "payable",
     "type": "function"
   },
@@ -1531,7 +1537,13 @@
       }
     ],
     "name": "tradeLive",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_createdTicket",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
