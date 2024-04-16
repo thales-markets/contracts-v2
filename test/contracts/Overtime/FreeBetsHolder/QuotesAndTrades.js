@@ -4,7 +4,7 @@ const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('../../../constants/overtime');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, SPORT_ID_NBA } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
 
 describe('SportsAMMV2 Quotes And Trades', () => {
@@ -15,7 +15,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		firstLiquidityProvider,
 		firstTrader,
 		freeBetsHolder,
-		collateralAddress;
+		collateralAddress,
+		sportsAMMV2RiskManager;
 
 	beforeEach(async () => {
 		({
@@ -25,6 +26,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			tradeDataTenMarketsCurrentRound,
 			freeBetsHolder,
 			collateralAddress,
+			sportsAMMV2RiskManager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
@@ -87,12 +89,34 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				);
 		});
 
-		//    function trade(
-		//         ISportsAMMV2.TradeData[] calldata _tradeData,
-		//         uint _buyInAmount,
-		//         uint _expectedPayout,
-		//         uint _additionalSlippage,
-		//         address _referrer,
-		//         address _collateral
+		it('Should pass live', async () => {
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
+
+			const firstTraderBalance = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+			expect(firstTraderBalance).to.equal(ethers.parseEther('10'));
+
+			await freeBetsHolder
+				.connect(firstTrader)
+				.tradeLive(
+					tradeDataCurrentRound[0].gameId,
+					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].typeId,
+					tradeDataCurrentRound[0].position,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					collateralAddress
+				);
+		});
 	});
 });
