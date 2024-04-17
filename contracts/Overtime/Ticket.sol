@@ -161,7 +161,7 @@ contract Ticket is OwnedWithInit {
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice exercise ticket
-    function exercise() external onlyAMM {
+    function exercise(address _collateral) external onlyAMM returns (uint winningAmount) {
         require(!paused, "Market paused");
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
@@ -192,7 +192,11 @@ contract Ticket is OwnedWithInit {
                     isCancelled = false;
                 }
             }
-            collateral.safeTransfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
+            winningAmount = isCancelled ? buyInAmount : finalPayout;
+            collateral.safeTransfer(
+                _collateral == address(0) || _collateral == address(collateral) ? address(ticketOwner) : address(sportsAMM),
+                isCancelled ? buyInAmount : finalPayout
+            );
 
             uint balance = collateral.balanceOf(address(this));
             if (balance != 0) {

@@ -535,6 +535,29 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_inEth",
+        "type": "bool"
+      }
+    ],
+    "name": "exerciseTicketOffRamp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address[]",
         "name": "_tickets",
         "type": "address[]"

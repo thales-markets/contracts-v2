@@ -84,5 +84,9 @@ contract MockMultiCollateralOnOffRamp {
 
     function offramp(address collateral, uint amount) external returns (uint) {}
 
+    function offrampCollateralIntoEth(address collateralFrom, uint amount) external returns (uint) {}
+
+    function offrampCollateral(address collateralFrom, address collateralTo, uint amount) external returns (uint) {}
+
     event OnRamp(address collateral, uint collateralAmount, uint convertedAmount);
 }

@@ -286,6 +286,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _differentRecipient different recipent of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
+    /// @param _isEth pay with ETH
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -381,7 +382,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice exercise specific ticket
     /// @param _ticket ticket address
     function exerciseTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        _exerciseTicket(_ticket);
+        _exerciseTicket(_ticket, address(0), false);
+    }
+
+    /// @notice exercise specific ticket to an off ramp collateral
+    /// @param _ticket ticket address
+    /// @param _collateral collateral address to off ramp to
+    /// @param _inEth offramp with ETH
+    function exerciseTicketOffRamp(
+        address _ticket,
+        address _collateral,
+        bool _inEth
+    ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
+        _exerciseTicket(_ticket, _collateral, _inEth);
     }
 
     /// @notice additional logic for ticket resolve (called only from ticket contact)
@@ -751,11 +764,29 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    function _exerciseTicket(address _ticket) internal {
+    function _exerciseTicket(address _ticket, address _collateral, bool _inEth) internal {
         Ticket ticket = Ticket(_ticket);
-        ticket.exercise();
+        uint userWinningAmount = ticket.exercise(_collateral);
         IERC20 ticketCollateral = ticket.collateral();
         uint amount = ticketCollateral.balanceOf(address(this));
+        if (userWinningAmount > 0 && _collateral != address(0) && _collateral != address(ticketCollateral)) {
+            // Off ramp methods
+            // Work in progress:
+            uint offramped;
+            if (_inEth) {
+                // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
+                // offramped = multiCollateralOnOffRamp.offrampCollateralIntoEth(address(ticketCollateral), userWinningAmount);
+                offramped = multiCollateralOnOffRamp.offrampIntoEth(userWinningAmount);
+                bool sent = payable(ticket.ticketOwner()).send(offramped);
+                require(sent, "Failed to send Ether");
+            } else {
+                // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
+                // offramped = multiCollateralOnOffRamp.offrampCollateral(address(ticketCollateral), _collateral, userWinningAmount);
+                offramped = multiCollateralOnOffRamp.offramp(_collateral, userWinningAmount);
+                IERC20(_collateral).safeTransfer(ticket.ticketOwner(), offramped);
+            }
+            amount = amount - userWinningAmount;
+        }
         if (amount > 0) {
             ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
             // Note: Following code can be used in case:

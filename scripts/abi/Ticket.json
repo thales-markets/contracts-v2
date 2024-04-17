@@ -187,9 +187,21 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      }
+    ],
     "name": "exercise",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "winningAmount",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
