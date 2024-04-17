@@ -54,7 +54,11 @@ contract MockMultiCollateralOnOffRamp {
             uint collateralInUSD = MockPriceFeed(priceFeed).rateForCurrency(collateralKey[collateral]);
             amountInUSD = (collateralAmount * collateralInUSD) / 1e18;
         }
-        if (manager.needsTransformingCollateral()) {
+        // instead of mocking needsTransformingCollateral
+        // the check for decimals have been added in the mock
+        // this conversion follows the defaultCollateral in SportsAMMV2
+        // needsTransformingCollateral is in sync with it
+        if (ISportsAMMV2Manager(address(sUSD)).decimals() == 6) {
             amountInUSD = amountInUSD / (10 ** 12);
         } else {
             amountInUSD = amountInUSD;

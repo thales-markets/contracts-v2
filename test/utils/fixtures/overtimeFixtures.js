@@ -54,6 +54,8 @@ async function deployTokenFixture() {
 	const ExoticUSD = await ethers.getContractFactory('ExoticUSD');
 	const collateral = await ExoticUSD.deploy();
 
+	const collateral18 = await ExoticUSD.deploy();
+
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
 	const collateralSixDecimals = await ExoticUSDC.deploy();
 
@@ -61,6 +63,7 @@ async function deployTokenFixture() {
 
 	return {
 		collateral,
+		collateral18,
 		collateralSixDecimals,
 		collateralSixDecimals2,
 	};
@@ -77,8 +80,10 @@ async function deploySportsAMMV2Fixture() {
 		firstTrader,
 		secondTrader,
 	} = await deployAccountsFixture();
-	const { collateral, collateralSixDecimals, collateralSixDecimals2 } = await deployTokenFixture();
+	const { collateral, collateral18, collateralSixDecimals, collateralSixDecimals2 } =
+		await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
+	const collateral18Address = await collateral18.getAddress();
 	// deploy Address Manager
 	const AddressManager = await ethers.getContractFactory('MockAddressManager');
 	const addressManager = await upgrades.deployProxy(AddressManager, [
@@ -131,6 +136,11 @@ async function deploySportsAMMV2Fixture() {
 		ethers.parseEther('1')
 	);
 	await priceFeed.setPriceFeedForCollateral(
+		ethers.encodeBytes32String('DAI'),
+		collateral18Address,
+		ethers.parseEther('1')
+	);
+	await priceFeed.setPriceFeedForCollateral(
 		ethers.encodeBytes32String('USDC'),
 		collateralSixDecimalsAddress,
 		ethers.parseEther('1')
@@ -157,6 +167,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralSixDecimals2Address,
 		ethers.encodeBytes32String('USDC2')
 	);
+	await multiCollateral.setCollateralKey(collateral18Address, ethers.encodeBytes32String('DAI'));
 	await multiCollateral.setCollateralKey(collateral, ethers.encodeBytes32String('SUSD'));
 	const multiCollateralAddress = await multiCollateral.getAddress();
 	await multiCollateral.setPositionalManager(positionalManagerAddress);
@@ -403,6 +414,7 @@ async function deploySportsAMMV2Fixture() {
 	await weth.connect(secondTrader).approve(sportsAMMV2, ETH_DEFAULT_AMOUNT);
 
 	await collateral.setDefaultAmount(DEFAULT_AMOUNT);
+	await collateral18.setDefaultAmount(DEFAULT_AMOUNT);
 	await collateralSixDecimals.setDefaultAmount(DEFAULT_AMOUNT_SIX_DECIMALS);
 	await collateralSixDecimals2.setDefaultAmount(DEFAULT_AMOUNT_SIX_DECIMALS);
 	await collateral.mintForUser(firstLiquidityProvider);
@@ -415,6 +427,19 @@ async function deploySportsAMMV2Fixture() {
 		.connect(secondLiquidityProvider)
 		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
 	await collateral
+		.connect(thirdLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
+
+	await collateral18.mintForUser(firstLiquidityProvider);
+	await collateral18.mintForUser(secondLiquidityProvider);
+	await collateral18.mintForUser(thirdLiquidityProvider);
+	await collateral18
+		.connect(firstLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
+	await collateral18
+		.connect(secondLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
+	await collateral18
 		.connect(thirdLiquidityProvider)
 		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
 
@@ -447,6 +472,11 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.mintForUser(secondTrader);
 	await collateral.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 	await collateral.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+
+	await collateral18.mintForUser(firstTrader);
+	await collateral18.mintForUser(secondTrader);
+	await collateral18.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+	await collateral18.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 
 	await collateralSixDecimals.mintForUser(firstTrader);
 	await collateralSixDecimals.mintForUser(secondTrader);
@@ -613,6 +643,7 @@ async function deploySportsAMMV2Fixture() {
 		collateral,
 		collateralSixDecimals,
 		collateralSixDecimals2,
+		collateral18,
 		multiCollateral,
 		positionalManager,
 		priceFeed,
