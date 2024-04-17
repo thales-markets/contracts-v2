@@ -162,6 +162,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "manager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2Manager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -287,6 +300,19 @@
       }
     ],
     "name": "setCollateralKey",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_mockPositionalManager",
+        "type": "address"
+      }
+    ],
+    "name": "setPositionalManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

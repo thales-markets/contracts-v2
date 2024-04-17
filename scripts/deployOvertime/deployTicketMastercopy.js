@@ -1,5 +1,5 @@
 const { ethers } = require('hardhat');
-const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -9,10 +9,6 @@ async function main() {
 
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
-
-	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
-	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
-	const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
 
 	const ticketMastercopy = await ethers.getContractFactory('TicketMastercopy');
 
@@ -26,6 +22,9 @@ async function main() {
 	await delay(5000);
 
 	if (isTestNetwork(networkObj.chainId)) {
+		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
+		const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
+		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
 		await sportsAMMV2Deployed.setTicketMastercopy(ticketMastercopyAddress, {
 			from: owner.address,
 		});
@@ -50,9 +49,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}

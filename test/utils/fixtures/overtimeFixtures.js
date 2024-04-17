@@ -57,9 +57,12 @@ async function deployTokenFixture() {
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
 	const collateralSixDecimals = await ExoticUSDC.deploy();
 
+	const collateralSixDecimals2 = await ExoticUSDC.deploy();
+
 	return {
 		collateral,
 		collateralSixDecimals,
+		collateralSixDecimals2,
 	};
 }
 
@@ -74,7 +77,7 @@ async function deploySportsAMMV2Fixture() {
 		firstTrader,
 		secondTrader,
 	} = await deployAccountsFixture();
-	const { collateral, collateralSixDecimals } = await deployTokenFixture();
+	const { collateral, collateralSixDecimals, collateralSixDecimals2 } = await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
 	// deploy Address Manager
 	const AddressManager = await ethers.getContractFactory('MockAddressManager');
@@ -97,6 +100,13 @@ async function deploySportsAMMV2Fixture() {
 	// deploy mock Staking Thales
 	const StakingThales = await ethers.getContractFactory('MockStakingThales');
 	const stakingThales = await upgrades.deployProxy(StakingThales);
+	stakingThales.setFeeToken(collateralAddress);
+
+	// deploy mock Staking Thales
+	const MockPositionalManager = await ethers.getContractFactory('MockPositionalManager');
+	const positionalManager = await upgrades.deployProxy(MockPositionalManager);
+	positionalManager.setTransformingCollateral(false);
+	const positionalManagerAddress = positionalManager.getAddress();
 
 	// deploy mock Referrals
 	const Referrals = await ethers.getContractFactory('MockReferrals');
@@ -108,6 +118,7 @@ async function deploySportsAMMV2Fixture() {
 	const wethAddress = await weth.getAddress();
 
 	const collateralSixDecimalsAddress = await collateralSixDecimals.getAddress();
+	const collateralSixDecimals2Address = await collateralSixDecimals2.getAddress();
 
 	await priceFeed.setPriceFeedForCollateral(
 		ethers.encodeBytes32String('WETH'),
@@ -115,8 +126,18 @@ async function deploySportsAMMV2Fixture() {
 		ethers.parseEther('3500')
 	);
 	await priceFeed.setPriceFeedForCollateral(
+		ethers.encodeBytes32String('SUSD'),
+		collateralAddress,
+		ethers.parseEther('1')
+	);
+	await priceFeed.setPriceFeedForCollateral(
 		ethers.encodeBytes32String('USDC'),
 		collateralSixDecimalsAddress,
+		ethers.parseEther('1')
+	);
+	await priceFeed.setPriceFeedForCollateral(
+		ethers.encodeBytes32String('USDC2'),
+		collateralSixDecimals2Address,
 		ethers.parseEther('1')
 	);
 	await priceFeed.setWETH9(wethAddress);
@@ -132,7 +153,13 @@ async function deploySportsAMMV2Fixture() {
 		collateralSixDecimalsAddress,
 		ethers.encodeBytes32String('USDC')
 	);
+	await multiCollateral.setCollateralKey(
+		collateralSixDecimals2Address,
+		ethers.encodeBytes32String('USDC2')
+	);
+	await multiCollateral.setCollateralKey(collateral, ethers.encodeBytes32String('SUSD'));
 	const multiCollateralAddress = await multiCollateral.getAddress();
+	await multiCollateral.setPositionalManager(positionalManagerAddress);
 
 	// deploy Sports AMM manager
 	const SportsAMMV2Manager = await ethers.getContractFactory('SportsAMMV2Manager');
@@ -246,9 +273,32 @@ async function deploySportsAMMV2Fixture() {
 		},
 	]);
 
+	const sportsAMMV2LiquidityPoolSixDecimals2 = await upgrades.deployProxy(
+		SportsAMMV2LiquidityPool,
+		[
+			{
+				_owner: owner.address,
+				_sportsAMM: sportsAMMV2Address,
+				_addressManager: addressManagerAddress,
+				_collateral: collateralSixDecimals2Address,
+				_collateralKey: ethers.encodeBytes32String('USDC2'),
+				_roundLength: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.roundLength,
+				_maxAllowedDeposit: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.maxAllowedDeposit,
+				_minDepositAmount: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.minDepositAmount,
+				_maxAllowedUsers: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.maxAllowedUsers,
+				_utilizationRate: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.utilizationRate,
+				_safeBox: safeBox.address,
+				_safeBoxImpact: SPORTS_AMM_LP_SIX_DEC_INITAL_PARAMS.safeBoxImpact,
+			},
+		]
+	);
+
 	const sportsAMMV2LiquidityPoolAddress = await sportsAMMV2LiquidityPool.getAddress();
 	const sportsAMMV2LiquidityPoolSixDecimalsAddress =
 		await sportsAMMV2LiquidityPoolSixDecimals.getAddress();
+
+	const sportsAMMV2LiquidityPoolSixDecimals2Address =
+		await sportsAMMV2LiquidityPoolSixDecimals2.getAddress();
 
 	await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolAddress);
 
@@ -265,6 +315,9 @@ async function deploySportsAMMV2Fixture() {
 	sportsAMMV2LiquidityPoolSixDecimals.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
 	);
+	sportsAMMV2LiquidityPoolSixDecimals2.setPoolRoundMastercopy(
+		sportsAMMV2LiquidityPoolRoundMastercopyAddress
+	);
 
 	// deploy default liqudity provider
 	const DefaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
@@ -278,6 +331,10 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2LiquidityPoolSixDecimalsAddress,
 		collateralSixDecimalsAddress,
 	]);
+	const defaultLiquidityProviderSixDecimals2 = await upgrades.deployProxy(
+		DefaultLiquidityProvider,
+		[owner.address, sportsAMMV2LiquidityPoolSixDecimals2Address, collateralSixDecimals2Address]
+	);
 
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 
@@ -285,8 +342,14 @@ async function deploySportsAMMV2Fixture() {
 
 	const defaultLiquidityProviderSixDecimalsAddress =
 		defaultLiquidityProviderSixDecimals.getAddress();
+	const defaultLiquidityProviderSixDecimals2Address =
+		defaultLiquidityProviderSixDecimals2.getAddress();
+
 	await sportsAMMV2LiquidityPoolSixDecimals.setDefaultLiquidityProvider(
 		defaultLiquidityProviderSixDecimalsAddress
+	);
+	await sportsAMMV2LiquidityPoolSixDecimals2.setDefaultLiquidityProvider(
+		defaultLiquidityProviderSixDecimals2Address
 	);
 
 	// deploy Sports AMM Data
@@ -341,6 +404,7 @@ async function deploySportsAMMV2Fixture() {
 
 	await collateral.setDefaultAmount(DEFAULT_AMOUNT);
 	await collateralSixDecimals.setDefaultAmount(DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals2.setDefaultAmount(DEFAULT_AMOUNT_SIX_DECIMALS);
 	await collateral.mintForUser(firstLiquidityProvider);
 	await collateral.mintForUser(secondLiquidityProvider);
 	await collateral.mintForUser(thirdLiquidityProvider);
@@ -366,6 +430,18 @@ async function deploySportsAMMV2Fixture() {
 	await collateralSixDecimals
 		.connect(thirdLiquidityProvider)
 		.approve(sportsAMMV2LiquidityPoolSixDecimals, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals2.mintForUser(firstLiquidityProvider);
+	await collateralSixDecimals2.mintForUser(secondLiquidityProvider);
+	await collateralSixDecimals2.mintForUser(thirdLiquidityProvider);
+	await collateralSixDecimals2
+		.connect(firstLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolSixDecimals2, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals2
+		.connect(secondLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolSixDecimals2, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals2
+		.connect(thirdLiquidityProvider)
+		.approve(sportsAMMV2LiquidityPoolSixDecimals2, DEFAULT_AMOUNT_SIX_DECIMALS);
 
 	await collateral.mintForUser(firstTrader);
 	await collateral.mintForUser(secondTrader);
@@ -380,6 +456,14 @@ async function deploySportsAMMV2Fixture() {
 	await collateralSixDecimals
 		.connect(secondTrader)
 		.approve(sportsAMMV2, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals2.mintForUser(firstTrader);
+	await collateralSixDecimals2.mintForUser(secondTrader);
+	await collateralSixDecimals2
+		.connect(firstTrader)
+		.approve(sportsAMMV2, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals2
+		.connect(secondTrader)
+		.approve(sportsAMMV2, DEFAULT_AMOUNT_SIX_DECIMALS);
 
 	await collateral.mintForUser(owner);
 	await collateral.transfer(await defaultLiquidityProvider.getAddress(), DEFAULT_AMOUNT);
@@ -389,6 +473,11 @@ async function deploySportsAMMV2Fixture() {
 		await defaultLiquidityProviderSixDecimals.getAddress(),
 		DEFAULT_AMOUNT_SIX_DECIMALS
 	);
+	await collateralSixDecimals2.mintForUser(owner);
+	await collateralSixDecimals2.transfer(
+		await defaultLiquidityProviderSixDecimals2.getAddress(),
+		DEFAULT_AMOUNT_SIX_DECIMALS
+	);
 
 	// send collateral to multicollateral so it can convert other collaterals
 	await collateral.mintForUser(owner);
@@ -396,6 +485,8 @@ async function deploySportsAMMV2Fixture() {
 
 	await collateralSixDecimals.mintForUser(owner);
 	await collateralSixDecimals.transfer(multiCollateralAddress, DEFAULT_AMOUNT_SIX_DECIMALS);
+	await collateralSixDecimals2.mintForUser(owner);
+	await collateralSixDecimals2.transfer(multiCollateralAddress, DEFAULT_AMOUNT_SIX_DECIMALS);
 
 	const SportsAMMV2LiquidityPoolETH = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 
@@ -454,12 +545,11 @@ async function deploySportsAMMV2Fixture() {
 
 	const MockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
 	const mockChainlinkOracle = await MockChainlinkOracle.deploy();
-
 	const mockChainlinkOracleAddress = mockChainlinkOracle.getAddress();
 
+	// deploy LiveTradingProcessor
 	const mockSpecId = '0x7370656349640000000000000000000000000000000000000000000000000000';
 	const LiveTradingProcessor = await ethers.getContractFactory('LiveTradingProcessor');
-	//	//constructor(address _link, address _oracle, address _sportsAMM, bytes32 _specId, uint _payment) Ownable(msg.sender) {
 	const liveTradingProcessor = await LiveTradingProcessor.deploy(
 		collateralAddress, //link
 		mockChainlinkOracleAddress, //_oracle
@@ -467,19 +557,18 @@ async function deploySportsAMMV2Fixture() {
 		mockSpecId, // _specId
 		0 // payment
 	);
-
 	const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
 
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
 
+	// deploy ChainlinkResolver
 	const ChainlinkResolver = await ethers.getContractFactory('ChainlinkResolver');
-	const sportsAMMV2ResultManagerAddreess = sportsAMMV2ResultManager.getAddress();
 	const chainlinkResolver = await ChainlinkResolver.deploy(
 		collateralAddress, //link
 		mockChainlinkOracleAddress, //_oracle
 		sportsAMMV2Address, // _sportsAMM
-		sportsAMMV2ResultManagerAddreess, // sportsAMMV2ResultManager
+		sportsAMMV2ResultManagerAddress, // sportsAMMV2ResultManager
 		mockSpecId, // _specId
 		0 // payment
 	);
@@ -513,15 +602,19 @@ async function deploySportsAMMV2Fixture() {
 		ticketMastercopy,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolSixDecimals,
+		sportsAMMV2LiquidityPoolSixDecimals2,
 		sportsAMMV2LiquidityPoolRoundMastercopy,
 		defaultLiquidityProvider,
 		defaultLiquidityProviderSixDecimals,
+		defaultLiquidityProviderSixDecimals2,
 		sportsAMMV2LiquidityPoolETH,
 		defaultLiquidityProviderETH,
 		weth,
 		collateral,
 		collateralSixDecimals,
+		collateralSixDecimals2,
 		multiCollateral,
+		positionalManager,
 		priceFeed,
 		referrals,
 		stakingThales,

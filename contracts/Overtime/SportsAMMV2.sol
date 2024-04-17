@@ -537,7 +537,25 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (exactReceived > buyInAmountInDefaultCollateral) {
                 defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
             }
-            buyInAmount = buyInAmountInDefaultCollateral;
+            // buyInAmount = buyInAmountInDefaultCollateral * 10 ** 12;
+            // Note: The previous code has only the line above ^^^^^^^^
+            // The following code is to cover most of the cases when
+            // the default collateral in multicollateral contract is different
+            // or the needsToTransformCollateral flag is set opposite of the defaultCollateral on SportsAMM
+            // for example: needsToTransform is true == the multicollateral default collateral is with 6 decimals
+            // where on this (SportsAMM) contract the default collateral may have 18 decimals.
+            // onramp function won't work if there are different default collaterals in both Multicollateral and SportsAMM contracts
+            uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
+            bool needsTransformCollateral = ISportsAMMV2Manager(
+                ISportsAMMV2Manager(address(multiCollateralOnOffRamp)).manager()
+            ).needsTransformingCollateral();
+            if (needsTransformCollateral && defaultCollateralDecimals != 6) {
+                buyInAmount = buyInAmountInDefaultCollateral * 10 ** 12;
+            } else if (!needsTransformCollateral && defaultCollateralDecimals == 6) {
+                buyInAmount = buyInAmountInDefaultCollateral / 10 ** 12;
+            } else {
+                buyInAmount = buyInAmountInDefaultCollateral;
+            }
         }
     }
 
@@ -566,6 +584,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeDataInternal._expectedPayout,
             _tradeDataInternal._additionalSlippage,
             _tradeDataInternal._collateralPriceInUSD,
+            _tradeDataInternal._collateral,
             _tradeDataInternal._differentRecipient
         );
 
@@ -643,10 +662,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout,
         uint _additionalSlippage,
         uint _collateralPriceInUSD,
+        address _collateral,
         address _differentRecipient
     ) internal {
+        uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         if (_collateralPriceInUSD > 0) {
-            uint transformDecimal = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
+            uint collateralDecimals = ISportsAMMV2Manager(_collateral).decimals();
+            uint transformDecimal = collateralDecimals != defaultCollateralDecimals ? (18 - defaultCollateralDecimals) : 0;
             _buyInAmount = _transformToUSD(_buyInAmount, _collateralPriceInUSD, transformDecimal);
             _payout = _transformToUSD(_payout, _collateralPriceInUSD, transformDecimal);
             _expectedPayout = _transformToUSD(_expectedPayout, _collateralPriceInUSD, transformDecimal);
@@ -654,6 +676,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount);
         riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _additionalSlippage);
         if (address(stakingThales) != address(0)) {
+            uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
+                .decimals();
+            if (defaultCollateralDecimals < stakingCollateralDecimals) {
+                _buyInAmount = _buyInAmount * 10 ** (18 - defaultCollateralDecimals);
+            } else if (defaultCollateralDecimals > stakingCollateralDecimals) {
+                _buyInAmount = _buyInAmount / 10 ** (18 - stakingCollateralDecimals);
+            }
             stakingThales.updateVolume(_differentRecipient, _buyInAmount);
         }
     }
@@ -858,10 +887,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _liquidityPool new LP address
     function setLiquidityPoolForCollateral(address _collateralAddress, address _liquidityPool) external onlyOwner {
         if (liquidityPoolForCollateral[_collateralAddress] != address(0)) {
-            IERC20(_collateralAddress).approve(_liquidityPool, 0);
+            IERC20(_collateralAddress).approve(liquidityPoolForCollateral[_collateralAddress], 0);
         }
         liquidityPoolForCollateral[_collateralAddress] = _liquidityPool;
-        IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
+        if (_liquidityPool != address(0)) {
+            IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
+        }
         emit SetLiquidityPoolForCollateral(_liquidityPool, _collateralAddress);
     }
 
