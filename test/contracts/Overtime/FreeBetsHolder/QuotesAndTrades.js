@@ -4,7 +4,12 @@ const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, SPORT_ID_NBA } = require('../../../constants/overtime');
+const {
+	BUY_IN_AMOUNT,
+	ADDITIONAL_SLIPPAGE,
+	SPORT_ID_NBA,
+	RESULT_TYPE,
+} = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
 
 describe('SportsAMMV2 Quotes And Trades', () => {
@@ -18,7 +23,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		collateralAddress,
 		sportsAMMV2RiskManager,
 		mockChainlinkOracle,
-		liveTradingProcessor;
+		liveTradingProcessor,
+		sportsAMMV2ResultManager;
 
 	beforeEach(async () => {
 		({
@@ -31,6 +37,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			sportsAMMV2RiskManager,
 			mockChainlinkOracle,
 			liveTradingProcessor,
+			sportsAMMV2ResultManager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
@@ -126,6 +133,59 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			console.log('requestId is ' + requestId);
 
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
+		});
+
+		it('Should claim winnings', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
+
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
+
+			const firstTraderBalance = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+			expect(firstTraderBalance).to.equal(ethers.parseEther('10'));
+
+			await freeBetsHolder
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					collateralAddress
+				);
+
+			const firstTraderBalanceAfterTrade = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+			expect(firstTraderBalanceAfterTrade).to.equal(ethers.parseEther('0'));
+
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataCurrentRound[0].gameId],
+				[tradeDataCurrentRound[0].typeId],
+				[tradeDataCurrentRound[0].playerId],
+				[[0]]
+			);
+
+			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			await freeBetsHolder.connect(firstTrader).claimTicket(ticketAddress);
+
+			const firstTraderBalanceAfterClaim = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+			expect(firstTraderBalanceAfterClaim).to.equal(ethers.parseEther('10'));
 		});
 	});
 });
