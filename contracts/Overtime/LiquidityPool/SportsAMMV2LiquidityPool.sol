@@ -593,13 +593,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (address(stakingThales) != address(0)) {
             uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
                 .decimals();
-            if (_isDefaultCollateral) {
-                if (_defaultCollateralDecimals < stakingCollateralDecimals) {
-                    _amount = _amount * 10 ** (18 - _defaultCollateralDecimals);
-                } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
-                    _amount = _amount / 10 ** (18 - _defaultCollateralDecimals);
-                }
-            } else {
+
+            if (!_isDefaultCollateral) {
                 uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
                     collateralKey
                 );
@@ -614,12 +609,14 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     collateralPriceInUSD,
                     collateralDecimals != _defaultCollateralDecimals ? (18 - _defaultCollateralDecimals) : 0
                 );
-                if (_defaultCollateralDecimals < stakingCollateralDecimals) {
-                    _amount = _amount * 10 ** (18 - _defaultCollateralDecimals);
-                } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
-                    _amount = _amount / 10 ** (18 - stakingCollateralDecimals);
-                }
             }
+
+            if (_defaultCollateralDecimals < stakingCollateralDecimals) {
+                _amount = _amount * 10 ** (18 - _defaultCollateralDecimals);
+            } else if (_defaultCollateralDecimals > stakingCollateralDecimals) {
+                _amount = _amount / 10 ** (18 - stakingCollateralDecimals);
+            }
+
             stakingThales.updateVolume(msg.sender, _amount);
         }
     }
