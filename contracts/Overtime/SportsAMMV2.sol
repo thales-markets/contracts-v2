@@ -532,25 +532,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (exactReceived > buyInAmountInDefaultCollateral) {
                 defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
             }
-            // buyInAmount = buyInAmountInDefaultCollateral * 10 ** 12;
-            // Note: The previous code has only the line above ^^^^^^^^
-            // The following code is to cover most of the cases when
-            // the default collateral in multicollateral contract is different
-            // or the needsToTransformCollateral flag is set opposite of the defaultCollateral on SportsAMM
-            // for example: needsToTransform is true == the multicollateral default collateral is with 6 decimals
-            // where on this (SportsAMM) contract the default collateral may have 18 decimals.
-            // onramp function won't work if there are different default collaterals in both Multicollateral and SportsAMM contracts
-            uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
-            bool needsTransformCollateral = ISportsAMMV2Manager(
-                ISportsAMMV2Manager(address(multiCollateralOnOffRamp)).manager()
-            ).needsTransformingCollateral();
-            if (needsTransformCollateral && defaultCollateralDecimals != 6) {
-                buyInAmount = buyInAmountInDefaultCollateral * 10 ** 12;
-            } else if (!needsTransformCollateral && defaultCollateralDecimals == 6) {
-                buyInAmount = buyInAmountInDefaultCollateral / 10 ** 12;
-            } else {
-                buyInAmount = buyInAmountInDefaultCollateral;
-            }
+            buyInAmount = buyInAmountInDefaultCollateral;
         }
     }
 
