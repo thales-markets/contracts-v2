@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat');
 
-const { setTargetAddress, getTargetAddress, isTestNetwork } = require('../../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -10,12 +10,6 @@ async function main() {
 
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
-
-	const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
-	const sportsAMMV2LiquidityPoolAddress = getTargetAddress('SportsAMMV2LiquidityPool', network);
-	const sportsAMMV2LiquidityPoolDeployed = sportsAMMV2LiquidityPool.attach(
-		sportsAMMV2LiquidityPoolAddress
-	);
 
 	const sportsAMMV2LiquidityPoolRoundMastercopy = await ethers.getContractFactory(
 		'SportsAMMV2LiquidityPoolRoundMastercopy'
@@ -40,6 +34,12 @@ async function main() {
 	await delay(5000);
 
 	if (isTestNetwork(networkObj.chainId)) {
+		const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
+		const sportsAMMV2LiquidityPoolAddress = getTargetAddress('SportsAMMV2LiquidityPool', network);
+		const sportsAMMV2LiquidityPoolDeployed = sportsAMMV2LiquidityPool.attach(
+			sportsAMMV2LiquidityPoolAddress
+		);
+
 		await sportsAMMV2LiquidityPoolDeployed.setPoolRoundMastercopy(
 			sportsAMMV2LiquidityPoolRoundMastercopyAddress,
 			{
@@ -68,9 +68,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}

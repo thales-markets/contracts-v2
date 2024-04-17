@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat');
 
-const { setTargetAddress } = require('../helpers');
+const { setTargetAddress, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -38,9 +38,3 @@ main()
 		console.error(error);
 		process.exit(1);
 	});
-
-function delay(time) {
-	return new Promise(function (resolve) {
-		setTimeout(resolve, time);
-	});
-}
