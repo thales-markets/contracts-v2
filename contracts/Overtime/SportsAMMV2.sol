@@ -877,10 +877,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _liquidityPool new LP address
     function setLiquidityPoolForCollateral(address _collateralAddress, address _liquidityPool) external onlyOwner {
         if (liquidityPoolForCollateral[_collateralAddress] != address(0)) {
-            IERC20(_collateralAddress).approve(_liquidityPool, 0);
+            IERC20(_collateralAddress).approve(liquidityPoolForCollateral[_collateralAddress], 0);
         }
         liquidityPoolForCollateral[_collateralAddress] = _liquidityPool;
-        IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
+        if (_liquidityPool != address(0)) {
+            IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
+        }
         emit SetLiquidityPoolForCollateral(_liquidityPool, _collateralAddress);
     }
 

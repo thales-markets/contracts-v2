@@ -156,6 +156,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralSixDecimals2Address,
 		ethers.encodeBytes32String('USDC2')
 	);
+	await multiCollateral.setCollateralKey(collateral, ethers.encodeBytes32String('SUSD'));
 	const multiCollateralAddress = await multiCollateral.getAddress();
 	await multiCollateral.setPositionalManager(positionalManagerAddress);
 
