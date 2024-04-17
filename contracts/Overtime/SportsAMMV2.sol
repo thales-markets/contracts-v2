@@ -185,16 +185,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 // TODO: require that this is greater than 0
                 useAmount = buyInAmountInDefaultCollateral;
             } else {
-                uint defaultCollateralDecimalConverter = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
+                uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
+                uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
                 uint priceInUSD = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
                     .rateForCurrency(ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey());
-                if (defaultCollateralDecimalConverter > ISportsAMMV2Manager(_collateral).decimals()) {
-                    priceInUSD = priceInUSD * 10 ** (18 - ISportsAMMV2Manager(_collateral).decimals());
-                }
+
                 buyInAmountInDefaultCollateral = _transformToUSD(
                     _buyInAmount,
                     priceInUSD,
-                    defaultCollateralDecimalConverter
+                    defaultCollateralDecimals,
+                    collateralDecimals
                 );
             }
         }
@@ -519,9 +519,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 ISportsAMMV2LiquidityPool(lqPool).collateralKey()
             );
             require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
-            if ((ISportsAMMV2Manager(address(defaultCollateral)).decimals()) > ISportsAMMV2Manager(_collateral).decimals()) {
-                collateralPrice = collateralPrice * 10 ** (18 - ISportsAMMV2Manager(_collateral).decimals());
-            }
         } else {
             uint buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
             IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
@@ -610,17 +607,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     // Transform collateral to USD
-    // _defaultCollateralDecimalConverter is used sustain function as pure
-    // _defaultCollateralDecimalConverter value is '12' for USDC (6 decimals)
     function _transformToUSD(
         uint _amountInCollateral,
         uint _collateralPriceInUSD,
-        uint _defaultCollateralDecimalConverter
+        uint _defaultCollateralDecimals,
+        uint _collateralDecimals
     ) internal pure returns (uint amountInUSD) {
-        if (_defaultCollateralDecimalConverter > 0) {
-            amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / (ONE * 10 ** _defaultCollateralDecimalConverter);
-        } else {
-            amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / ONE;
+        amountInUSD = (_amountInCollateral * _collateralPriceInUSD) / ONE;
+        if (_collateralDecimals < _defaultCollateralDecimals) {
+            amountInUSD = amountInUSD * 10 ** (_defaultCollateralDecimals - _collateralDecimals);
+        } else if (_collateralDecimals > _defaultCollateralDecimals) {
+            amountInUSD = amountInUSD / 10 ** (_collateralDecimals - _defaultCollateralDecimals);
         }
     }
 
@@ -638,11 +635,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal {
         uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         if (_collateralPriceInUSD > 0) {
-            uint collateralDecimals = ISportsAMMV2Manager(_collateral).decimals();
-            uint transformDecimal = collateralDecimals != defaultCollateralDecimals ? (18 - defaultCollateralDecimals) : 0;
-            _buyInAmount = _transformToUSD(_buyInAmount, _collateralPriceInUSD, transformDecimal);
-            _payout = _transformToUSD(_payout, _collateralPriceInUSD, transformDecimal);
-            _expectedPayout = _transformToUSD(_expectedPayout, _collateralPriceInUSD, transformDecimal);
+            uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
+            _buyInAmount = _transformToUSD(
+                _buyInAmount,
+                _collateralPriceInUSD,
+                defaultCollateralDecimals,
+                collateralDecimals
+            );
+            _payout = _transformToUSD(_payout, _collateralPriceInUSD, defaultCollateralDecimals, collateralDecimals);
+            _expectedPayout = _transformToUSD(
+                _expectedPayout,
+                _collateralPriceInUSD,
+                defaultCollateralDecimals,
+                collateralDecimals
+            );
         }
         riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount);
         riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _additionalSlippage);
