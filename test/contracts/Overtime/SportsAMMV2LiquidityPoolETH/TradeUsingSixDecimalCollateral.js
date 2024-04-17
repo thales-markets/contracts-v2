@@ -3145,15 +3145,15 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			);
 		});
 
-		it('18 decimal - default collateral, 6 decimal - multicollateral, 18 decimal - staking collateral', async () => {
+		it('18 decimal - default collateral, 6 decimal - multicollateral, 6 decimal - staking collateral', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 
 			// deposit and start pool
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
 			await sportsAMMV2LiquidityPool.start();
 
-			await stakingThales.setFeeToken(collateral);
-			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(18);
+			await stakingThales.setFeeToken(collateralSixDecimals);
+			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(6);
 
 			let currentRound = Number(await sportsAMMV2LiquidityPool.round());
 			let currentRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(currentRound);
@@ -3192,7 +3192,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				);
 
 			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
+			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2
@@ -3320,15 +3320,15 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			);
 		});
 
-		it('18 decimal - default collateral, 6 decimal - multicollateral, 6 decimal - staking collateral', async () => {
+		it('18 decimal - default collateral, 6 decimal - multicollateral, 18 decimal - staking collateral', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 
 			// deposit and start pool
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
 			await sportsAMMV2LiquidityPool.start();
 
-			await stakingThales.setFeeToken(collateralSixDecimals);
-			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(6);
+			await stakingThales.setFeeToken(collateral);
+			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(18);
 
 			let currentRound = Number(await sportsAMMV2LiquidityPool.round());
 			let currentRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(currentRound);
@@ -3367,7 +3367,7 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				);
 
 			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
+			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2
