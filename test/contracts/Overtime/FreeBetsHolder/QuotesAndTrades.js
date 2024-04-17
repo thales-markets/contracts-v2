@@ -16,7 +16,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		firstTrader,
 		freeBetsHolder,
 		collateralAddress,
-		sportsAMMV2RiskManager;
+		sportsAMMV2RiskManager,
+		mockChainlinkOracle,
+		liveTradingProcessor;
 
 	beforeEach(async () => {
 		({
@@ -27,6 +29,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			freeBetsHolder,
 			collateralAddress,
 			sportsAMMV2RiskManager,
+			mockChainlinkOracle,
+			liveTradingProcessor,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
@@ -117,6 +121,11 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ZERO_ADDRESS,
 					collateralAddress
 				);
+
+			let requestId = await liveTradingProcessor.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
 		});
 	});
 });

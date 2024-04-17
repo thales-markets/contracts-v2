@@ -103,6 +103,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         address _user = liveRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
 
+        if (_collateral == address(0)) {
+            _collateral = address(sportsAMM.defaultCollateral());
+        }
+
         require(supportedCollateral[_collateral], "Unsupported collateral");
         require(balancePerUserAndCollateral[_user][_collateral] >= _buyInAmount, "Insufficient balance");
 

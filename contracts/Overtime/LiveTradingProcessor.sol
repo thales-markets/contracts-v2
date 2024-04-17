@@ -93,6 +93,10 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         Chainlink.Request memory req;
 
+        if (_collateral == address(sportsAMM.defaultCollateral())) {
+            _collateral = address(0);
+        }
+
         req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
         req.add("_gameId", string(abi.encodePacked(_gameId)));
