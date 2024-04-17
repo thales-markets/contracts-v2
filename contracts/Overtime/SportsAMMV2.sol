@@ -182,6 +182,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             if (liquidityPoolForCollateral[_collateral] == address(0)) {
                 buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+                // TODO: require that this is greater than 0
                 useAmount = buyInAmountInDefaultCollateral;
             } else {
                 uint defaultCollateralDecimalConverter = (18 - ISportsAMMV2Manager(address(defaultCollateral)).decimals());
@@ -499,7 +500,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal returns (address lqPool, uint collateralPrice, uint buyInAmount) {
         require(multicollateralEnabled, "Multi-collat not enabled");
         buyInAmount = _buyInAmount;
-        uint exactReceived;
         lqPool = liquidityPoolForCollateral[_collateral];
         if (lqPool != address(0)) {
             if (_collateral == multiCollateralOnOffRamp.WETH9() && _isEth) {
@@ -509,13 +509,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 ICollateralUtility(_collateral).deposit{value: msg.value}();
                 uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
                 require(balanceDiff == msg.value, "Insuff WETH");
-                exactReceived = balanceDiff;
             } else {
                 // Generic case for any collateral used (THALES/ARB/OP)
                 IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
-                exactReceived = _buyInAmount;
             }
 
+            // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
             collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
                 ISportsAMMV2LiquidityPool(lqPool).collateralKey()
             );
@@ -527,7 +526,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
             IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
             IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
-            exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
+            uint exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
             require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
             if (exactReceived > buyInAmountInDefaultCollateral) {
                 defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
