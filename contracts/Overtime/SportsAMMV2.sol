@@ -739,12 +739,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
-        knownTickets.remove(msg.sender);
-        if (activeTicketsPerUser[ticketOwner].contains(msg.sender)) {
-            activeTicketsPerUser[ticketOwner].remove(msg.sender);
+        knownTickets.remove(_ticket);
+        if (activeTicketsPerUser[ticketOwner].contains(_ticket)) {
+            activeTicketsPerUser[ticketOwner].remove(_ticket);
         }
-        resolvedTicketsPerUser[ticketOwner].add(msg.sender);
-        emit TicketResolved(msg.sender, ticketOwner, ticket.isUserTheWinner());
+        resolvedTicketsPerUser[ticketOwner].add(_ticket);
+        emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 
         uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {

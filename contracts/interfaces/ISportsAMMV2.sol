@@ -42,14 +42,6 @@ interface ISportsAMMV2 {
 
     function safeBoxFee() external view returns (uint);
 
-    function resolveTicket(
-        address _ticketOwner,
-        bool _hasUserWon,
-        bool _cancelled,
-        uint _buyInAmount,
-        address _collateral
-    ) external;
-
     function exerciseTicket(address _ticket) external;
 
     function getTicketsPerGame(uint _index, uint _pageSize, bytes32 _gameId) external view returns (address[] memory);
