@@ -677,7 +677,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
-                if (referrerShare > ammBalance) {
+                if (ammBalance >= referrerShare) {
                     _collateral.safeTransfer(referrer, referrerShare);
                     emit ReferrerPaid(referrer, _tickerOwner, referrerShare, _buyInAmount);
                 }
@@ -687,7 +687,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (fees > referrerShare) {
             uint safeBoxAmount = fees - referrerShare;
             ammBalance = _collateral.balanceOf(address(this));
-            if (safeBoxAmount > ammBalance) {
+            if (ammBalance >= safeBoxAmount) {
                 _collateral.safeTransfer(safeBox, safeBoxAmount);
                 emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
             }
