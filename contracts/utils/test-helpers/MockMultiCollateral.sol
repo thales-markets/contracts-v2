@@ -16,6 +16,7 @@ contract MockMultiCollateralOnOffRamp {
     IERC20 public sUSD;
     mapping(address => bytes32) public collateralKey;
     mapping(bytes32 => address) public collateralAddress;
+    mapping(address collateralFrom => mapping(address collateralTo => uint rate)) public swapRate;
 
     function setPriceFeed(address _priceFeed) external {
         priceFeed = _priceFeed;
@@ -84,12 +85,26 @@ contract MockMultiCollateralOnOffRamp {
 
     function offramp(address collateral, uint amount) external returns (uint) {}
 
-    function offrampFromIntoEth(address collateralFrom, uint amount) external returns (uint) {
-        // TODO for multicollateral offramp into ETH
+    function offrampFromIntoEth(address collateralFrom, uint amount) external returns (uint offramped) {
+        IERC20(collateralFrom).safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(collateralFrom, collateralAddress["WETH"], amount);
+        payable(msg.sender).transfer(offramped);
     }
 
-    function offrampFrom(address collateralFrom, address collateralTo, uint amount) external returns (uint) {
-        // TODO for multicollateral offramp into collateral
+    function offrampFrom(address collateralFrom, address collateralTo, uint amount) external returns (uint offramped) {
+        IERC20(collateralFrom).safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(collateralFrom, collateralTo, amount);
+        IERC20(collateralTo).safeTransferFrom(address(this), msg.sender, amount);
+    }
+
+    function _swapAmount(address collateralFrom, address collateralTo, uint amount) internal view returns (uint) {
+        // assumed amount is 18 decimal
+        return (swapRate[collateralFrom][collateralTo] * amount) / 1e18;
+    }
+
+    function setSwapRate(address collateralFrom, address collateralTo, uint rate) external {
+        swapRate[collateralFrom][collateralTo] = rate;
+        swapRate[collateralTo][collateralFrom] = (1e18 * 1e18) / rate;
     }
 
     event OnRamp(address collateral, uint collateralAmount, uint convertedAmount);

@@ -216,11 +216,11 @@
         "type": "uint256"
       }
     ],
-    "name": "offrampCollateral",
+    "name": "offrampFrom",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "offramped",
         "type": "uint256"
       }
     ],
@@ -240,11 +240,11 @@
         "type": "uint256"
       }
     ],
-    "name": "offrampCollateralIntoEth",
+    "name": "offrampFromIntoEth",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "offramped",
         "type": "uint256"
       }
     ],
@@ -394,6 +394,53 @@
     "name": "setSUSD",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateralFrom",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateralTo",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rate",
+        "type": "uint256"
+      }
+    ],
+    "name": "setSwapRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateralFrom",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateralTo",
+        "type": "address"
+      }
+    ],
+    "name": "swapRate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "rate",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
