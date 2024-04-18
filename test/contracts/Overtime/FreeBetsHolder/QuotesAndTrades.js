@@ -195,5 +195,42 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				BUY_IN_AMOUNT
 			);
 		});
+
+		it('User tickets hitory getters', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
+
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
+
+			const firstTraderBalance = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+			expect(firstTraderBalance).to.equal(ethers.parseEther('10'));
+
+			await freeBetsHolder
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					collateralAddress
+				);
+
+			let numActive = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader);
+			expect(numActive).to.equal(1);
+
+			await freeBetsHolder.getActiveTicketsPerUser(0, 1, firstTrader);
+
+			let numResolved = await freeBetsHolder.numOfResolvedTicketsPerUser(firstTrader);
+			expect(numResolved).to.equal(0);
+
+			await freeBetsHolder.getResolvedTicketsPerUser(0, 1, firstTrader);
+		});
 	});
 });
