@@ -187,8 +187,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             } else {
                 uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
                 uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
-                uint priceInUSD = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
-                    .rateForCurrency(ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey());
+                uint priceInUSD = IPriceFeed(multiCollateralOnOffRamp.priceFeed()).rateForCurrency(
+                    ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey()
+                );
 
                 buyInAmountInDefaultCollateral = _transformToUSD(
                     _buyInAmount,
@@ -781,14 +782,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint offramped;
             if (_inEth) {
                 // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
-                // offramped = multiCollateralOnOffRamp.offrampCollateralIntoEth(address(ticketCollateral), userWinningAmount);
-                offramped = multiCollateralOnOffRamp.offrampIntoEth(userWinningAmount);
+                offramped = multiCollateralOnOffRamp.offrampFromIntoEth(address(ticketCollateral), userWinningAmount);
                 bool sent = payable(ticket.ticketOwner()).send(offramped);
                 require(sent, "Failed to send Ether");
             } else {
                 // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
-                // offramped = multiCollateralOnOffRamp.offrampCollateral(address(ticketCollateral), _collateral, userWinningAmount);
-                offramped = multiCollateralOnOffRamp.offramp(_collateral, userWinningAmount);
+                offramped = multiCollateralOnOffRamp.offrampFrom(address(ticketCollateral), _collateral, userWinningAmount);
                 IERC20(_collateral).safeTransfer(ticket.ticketOwner(), offramped);
             }
             amount = amount - userWinningAmount;
