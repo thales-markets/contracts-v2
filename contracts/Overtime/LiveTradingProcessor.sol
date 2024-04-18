@@ -73,6 +73,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /// @param _additionalSlippage the maximum slippage a user will accept
     /// @param _referrer who should get the referrer fee if any
     /// @param _collateral different collateral used for paymentAmount
+    //TODO: consider a struct for this
+    // TODO: add line as a parametar for live trades on totals
     function requestLiveTrade(
         bytes32 _gameId,
         uint16 _sportId,

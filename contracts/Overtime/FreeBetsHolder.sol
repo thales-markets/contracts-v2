@@ -172,7 +172,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         resolvedTicketsPerUser[_user].add(_resolvedTicket);
     }
 
-    /// @notice admin method to retrieve stuck funds should it happen to should this contract be deprecated
+    /// @notice admin method to retrieve stuck funds if needed
     function retrieveFunds(IERC20 _collateral, uint _amount) external onlyOwner {
         _collateral.safeTransfer(msg.sender, _amount);
     }
