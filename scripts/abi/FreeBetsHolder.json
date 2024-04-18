@@ -102,12 +102,12 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "earned",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       }
     ],
-    "name": "FreeBetTicketClaimed",
+    "name": "FreeBetTicketResolved",
     "type": "event"
   },
   {
@@ -277,19 +277,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_ticket",
-        "type": "address"
-      }
-    ],
-    "name": "claimTicket",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -625,12 +612,12 @@
     "inputs": [
       {
         "internalType": "contract IERC20",
-        "name": "collateral",
+        "name": "_collateral",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "_amount",
         "type": "uint256"
       }
     ],

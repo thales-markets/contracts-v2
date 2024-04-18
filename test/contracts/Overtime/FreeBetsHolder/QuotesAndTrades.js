@@ -179,7 +179,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
-			await freeBetsHolder.connect(firstTrader).claimTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
 
 			const firstTraderBalanceAfterClaim = await freeBetsHolder.balancePerUserAndCollateral(
 				firstTrader,

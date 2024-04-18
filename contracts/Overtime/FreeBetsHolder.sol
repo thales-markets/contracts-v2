@@ -149,24 +149,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit FreeBetTrade(_createdTicket, _buyInAmount, msg.sender, true);
     }
 
-    /// @notice claim a known ticket purchased previously by FreeBetsHolder. The net winnings are sent to user, while the buyIn amount goes back to freeBet balance for further use
-    function claimTicket(address _ticket) external notPaused nonReentrant {
-        address _user = ticketToUser[_ticket];
-        require(_user != address(0), "Unknown ticket");
-        IERC20 _collateral = Ticket(_ticket).collateral();
-        uint balanceBefore = _collateral.balanceOf(address(this));
-        sportsAMM.exerciseTicket(_ticket);
-        uint balanceAfter = _collateral.balanceOf(address(this));
-        uint exercized = balanceAfter - balanceBefore;
-        if (exercized > 0) {
-            uint earned = exercized - Ticket(_ticket).buyInAmount();
-            IERC20(_collateral).safeTransfer(_user, earned);
-            balancePerUserAndCollateral[_user][address(_collateral)] += Ticket(_ticket).buyInAmount();
-            emit FreeBetTicketClaimed(_ticket, earned);
-        }
-    }
-
-    /// @notice has to be called from SportsAMM on ticket resolve to maintain history of resolved markets per user
+    /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes back to the freebet balance
     function confirmTicketResolved(address _resolvedTicket) external notPaused {
         require(msg.sender == address(sportsAMM), "Only allowed from SportsAMM");
 
@@ -174,13 +157,24 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         require(_user != address(0), "Unknown ticket");
         require(activeTicketsPerUser[_user].contains(_resolvedTicket), "Unknown active ticket");
 
+        uint _exercized = Ticket(_resolvedTicket).finalPayout();
+        if (_exercized > 0) {
+            uint _earned = _exercized - Ticket(_resolvedTicket).buyInAmount();
+            if (_earned > 0) {
+                IERC20 _collateral = Ticket(_resolvedTicket).collateral();
+                _collateral.safeTransfer(_user, _earned);
+                balancePerUserAndCollateral[_user][address(_collateral)] += Ticket(_resolvedTicket).buyInAmount();
+            }
+        }
+        emit FreeBetTicketResolved(_resolvedTicket, _user);
+
         activeTicketsPerUser[_user].remove(_resolvedTicket);
         resolvedTicketsPerUser[_user].add(_resolvedTicket);
     }
 
     /// @notice admin method to retrieve stuck funds should it happen to should this contract be deprecated
-    function retrieveFunds(IERC20 collateral, uint amount) external onlyOwner {
-        collateral.safeTransfer(msg.sender, amount);
+    function retrieveFunds(IERC20 _collateral, uint _amount) external onlyOwner {
+        _collateral.safeTransfer(msg.sender, _amount);
     }
 
     /* ========== SETTERS ========== */
@@ -244,6 +238,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event AddSupportedCollateral(address collateral, bool supported);
-    event FreeBetTicketClaimed(address ticket, uint earned);
+    event FreeBetTicketResolved(address ticket, address user);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
 }

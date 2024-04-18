@@ -59,6 +59,8 @@ contract Ticket is OwnedWithInit {
 
     mapping(uint => MarketData) public markets;
 
+    uint public finalPayout;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the ticket contract
@@ -175,7 +177,7 @@ contract Ticket is OwnedWithInit {
                 collateral.safeTransfer(address(sportsAMM), payoutWithFees);
             }
         } else {
-            uint finalPayout = payout;
+            finalPayout = payout;
             isCancelled = true;
             for (uint i = 0; i < numOfMarkets; i++) {
                 bool isCancelledMarketPosition = sportsAMM.resultManager().isCancelledMarketPosition(

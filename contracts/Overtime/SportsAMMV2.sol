@@ -776,10 +776,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ticket.exercise();
 
         if (ticket.ticketOwner() == freeBetsHolder) {
-            require(
-                !ticket.isUserTheWinner() || msg.sender == freeBetsHolder,
-                "Only allowed from FreeBetsHolder for winning tickets"
-            );
             IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(address(ticket));
         }
 
