@@ -35,14 +35,12 @@ contract Ticket is OwnedWithInit {
         uint _totalQuote;
         address _sportsAMM;
         address _ticketOwner;
-        address _ticketCreator;
         IERC20 _collateral;
         uint _expiry;
     }
 
     ISportsAMMV2 public sportsAMM;
     address public ticketOwner;
-    address public ticketCreator;
     IERC20 public collateral;
 
     uint public buyInAmount;
@@ -76,7 +74,6 @@ contract Ticket is OwnedWithInit {
         fees = params._fees;
         totalQuote = params._totalQuote;
         ticketOwner = params._ticketOwner;
-        ticketCreator = params._ticketCreator;
         collateral = params._collateral;
         expiry = params._expiry;
         createdAt = block.timestamp;

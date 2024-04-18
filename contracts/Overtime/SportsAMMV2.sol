@@ -542,7 +542,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 totalQuote,
                 address(this),
                 _tradeDataInternal._differentRecipient,
-                msg.sender,
                 _tradeDataInternal._collateral == address(0) ? defaultCollateral : IERC20(_tradeDataInternal._collateral),
                 (block.timestamp + riskManager.expiryDuration())
             )
