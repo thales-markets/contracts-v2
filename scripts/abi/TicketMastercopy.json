@@ -195,7 +195,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_collateral",
+        "name": "_exerciseCollateral",
         "type": "address"
       }
     ],

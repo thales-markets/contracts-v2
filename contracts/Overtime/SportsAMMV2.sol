@@ -388,14 +388,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice exercise specific ticket to an off ramp collateral
     /// @param _ticket ticket address
-    /// @param _collateral collateral address to off ramp to
+    /// @param _exerciseCollateral collateral address to off ramp to
     /// @param _inEth offramp with ETH
     function exerciseTicketOffRamp(
         address _ticket,
-        address _collateral,
+        address _exerciseCollateral,
         bool _inEth
     ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        _exerciseTicket(_ticket, _collateral, _inEth);
+        _exerciseTicket(_ticket, _exerciseCollateral, _inEth);
     }
 
     /// @notice additional logic for ticket resolve (called only from ticket contact)
@@ -771,24 +771,30 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    function _exerciseTicket(address _ticket, address _collateral, bool _inEth) internal {
+    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWinningAmount = ticket.exercise(_collateral);
+        uint userWinningAmount = ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         uint amount = ticketCollateral.balanceOf(address(this));
-        if (userWinningAmount > 0 && _collateral != address(0) && _collateral != address(ticketCollateral)) {
+        if (userWinningAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
             // Off ramp methods
             // Work in progress:
             uint offramped;
             if (_inEth) {
                 // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
                 offramped = multiCollateralOnOffRamp.offrampFromIntoEth(address(ticketCollateral), userWinningAmount);
-                bool sent = payable(ticket.ticketOwner()).send(offramped);
+                // this method is used as a suggestion from here:
+                // https://solidity-by-example.org/sending-ether/
+                (bool sent, ) = payable(ticket.ticketOwner()).call{value: offramped}("");
                 require(sent, "Failed to send Ether");
             } else {
                 // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
-                offramped = multiCollateralOnOffRamp.offrampFrom(address(ticketCollateral), _collateral, userWinningAmount);
-                IERC20(_collateral).safeTransfer(ticket.ticketOwner(), offramped);
+                offramped = multiCollateralOnOffRamp.offrampFrom(
+                    address(ticketCollateral),
+                    _exerciseCollateral,
+                    userWinningAmount
+                );
+                IERC20(_exerciseCollateral).safeTransfer(ticket.ticketOwner(), offramped);
             }
             amount = amount - userWinningAmount;
         }
