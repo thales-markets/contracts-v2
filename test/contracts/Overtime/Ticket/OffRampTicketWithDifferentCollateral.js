@@ -142,7 +142,6 @@ describe('Ticket Exercise and Expire', () => {
 				to: multiCollateral.target,
 				value: ethers.parseEther('40'),
 			});
-			console.log('ETH balance: ', await ethers.provider.getBalance(multiCollateral.target));
 
 			// Swap rate set for swaps collateral -> collateral18 and collateral18 -> collateral
 			expect(await multiCollateral.swapRate(collateral, weth)).to.be.equal(ethers.parseEther('2'));
@@ -204,14 +203,13 @@ describe('Ticket Exercise and Expire', () => {
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
-			let userBalanceBefore = await collateral18.balanceOf(firstTrader);
-			expect(userBalanceBefore).to.be.equal(DEFAULT_AMOUNT);
+			let userBalanceBefore = await ethers.provider.getBalance(firstTrader);
 			await sportsAMMV2.exerciseTicketOffRamp(ticketAddress, weth, true);
 			expect(await userTicket.resolved()).to.be.equal(true);
-			// let userBalanceAfter = await collateral18.balanceOf(firstTrader);
-			// let calculatedBalance =
-			// 	parseInt(swapAmount.toString()) + parseInt(userBalanceBefore.toString());
-			// expect(parseInt(userBalanceAfter.toString())).to.be.equal(calculatedBalance);
+			let userBalanceAfter = await ethers.provider.getBalance(firstTrader);
+			let calculatedBalance =
+				parseInt(swapAmount.toString()) + parseInt(userBalanceBefore.toString());
+			expect(parseInt(userBalanceAfter.toString())).to.be.equal(calculatedBalance);
 		});
 	});
 });
