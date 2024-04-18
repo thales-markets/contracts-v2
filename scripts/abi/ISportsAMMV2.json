@@ -195,6 +195,11 @@
         "internalType": "address",
         "name": "_ticketCreator",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
       }
     ],
     "name": "resolveTicket",

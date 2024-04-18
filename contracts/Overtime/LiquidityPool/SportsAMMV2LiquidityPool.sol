@@ -11,9 +11,13 @@ import "../../utils/proxy/ProxyReentrancyGuard.sol";
 import "../../utils/proxy/ProxyOwned.sol";
 
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
+import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
+import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
 import "./SportsAMMV2LiquidityPoolRound.sol";
+
 import "../Ticket.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 
 contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradeable, ProxyReentrancyGuard {
@@ -26,7 +30,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     struct InitParams {
         address _owner;
         address _sportsAMM;
-        address _stakingThales;
+        address _addressManager;
         IERC20 _collateral;
         uint _roundLength;
         uint _maxAllowedDeposit;
@@ -35,6 +39,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         uint _utilizationRate;
         address _safeBox;
         uint _safeBoxImpact;
+        bytes32 _collateralKey;
     }
 
     /* ========== CONSTANTS ========== */
@@ -80,8 +85,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     address public defaultLiquidityProvider;
 
-    IStakingThales public stakingThales;
-
     address public poolRoundMastercopy;
 
     uint public totalDeposited;
@@ -94,15 +97,20 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     address public safeBox;
     uint public safeBoxImpact;
 
+    IAddressManager public addressManager;
+
+    bytes32 public collateralKey;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(InitParams calldata params) external initializer {
         setOwner(params._owner);
         initNonReentrant();
         sportsAMM = ISportsAMMV2(params._sportsAMM);
-        stakingThales = IStakingThales(params._stakingThales);
+        addressManager = IAddressManager(params._addressManager);
 
         collateral = params._collateral;
+        collateralKey = params._collateralKey;
         roundLength = params._roundLength;
         maxAllowedDeposit = params._maxAllowedDeposit;
         minDepositAmount = params._minDepositAmount;
@@ -135,6 +143,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice deposit funds from user into pool for the next round
     /// @param amount value to be deposited
     function deposit(uint amount) external canDeposit(amount) nonReentrant whenNotPaused roundClosingNotPrepared {
+        _deposit(amount);
+    }
+
+    /// @notice deposit funds from user into pool for the next round
+    /// @param amount value to be deposited
+    function _deposit(uint amount) internal {
         uint nextRound = round + 1;
         address roundPool = _getOrCreateRoundPool(nextRound);
         collateral.safeTransferFrom(msg.sender, roundPool, amount);
@@ -152,10 +166,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
         allocationPerRound[nextRound] += amount;
         totalDeposited += amount;
-
-        if (address(stakingThales) != address(0)) {
-            stakingThales.updateVolume(msg.sender, amount);
-        }
+        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
+        updateStakingVolume(stakingThales, amount, address(sportsAMM.defaultCollateral()) == address(collateral));
 
         emit Deposited(msg.sender, amount, round);
     }
@@ -166,7 +178,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function commitTrade(address ticket, uint amount) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
         require(started, "Pool has not started");
         require(amount > 0, "Can't commit a zero trade");
-
         uint ticketRound = getTicketRound(ticket);
         roundPerTicket[ticket] = ticketRound;
         address liquidityPoolRound = _getOrCreateRoundPool(ticketRound);
@@ -190,7 +201,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             require(ticketRound == 1, "Invalid round");
             _provideAsDefault(amount);
         }
-
         tradingTicketsPerRound[ticketRound].push(ticket);
         isTradingTicketInARound[ticketRound][ticket] = true;
     }
@@ -275,22 +285,21 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         require(usersProcessedInRound < usersPerRound[round].length, "All users already processed");
         require(_batchSize > 0, "Batch size has to be greater than 0");
 
+        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
         address roundPool = roundPools[round];
 
         uint endCursor = usersProcessedInRound + _batchSize;
         if (endCursor > usersPerRound[round].length) {
             endCursor = usersPerRound[round].length;
         }
-
+        bool isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(collateral);
         for (uint i = usersProcessedInRound; i < endCursor; i++) {
             address user = usersPerRound[round][i];
             uint balanceAfterCurRound = (balancesPerRound[round][user] * profitAndLossPerRound[round]) / ONE;
             if (!withdrawalRequested[user] && (profitAndLossPerRound[round] > 0)) {
                 balancesPerRound[round + 1][user] = balancesPerRound[round + 1][user] + balanceAfterCurRound;
                 usersPerRound[round + 1].push(user);
-                if (address(stakingThales) != address(0)) {
-                    stakingThales.updateVolume(user, balanceAfterCurRound);
-                }
+                updateStakingVolume(stakingThales, balanceAfterCurRound, isDefaultCollateral);
             } else {
                 if (withdrawalShare[user] > 0) {
                     uint amountToClaim = (balanceAfterCurRound * withdrawalShare[user]) / ONE;
@@ -421,17 +430,17 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
 
         // TODO: uncomment, for test only
-        // Ticket ticket;
-        // address ticketAddress;
-        // for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
-        //     ticketAddress = tradingTicketsPerRound[round][i];
-        //     if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
-        //         ticket = Ticket(ticketAddress);
-        //         if (!ticket.areAllMarketsResolved()) {
-        //             return false;
-        //         }
-        //     }
-        // }
+        Ticket ticket;
+        address ticketAddress;
+        for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
+            ticketAddress = tradingTicketsPerRound[round][i];
+            if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
+                ticket = Ticket(ticketAddress);
+                if (!ticket.areAllMarketsResolved()) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -561,6 +570,29 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
+    function updateStakingVolume(IStakingThales stakingThales, uint _amount, bool _isDefaultCollateral) internal {
+        if (address(stakingThales) != address(0)) {
+            uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
+                .decimals();
+            uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
+
+            if (!_isDefaultCollateral) {
+                uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
+                    collateralKey
+                );
+                _amount = (_amount * collateralPriceInUSD) / ONE;
+            }
+
+            if (collateralDecimals < stakingCollateralDecimals) {
+                _amount = _amount * 10 ** (stakingCollateralDecimals - collateralDecimals);
+            } else if (collateralDecimals > stakingCollateralDecimals) {
+                _amount = _amount / 10 ** (collateralDecimals - stakingCollateralDecimals);
+            }
+
+            stakingThales.updateVolume(msg.sender, _amount);
+        }
+    }
+
     /* ========== SETTERS ========== */
 
     /// @notice Pause/unpause LP
@@ -575,14 +607,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         require(_poolRoundMastercopy != address(0), "Can not set a zero address!");
         poolRoundMastercopy = _poolRoundMastercopy;
         emit PoolRoundMastercopyChanged(poolRoundMastercopy);
-    }
-
-    /// @notice Set IStakingThales contract
-    /// @param _stakingThales IStakingThales address
-    function setStakingThales(IStakingThales _stakingThales) external onlyOwner {
-        require(address(_stakingThales) != address(0), "Can not set a zero address!");
-        stakingThales = _stakingThales;
-        emit StakingThalesChanged(address(_stakingThales));
     }
 
     /// @notice Set max allowed deposit
@@ -693,7 +717,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     event RoundClosed(uint round, uint roundPnL);
 
     event PoolRoundMastercopyChanged(address newMastercopy);
-    event StakingThalesChanged(address stakingThales);
     event SportAMMChanged(address sportAMM);
     event DefaultLiquidityProviderChanged(address newProvider);
 

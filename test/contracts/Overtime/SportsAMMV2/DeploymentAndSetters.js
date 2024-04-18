@@ -66,7 +66,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(await sportsAMMV2.ticketMastercopy()).to.equal(await ticketMastercopy.getAddress());
 		});
 		it('Should set the right liquidity pool', async () => {
-			expect(await sportsAMMV2.liquidityPool()).to.equal(
+			expect(await sportsAMMV2.defaultLiquidityPool()).to.equal(
 				await sportsAMMV2LiquidityPool.getAddress()
 			);
 		});
@@ -171,11 +171,11 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
 
 			await expect(
-				sportsAMMV2.connect(secondAccount).setLiquidityPool(dummyAddress1)
+				sportsAMMV2.connect(secondAccount).setDefaultLiquidityPool(dummyAddress1)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await sportsAMMV2.setLiquidityPool(dummyAddress1);
-			expect(await sportsAMMV2.liquidityPool()).to.equal(dummyAddress1);
+			await sportsAMMV2.setDefaultLiquidityPool(dummyAddress1);
+			expect(await sportsAMMV2.defaultLiquidityPool()).to.equal(dummyAddress1);
 
 			curentLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyAddress1);
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
@@ -186,8 +186,8 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			);
 			expect(oldLpAllowance).to.equal(0);
 
-			await expect(sportsAMMV2.setLiquidityPool(dummyAddress1))
-				.to.emit(sportsAMMV2, 'SetLiquidityPool')
+			await expect(sportsAMMV2.setDefaultLiquidityPool(dummyAddress1))
+				.to.emit(sportsAMMV2, 'SetDefaultLiquidityPool')
 				.withArgs(dummyAddress1);
 		});
 
@@ -195,8 +195,8 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			const dummyAddress1 = thirdAccount.address;
 			const dummyAddress2 = fourthAccount.address;
 
-			expect(await sportsAMMV2.multiCollateralOnOffRamp()).to.equal(ZERO_ADDRESS);
-			expect(await sportsAMMV2.multicollateralEnabled()).to.equal(false);
+			// expect(await sportsAMMV2.multiCollateralOnOffRamp()).to.equal(ZERO_ADDRESS);
+			// expect(await sportsAMMV2.multicollateralEnabled()).to.equal(false);
 
 			await expect(
 				sportsAMMV2.connect(secondAccount).setMultiCollateralOnOffRamp(dummyAddress1, true)

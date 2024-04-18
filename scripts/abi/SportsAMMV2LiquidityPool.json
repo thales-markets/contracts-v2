@@ -375,19 +375,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "stakingThales",
-        "type": "address"
-      }
-    ],
-    "name": "StakingThalesChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "account",
         "type": "address"
       }
@@ -426,6 +413,19 @@
     "name": "acceptOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "addressManager",
+    "outputs": [
+      {
+        "internalType": "contract IAddressManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -499,6 +499,19 @@
         "internalType": "contract IERC20",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "collateralKey",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -768,7 +781,7 @@
           },
           {
             "internalType": "address",
-            "name": "_stakingThales",
+            "name": "_addressManager",
             "type": "address"
           },
           {
@@ -810,6 +823,11 @@
             "internalType": "uint256",
             "name": "_safeBoxImpact",
             "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "_collateralKey",
+            "type": "bytes32"
           }
         ],
         "internalType": "struct SportsAMMV2LiquidityPool.InitParams",
@@ -1262,19 +1280,6 @@
   {
     "inputs": [
       {
-        "internalType": "contract IStakingThales",
-        "name": "_stakingThales",
-        "type": "address"
-      }
-    ],
-    "name": "setStakingThales",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "_utilizationRate",
         "type": "uint256"
@@ -1291,19 +1296,6 @@
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stakingThales",
-    "outputs": [
-      {
-        "internalType": "contract IStakingThales",
         "name": "",
         "type": "address"
       }

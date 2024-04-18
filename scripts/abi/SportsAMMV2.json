@@ -351,7 +351,26 @@
         "type": "address"
       }
     ],
-    "name": "SetLiquidityPool",
+    "name": "SetDefaultLiquidityPool",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "liquidityPool",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      }
+    ],
+    "name": "SetLiquidityPoolForCollateral",
     "type": "event"
   },
   {
@@ -480,6 +499,19 @@
     "outputs": [
       {
         "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "defaultLiquidityPool",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2LiquidityPool",
         "name": "",
         "type": "address"
       }
@@ -712,11 +744,17 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "liquidityPool",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "liquidityPoolForCollateral",
     "outputs": [
       {
-        "internalType": "contract ISportsAMMV2LiquidityPool",
+        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -937,6 +975,11 @@
         "internalType": "address",
         "name": "_ticketCreator",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
       }
     ],
     "name": "resolveTicket",
@@ -1098,7 +1141,25 @@
         "type": "address"
       }
     ],
-    "name": "setLiquidityPool",
+    "name": "setDefaultLiquidityPool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_collateralAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_liquidityPool",
+        "type": "address"
+      }
+    ],
+    "name": "setLiquidityPoolForCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1590,7 +1651,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "collateralQuote",
+        "name": "buyInAmountInDefaultCollateral",
         "type": "uint256"
       },
       {

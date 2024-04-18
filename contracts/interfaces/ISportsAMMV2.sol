@@ -26,6 +26,16 @@ interface ISportsAMMV2 {
         CombinedPosition[][] combinedPositions;
     }
 
+    struct TradeParams {
+        uint _buyInAmount;
+        uint _expectedPayout;
+        uint _additionalSlippage;
+        address _differentRecipient;
+        address _collateral;
+        address _collateralPool;
+        uint _collateralPriceInUSD;
+    }
+
     function defaultCollateral() external view returns (IERC20);
 
     function resultManager() external view returns (ISportsAMMV2ResultManager);
@@ -37,7 +47,8 @@ interface ISportsAMMV2 {
         bool _hasUserWon,
         bool _cancelled,
         uint _buyInAmount,
-        address _ticketCreator
+        address _ticketCreator,
+        address _collateral
     ) external;
 
     function exerciseTicket(address _ticket) external;

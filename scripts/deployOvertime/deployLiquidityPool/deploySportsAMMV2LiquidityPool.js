@@ -79,7 +79,7 @@ async function main() {
 	if (isTestNetwork(networkObj.chainId)) {
 		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
-		await sportsAMMV2Deployed.setLiquidityPool(sportsAMMV2LiquidityPoolAddress, {
+		await sportsAMMV2Deployed.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolAddress, {
 			from: owner.address,
 		});
 		console.log('SportsAMMV2LiquidityPool set in SportsAMMV2');

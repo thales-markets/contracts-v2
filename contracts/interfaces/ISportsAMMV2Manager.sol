@@ -15,4 +15,6 @@ interface ISportsAMMV2Manager {
     function reverseTransformCollateral(uint value, address collateral) external view returns (uint);
 
     function decimals() external view returns (uint);
+
+    function feeToken() external view returns (address);
 }
