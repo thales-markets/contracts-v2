@@ -94,7 +94,7 @@ contract MockMultiCollateralOnOffRamp {
     function offrampFrom(address collateralFrom, address collateralTo, uint amount) external returns (uint offramped) {
         IERC20(collateralFrom).safeTransferFrom(msg.sender, address(this), amount);
         offramped = _swapAmount(collateralFrom, collateralTo, amount);
-        IERC20(collateralTo).safeTransferFrom(address(this), msg.sender, amount);
+        IERC20(collateralTo).safeTransfer(msg.sender, offramped);
     }
 
     function _swapAmount(address collateralFrom, address collateralTo, uint amount) internal view returns (uint) {
