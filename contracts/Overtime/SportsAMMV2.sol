@@ -635,7 +635,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal {
         uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         if (_collateralPriceInUSD > 0) {
-            uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
+            uint collateralDecimals = ISportsAMMV2Manager(_collateral).decimals();
             _buyInAmount = _transformToUSD(
                 _buyInAmount,
                 _collateralPriceInUSD,
