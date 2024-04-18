@@ -18,6 +18,8 @@ contract MockMultiCollateralOnOffRamp {
     mapping(bytes32 => address) public collateralAddress;
     mapping(address collateralFrom => mapping(address collateralTo => uint rate)) public swapRate;
 
+    receive() external payable {}
+
     function setPriceFeed(address _priceFeed) external {
         priceFeed = _priceFeed;
     }
@@ -88,7 +90,8 @@ contract MockMultiCollateralOnOffRamp {
     function offrampFromIntoEth(address collateralFrom, uint amount) external returns (uint offramped) {
         IERC20(collateralFrom).safeTransferFrom(msg.sender, address(this), amount);
         offramped = _swapAmount(collateralFrom, collateralAddress["WETH"], amount);
-        payable(msg.sender).transfer(offramped);
+        (bool sent, ) = payable(msg.sender).call{value: offramped}("");
+        require(sent, "Failed to send Ether");
     }
 
     function offrampFrom(address collateralFrom, address collateralTo, uint amount) external returns (uint offramped) {
