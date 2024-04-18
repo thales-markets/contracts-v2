@@ -39,6 +39,18 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
     }
 
+    /// @notice fund a batch of users with free bets in chosen collateral
+    function fundBatch(address[] calldata _users, address _collateral, uint _amountPerUser) external notPaused {
+        require(supportedCollateral[_collateral], "Unsupported collateral");
+        IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amountPerUser * _users.length);
+        for (uint256 index = 0; index < _users.length; index++) {
+            address _user = _users[index];
+            balancePerUserAndCollateral[_user][_collateral] += _amountPerUser;
+            emit UserFunded(_user, _collateral, _amountPerUser, msg.sender);
+        }
+    }
+
+    /// @notice fund a single user with free bets in chosen collateral
     function fund(address _user, address _collateral, uint _amount) external notPaused {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amount);
@@ -46,6 +58,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         emit UserFunded(_user, _collateral, _amount, msg.sender);
     }
 
+    /// @notice buy a ticket for a user if he has enough free bet in given collateral
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -55,7 +68,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         address _collateral
     ) external notPaused canTrade(msg.sender, _collateral, _buyInAmount) {
         balancePerUserAndCollateral[msg.sender][_collateral] -= _buyInAmount;
-        address createdTicket = sportsAMM.trade(
+        address _createdTicket = sportsAMM.trade(
             _tradeData,
             _buyInAmount,
             _expectedPayout,
@@ -65,9 +78,11 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
             _collateral == address(sportsAMM.defaultCollateral()) ? address(0) : _collateral,
             false
         );
-        ticketToUser[createdTicket] = msg.sender;
+        ticketToUser[_createdTicket] = msg.sender;
+        emit FreeBetTrade(_createdTicket, _buyInAmount, msg.sender, false);
     }
 
+    /// @notice request a live ticket for a user if he has enough free bet in given collateral
     function tradeLive(
         bytes32 _gameId,
         uint16 _sportId,
@@ -92,14 +107,18 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
             _collateral
         );
         liveRequestsPerUser[_requestId] = msg.sender;
+        emit FreeBetLiveTradeRequested(msg.sender, _buyInAmount, _requestId);
     }
 
+    /// @notice confirm a live ticket purchase. As live betting is a 2 step approach, the LiveTradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
     function confirmLiveTrade(
         bytes32 requestId,
         address _createdTicket,
         uint _buyInAmount,
         address _collateral
     ) external notPaused {
+        require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
+
         address _user = liveRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
 
@@ -112,8 +131,11 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
 
         balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
         ticketToUser[_createdTicket] = _user;
+
+        emit FreeBetTrade(_createdTicket, _buyInAmount, msg.sender, true);
     }
 
+    /// @notice claim a known ticket purchased previously by FreeBetsHolder. The net winnings are sent to user, while the buyIn amount goes back to freeBet balance for further use
     function claimTicket(address _ticket) external notPaused {
         address _user = ticketToUser[_ticket];
         require(_user != address(0), "Unknown ticket");
@@ -127,9 +149,17 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
             uint earned = exercized - Ticket(_ticket).buyInAmount();
             IERC20(_collateral).safeTransfer(_user, earned);
             balancePerUserAndCollateral[_user][address(_collateral)] += Ticket(_ticket).buyInAmount();
+            emit FreeBetTicketClaimed(_ticket, earned);
         }
     }
 
+    /// @notice admin method to retrieve stuck funds should it happen to should this contract be deprecated
+    function retrieveFunds(IERC20 collateral, uint amount) external onlyOwner {
+        collateral.safeTransfer(msg.sender, amount);
+    }
+
+    /* ========== SETTERS ========== */
+    /// @notice add or remove a supported collateral
     function addSupportedCollateral(address _collateral, bool _supported) external onlyOwner {
         supportedCollateral[_collateral] = _supported;
         if (_supported) {
@@ -137,15 +167,8 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         } else {
             IERC20(_collateral).approve(address(sportsAMM), 0);
         }
+        emit AddSupportedCollateral(_collateral, _supported);
     }
-
-    function retrieveFunds(IERC20 collateral, uint amount) external onlyOwner {
-        collateral.safeTransfer(msg.sender, amount);
-    }
-
-    /* ========== EXTERNAL READ FUNCTIONS ========== */
-
-    /* ========== SETTERS ========== */
 
     /* ========== MODIFIERS ========== */
     modifier canTrade(
@@ -161,4 +184,8 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
     /* ========== EVENTS ========== */
 
     event UserFunded(address user, address collateral, uint amount, address funder);
+    event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
+    event AddSupportedCollateral(address collateral, bool supported);
+    event FreeBetTicketClaimed(address ticket, uint earned);
+    event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
 }

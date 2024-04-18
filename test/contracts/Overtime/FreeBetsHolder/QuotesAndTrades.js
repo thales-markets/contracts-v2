@@ -187,5 +187,13 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 			expect(firstTraderBalanceAfterClaim).to.equal(ethers.parseEther('10'));
 		});
+
+		it('Fund batch', async () => {
+			await freeBetsHolder.fundBatch(
+				[firstTrader, firstLiquidityProvider],
+				collateralAddress,
+				BUY_IN_AMOUNT
+			);
+		});
 	});
 });
