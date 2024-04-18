@@ -68,9 +68,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // safe box fee paid on each trade
     uint public safeBoxFee;
 
-    // safe box fee per specific address paid on each trade
-    mapping(address => uint) public safeBoxFeePerAddress;
-
     // stores active tickets
     AddressSetLib.AddressSet internal knownTickets;
 
@@ -384,29 +381,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _exerciseTicket(_ticket);
     }
 
-    /// @notice additional logic for ticket resolve (called only from ticket contact)
-    /// @param _ticketOwner ticket owner
-    /// @param _hasUserWon is winning ticket
-    /// @param _cancelled is ticket cancelled (needed for referral and safe box fee)
-    /// @param _buyInAmount ticket buy-in amount (needed for referral and safe box fee)
-    function resolveTicket(
-        address _ticketOwner,
-        bool _hasUserWon,
-        bool _cancelled,
-        uint _buyInAmount,
-        address _collateral
-    ) external notPaused onlyKnownTickets(msg.sender) {
-        if (!_cancelled) {
-            _handleReferrerAndSB(_buyInAmount, _ticketOwner, IERC20(_collateral));
-        }
-        knownTickets.remove(msg.sender);
-        if (activeTicketsPerUser[_ticketOwner].contains(msg.sender)) {
-            activeTicketsPerUser[_ticketOwner].remove(msg.sender);
-        }
-        resolvedTicketsPerUser[_ticketOwner].add(msg.sender);
-        emit TicketResolved(msg.sender, _ticketOwner, _hasUserWon);
-    }
-
     /// @notice pause/unapause provided tickets
     /// @param _tickets array of tickets to be paused/unpaused
     /// @param _paused pause/unpause
@@ -469,7 +443,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 totalQuote = maxSupportedOdds;
             }
             payout = (_buyInAmount * ONE) / totalQuote;
-            fees = (safeBoxFee * _buyInAmount) / ONE;
+            fees = _getFees(_buyInAmount);
 
             if (_shouldCheckRisks) {
                 (ISportsAMMV2RiskManager.RiskStatus rStatus, bool[] memory isMarketOutOfLiquidity) = riskManager.checkRisks(
@@ -537,7 +511,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
         uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
         uint payout = _tradeDataInternal._expectedPayout;
-        uint fees = (safeBoxFee * _tradeDataInternal._buyInAmount) / ONE;
+        uint fees = _getFees(_tradeDataInternal._buyInAmount);
 
         if (!_tradeDataInternal._isLive) {
             (totalQuote, payout, fees, , ) = _tradeQuote(_tradeData, _tradeDataInternal._buyInAmount, false, 0);
@@ -694,33 +668,34 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleReferrerAndSB(
-        uint _buyInAmount,
-        address _tickerCreator,
-        IERC20 _collateral
-    ) internal returns (uint safeBoxAmount) {
+    function _handleFees(uint _buyInAmount, address _tickerOwner, IERC20 _collateral) internal returns (uint fees) {
         uint referrerShare;
-        address referrer = referrals.sportReferrals(_tickerCreator);
+        address referrer = referrals.sportReferrals(_tickerOwner);
+        uint ammBalance = _collateral.balanceOf(address(this));
+
         if (referrer != address(0)) {
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
-                _collateral.safeTransfer(referrer, referrerShare);
-                emit ReferrerPaid(referrer, _tickerCreator, referrerShare, _buyInAmount);
+                if (referrerShare > ammBalance) {
+                    _collateral.safeTransfer(referrer, referrerShare);
+                    emit ReferrerPaid(referrer, _tickerOwner, referrerShare, _buyInAmount);
+                }
             }
         }
-        safeBoxAmount = _getSafeBoxAmount(_buyInAmount, _tickerCreator);
-        _collateral.safeTransfer(safeBox, safeBoxAmount - referrerShare);
-        emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
+        fees = _getFees(_buyInAmount);
+        if (fees > referrerShare) {
+            uint safeBoxAmount = fees - referrerShare;
+            ammBalance = _collateral.balanceOf(address(this));
+            if (safeBoxAmount > ammBalance) {
+                _collateral.safeTransfer(safeBox, safeBoxAmount);
+                emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
+            }
+        }
     }
 
-    function _getSafeBoxAmount(uint _buyInAmount, address _toCheck) internal view returns (uint safeBoxAmount) {
-        uint sbFee = _getSafeBoxFeePerAddress(_toCheck);
-        safeBoxAmount = (_buyInAmount * sbFee) / ONE;
-    }
-
-    function _getSafeBoxFeePerAddress(address _toCheck) internal view returns (uint toReturn) {
-        return safeBoxFeePerAddress[_toCheck] > 0 ? safeBoxFeePerAddress[_toCheck] : safeBoxFee;
+    function _getFees(uint _buyInAmount) internal view returns (uint fees) {
+        fees = (_buyInAmount * safeBoxFee) / ONE;
     }
 
     function _verifyMerkleTree(ISportsAMMV2.TradeData memory marketTradeData) internal view {
@@ -758,7 +733,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _exerciseTicket(address _ticket) internal {
         Ticket ticket = Ticket(_ticket);
         ticket.exercise();
+
         IERC20 ticketCollateral = ticket.collateral();
+        address ticketOwner = ticket.ticketOwner();
+        if (!ticket.cancelled()) {
+            _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
+        }
+        knownTickets.remove(msg.sender);
+        if (activeTicketsPerUser[ticketOwner].contains(msg.sender)) {
+            activeTicketsPerUser[ticketOwner].remove(msg.sender);
+        }
+        resolvedTicketsPerUser[ticketOwner].add(msg.sender);
+        emit TicketResolved(msg.sender, ticketOwner, ticket.isUserTheWinner());
+
         uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
             ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
