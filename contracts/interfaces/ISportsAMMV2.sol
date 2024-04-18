@@ -47,7 +47,6 @@ interface ISportsAMMV2 {
         bool _hasUserWon,
         bool _cancelled,
         uint _buyInAmount,
-        address _ticketCreator,
         address _collateral
     ) external;
 

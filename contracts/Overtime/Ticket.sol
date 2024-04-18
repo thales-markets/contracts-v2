@@ -221,7 +221,7 @@ contract Ticket is OwnedWithInit {
     function _resolve(bool _hasUserWon, bool _cancelled) internal {
         resolved = true;
         cancelled = _cancelled;
-        sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, ticketCreator, address(collateral));
+        sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, address(collateral));
         emit Resolved(_hasUserWon, _cancelled);
     }
 

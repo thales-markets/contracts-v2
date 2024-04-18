@@ -389,17 +389,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _hasUserWon is winning ticket
     /// @param _cancelled is ticket cancelled (needed for referral and safe box fee)
     /// @param _buyInAmount ticket buy-in amount (needed for referral and safe box fee)
-    /// @param _ticketCreator ticket creator (needed for referral and safe box fee)
     function resolveTicket(
         address _ticketOwner,
         bool _hasUserWon,
         bool _cancelled,
         uint _buyInAmount,
-        address _ticketCreator,
         address _collateral
     ) external notPaused onlyKnownTickets(msg.sender) {
         if (!_cancelled) {
-            _handleReferrerAndSB(_buyInAmount, _ticketCreator, IERC20(_collateral));
+            _handleReferrerAndSB(_buyInAmount, _ticketOwner, IERC20(_collateral));
         }
         knownTickets.remove(msg.sender);
         if (activeTicketsPerUser[_ticketOwner].contains(msg.sender)) {
