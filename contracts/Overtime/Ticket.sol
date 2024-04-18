@@ -205,8 +205,8 @@ contract Ticket is OwnedWithInit {
 
     /// @notice expire ticket
     function expire(address payable beneficiary) external onlyAMM {
-        require(phase() == Phase.Expiry, "Ticket expired");
-        require(!resolved, "Can't expire resolved parlay.");
+        require(phase() == Phase.Expiry, "Ticket not in expiry phase");
+        require(!resolved, "Can't expire resolved ticket");
         emit Expired(beneficiary);
         _selfDestruct(beneficiary);
     }

@@ -423,7 +423,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function expireTickets(address[] calldata _tickets) external onlyOwner {
         for (uint i = 0; i < _tickets.length; i++) {
             if (Ticket(_tickets[i]).phase() == Ticket.Phase.Expiry) {
-                Ticket(_tickets[i]).expire(payable(safeBox));
+                Ticket(_tickets[i]).expire(payable(msg.sender));
             }
         }
     }
