@@ -8,12 +8,15 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 // TODO: why do we still use these synthetix contracts?
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
+import "../utils/proxy/ProxyReentrancyGuard.sol";
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/ILiveTradingProcessor.sol";
 import "./Ticket.sol";
+import "../utils/libraries/AddressSetLib.sol";
 
-contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
+contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
+    using AddressSetLib for AddressSetLib.AddressSet;
 
     uint private constant MAX_APPROVAL = type(uint256).max;
 
@@ -31,10 +34,17 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
 
     mapping(bytes32 => address) public liveRequestsPerUser;
 
+    // stores active tickets per user
+    mapping(address => AddressSetLib.AddressSet) internal activeTicketsPerUser;
+
+    // stores resolved tickets per user
+    mapping(address => AddressSetLib.AddressSet) internal resolvedTicketsPerUser;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner, address _sportsAMMV2, address _liveTradingProcessor) external initializer {
         setOwner(_owner);
+        initNonReentrant();
         sportsAMM = ISportsAMMV2(_sportsAMMV2);
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
     }
@@ -66,7 +76,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         uint _additionalSlippage,
         address _referrer,
         address _collateral
-    ) external notPaused canTrade(msg.sender, _collateral, _buyInAmount) {
+    ) external notPaused nonReentrant canTrade(msg.sender, _collateral, _buyInAmount) {
         balancePerUserAndCollateral[msg.sender][_collateral] -= _buyInAmount;
         address _createdTicket = sportsAMM.trade(
             _tradeData,
@@ -79,10 +89,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
             false
         );
         ticketToUser[_createdTicket] = msg.sender;
+        activeTicketsPerUser[msg.sender].add(_createdTicket);
         emit FreeBetTrade(_createdTicket, _buyInAmount, msg.sender, false);
     }
 
     /// @notice request a live ticket for a user if he has enough free bet in given collateral
+    // TODO: stack too deep issues if more modifiers are added, but consider whether nonreentrancy guard is needed
     function tradeLive(
         bytes32 _gameId,
         uint16 _sportId,
@@ -116,7 +128,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         address _createdTicket,
         uint _buyInAmount,
         address _collateral
-    ) external notPaused {
+    ) external notPaused nonReentrant {
         require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
 
         address _user = liveRequestsPerUser[requestId];
@@ -132,11 +144,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
         ticketToUser[_createdTicket] = _user;
 
+        activeTicketsPerUser[msg.sender].add(_createdTicket);
+
         emit FreeBetTrade(_createdTicket, _buyInAmount, msg.sender, true);
     }
 
     /// @notice claim a known ticket purchased previously by FreeBetsHolder. The net winnings are sent to user, while the buyIn amount goes back to freeBet balance for further use
-    function claimTicket(address _ticket) external notPaused {
+    function claimTicket(address _ticket) external notPaused nonReentrant {
         address _user = ticketToUser[_ticket];
         require(_user != address(0), "Unknown ticket");
         IERC20 _collateral = Ticket(_ticket).collateral();
@@ -145,12 +159,23 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
         uint balanceAfter = _collateral.balanceOf(address(this));
         uint exercized = balanceAfter - balanceBefore;
         if (exercized > 0) {
-            //TODO: can it happen that user claims less than what he paid?
             uint earned = exercized - Ticket(_ticket).buyInAmount();
             IERC20(_collateral).safeTransfer(_user, earned);
             balancePerUserAndCollateral[_user][address(_collateral)] += Ticket(_ticket).buyInAmount();
             emit FreeBetTicketClaimed(_ticket, earned);
         }
+    }
+
+    /// @notice has to be called from SportsAMM on ticket resolve to maintain history of resolved markets per user
+    function confirmTicketResolved(address _resolvedTicket) external notPaused {
+        require(msg.sender == address(sportsAMM), "Only allowed from SportsAMM");
+
+        address _user = ticketToUser[_resolvedTicket];
+        require(_user != address(0), "Unknown ticket");
+        require(activeTicketsPerUser[_user].contains(_resolvedTicket), "Unknown active ticket");
+
+        activeTicketsPerUser[_user].remove(_resolvedTicket);
+        resolvedTicketsPerUser[_user].add(_resolvedTicket);
     }
 
     /// @notice admin method to retrieve stuck funds should it happen to should this contract be deprecated
@@ -168,6 +193,39 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable {
             IERC20(_collateral).approve(address(sportsAMM), 0);
         }
         emit AddSupportedCollateral(_collateral, _supported);
+    }
+
+    /* ========== GETTERS ========== */
+    /// @notice gets batch of active tickets per user
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _user to get active tickets for
+    /// @return activeTickets
+    function getActiveTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
+        return activeTicketsPerUser[_user].getPage(_index, _pageSize);
+    }
+
+    /// @notice gets number of active tickets per user
+    /// @param _user to get number of active tickets for
+    /// @return numOfActiveTickets
+    function numOfActiveTicketsPerUser(address _user) external view returns (uint) {
+        return activeTicketsPerUser[_user].elements.length;
+    }
+
+    /// @notice gets batch of resolved tickets per user
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _user to get resolved tickets for
+    /// @return resolvedTickets
+    function getResolvedTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
+        return resolvedTicketsPerUser[_user].getPage(_index, _pageSize);
+    }
+
+    /// @notice gets number of resolved tickets per user
+    /// @param _user to get number of resolved tickets for
+    /// @return numOfResolvedTickets
+    function numOfResolvedTicketsPerUser(address _user) external view returns (uint) {
+        return resolvedTicketsPerUser[_user].elements.length;
     }
 
     /* ========== MODIFIERS ========== */

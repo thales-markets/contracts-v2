@@ -27,6 +27,7 @@ import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../interfaces/ICollateralUtility.sol";
+import "../interfaces/IFreeBetsHolder.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -112,6 +113,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     mapping(address => address) public liquidityPoolForCollateral;
+
+    address freeBetsHolder;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -411,6 +414,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             activeTicketsPerUser[_ticketOwner].remove(msg.sender);
         }
         resolvedTicketsPerUser[_ticketOwner].add(msg.sender);
+
         emit TicketResolved(msg.sender, _ticketOwner, _hasUserWon);
     }
 
@@ -770,6 +774,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _exerciseTicket(address _ticket) internal {
         Ticket ticket = Ticket(_ticket);
         ticket.exercise();
+
+        if (ticket.ticketOwner() == freeBetsHolder) {
+            require(
+                !ticket.isUserTheWinner() || msg.sender == freeBetsHolder,
+                "Only allowed from FreeBetsHolder for winning tickets"
+            );
+            IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(address(ticket));
+        }
+
         IERC20 ticketCollateral = ticket.collateral();
         uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
@@ -845,9 +858,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
+    /// @notice sets the LiveTradingProcessor, required for any live trading
     function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
         liveTradingProcessor = _liveTradingProcessor;
         emit SetLiveTradingProcessor(_liveTradingProcessor);
+    }
+
+    /// @notice sets the FreeBetsHolder address, required for handling ticket claiming via FreeBetsHolder
+    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+        emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -945,4 +965,5 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);
+    event SetFreeBetsHolder(address freeBetsHolder);
 }

@@ -360,6 +360,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "SetFreeBetsHolder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "liquidityPool",
         "type": "address"
       },
@@ -1142,6 +1155,19 @@
       }
     ],
     "name": "setDefaultLiquidityPool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "setFreeBetsHolder",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

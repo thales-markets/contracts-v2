@@ -623,6 +623,8 @@ async function deploySportsAMMV2Fixture() {
 	await freeBetsHolder.addSupportedCollateral(collateralAddress, true);
 	await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);
 
+	await sportsAMMV2.setFreeBetsHolder(freeBetsHolderAddress);
+
 	return {
 		owner,
 		sportsAMMV2Manager,
