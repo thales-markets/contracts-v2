@@ -170,44 +170,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_ticketOwner",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_hasUserWon",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "_cancelled",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_buyInAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_ticketCreator",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      }
-    ],
-    "name": "resolveTicket",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "resultManager",
     "outputs": [
