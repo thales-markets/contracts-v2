@@ -199,6 +199,7 @@ contract Ticket is OwnedWithInit {
             );
         }
 
+        // if user is lost or if the user payout was less than anticipated due to cancelled games, send the remainder to AMM
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
             collateral.safeTransfer(address(sportsAMM), balance);
