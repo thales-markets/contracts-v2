@@ -111,7 +111,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     mapping(address => address) public liquidityPoolForCollateral;
 
-    address freeBetsHolder;
+    address public freeBetsHolder;
 
     /* ========== CONSTRUCTOR ========== */
 
