@@ -789,7 +789,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 (bool sent, ) = payable(ticketOwner).call{value: offramped}("");
                 require(sent, "Failed to send Ether");
             } else {
-                // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
+                // Multi-collateral contract needs changes, for example to swap from ARB -> USDT
+                // Approval code can be deleted for size/gas savings.
                 if (
                     IERC20(_exerciseCollateral).allowance(address(this), address(multiCollateralOnOffRamp)) <
                     userWinningAmount
