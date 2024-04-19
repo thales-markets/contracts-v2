@@ -6,10 +6,11 @@ const {
 } = require('../../../utils/fixtures/overtimeFixtures');
 
 describe('SportsAMMV2Data Deployment And Setters', () => {
-	let sportsAMMV2Data, sportsAMMV2, owner, secondAccount, thirdAccount;
+	let sportsAMMV2Data, sportsAMMV2, sportsAMMV2RiskManager, owner, secondAccount, thirdAccount;
 
 	beforeEach(async () => {
-		({ sportsAMMV2Data, sportsAMMV2, owner } = await loadFixture(deploySportsAMMV2Fixture));
+		({ sportsAMMV2Data, sportsAMMV2, sportsAMMV2RiskManager, owner } =
+			await loadFixture(deploySportsAMMV2Fixture));
 		({ secondAccount, thirdAccount } = await loadFixture(deployAccountsFixture));
 	});
 
@@ -20,6 +21,12 @@ describe('SportsAMMV2Data Deployment And Setters', () => {
 
 		it('Should set the right Sports AMM', async () => {
 			expect(await sportsAMMV2Data.sportsAMM()).to.equal(await sportsAMMV2.getAddress());
+		});
+
+		it('Should set the right risk manager', async () => {
+			expect(await sportsAMMV2Data.riskManager()).to.equal(
+				await sportsAMMV2RiskManager.getAddress()
+			);
 		});
 	});
 

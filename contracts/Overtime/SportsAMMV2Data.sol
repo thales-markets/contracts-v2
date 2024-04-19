@@ -45,7 +45,6 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         MarketData[] marketsData;
         MarketResult[] marketsResult;
         address ticketOwner;
-        address ticketCreator;
         uint buyInAmount;
         uint fees;
         uint totalQuote;
@@ -124,7 +123,6 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 marketsData,
                 marketsResult,
                 ticket.ticketOwner(),
-                ticket.ticketCreator(),
                 ticket.buyInAmount(),
                 ticket.fees(),
                 ticket.totalQuote(),

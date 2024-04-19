@@ -209,11 +209,6 @@
             "type": "address"
           },
           {
-            "internalType": "address",
-            "name": "ticketCreator",
-            "type": "address"
-          },
-          {
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
@@ -388,11 +383,6 @@
           {
             "internalType": "address",
             "name": "ticketOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "ticketCreator",
             "type": "address"
           },
           {
@@ -613,11 +603,6 @@
             "type": "address"
           },
           {
-            "internalType": "address",
-            "name": "ticketCreator",
-            "type": "address"
-          },
-          {
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
@@ -792,11 +777,6 @@
           {
             "internalType": "address",
             "name": "ticketOwner",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "ticketCreator",
             "type": "address"
           },
           {

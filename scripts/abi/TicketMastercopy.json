@@ -390,11 +390,6 @@
             "type": "address"
           },
           {
-            "internalType": "address",
-            "name": "_ticketCreator",
-            "type": "address"
-          },
-          {
             "internalType": "contract IERC20",
             "name": "_collateral",
             "type": "address"
@@ -636,19 +631,6 @@
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "ticketCreator",
-    "outputs": [
-      {
-        "internalType": "address",
         "name": "",
         "type": "address"
       }

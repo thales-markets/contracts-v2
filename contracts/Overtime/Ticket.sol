@@ -36,14 +36,12 @@ contract Ticket is OwnedWithInit {
         uint _totalQuote;
         address _sportsAMM;
         address _ticketOwner;
-        address _ticketCreator;
         IERC20 _collateral;
         uint _expiry;
     }
 
     ISportsAMMV2 public sportsAMM;
     address public ticketOwner;
-    address public ticketCreator;
     IERC20 public collateral;
 
     uint public buyInAmount;
@@ -79,7 +77,6 @@ contract Ticket is OwnedWithInit {
         fees = params._fees;
         totalQuote = params._totalQuote;
         ticketOwner = params._ticketOwner;
-        ticketCreator = params._ticketCreator;
         collateral = params._collateral;
         expiry = params._expiry;
         createdAt = block.timestamp;
@@ -211,8 +208,8 @@ contract Ticket is OwnedWithInit {
 
     /// @notice expire ticket
     function expire(address payable beneficiary) external onlyAMM {
-        require(phase() == Phase.Expiry, "Ticket expired");
-        require(!resolved, "Can't expire resolved parlay.");
+        require(phase() == Phase.Expiry, "Ticket not in expiry phase");
+        require(!resolved, "Can't expire resolved ticket");
         emit Expired(beneficiary);
         _selfDestruct(beneficiary);
     }
@@ -227,7 +224,6 @@ contract Ticket is OwnedWithInit {
     function _resolve(bool _hasUserWon, bool _cancelled) internal {
         resolved = true;
         cancelled = _cancelled;
-        sportsAMM.resolveTicket(ticketOwner, _hasUserWon, _cancelled, buyInAmount, ticketCreator, address(collateral));
         emit Resolved(_hasUserWon, _cancelled);
     }
 

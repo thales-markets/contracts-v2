@@ -371,6 +371,14 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2RiskManagerAddress,
 	]);
 
+	// deploy Sports AMM liqudity pool Data
+	const SportsAMMV2LiquidityPoolData = await ethers.getContractFactory(
+		'SportsAMMV2LiquidityPoolData'
+	);
+	const sportsAMMV2LiquidityPoolData = await upgrades.deployProxy(SportsAMMV2LiquidityPoolData, [
+		owner.address,
+	]);
+
 	const root = await createMerkleTree();
 	const {
 		tradeDataCurrentRound,
@@ -667,6 +675,7 @@ async function deploySportsAMMV2Fixture() {
 		sameGameSamePlayersDifferentProps,
 		chainlinkResolver,
 		tradeDataNotActive,
+		sportsAMMV2LiquidityPoolData,
 		freeBetsHolder,
 		freeBetsHolderAddress,
 		collateralAddress,
