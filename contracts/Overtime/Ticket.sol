@@ -161,7 +161,7 @@ contract Ticket is OwnedWithInit {
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice exercise ticket
-    function exercise(address _exerciseCollateral) external onlyAMM returns (uint winningAmount) {
+    function exercise(address _exerciseCollateral) external onlyAMM returns (uint) {
         require(!paused, "Market paused");
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
@@ -170,11 +170,7 @@ contract Ticket is OwnedWithInit {
         uint payout = payoutWithFees - fees;
         bool isCancelled = false;
 
-        if (isTicketLost()) {
-            if (payoutWithFees > 0) {
-                collateral.safeTransfer(address(sportsAMM), payoutWithFees);
-            }
-        } else {
+        if (isUserTheWinner()) {
             finalPayout = payout;
             isCancelled = true;
             for (uint i = 0; i < numOfMarkets; i++) {
@@ -195,22 +191,21 @@ contract Ticket is OwnedWithInit {
             if (isCancelled) {
                 finalPayout = buyInAmount;
             }
-            winningAmount = finalPayout;
             collateral.safeTransfer(
                 _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
                     ? address(ticketOwner)
                     : address(sportsAMM),
-                    finalPayout
+                finalPayout
             );
-            
-            collateral.safeTransfer(address(ticketOwner), finalPayout);
-
-            uint balance = collateral.balanceOf(address(this));
-            if (balance != 0) {
-                collateral.safeTransfer(address(sportsAMM), collateral.balanceOf(address(this)));
-            }
         }
+
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
+        }
+
         _resolve(!isTicketLost(), isCancelled);
+        return finalPayout;
     }
 
     /// @notice expire ticket
