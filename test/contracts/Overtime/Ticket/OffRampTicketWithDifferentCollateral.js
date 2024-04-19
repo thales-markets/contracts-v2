@@ -138,11 +138,6 @@ describe('Ticket Exercise and Expire', () => {
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 			await multiCollateral.setSwapRate(collateral, weth, ethers.parseEther('2'));
 
-			await firstLiquidityProvider.sendTransaction({
-				to: multiCollateral.target,
-				value: ethers.parseEther('40'),
-			});
-
 			// Swap rate set for swaps collateral -> collateral18 and collateral18 -> collateral
 			expect(await multiCollateral.swapRate(collateral, weth)).to.be.equal(ethers.parseEther('2'));
 			expect(await multiCollateral.swapRate(weth, collateral)).to.be.equal(
@@ -183,8 +178,10 @@ describe('Ticket Exercise and Expire', () => {
 					false
 				);
 			let swapAmount = parseInt(quote.payout.toString()) * 2;
-			collateral18.transfer(multiCollateral, swapAmount.toString());
-			collateral.transfer(multiCollateral, swapAmount.toString());
+			await firstLiquidityProvider.sendTransaction({
+				to: multiCollateral.target,
+				value: swapAmount.toString(),
+			});
 			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 

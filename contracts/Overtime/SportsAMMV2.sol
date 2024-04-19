@@ -777,8 +777,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWinningAmount = ticket.exercise(_exerciseCollateral);
-        IERC20 ticketCollateral = ticket.collateral();
+        (uint userWinningAmount, address ticketOwner, IERC20 ticketCollateral) = ticket.exercise(_exerciseCollateral);
         uint amount = ticketCollateral.balanceOf(address(this));
         if (userWinningAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
             // Off ramp methods
@@ -789,7 +788,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 offramped = multiCollateralOnOffRamp.offrampFromIntoEth(address(ticketCollateral), userWinningAmount);
                 // this method is used as a suggestion from here:
                 // https://solidity-by-example.org/sending-ether/
-                (bool sent, ) = payable(ticket.ticketOwner()).call{value: offramped}("");
+                (bool sent, ) = payable(ticketOwner).call{value: offramped}("");
                 require(sent, "Failed to send Ether");
             } else {
                 // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
@@ -804,7 +803,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _exerciseCollateral,
                     userWinningAmount
                 );
-                IERC20(_exerciseCollateral).safeTransfer(ticket.ticketOwner(), offramped);
+                IERC20(_exerciseCollateral).safeTransfer(ticketOwner, offramped);
             }
             amount = amount - userWinningAmount;
         }

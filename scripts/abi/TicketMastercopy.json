@@ -205,6 +205,16 @@
         "internalType": "uint256",
         "name": "winningAmount",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "ticketOwner_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "ticketCollateral_",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
