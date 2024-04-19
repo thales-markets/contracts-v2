@@ -487,10 +487,6 @@
     "type": "event"
   },
   {
-    "stateMutability": "payable",
-    "type": "fallback"
-  },
-  {
     "inputs": [],
     "name": "acceptOwnership",
     "outputs": [],

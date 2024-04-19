@@ -145,8 +145,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     receive() external payable {}
 
-    fallback() external payable {}
-
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
     /// @notice gets trade quote
