@@ -397,6 +397,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _exerciseCollateral,
         bool _inEth
     ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
+        require(msg.sender == Ticket(_ticket).ticketOwner(), "Caller not the ticket owner");
         _exerciseTicket(_ticket, _exerciseCollateral, _inEth);
     }
 
@@ -778,30 +779,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         (uint userWinningAmount, address ticketOwner, IERC20 ticketCollateral) = ticket.exercise(_exerciseCollateral);
         uint amount = ticketCollateral.balanceOf(address(this));
         if (userWinningAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
-            // Off ramp methods
-            // Work in progress:
+            require(ticketCollateral == defaultCollateral, "Offramp only default collateral");
             uint offramped;
             if (_inEth) {
-                // Multi-collateral contract needs changes, for example to swap from ARB -> ETH
-                offramped = multiCollateralOnOffRamp.offrampFromIntoEth(address(ticketCollateral), userWinningAmount);
-                // this method is used as a suggestion from here:
-                // https://solidity-by-example.org/sending-ether/
-                (bool sent, ) = payable(ticketOwner).call{value: offramped}("");
+                offramped = multiCollateralOnOffRamp.offrampIntoEth(userWinningAmount);
+                bool sent = payable(ticketOwner).send(offramped);
                 require(sent, "Failed to send Ether");
             } else {
-                // Multi-collateral contract needs changes, for example to swap from ARB -> USDT
-                // Approval code can be deleted for size/gas savings.
-                if (
-                    IERC20(_exerciseCollateral).allowance(address(this), address(multiCollateralOnOffRamp)) <
-                    userWinningAmount
-                ) {
-                    IERC20(_exerciseCollateral).approve(address(multiCollateralOnOffRamp), userWinningAmount);
-                }
-                offramped = multiCollateralOnOffRamp.offrampFrom(
-                    address(ticketCollateral),
-                    _exerciseCollateral,
-                    userWinningAmount
-                );
+                offramped = multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWinningAmount);
                 IERC20(_exerciseCollateral).safeTransfer(ticketOwner, offramped);
             }
             amount = amount - userWinningAmount;

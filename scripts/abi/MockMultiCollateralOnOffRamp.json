@@ -178,7 +178,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "collateral",
+        "name": "collateralTo",
         "type": "address"
       },
       {
@@ -191,7 +191,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "offramped",
         "type": "uint256"
       }
     ],
@@ -263,7 +263,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "offramped",
         "type": "uint256"
       }
     ],

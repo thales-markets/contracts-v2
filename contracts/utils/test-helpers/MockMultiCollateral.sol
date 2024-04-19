@@ -83,14 +83,25 @@ contract MockMultiCollateralOnOffRamp {
         return collateralAddress["WETH"];
     }
 
-    function offrampIntoEth(uint amount) external returns (uint) {}
+    function offrampIntoEth(uint amount) external returns (uint offramped) {
+        sUSD.safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(address(sUSD), collateralAddress["WETH"], amount);
+        // (bool sent, ) = payable(msg.sender).call{value: offramped}("");
+        bool sent = payable(msg.sender).send(offramped);
+        require(sent, "Failed to send Ether");
+    }
 
-    function offramp(address collateral, uint amount) external returns (uint) {}
+    function offramp(address collateralTo, uint amount) external returns (uint offramped) {
+        sUSD.safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(address(sUSD), collateralTo, amount);
+        IERC20(collateralTo).safeTransfer(msg.sender, offramped);
+    }
 
     function offrampFromIntoEth(address collateralFrom, uint amount) external returns (uint offramped) {
         IERC20(collateralFrom).safeTransferFrom(msg.sender, address(this), amount);
         offramped = _swapAmount(collateralFrom, collateralAddress["WETH"], amount);
         (bool sent, ) = payable(msg.sender).call{value: offramped}("");
+        // bool sent = payable(msg.sender).send(offramped);
         require(sent, "Failed to send Ether");
     }
 

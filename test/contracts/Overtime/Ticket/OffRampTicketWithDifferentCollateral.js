@@ -118,14 +118,14 @@ describe('Ticket Exercise and Expire', () => {
 
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const userTicket = await TicketContract.attach(ticketAddress);
-			// console.log(userTicket);
 			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
 			let userBalanceBefore = await collateral18.balanceOf(firstTrader);
 			expect(userBalanceBefore).to.be.equal(DEFAULT_AMOUNT);
-			await sportsAMMV2.exerciseTicketOffRamp(ticketAddress, collateral18, false);
+			await expect(sportsAMMV2.exerciseTicketOffRamp(ticketAddress, collateral18, false)).to.be.revertedWith("Caller not the ticket owner");
+			await sportsAMMV2.connect(firstTrader).exerciseTicketOffRamp(ticketAddress, collateral18, false);
 			expect(await userTicket.resolved()).to.be.equal(true);
 			let userBalanceAfter = await collateral18.balanceOf(firstTrader);
 			let calculatedBalance =
@@ -195,18 +195,21 @@ describe('Ticket Exercise and Expire', () => {
 
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const userTicket = await TicketContract.attach(ticketAddress);
-			// console.log(userTicket);
 			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
+			await expect(sportsAMMV2.exerciseTicketOffRamp(ticketAddress, weth, true)).to.be.revertedWith("Caller not the ticket owner");
 			let userBalanceBefore = await ethers.provider.getBalance(firstTrader);
-			await sportsAMMV2.exerciseTicketOffRamp(ticketAddress, weth, true);
+			await sportsAMMV2.connect(firstTrader).exerciseTicketOffRamp(ticketAddress, weth, true);
 			expect(await userTicket.resolved()).to.be.equal(true);
+
 			let userBalanceAfter = await ethers.provider.getBalance(firstTrader);
 			let calculatedBalance =
-				parseInt(swapAmount.toString()) + parseInt(userBalanceBefore.toString());
-			expect(parseInt(userBalanceAfter.toString())).to.be.equal(calculatedBalance);
+			parseInt(swapAmount.toString()) + parseInt(userBalanceBefore.toString());
+			userBalanceAfter = parseInt(parseInt(userBalanceAfter.toString())/1e15);
+			calculatedBalance = parseInt(calculatedBalance/1e15);
+			expect(userBalanceAfter).to.be.equal(calculatedBalance);
 		});
 	});
 });
