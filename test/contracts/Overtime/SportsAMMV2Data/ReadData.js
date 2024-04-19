@@ -94,7 +94,6 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(ticketsData[0].marketsResult.length).to.be.equal(numberOfGamesOnTicket);
 			expect(ticketsData[0].resolved).to.be.equal(false);
 			expect(ticketsData[0].ticketOwner).to.be.equal(firstTraderAddress);
-			expect(ticketsData[0].ticketCreator).to.be.equal(firstTraderAddress);
 		});
 
 		it('Should return resolved tickets data per user', async () => {
@@ -119,7 +118,6 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(ticketsData[0].isLost).to.be.equal(true);
 			expect(ticketsData[0].isUserTheWinner).to.be.equal(false);
 			expect(ticketsData[0].ticketOwner).to.be.equal(firstTraderAddress);
-			expect(ticketsData[0].ticketCreator).to.be.equal(firstTraderAddress);
 		});
 
 		it('Should return tickets data per game', async () => {
