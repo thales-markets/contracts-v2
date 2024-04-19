@@ -135,12 +135,6 @@ contract Ticket is OwnedWithInit {
         hasUserWon = _isUserTheWinner();
     }
 
-    function _isUserTheWinner() internal view returns (bool hasUserWon) {
-        if (areAllMarketsResolved()) {
-            hasUserWon = !isTicketLost();
-        }
-    }
-
     /// @notice checks if the ticket ready to be exercised
     /// @return isExercisable true/false
     function isTicketExercisable() public view returns (bool isExercisable) {
@@ -238,6 +232,12 @@ contract Ticket is OwnedWithInit {
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
             collateral.safeTransfer(beneficiary, balance);
+        }
+    }
+
+    function _isUserTheWinner() internal view returns (bool hasUserWon) {
+        if (areAllMarketsResolved()) {
+            hasUserWon = !isTicketLost();
         }
     }
 
