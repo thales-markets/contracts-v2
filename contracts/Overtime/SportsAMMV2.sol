@@ -761,15 +761,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWinningAmount = ticket.exercise(_exerciseCollateral);
+        uint userWonAmount = ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
+
         if (ticketOwner == freeBetsHolder) {
             IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
         }
+
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
+
         knownTickets.remove(_ticket);
         if (activeTicketsPerUser[ticketOwner].contains(_ticket)) {
             activeTicketsPerUser[ticketOwner].remove(_ticket);
@@ -777,34 +780,23 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         resolvedTicketsPerUser[ticketOwner].add(_ticket);
         emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 
-        uint amount = ticketCollateral.balanceOf(address(this));
-        if (userWinningAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
+        if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
             require(ticketCollateral == defaultCollateral, "Offramp only default collateral");
             uint offramped;
             if (_inEth) {
-                offramped = multiCollateralOnOffRamp.offrampIntoEth(userWinningAmount);
+                offramped = multiCollateralOnOffRamp.offrampIntoEth(userWonAmount);
                 bool sent = payable(ticketOwner).send(offramped);
                 require(sent, "Failed to send Ether");
             } else {
-                offramped = multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWinningAmount);
+                offramped = multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWonAmount);
                 IERC20(_exerciseCollateral).safeTransfer(ticketOwner, offramped);
             }
-            amount = amount - userWinningAmount;
         }
+
+        // if the ticket was lost or if for any reason there is surplus in SportsAMM after the ticket is exercised, send it all to Liquidity Pool
+        uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
             ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
-            // Note: Following code can be used in case:
-            // the default collateral is not added to the collateralPool mapping.
-            // In test and production, it safer to add it.
-            // address usePool = liquidityPoolForCollateral[address(ticketCollateral)];
-            // if (usePool != address(0)) {
-            //     ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(
-            //         _ticket,
-            //         amount
-            //     );
-            // } else {
-            //     defaultLiquidityPool.transferToPool(_ticket, amount);
-            // }
         }
     }
 
