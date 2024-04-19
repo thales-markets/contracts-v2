@@ -66,5 +66,16 @@ interface ISportsAMMV2 {
         address _differentRecipient,
         address _referrer,
         address _collateral
-    ) external;
+    ) external returns (address _createdTicket);
+
+    function trade(
+        TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedPayout,
+        uint _additionalSlippage,
+        address _differentRecipient,
+        address _referrer,
+        address _collateral,
+        bool _isEth
+    ) external returns (address _createdTicket);
 }

@@ -360,6 +360,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "SetFreeBetsHolder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "liquidityPool",
         "type": "address"
       },
@@ -1093,6 +1106,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "setFreeBetsHolder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_collateralAddress",
         "type": "address"
       },
@@ -1357,7 +1383,13 @@
       }
     ],
     "name": "trade",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_createdTicket",
+        "type": "address"
+      }
+    ],
     "stateMutability": "payable",
     "type": "function"
   },
@@ -1474,7 +1506,13 @@
       }
     ],
     "name": "tradeLive",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_createdTicket",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

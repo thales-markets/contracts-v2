@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/ISportsAMMV2.sol";
+import "../interfaces/IFreeBetsHolder.sol";
 
 contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
@@ -17,6 +18,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     uint private constant ONE = 1e18;
 
     ISportsAMMV2 public sportsAMM;
+
+    address freeBetsHolder;
 
     bytes32 public jobSpecId;
 
@@ -70,6 +73,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /// @param _additionalSlippage the maximum slippage a user will accept
     /// @param _referrer who should get the referrer fee if any
     /// @param _collateral different collateral used for paymentAmount
+    //TODO: consider a struct for this
+    // TODO: add line as a parametar for live trades on totals
     function requestLiveTrade(
         bytes32 _gameId,
         uint16 _sportId,
@@ -81,7 +86,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _differentRecipient, // in case a voucher is used
         address _referrer,
         address _collateral
-    ) external whenNotPaused {
+    ) external whenNotPaused returns (bytes32 requestId) {
         //TODO: consider how to prevent someone spamming this method
         require(
             sportsAMM.riskManager().liveTradingPerSportAndTypeEnabled(_sportId, _typeId),
@@ -89,6 +94,10 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         );
 
         Chainlink.Request memory req;
+
+        if (_collateral == address(sportsAMM.defaultCollateral())) {
+            _collateral = address(0);
+        }
 
         req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
@@ -105,7 +114,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _differentRecipient = msg.sender;
         }
 
-        bytes32 requestId = sendChainlinkRequest(req, paymentAmount);
+        requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;
         requestIdToTradeData[requestId] = LiveTradeData(
             msg.sender,
@@ -179,7 +188,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 comPositions //combinedPositions[]
             );
 
-            sportsAMM.tradeLive(
+            address _createdTicket = sportsAMM.tradeLive(
                 tradeData,
                 lTradeData._requester,
                 lTradeData._buyInAmount,
@@ -188,6 +197,15 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 lTradeData._referrer,
                 lTradeData._collateral
             );
+
+            if (lTradeData._requester == freeBetsHolder) {
+                IFreeBetsHolder(freeBetsHolder).confirmLiveTrade(
+                    _requestId,
+                    _createdTicket,
+                    lTradeData._buyInAmount,
+                    lTradeData._collateral
+                );
+            }
         }
         requestIdToFulfillAllowed[_requestId] = _allow;
         requestIdFulfilled[_requestId] = true;
@@ -237,6 +255,12 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         emit ContextReset(_link, _oracle, _sportsAMM, _jobSpecId, _paymentAmount);
     }
 
+    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+
+        emit SetFreeBetsHolder(_freeBetsHolder);
+    }
+
     /// @notice setMaxAllowedExecutionDelay
     /// @param _maxAllowedExecutionDelay maximum allowed buffer for the CL request to be executed, defaulted at 60 seconds
     function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
@@ -273,4 +297,5 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint timestamp
     );
     event SetMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay);
+    event SetFreeBetsHolder(address _freeBetsHolder);
 }

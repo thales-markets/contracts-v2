@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
+
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 // internal
 import "../utils/OwnedWithInit.sol";
@@ -56,6 +57,8 @@ contract Ticket is OwnedWithInit {
     bool public cancelled;
 
     mapping(uint => MarketData) public markets;
+
+    uint public finalPayout;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -172,7 +175,7 @@ contract Ticket is OwnedWithInit {
                 collateral.safeTransfer(address(sportsAMM), payoutWithFees);
             }
         } else {
-            uint finalPayout = payout;
+            finalPayout = payout;
             isCancelled = true;
             for (uint i = 0; i < numOfMarkets; i++) {
                 bool isCancelledMarketPosition = sportsAMM.resultManager().isCancelledMarketPosition(
@@ -189,7 +192,10 @@ contract Ticket is OwnedWithInit {
                     isCancelled = false;
                 }
             }
-            collateral.safeTransfer(address(ticketOwner), isCancelled ? buyInAmount : finalPayout);
+            if (isCancelled) {
+                finalPayout = buyInAmount;
+            }
+            collateral.safeTransfer(address(ticketOwner), finalPayout);
 
             uint balance = collateral.balanceOf(address(this));
             if (balance != 0) {
