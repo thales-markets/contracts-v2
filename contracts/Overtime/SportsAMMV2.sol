@@ -748,7 +748,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth) internal {
         Ticket ticket = Ticket(_ticket);
-        (uint userWinningAmount, address ticketOwner, IERC20 ticketCollateral) = ticket.exercise(_exerciseCollateral);
+        uint userWinningAmount = ticket.exercise(_exerciseCollateral);
+        IERC20 ticketCollateral = ticket.collateral();
+        address ticketOwner = ticket.ticketOwner();
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
