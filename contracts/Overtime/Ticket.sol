@@ -132,6 +132,10 @@ contract Ticket is OwnedWithInit {
     /// @notice checks if the user won the ticket
     /// @return hasUserWon true/false
     function isUserTheWinner() external view returns (bool hasUserWon) {
+        hasUserWon = _isUserTheWinner();
+    }
+
+    function _isUserTheWinner() internal view returns (bool hasUserWon) {
         if (areAllMarketsResolved()) {
             hasUserWon = !isTicketLost();
         }
@@ -170,7 +174,7 @@ contract Ticket is OwnedWithInit {
         uint payout = payoutWithFees - fees;
         bool isCancelled = false;
 
-        if (isUserTheWinner()) {
+        if (_isUserTheWinner()) {
             finalPayout = payout;
             isCancelled = true;
             for (uint i = 0; i < numOfMarkets; i++) {

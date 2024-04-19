@@ -767,8 +767,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (ticketOwner == freeBetsHolder) {
             IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
         }
-
-        IERC20 ticketCollateral = ticket.collateral();
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }

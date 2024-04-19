@@ -198,7 +198,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "winningAmount",
+        "name": "",
         "type": "uint256"
       }
     ],
