@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 // internal
+// TODO: why do we still use these synthetix contracts?
 import "../utils/proxy/ProxyReentrancyGuard.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
@@ -18,6 +19,7 @@ import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
+//TODO: wy not use an interface for the ticket?
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
@@ -25,6 +27,7 @@ import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../interfaces/ICollateralUtility.sol";
+import "../interfaces/IFreeBetsHolder.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -107,6 +110,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     mapping(address => address) public liquidityPoolForCollateral;
+
+    address freeBetsHolder;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -287,6 +292,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
     /// @param _isEth pay with ETH
+    /// @return _createdTicket the address of the created ticket
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -296,7 +302,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrer,
         address _collateral,
         bool _isEth
-    ) external payable nonReentrant notPaused {
+    ) external payable nonReentrant notPaused returns (address _createdTicket) {
         address useLPpool;
         uint collateralPriceInUSD;
         if (_referrer != address(0)) {
@@ -314,7 +320,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _isEth
             );
         }
-        _trade(
+        _createdTicket = _trade(
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
@@ -337,6 +343,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _differentRecipient different recipient of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
+    /// @return _createdTicket the address of the created ticket
     function tradeLive(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         address _requester,
@@ -345,7 +352,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _differentRecipient,
         address _referrer,
         address _collateral
-    ) external nonReentrant notPaused {
+    ) external nonReentrant notPaused returns (address _createdTicket) {
         require(msg.sender == liveTradingProcessor, "OnlyLiveTradingProcessor");
 
         if (_referrer != address(0)) {
@@ -355,6 +362,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         require(_differentRecipient != address(0), "UndefinedRecipient");
         address useLPpool;
         uint collateralPriceInUSD;
+        //TODO: I feel better with enforcing that collateral is always sent as a parameter
         if (_collateral != address(0)) {
             (useLPpool, collateralPriceInUSD, _buyInAmount) = _handleDifferentCollateral(
                 _buyInAmount,
@@ -363,7 +371,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 false
             );
         }
-        _trade(
+        _createdTicket = _trade(
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
@@ -521,7 +529,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _trade(ISportsAMMV2.TradeData[] memory _tradeData, TradeDataInternal memory _tradeDataInternal) internal {
+    function _trade(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        TradeDataInternal memory _tradeDataInternal
+    ) internal returns (address) {
         require(
             _tradeDataInternal._collateral != address(defaultCollateral),
             "Use 0x for collateral parameter if the default collateral is used"
@@ -592,6 +603,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             payout,
             totalQuote
         );
+
+        return address(ticket);
     }
 
     // Transform collateral to USD
@@ -751,6 +764,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint userWinningAmount = ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
+        if (ticketOwner == freeBetsHolder) {
+            IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
+        }
+
+        IERC20 ticketCollateral = ticket.collateral();
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
@@ -848,9 +866,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
+    /// @notice sets the LiveTradingProcessor, required for any live trading
     function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
         liveTradingProcessor = _liveTradingProcessor;
         emit SetLiveTradingProcessor(_liveTradingProcessor);
+    }
+
+    /// @notice sets the FreeBetsHolder address, required for handling ticket claiming via FreeBetsHolder
+    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+        emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -948,4 +973,5 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);
+    event SetFreeBetsHolder(address freeBetsHolder);
 }

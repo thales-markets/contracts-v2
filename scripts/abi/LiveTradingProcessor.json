@@ -321,6 +321,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "SetFreeBetsHolder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "_maxAllowedExecutionDelay",
         "type": "uint256"
@@ -630,7 +643,13 @@
       }
     ],
     "name": "requestLiveTrade",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "requestId",
+        "type": "bytes32"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -663,6 +682,19 @@
       }
     ],
     "name": "setConfiguration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "setFreeBetsHolder",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
