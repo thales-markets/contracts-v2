@@ -178,12 +178,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         buyInAmountInDefaultCollateral = _buyInAmount;
 
         // TODO: I might prefer insisting on always sending the collateral
-        if (_collateral != address(0)) {
-            require(
-                _collateral != address(defaultCollateral),
-                "Use 0x for collateral parameter if the default collateral is used"
-            );
-
+        if (_collateral != address(0) && _collateral != address(defaultCollateral)) {
             if (liquidityPoolForCollateral[_collateral] == address(0)) {
                 buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
                 // TODO: require that this is greater than 0
@@ -518,16 +513,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             collateralAfterOnramp = address(defaultCollateral);
             defaultCollateral.safeTransferFrom(_fromAddress, address(this), _buyInAmount);
         }
+        lqPool = liquidityPoolForCollateral[collateralAfterOnramp];
     }
 
     function _trade(
         ISportsAMMV2.TradeData[] memory _tradeData,
         TradeDataInternal memory _tradeDataInternal
     ) internal returns (address) {
-        require(
-            _tradeDataInternal._collateral != address(defaultCollateral),
-            "Use 0x for collateral parameter if the default collateral is used"
-        );
         uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
         uint payout = _tradeDataInternal._expectedPayout;
         uint fees = _getFees(_tradeDataInternal._buyInAmount);
