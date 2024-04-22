@@ -61,6 +61,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // the default token used for payment
     IERC20 public defaultCollateral;
 
+    // Liquidity pool instance for the given collateral
+    mapping(address => address) public liquidityPoolForCollateral;
+
+    // decimals of the default collateral
+    uint private defaultCollateralDecimals;
+
     // manager address
     ISportsAMMV2Manager public manager;
 
@@ -82,9 +88,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // safe box fee paid on each trade
     uint public safeBoxFee;
 
-    // stores active tickets
-    AddressSetLib.AddressSet internal knownTickets;
-
     // multi-collateral on/off ramp address
     IMultiCollateralOnOffRamp public multiCollateralOnOffRamp;
 
@@ -93,6 +96,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     // staking thales address
     IStakingThales public stakingThales;
+
+    // stores active tickets
+    AddressSetLib.AddressSet internal knownTickets;
 
     // stores active tickets per user
     mapping(address => AddressSetLib.AddressSet) internal activeTicketsPerUser;
@@ -105,8 +111,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     // CL client that processes live requests
     address public liveTradingProcessor;
-
-    mapping(address => address) public liquidityPoolForCollateral;
 
     // the contract that processes all free bets
     address public freeBetsHolder;
@@ -184,11 +188,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 // TODO: require that this is greater than 0
                 useAmount = buyInAmountInDefaultCollateral;
             } else {
-                uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
                 uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
-                uint priceInUSD = IPriceFeed(multiCollateralOnOffRamp.priceFeed()).rateForCurrency(
-                    ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey()
-                );
+                uint priceInUSD = ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).getCollateralPrice();
 
                 buyInAmountInDefaultCollateral = _transformToUSD(
                     _buyInAmount,
@@ -491,8 +492,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             lqPool = liquidityPoolForCollateral[_collateral];
             if (lqPool != address(0)) {
                 // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
-                collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
-                    .rateForCurrency(ISportsAMMV2LiquidityPool(lqPool).collateralKey());
+                collateralPrice = ISportsAMMV2LiquidityPool(lqPool).getCollateralPrice();
                 require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
             } else {
                 require(multicollateralEnabled, "Multi-collat not enabled");
@@ -500,12 +500,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
                 uint exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
                 require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
-
-                // send any suprlus to SafeBox
-                // TODO: consider if this has to be done
-                if (exactReceived > buyInAmountInDefaultCollateral) {
-                    defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
-                }
 
                 buyInAmount = buyInAmountInDefaultCollateral;
                 collateralAfterOnramp = address(defaultCollateral);
@@ -530,17 +524,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         uint payoutWithFees = payout + fees;
-        _checkRisksLimitsAndUpdateStakingVolume(
-            _tradeData,
-            _tradeDataInternal._buyInAmount,
-            totalQuote,
-            payout,
-            _tradeDataInternal._expectedPayout,
-            _tradeDataInternal._additionalSlippage,
-            _tradeDataInternal._collateralPriceInUSD,
-            _tradeDataInternal._collateral,
-            _tradeDataInternal._differentRecipient
-        );
+        _checkRisksLimitsAndUpdateStakingVolume(_tradeData, totalQuote, payout, _tradeDataInternal);
 
         // clone a ticket
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
@@ -598,18 +582,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // Checks risk and updates Staking Volume
     function _checkRisksLimitsAndUpdateStakingVolume(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        uint _buyInAmount,
         uint _totalQuote,
         uint _payout,
-        uint _expectedPayout,
-        uint _additionalSlippage,
-        uint _collateralPriceInUSD,
-        address _collateral,
-        address _differentRecipient
+        TradeDataInternal memory _tradeDataInternal
     ) internal {
-        uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
+        uint _buyInAmount = _tradeDataInternal._buyInAmount;
+        uint _collateralPriceInUSD = _tradeDataInternal._collateralPriceInUSD;
+        uint _expectedPayout = _tradeDataInternal._expectedPayout;
         if (_collateralPriceInUSD > 0) {
-            uint collateralDecimals = ISportsAMMV2Manager(_collateral).decimals();
+            uint collateralDecimals = ISportsAMMV2Manager(_tradeDataInternal._collateral).decimals();
             // TODO: perhaps a batch method can be created that transforms all 3?
             _buyInAmount = _transformToUSD(
                 _buyInAmount,
@@ -626,7 +607,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             );
         }
         riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount);
-        riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _additionalSlippage);
+        riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _tradeDataInternal._additionalSlippage);
         if (address(stakingThales) != address(0)) {
             uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
                 .decimals();
@@ -636,7 +617,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _buyInAmount = _buyInAmount / 10 ** (18 - stakingCollateralDecimals);
             }
             // TODO: might be simple to add an update volume method to stakingThales that accepts the number of decimals as input
-            stakingThales.updateVolume(_differentRecipient, _buyInAmount);
+            stakingThales.updateVolume(_tradeDataInternal._differentRecipient, _buyInAmount);
         }
     }
 
@@ -684,13 +665,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 if (ammBalance >= referrerShare) {
                     _collateral.safeTransfer(referrer, referrerShare);
                     emit ReferrerPaid(referrer, _tickerOwner, referrerShare, _buyInAmount);
+                    ammBalance -= referrerShare;
                 }
             }
         }
         fees = _getFees(_buyInAmount);
         if (fees > referrerShare) {
             uint safeBoxAmount = fees - referrerShare;
-            ammBalance = _collateral.balanceOf(address(this));
             if (ammBalance >= safeBoxAmount) {
                 _collateral.safeTransfer(safeBox, safeBoxAmount);
                 emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
@@ -768,6 +749,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         // if the ticket was lost or if for any reason there is surplus in SportsAMM after the ticket is exercised, send it all to Liquidity Pool
+        // TODO: if a game was cancelled a certain amount needs to be sent back to LP pool for that round, but in theory that round can be closed, so its better to always send to the active round
         uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
             ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
@@ -814,6 +796,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _safeBox
     ) external onlyOwner {
         defaultCollateral = _defaultCollateral;
+        defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         manager = ISportsAMMV2Manager(_manager);
         riskManager = ISportsAMMV2RiskManager(_riskManager);
         resultManager = ISportsAMMV2ResultManager(_resultManager);
