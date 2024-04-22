@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 // internal
-// TODO: why do we still use these synthetix contracts?
 import "../utils/proxy/ProxyReentrancyGuard.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
@@ -19,7 +18,6 @@ import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
-//TODO: wy not use an interface for the ticket?
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
@@ -105,7 +103,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
-    // cl client that processes live requests
+    // CL client that processes live requests
     address public liveTradingProcessor;
 
     mapping(address => address) public liquidityPoolForCollateral;
@@ -305,8 +303,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _collateral,
         bool _isEth
     ) external payable nonReentrant notPaused returns (address _createdTicket) {
-        address useLPpool;
-        uint collateralPriceInUSD;
         if (_referrer != address(0)) {
             referrals.setReferrer(_referrer, msg.sender);
         }
@@ -314,16 +310,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_differentRecipient == address(0)) {
             _differentRecipient = msg.sender;
         }
-        if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD, _buyInAmount) = _handleDifferentCollateral(
-                _buyInAmount,
-                _collateral,
-                msg.sender,
-                _isEth
-            );
-        } else {
-            defaultCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
-        }
+
+        address useLPpool;
+        uint collateralPriceInUSD;
+        (useLPpool, collateralPriceInUSD, _buyInAmount, _collateral) = _handleCollateral(
+            _buyInAmount,
+            _collateral,
+            msg.sender,
+            _isEth
+        );
         _createdTicket = _trade(
             _tradeData,
             TradeDataInternal(
@@ -366,17 +361,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         require(_differentRecipient != address(0), "UndefinedRecipient");
         address useLPpool;
         uint collateralPriceInUSD;
-        //TODO: I feel better with enforcing that collateral is always sent as a parameter
-        if (_collateral != address(0)) {
-            (useLPpool, collateralPriceInUSD, _buyInAmount) = _handleDifferentCollateral(
-                _buyInAmount,
-                _collateral,
-                _requester,
-                false
-            );
-        } else {
-            defaultCollateral.safeTransferFrom(_requester, address(this), _buyInAmount);
-        }
+        (useLPpool, collateralPriceInUSD, _buyInAmount, _collateral) = _handleCollateral(
+            _buyInAmount,
+            _collateral,
+            _requester,
+            false
+        );
         _createdTicket = _trade(
             _tradeData,
             TradeDataInternal(
@@ -450,20 +440,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint numOfMarkets = _tradeData.length;
         amountsToBuy = new uint[](numOfMarkets);
         uint maxSupportedOdds = riskManager.maxSupportedOdds();
-        uint marketOdds;
 
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
             _verifyMerkleTree(marketTradeData);
 
-            if (marketTradeData.odds.length > marketTradeData.position) {
-                marketOdds = marketTradeData.odds[marketTradeData.position];
-            }
-            if (marketOdds == 0) {
-                totalQuote = 0;
-                break;
-            }
+            require(marketTradeData.odds.length > marketTradeData.position, "Invalid position");
+            uint marketOdds = marketTradeData.odds[marketTradeData.position];
+
             amountsToBuy[i] = (ONE * _buyInAmount) / marketOdds;
             totalQuote = totalQuote == 0 ? marketOdds : (totalQuote * marketOdds) / ONE;
         }
@@ -475,11 +460,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             fees = _getFees(_buyInAmount);
 
             if (_shouldCheckRisks) {
-                (ISportsAMMV2RiskManager.RiskStatus rStatus, bool[] memory isMarketOutOfLiquidity) = riskManager.checkRisks(
-                    _tradeData,
-                    _buyInAmountInDefaultCollateral
-                );
-                riskStatus = rStatus;
+                bool[] memory isMarketOutOfLiquidity;
+                (riskStatus, isMarketOutOfLiquidity) = riskManager.checkRisks(_tradeData, _buyInAmountInDefaultCollateral);
 
                 for (uint i = 0; i < numOfMarkets; i++) {
                     if (isMarketOutOfLiquidity[i]) {
@@ -493,43 +475,48 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleDifferentCollateral(
+    function _handleCollateral(
         uint _buyInAmount,
         address _collateral,
         address _fromAddress,
         bool _isEth
-    ) internal returns (address lqPool, uint collateralPrice, uint buyInAmount) {
-        require(multicollateralEnabled, "Multi-collat not enabled");
+    ) internal returns (address lqPool, uint collateralPrice, uint buyInAmount, address collateralAfterOnramp) {
         buyInAmount = _buyInAmount;
-        lqPool = liquidityPoolForCollateral[_collateral];
-        if (lqPool != address(0)) {
-            if (_collateral == multiCollateralOnOffRamp.WETH9() && _isEth) {
-                // wrap ETH
-                require(msg.value >= _buyInAmount, "Insuff ETH sent");
-                ICollateralUtility(_collateral).deposit{value: msg.value}();
+        collateralAfterOnramp = _collateral;
+        if (_collateral != address(0)) {
+            lqPool = liquidityPoolForCollateral[_collateral];
+            if (lqPool != address(0)) {
+                if (_isEth) {
+                    // wrap ETH
+                    require(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount, "Insuff ETH sent");
+                    ICollateralUtility(_collateral).deposit{value: msg.value}();
+                } else {
+                    // Generic case for any collateral used (THALES/ARB/OP)
+                    IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
+                }
+
+                // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
+                collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
+                    .rateForCurrency(ISportsAMMV2LiquidityPool(lqPool).collateralKey());
+                require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
             } else {
-                // Generic case for any collateral used (THALES/ARB/OP)
+                require(multicollateralEnabled, "Multi-collat not enabled");
+                uint buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
                 IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
-            }
+                IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
+                uint exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
+                require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
 
-            // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
-            collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
-                ISportsAMMV2LiquidityPool(lqPool).collateralKey()
-            );
-            require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
+                // send any suprlus to SafeBox
+                if (exactReceived > buyInAmountInDefaultCollateral) {
+                    defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
+                }
+
+                buyInAmount = buyInAmountInDefaultCollateral;
+                collateralAfterOnramp = address(0);
+            }
         } else {
-            uint buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
-            IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
-            IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
-            uint exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
-            require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
-
-            // send any suprlus to SafeBox
-            if (exactReceived > buyInAmountInDefaultCollateral) {
-                defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
-            }
-
-            buyInAmount = buyInAmountInDefaultCollateral;
+            defaultCollateral.safeTransferFrom(_fromAddress, address(this), _buyInAmount);
         }
     }
 
@@ -566,6 +553,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
+        address collateralToUse = _tradeDataInternal._collateralPool == address(0)
+            ? address(defaultCollateral)
+            : _tradeDataInternal._collateral;
+
         ticket.initialize(
             Ticket.TicketInit(
                 markets,
@@ -574,15 +565,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 totalQuote,
                 address(this),
                 _tradeDataInternal._differentRecipient,
-                _tradeDataInternal._collateral == address(0) ? defaultCollateral : IERC20(_tradeDataInternal._collateral),
+                IERC20(collateralToUse),
                 (block.timestamp + riskManager.expiryDuration())
             )
         );
         _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
-
-        address collateralToUse = _tradeDataInternal._collateralPool == address(0)
-            ? address(defaultCollateral)
-            : _tradeDataInternal._collateral;
 
         //TODO: reconsider the flow here, perhaps the liquidity pool can send directly to the ticket
         ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[collateralToUse]).commitTrade(
