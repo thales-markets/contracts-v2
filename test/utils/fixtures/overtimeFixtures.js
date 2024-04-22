@@ -223,17 +223,16 @@ async function deploySportsAMMV2Fixture() {
 	await addressManager.setAddressInAddressBook('PriceFeed', priceFeedAddress, {
 		from: owner.address,
 	});
+	await addressManager.setAddressInAddressBook('SportManager', sportsAMMV2ManagerAddress, {
+		from: owner.address,
+	});
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
 		owner.address,
 		collateralAddress,
-		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
-		sportsAMMV2ResultManagerAddress,
-		referralsAddress,
-		stakingThalesAddress,
-		safeBox.address,
+		addressManagerAddress,
 	]);
 	const sportsAMMV2Address = await sportsAMMV2.getAddress();
 
@@ -311,7 +310,7 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2LiquidityPoolSixDecimals2Address =
 		await sportsAMMV2LiquidityPoolSixDecimals2.getAddress();
 
-	await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolAddress);
+	await sportsAMMV2.setLiquidityPoolForCollateral(collateral, sportsAMMV2LiquidityPoolAddress);
 
 	// deploy Sports AMM liqudity pool round mastercopy
 	const SportsAMMV2LiquidityPoolRoundMastercopy = await ethers.getContractFactory(
@@ -598,8 +597,13 @@ async function deploySportsAMMV2Fixture() {
 	const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
 
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
-	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
-
+	await addressManager.setAddressInAddressBook(
+		'LiveTradingProcessor',
+		liveTradingProcessorAddress,
+		{
+			from: owner.address,
+		}
+	);
 	// deploy ChainlinkResolver
 	const ChainlinkResolver = await ethers.getContractFactory('ChainlinkResolver');
 	const chainlinkResolver = await ChainlinkResolver.deploy(
@@ -625,13 +629,15 @@ async function deploySportsAMMV2Fixture() {
 	]);
 	const freeBetsHolderAddress = await freeBetsHolder.getAddress();
 
+	await addressManager.setAddressInAddressBook('FreeBetsHolder', freeBetsHolderAddress, {
+		from: owner.address,
+	});
+
 	await liveTradingProcessor.setFreeBetsHolder(freeBetsHolderAddress);
 
 	await collateral.connect(owner).approve(freeBetsHolder, DEFAULT_AMOUNT);
 	await freeBetsHolder.addSupportedCollateral(collateralAddress, true);
 	await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);
-
-	await sportsAMMV2.setFreeBetsHolder(freeBetsHolderAddress);
 
 	return {
 		owner,
