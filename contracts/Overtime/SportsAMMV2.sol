@@ -810,10 +810,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice sets main addresses
     /// @param _riskManager risk manager address
     // TODO: lot of it could go to AddressManager. To avoid constant external calls, address manager could maintain a list of all  it needs to notify if a certain parameter is chained
-    function setAddresses(address _riskManager) external onlyOwner {
+    function setAddresses(IERC20 _defaultCollateral, address _riskManager) external onlyOwner {
+        defaultCollateral = _defaultCollateral;
         riskManager = ISportsAMMV2RiskManager(_riskManager);
 
-        emit AddressesUpdated(_riskManager);
+        emit AddressesUpdated(address(_defaultCollateral), _riskManager);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -834,7 +835,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_liquidityPool != address(0)) {
             IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
         }
-        emit SetLiquidityPoolForCollateral(_liquidityPool, _collateralAddress);
+        emit SetLiquidityPoolForCollateral(_collateralAddress, _liquidityPool);
     }
 
     /// @notice sets multi-collateral on/off ramp contract and enable/disable
@@ -889,8 +890,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     event GameRootUpdated(bytes32 game, bytes32 root);
     event AmountsUpdated(uint safeBoxFee);
-    event AddressesUpdated(address riskManager);
+    event AddressesUpdated(address defaultCollateral, address riskManager);
     event TicketMastercopyUpdated(address ticketMastercopy);
-    event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
+    event SetLiquidityPoolForCollateral(address collateral, address liquidityPool);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
 }

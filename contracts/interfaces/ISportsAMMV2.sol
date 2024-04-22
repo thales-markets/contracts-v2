@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 
@@ -57,6 +58,8 @@ interface ISportsAMMV2 {
     function numOfResolvedTicketsPerUser(address _user) external view returns (uint);
 
     function riskManager() external view returns (ISportsAMMV2RiskManager);
+
+    function addressManager() external view returns (IAddressManager);
 
     function tradeLive(
         TradeData[] calldata _tradeData,

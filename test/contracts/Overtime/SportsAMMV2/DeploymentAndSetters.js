@@ -48,14 +48,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 
 		it('Should set the right addresses', async () => {
 			expect(await sportsAMMV2.defaultCollateral()).to.equal(await collateral.getAddress());
-			expect(await sportsAMMV2.manager()).to.equal(await sportsAMMV2Manager.getAddress());
 			expect(await sportsAMMV2.riskManager()).to.equal(await sportsAMMV2RiskManager.getAddress());
-			expect(await sportsAMMV2.resultManager()).to.equal(
-				await sportsAMMV2ResultManager.getAddress()
-			);
-			expect(await sportsAMMV2.referrals()).to.equal(await referrals.getAddress());
-			expect(await sportsAMMV2.stakingThales()).to.equal(await stakingThales.getAddress());
-			expect(await sportsAMMV2.safeBox()).to.equal(safeBox.address);
 		});
 
 		it('Should set the right amounts', async () => {
@@ -66,7 +59,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(await sportsAMMV2.ticketMastercopy()).to.equal(await ticketMastercopy.getAddress());
 		});
 		it('Should set the right liquidity pool', async () => {
-			expect(await sportsAMMV2.defaultLiquidityPool()).to.equal(
+			expect(await sportsAMMV2.liquidityPoolForCollateral(collateral.target)).to.equal(
 				await sportsAMMV2LiquidityPool.getAddress()
 			);
 		});
@@ -93,57 +86,16 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			const dummyAddress2 = fourthAccount.address;
 
 			await expect(
-				sportsAMMV2
-					.connect(secondAccount)
-					.setAddresses(
-						dummyAddress1,
-						dummyAddress2,
-						dummyAddress1,
-						dummyAddress2,
-						dummyAddress1,
-						dummyAddress2,
-						dummyAddress1
-					)
+				sportsAMMV2.connect(secondAccount).setAddresses(dummyAddress1, dummyAddress2)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await sportsAMMV2.setAddresses(
-				dummyAddress1,
-				dummyAddress2,
-				dummyAddress1,
-				dummyAddress2,
-				dummyAddress1,
-				dummyAddress2,
-				dummyAddress1
-			);
+			await sportsAMMV2.setAddresses(dummyAddress1, dummyAddress2);
 			expect(await sportsAMMV2.defaultCollateral()).to.equal(dummyAddress1);
-			expect(await sportsAMMV2.manager()).to.equal(dummyAddress2);
-			expect(await sportsAMMV2.riskManager()).to.equal(dummyAddress1);
-			expect(await sportsAMMV2.resultManager()).to.equal(dummyAddress2);
-			expect(await sportsAMMV2.referrals()).to.equal(dummyAddress1);
-			expect(await sportsAMMV2.stakingThales()).to.equal(dummyAddress2);
-			expect(await sportsAMMV2.safeBox()).to.equal(dummyAddress1);
+			expect(await sportsAMMV2.riskManager()).to.equal(dummyAddress2);
 
-			await expect(
-				sportsAMMV2.setAddresses(
-					dummyAddress1,
-					dummyAddress2,
-					dummyAddress1,
-					dummyAddress2,
-					dummyAddress1,
-					dummyAddress2,
-					dummyAddress1
-				)
-			)
+			await expect(sportsAMMV2.setAddresses(dummyAddress1, dummyAddress2))
 				.to.emit(sportsAMMV2, 'AddressesUpdated')
-				.withArgs(
-					dummyAddress1,
-					dummyAddress2,
-					dummyAddress1,
-					dummyAddress2,
-					dummyAddress1,
-					dummyAddress2,
-					dummyAddress1
-				);
+				.withArgs(dummyAddress1, dummyAddress2);
 		});
 
 		it('Should set the new ticket mastercopy', async () => {
@@ -170,12 +122,8 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			);
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
 
-			await expect(
-				sportsAMMV2.connect(secondAccount).setDefaultLiquidityPool(dummyAddress1)
-			).to.be.revertedWith('Only the contract owner may perform this action');
-
-			await sportsAMMV2.setDefaultLiquidityPool(dummyAddress1);
-			expect(await sportsAMMV2.defaultLiquidityPool()).to.equal(dummyAddress1);
+			await sportsAMMV2.setLiquidityPoolForCollateral(collateral, dummyAddress1);
+			expect(await sportsAMMV2.liquidityPoolForCollateral(collateral)).to.equal(dummyAddress1);
 
 			curentLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyAddress1);
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
@@ -186,9 +134,9 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			);
 			expect(oldLpAllowance).to.equal(0);
 
-			await expect(sportsAMMV2.setDefaultLiquidityPool(dummyAddress1))
-				.to.emit(sportsAMMV2, 'SetDefaultLiquidityPool')
-				.withArgs(dummyAddress1);
+			await expect(sportsAMMV2.setLiquidityPoolForCollateral(collateral, dummyAddress1))
+				.to.emit(sportsAMMV2, 'SetLiquidityPoolForCollateral')
+				.withArgs(collateral.target, dummyAddress1);
 		});
 
 		it('Should set the new multi-collateral on/off ramp', async () => {

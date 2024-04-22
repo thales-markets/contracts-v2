@@ -216,7 +216,7 @@ async function deploySportsAMMV2Fixture() {
 	await addressManager.setAddressInAddressBook('StakingThales', stakingThalesAddress, {
 		from: owner.address,
 	});
-	await addressManager.setAddressInAddressBook('Refferals', referralsAddress, {
+	await addressManager.setAddressInAddressBook('Referrals', referralsAddress, {
 		from: owner.address,
 	});
 	await addressManager.setAddressInAddressBook('SafeBox', safeBox, { from: owner.address });
@@ -226,6 +226,13 @@ async function deploySportsAMMV2Fixture() {
 	await addressManager.setAddressInAddressBook('SportManager', sportsAMMV2ManagerAddress, {
 		from: owner.address,
 	});
+	await addressManager.setAddressInAddressBook(
+		'SportResultManager',
+		sportsAMMV2ResultManagerAddress,
+		{
+			from: owner.address,
+		}
+	);
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [

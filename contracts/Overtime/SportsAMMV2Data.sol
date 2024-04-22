@@ -15,6 +15,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     ISportsAMMV2RiskManager public riskManager;
 
+    ISportsAMMV2ResultManager public resultManager;
+
     struct SportsAMMParameters {
         uint minBuyInAmount;
         uint maxTicketSize;
@@ -62,6 +64,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function initialize(address _owner, ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external initializer {
         setOwner(_owner);
         sportsAMM = _sportsAMM;
+        resultManager = ISportsAMMV2ResultManager(sportsAMM.addressManager().getAddress("SportResultManager"));
         riskManager = _riskManager;
     }
 
@@ -161,7 +164,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         (bytes32 gameId, , uint16 typeId, , , int24 line, uint16 playerId, uint8 position, ) = ticket.markets(marketIndex);
         ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(marketIndex);
 
-        ISportsAMMV2ResultManager.MarketPositionStatus status = sportsAMM.resultManager().getMarketPositionStatus(
+        ISportsAMMV2ResultManager.MarketPositionStatus status = resultManager.getMarketPositionStatus(
             gameId,
             typeId,
             playerId,
@@ -170,7 +173,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             combinedPositions
         );
 
-        int24[] memory results = sportsAMM.resultManager().getResultsPerMarket(gameId, typeId, playerId);
+        int24[] memory results = resultManager.getResultsPerMarket(gameId, typeId, playerId);
 
         return MarketResult(status, results);
     }

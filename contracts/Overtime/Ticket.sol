@@ -41,6 +41,7 @@ contract Ticket is OwnedWithInit {
     }
 
     ISportsAMMV2 public sportsAMM;
+    ISportsAMMV2ResultManager public resultManager;
     address public ticketOwner;
     IERC20 public collateral;
 
@@ -69,6 +70,7 @@ contract Ticket is OwnedWithInit {
         initialized = true;
         initOwner(msg.sender);
         sportsAMM = ISportsAMMV2(params._sportsAMM);
+        resultManager = ISportsAMMV2ResultManager(sportsAMM.addressManager().getAddress("SportResultManager"));
         numOfMarkets = params._markets.length;
         for (uint i = 0; i < numOfMarkets; i++) {
             markets[i] = params._markets[i];
@@ -88,14 +90,14 @@ contract Ticket is OwnedWithInit {
     /// @return isTicketLost true/false
     function isTicketLost() public view returns (bool) {
         for (uint i = 0; i < numOfMarkets; i++) {
-            bool isMarketResolved = sportsAMM.resultManager().isMarketResolved(
+            bool isMarketResolved = resultManager.isMarketResolved(
                 markets[i].gameId,
                 markets[i].typeId,
                 markets[i].playerId,
                 markets[i].line,
                 markets[i].combinedPositions
             );
-            bool isWinningMarketPosition = sportsAMM.resultManager().isWinningMarketPosition(
+            bool isWinningMarketPosition = resultManager.isWinningMarketPosition(
                 markets[i].gameId,
                 markets[i].typeId,
                 markets[i].playerId,
@@ -115,7 +117,7 @@ contract Ticket is OwnedWithInit {
     function areAllMarketsResolved() public view returns (bool) {
         for (uint i = 0; i < numOfMarkets; i++) {
             if (
-                !sportsAMM.resultManager().isMarketResolved(
+                !resultManager.isMarketResolved(
                     markets[i].gameId,
                     markets[i].typeId,
                     markets[i].playerId,
@@ -172,7 +174,7 @@ contract Ticket is OwnedWithInit {
             finalPayout = payout;
             isCancelled = true;
             for (uint i = 0; i < numOfMarkets; i++) {
-                bool isCancelledMarketPosition = sportsAMM.resultManager().isCancelledMarketPosition(
+                bool isCancelledMarketPosition = resultManager.isCancelledMarketPosition(
                     markets[i].gameId,
                     markets[i].typeId,
                     markets[i].playerId,

@@ -1,6 +1,19 @@
 [
   {
     "inputs": [],
+    "name": "addressManager",
+    "outputs": [
+      {
+        "internalType": "contract IAddressManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "defaultCollateral",
     "outputs": [
       {

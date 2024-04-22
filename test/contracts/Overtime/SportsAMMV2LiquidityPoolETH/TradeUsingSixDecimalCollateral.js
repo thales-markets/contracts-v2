@@ -266,16 +266,11 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
 				sportsAMMV2LiquidityPoolSixDecimals.connect(firstLiquidityProvider);
 
-			await sportsAMMV2.setAddresses(
+			await sportsAMMV2.setAddresses(collateralSixDecimals.target, await sportsAMMV2.riskManager());
+			await sportsAMMV2.setLiquidityPoolForCollateral(
 				collateralSixDecimals.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				sportsAMMV2LiquidityPoolSixDecimals.target
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -675,16 +670,11 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await stakingThales.setFeeToken(collateral);
 			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(18);
 
-			await sportsAMMV2.setAddresses(
+			await sportsAMMV2.setAddresses(collateralSixDecimals.target, await sportsAMMV2.riskManager());
+			await sportsAMMV2.setLiquidityPoolForCollateral(
 				collateralSixDecimals.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				sportsAMMV2LiquidityPoolSixDecimals.target
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -870,16 +860,11 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await stakingThales.setFeeToken(collateralSixDecimals);
 			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(6);
 
-			await sportsAMMV2.setAddresses(
+			await sportsAMMV2.setAddresses(collateralSixDecimals.target, await sportsAMMV2.riskManager());
+			await sportsAMMV2.setLiquidityPoolForCollateral(
 				collateralSixDecimals.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				sportsAMMV2LiquidityPoolSixDecimals.target
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -1081,14 +1066,12 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 
 			await sportsAMMV2.setAddresses(
 				collateralSixDecimals2.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				await sportsAMMV2.riskManager()
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals2.target);
+			await sportsAMMV2.setLiquidityPoolForCollateral(
+				collateralSixDecimals2.target,
+				sportsAMMV2LiquidityPoolSixDecimals2.target
+			);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -1320,14 +1303,12 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 
 			await sportsAMMV2.setAddresses(
 				collateralSixDecimals2.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				await sportsAMMV2.riskManager()
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals2.target);
+			await sportsAMMV2.setLiquidityPoolForCollateral(
+				collateralSixDecimals2.target,
+				sportsAMMV2LiquidityPoolSixDecimals2.target
+			);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -2299,16 +2280,11 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await stakingThales.setFeeToken(collateralSixDecimals);
 			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(6);
 
-			await sportsAMMV2.setAddresses(
+			await sportsAMMV2.setAddresses(collateralSixDecimals.target, await sportsAMMV2.riskManager());
+			await sportsAMMV2.setLiquidityPoolForCollateral(
 				collateralSixDecimals.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				sportsAMMV2LiquidityPoolSixDecimals.target
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -2513,16 +2489,11 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await stakingThales.setFeeToken(collateral);
 			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(18);
 
-			await sportsAMMV2.setAddresses(
+			await sportsAMMV2.setAddresses(collateralSixDecimals.target, await sportsAMMV2.riskManager());
+			await sportsAMMV2.setLiquidityPoolForCollateral(
 				collateralSixDecimals.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				sportsAMMV2LiquidityPoolSixDecimals.target
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -2729,16 +2700,11 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await stakingThales.setFeeToken(collateralSixDecimals);
 			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(6);
 
-			await sportsAMMV2.setAddresses(
+			await sportsAMMV2.setAddresses(collateralSixDecimals.target, await sportsAMMV2.riskManager());
+			await sportsAMMV2.setLiquidityPoolForCollateral(
 				collateralSixDecimals.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				sportsAMMV2LiquidityPoolSixDecimals.target
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(
@@ -2944,16 +2910,11 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await stakingThales.setFeeToken(collateral);
 			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(18);
 
-			await sportsAMMV2.setAddresses(
+			await sportsAMMV2.setAddresses(collateralSixDecimals.target, await sportsAMMV2.riskManager());
+			await sportsAMMV2.setLiquidityPoolForCollateral(
 				collateralSixDecimals.target,
-				await sportsAMMV2.manager(),
-				await sportsAMMV2.riskManager(),
-				await sportsAMMV2.resultManager(),
-				await sportsAMMV2.referrals(),
-				stakingThales,
-				await sportsAMMV2.safeBox()
+				sportsAMMV2LiquidityPoolSixDecimals.target
 			);
-			await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolSixDecimals.target);
 			await priceFeed.setDefaultCollateralDecimals(6);
 
 			await sportsAMMV2RiskManager.setTicketParams(

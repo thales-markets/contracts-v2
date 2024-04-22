@@ -938,6 +938,19 @@
   },
   {
     "inputs": [],
+    "name": "resultManager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2ResultManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "riskManager",
     "outputs": [
       {

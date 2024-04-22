@@ -58,6 +58,12 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "defaultCollateral",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "riskManager",
         "type": "address"
       }
@@ -311,13 +317,13 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "liquidityPool",
+        "name": "collateral",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "collateral",
+        "name": "liquidityPool",
         "type": "address"
       }
     ],
@@ -898,6 +904,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "_defaultCollateral",
+        "type": "address"
+      },
       {
         "internalType": "address",
         "name": "_riskManager",
