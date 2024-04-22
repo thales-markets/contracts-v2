@@ -213,8 +213,8 @@
   {
     "inputs": [
       {
-        "internalType": "address payable",
-        "name": "beneficiary",
+        "internalType": "address",
+        "name": "_beneficiary",
         "type": "address"
       }
     ],
