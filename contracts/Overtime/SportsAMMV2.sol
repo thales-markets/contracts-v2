@@ -14,6 +14,7 @@ import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../utils/libraries/AddressSetLib.sol";
 
+import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
@@ -63,23 +64,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // the default token used for payment
     IERC20 public defaultCollateral;
 
-    // manager address
-    ISportsAMMV2Manager public manager;
+    // address manager contract to obtain addresses of related contracts
+    IAddressManager public addressManager;
 
     // risk manager address
     ISportsAMMV2RiskManager public riskManager;
 
-    // result manager address
-    ISportsAMMV2ResultManager public resultManager;
-
-    // referrals address
-    IReferrals public referrals;
-
     // ticket mastercopy address
     address public ticketMastercopy;
-
-    // safe box address
-    address public safeBox;
 
     // safe box fee paid on each trade
     uint public safeBoxFee;
@@ -93,13 +85,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // is multi-collateral enabled
     bool public multicollateralEnabled;
 
-    // liquidity pool address
-    // TODO: I dont think this is required when we can set the liquidity pool for default collateral
-    ISportsAMMV2LiquidityPool public defaultLiquidityPool;
-
-    // staking thales address
-    IStakingThales public stakingThales;
-
     // stores active tickets per user
     mapping(address => AddressSetLib.AddressSet) internal activeTicketsPerUser;
 
@@ -110,12 +95,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
     // cl client that processes live requests
-    address public liveTradingProcessor;
+    // address public liveTradingProcessor;
 
     mapping(address => address) public liquidityPoolForCollateral;
-
-    // the contract that processes all free bets
-    address public freeBetsHolder;
 
     // declare that it can receive eth
     receive() external payable {}
@@ -125,31 +107,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice initialize the storage in the proxy contract with the parameters
     /// @param _owner owner for using the onlyOwner functions
     /// @param _defaultCollateral the address of default token used for payment
-    /// @param _manager the address of manager
     /// @param _riskManager the address of risk manager
-    /// @param _riskManager the address of result manager
-    /// @param _referrals the address of referrals
-    /// @param _stakingThales the address of staking thales
-    /// @param _safeBox the address of safe box
+    /// @param _addressManager the address of address manager
     function initialize(
         address _owner,
         IERC20 _defaultCollateral,
-        ISportsAMMV2Manager _manager,
         ISportsAMMV2RiskManager _riskManager,
-        ISportsAMMV2ResultManager _resultManager,
-        IReferrals _referrals,
-        IStakingThales _stakingThales,
-        address _safeBox
+        IAddressManager _addressManager
     ) public initializer {
         setOwner(_owner);
         initNonReentrant();
         defaultCollateral = _defaultCollateral;
-        manager = _manager;
         riskManager = _riskManager;
-        resultManager = _resultManager;
-        referrals = _referrals;
-        stakingThales = _stakingThales;
-        safeBox = _safeBox;
+        addressManager = _addressManager;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -197,7 +167,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             } else {
                 uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
                 uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
-                uint priceInUSD = IPriceFeed(multiCollateralOnOffRamp.priceFeed()).rateForCurrency(
+                uint priceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
                     ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey()
                 );
 
@@ -312,6 +282,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address useLPpool;
         uint collateralPriceInUSD;
         if (_referrer != address(0)) {
+            IReferrals referrals = IReferrals(addressManager.getAddress("Referrals"));
             referrals.setReferrer(_referrer, msg.sender);
         }
 
@@ -359,9 +330,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrer,
         address _collateral
     ) external nonReentrant notPaused returns (address _createdTicket) {
-        require(msg.sender == liveTradingProcessor, "OnlyLiveTradingProcessor");
+        require(msg.sender == addressManager.getAddress("LiveTradingProcessor"), "OnlyLiveTradingProcessor");
 
         if (_referrer != address(0)) {
+            IReferrals referrals = IReferrals(addressManager.getAddress("Referrals"));
             referrals.setReferrer(_referrer, _requester);
         }
 
@@ -513,7 +485,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             }
 
             // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
-            collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed()).rateForCurrency(
+            collateralPrice = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
                 ISportsAMMV2LiquidityPool(lqPool).collateralKey()
             );
             require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
@@ -526,7 +498,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             // send any suprlus to SafeBox
             if (exactReceived > buyInAmountInDefaultCollateral) {
-                defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
+                defaultCollateral.safeTransfer(
+                    addressManager.getAddress("SafeBox"),
+                    exactReceived - buyInAmountInDefaultCollateral
+                );
             }
 
             buyInAmount = buyInAmountInDefaultCollateral;
@@ -589,7 +564,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 );
             }
             //TODO: the code here is the same no matter the collateral.
-            defaultLiquidityPool.commitTrade(address(ticket), payoutWithFees - _tradeDataInternal._buyInAmount);
+            ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(defaultCollateral)]).commitTrade(
+                address(ticket),
+                payoutWithFees - _tradeDataInternal._buyInAmount
+            );
             defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
         } else {
             ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
@@ -659,6 +637,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
         riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount);
         riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _additionalSlippage);
+        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
         if (address(stakingThales) != address(0)) {
             uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
                 .decimals();
@@ -706,6 +685,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _handleFees(uint _buyInAmount, address _tickerOwner, IERC20 _collateral) internal returns (uint fees) {
         uint referrerShare;
+        IReferrals referrals = IReferrals(addressManager.getAddress("Referrals"));
         address referrer = referrals.sportReferrals(_tickerOwner);
         uint ammBalance = _collateral.balanceOf(address(this));
 
@@ -724,7 +704,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint safeBoxAmount = fees - referrerShare;
             ammBalance = _collateral.balanceOf(address(this));
             if (ammBalance >= safeBoxAmount) {
-                _collateral.safeTransfer(safeBox, safeBoxAmount);
+                _collateral.safeTransfer(addressManager.getAddress("SafeBox"), safeBoxAmount);
                 emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
             }
         }
@@ -771,7 +751,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint userWonAmount = ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
-
+        address freeBetsHolder = addressManager.getAddress("FreeBetsHolder");
         if (ticketOwner == freeBetsHolder) {
             IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
         }
@@ -828,52 +808,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     /// @notice sets main addresses
-    /// @param _defaultCollateral the default token used for payment
-    /// @param _manager manager address
     /// @param _riskManager risk manager address
-    /// @param _resultManager result manager address
-    /// @param _referrals referrals address
-    /// @param _stakingThales staking thales address
-    /// @param _safeBox safeBox address
     // TODO: lot of it could go to AddressManager. To avoid constant external calls, address manager could maintain a list of all  it needs to notify if a certain parameter is chained
-    function setAddresses(
-        IERC20 _defaultCollateral,
-        address _manager,
-        address _riskManager,
-        address _resultManager,
-        address _referrals,
-        address _stakingThales,
-        address _safeBox
-    ) external onlyOwner {
-        defaultCollateral = _defaultCollateral;
-        manager = ISportsAMMV2Manager(_manager);
+    function setAddresses(address _riskManager) external onlyOwner {
         riskManager = ISportsAMMV2RiskManager(_riskManager);
-        resultManager = ISportsAMMV2ResultManager(_resultManager);
-        referrals = IReferrals(_referrals);
-        stakingThales = IStakingThales(_stakingThales);
-        safeBox = _safeBox;
 
-        emit AddressesUpdated(
-            _defaultCollateral,
-            _manager,
-            _riskManager,
-            _resultManager,
-            _referrals,
-            _stakingThales,
-            _safeBox
-        );
-    }
-
-    /// @notice sets the LiveTradingProcessor, required for any live trading
-    function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
-        liveTradingProcessor = _liveTradingProcessor;
-        emit SetLiveTradingProcessor(_liveTradingProcessor);
-    }
-
-    /// @notice sets the FreeBetsHolder address, required for handling ticket claiming via FreeBetsHolder
-    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
-        freeBetsHolder = _freeBetsHolder;
-        emit SetFreeBetsHolder(_freeBetsHolder);
+        emit AddressesUpdated(_riskManager);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -881,19 +821,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function setTicketMastercopy(address _ticketMastercopy) external onlyOwner {
         ticketMastercopy = _ticketMastercopy;
         emit TicketMastercopyUpdated(_ticketMastercopy);
-    }
-
-    /// @notice sets new LP address
-    /// @param _liquidityPool new LP address
-    // todo: is this really needed when the below method can be used?
-    function setDefaultLiquidityPool(address _liquidityPool) external onlyOwner {
-        if (address(defaultLiquidityPool) != address(0)) {
-            defaultCollateral.approve(address(defaultLiquidityPool), 0);
-        }
-        defaultLiquidityPool = ISportsAMMV2LiquidityPool(_liquidityPool);
-        liquidityPoolForCollateral[address(defaultCollateral)] = _liquidityPool;
-        defaultCollateral.approve(_liquidityPool, MAX_APPROVAL);
-        emit SetDefaultLiquidityPool(_liquidityPool);
     }
 
     /// @notice sets new LP Pool with LP address and the supported collateral
@@ -934,7 +861,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     modifier onlyWhitelistedAddresses(address sender) {
         require(
-            sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.ROOT_SETTING),
+            sender == owner ||
+                ISportsAMMV2Manager(addressManager.getAddress("SportManager")).isWhitelistedAddress(
+                    sender,
+                    ISportsAMMV2Manager.Role.ROOT_SETTING
+                ),
             "Invalid sender"
         );
         _;
@@ -958,19 +889,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     event GameRootUpdated(bytes32 game, bytes32 root);
     event AmountsUpdated(uint safeBoxFee);
-    event AddressesUpdated(
-        IERC20 defaultCollateral,
-        address manager,
-        address riskManager,
-        address resultManager,
-        address referrals,
-        address stakingThales,
-        address safeBox
-    );
+    event AddressesUpdated(address riskManager);
     event TicketMastercopyUpdated(address ticketMastercopy);
-    event SetDefaultLiquidityPool(address liquidityPool);
     event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
-    event SetLiveTradingProcessor(address liveTradingProcessor);
-    event SetFreeBetsHolder(address freeBetsHolder);
 }
