@@ -178,7 +178,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "collateral",
+        "name": "collateralTo",
         "type": "address"
       },
       {
@@ -191,7 +191,60 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "offramped",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateralFrom",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateralTo",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "offrampFrom",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "offramped",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateralFrom",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "offrampFromIntoEth",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "offramped",
         "type": "uint256"
       }
     ],
@@ -210,7 +263,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "offramped",
         "type": "uint256"
       }
     ],
@@ -342,5 +395,56 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateralFrom",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateralTo",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rate",
+        "type": "uint256"
+      }
+    ],
+    "name": "setSwapRate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateralFrom",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateralTo",
+        "type": "address"
+      }
+    ],
+    "name": "swapRate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "rate",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]

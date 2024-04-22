@@ -111,7 +111,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     mapping(address => address) public liquidityPoolForCollateral;
 
-    address freeBetsHolder;
+    address public freeBetsHolder;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -144,6 +144,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         stakingThales = _stakingThales;
         safeBox = _safeBox;
     }
+
+    receive() external payable {}
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
@@ -189,8 +191,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             } else {
                 uint defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
                 uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
-                uint priceInUSD = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
-                    .rateForCurrency(ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey());
+                uint priceInUSD = IPriceFeed(multiCollateralOnOffRamp.priceFeed()).rateForCurrency(
+                    ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[_collateral]).collateralKey()
+                );
 
                 buyInAmountInDefaultCollateral = _transformToUSD(
                     _buyInAmount,
@@ -288,6 +291,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _differentRecipient different recipent of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
+    /// @param _isEth pay with ETH
     /// @return _createdTicket the address of the created ticket
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
@@ -386,7 +390,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice exercise specific ticket
     /// @param _ticket ticket address
     function exerciseTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        _exerciseTicket(_ticket);
+        _exerciseTicket(_ticket, address(0), false);
+    }
+
+    /// @notice exercise specific ticket to an off ramp collateral
+    /// @param _ticket ticket address
+    /// @param _exerciseCollateral collateral address to off ramp to
+    /// @param _inEth offramp with ETH
+    function exerciseTicketOffRamp(
+        address _ticket,
+        address _exerciseCollateral,
+        bool _inEth
+    ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
+        require(msg.sender == Ticket(_ticket).ticketOwner(), "Caller not the ticket owner");
+        _exerciseTicket(_ticket, _exerciseCollateral, _inEth);
     }
 
     /// @notice pause/unapause provided tickets
@@ -742,19 +759,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    function _exerciseTicket(address _ticket) internal {
+    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth) internal {
         Ticket ticket = Ticket(_ticket);
-        ticket.exercise();
-
+        uint userWonAmount = ticket.exercise(_exerciseCollateral);
+        IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
+
         if (ticketOwner == freeBetsHolder) {
             IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
         }
 
-        IERC20 ticketCollateral = ticket.collateral();
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
+
         knownTickets.remove(_ticket);
         if (activeTicketsPerUser[ticketOwner].contains(_ticket)) {
             activeTicketsPerUser[ticketOwner].remove(_ticket);
@@ -762,21 +780,23 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         resolvedTicketsPerUser[ticketOwner].add(_ticket);
         emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 
+        if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
+            require(ticketCollateral == defaultCollateral, "Offramp only default collateral");
+            uint offramped;
+            if (_inEth) {
+                offramped = multiCollateralOnOffRamp.offrampIntoEth(userWonAmount);
+                bool sent = payable(ticketOwner).send(offramped);
+                require(sent, "Failed to send Ether");
+            } else {
+                offramped = multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWonAmount);
+                IERC20(_exerciseCollateral).safeTransfer(ticketOwner, offramped);
+            }
+        }
+
+        // if the ticket was lost or if for any reason there is surplus in SportsAMM after the ticket is exercised, send it all to Liquidity Pool
         uint amount = ticketCollateral.balanceOf(address(this));
         if (amount > 0) {
             ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
-            // Note: Following code can be used in case:
-            // the default collateral is not added to the collateralPool mapping.
-            // In test and production, it safer to add it.
-            // address usePool = liquidityPoolForCollateral[address(ticketCollateral)];
-            // if (usePool != address(0)) {
-            //     ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(
-            //         _ticket,
-            //         amount
-            //     );
-            // } else {
-            //     defaultLiquidityPool.transferToPool(_ticket, amount);
-            // }
         }
     }
 

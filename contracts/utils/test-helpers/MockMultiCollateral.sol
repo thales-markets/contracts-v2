@@ -16,6 +16,9 @@ contract MockMultiCollateralOnOffRamp {
     IERC20 public sUSD;
     mapping(address => bytes32) public collateralKey;
     mapping(bytes32 => address) public collateralAddress;
+    mapping(address collateralFrom => mapping(address collateralTo => uint rate)) public swapRate;
+
+    receive() external payable {}
 
     function setPriceFeed(address _priceFeed) external {
         priceFeed = _priceFeed;
@@ -80,9 +83,43 @@ contract MockMultiCollateralOnOffRamp {
         return collateralAddress["WETH"];
     }
 
-    function offrampIntoEth(uint amount) external returns (uint) {}
+    function offrampIntoEth(uint amount) external returns (uint offramped) {
+        sUSD.safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(address(sUSD), collateralAddress["WETH"], amount);
+        // (bool sent, ) = payable(msg.sender).call{value: offramped}("");
+        bool sent = payable(msg.sender).send(offramped);
+        require(sent, "Failed to send Ether");
+    }
 
-    function offramp(address collateral, uint amount) external returns (uint) {}
+    function offramp(address collateralTo, uint amount) external returns (uint offramped) {
+        sUSD.safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(address(sUSD), collateralTo, amount);
+        IERC20(collateralTo).safeTransfer(msg.sender, offramped);
+    }
+
+    function offrampFromIntoEth(address collateralFrom, uint amount) external returns (uint offramped) {
+        IERC20(collateralFrom).safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(collateralFrom, collateralAddress["WETH"], amount);
+        (bool sent, ) = payable(msg.sender).call{value: offramped}("");
+        // bool sent = payable(msg.sender).send(offramped);
+        require(sent, "Failed to send Ether");
+    }
+
+    function offrampFrom(address collateralFrom, address collateralTo, uint amount) external returns (uint offramped) {
+        IERC20(collateralFrom).safeTransferFrom(msg.sender, address(this), amount);
+        offramped = _swapAmount(collateralFrom, collateralTo, amount);
+        IERC20(collateralTo).safeTransfer(msg.sender, offramped);
+    }
+
+    function _swapAmount(address collateralFrom, address collateralTo, uint amount) internal view returns (uint) {
+        // assumed amount is 18 decimal
+        return (swapRate[collateralFrom][collateralTo] * amount) / 1e18;
+    }
+
+    function setSwapRate(address collateralFrom, address collateralTo, uint rate) external {
+        swapRate[collateralFrom][collateralTo] = rate;
+        swapRate[collateralTo][collateralFrom] = (1e18 * 1e18) / rate;
+    }
 
     event OnRamp(address collateral, uint collateralAmount, uint convertedAmount);
 }
