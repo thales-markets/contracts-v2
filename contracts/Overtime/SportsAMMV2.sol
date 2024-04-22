@@ -142,6 +142,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         setOwner(_owner);
         initNonReentrant();
         defaultCollateral = _defaultCollateral;
+        defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         manager = _manager;
         riskManager = _riskManager;
         resultManager = _resultManager;
