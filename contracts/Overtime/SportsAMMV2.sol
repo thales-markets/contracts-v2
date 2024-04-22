@@ -24,7 +24,7 @@ import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2LiquidityPool.sol";
-import "../interfaces/ICollateralUtility.sol";
+import "../interfaces/IWeth.sol";
 import "../interfaces/IFreeBetsHolder.sol";
 
 /// @title Sports AMM V2 contract
@@ -483,7 +483,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (_isEth) {
                 // wrap ETH
                 require(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount, "Insuff ETH sent");
-                ICollateralUtility(_collateral).deposit{value: msg.value}();
+                IWeth(_collateral).deposit{value: msg.value}();
             } else {
                 // Generic case for any collateral used (THALES/ARB/OP)
                 IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);

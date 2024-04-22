@@ -104,7 +104,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
 			await sportsAMMV2.setAddresses(
-				dummyAddress1,
+				collateralAddress,
 				dummyAddress2,
 				dummyAddress1,
 				dummyAddress2,
@@ -112,7 +112,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 				dummyAddress2,
 				dummyAddress1
 			);
-			expect(await sportsAMMV2.defaultCollateral()).to.equal(dummyAddress1);
+			expect(await sportsAMMV2.defaultCollateral()).to.equal(collateralAddress);
 			expect(await sportsAMMV2.manager()).to.equal(dummyAddress2);
 			expect(await sportsAMMV2.riskManager()).to.equal(dummyAddress1);
 			expect(await sportsAMMV2.resultManager()).to.equal(dummyAddress2);
@@ -122,7 +122,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 
 			await expect(
 				sportsAMMV2.setAddresses(
-					dummyAddress1,
+					collateralAddress,
 					dummyAddress2,
 					dummyAddress1,
 					dummyAddress2,
@@ -133,7 +133,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			)
 				.to.emit(sportsAMMV2, 'AddressesUpdated')
 				.withArgs(
-					dummyAddress1,
+					collateralAddress,
 					dummyAddress2,
 					dummyAddress1,
 					dummyAddress2,
