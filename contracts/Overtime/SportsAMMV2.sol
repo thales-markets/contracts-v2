@@ -502,6 +502,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
 
                 // send any suprlus to SafeBox
+                // TODO: consider if this has to be done
                 if (exactReceived > buyInAmountInDefaultCollateral) {
                     defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
                 }
