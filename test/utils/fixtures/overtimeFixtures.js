@@ -33,6 +33,7 @@ async function deployAccountsFixture() {
 		thirdLiquidityProvider,
 		firstTrader,
 		secondTrader,
+		collateralAddress,
 	] = await ethers.getSigners();
 
 	return {
@@ -47,6 +48,7 @@ async function deployAccountsFixture() {
 		thirdLiquidityProvider,
 		firstTrader,
 		secondTrader,
+		collateralAddress,
 	};
 }
 
@@ -311,7 +313,10 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2LiquidityPoolSixDecimals2Address =
 		await sportsAMMV2LiquidityPoolSixDecimals2.getAddress();
 
-	await sportsAMMV2.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolAddress);
+	await sportsAMMV2.setLiquidityPoolForCollateral(
+		collateralAddress,
+		sportsAMMV2LiquidityPoolAddress
+	);
 
 	// deploy Sports AMM liqudity pool round mastercopy
 	const SportsAMMV2LiquidityPoolRoundMastercopy = await ethers.getContractFactory(
@@ -679,6 +684,8 @@ async function deploySportsAMMV2Fixture() {
 		freeBetsHolder,
 		freeBetsHolderAddress,
 		collateralAddress,
+		collateralSixDecimalsAddress,
+		collateralSixDecimals2Address,
 	};
 }
 

@@ -93,10 +93,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // is multi-collateral enabled
     bool public multicollateralEnabled;
 
-    // liquidity pool address
-    // TODO: I dont think this is required when we can set the liquidity pool for default collateral
-    ISportsAMMV2LiquidityPool public defaultLiquidityPool;
-
     // staking thales address
     IStakingThales public stakingThales;
 
@@ -325,6 +321,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 msg.sender,
                 _isEth
             );
+        } else {
+            defaultCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
         }
         _createdTicket = _trade(
             _tradeData,
@@ -376,6 +374,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _requester,
                 false
             );
+        } else {
+            defaultCollateral.safeTransferFrom(_requester, address(this), _buyInAmount);
         }
         _createdTicket = _trade(
             _tradeData,
@@ -580,24 +580,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
         _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
-        if (_tradeDataInternal._collateralPool == address(0)) {
-            if (_tradeDataInternal._collateral == address(0)) {
-                defaultCollateral.safeTransferFrom(
-                    _tradeDataInternal._requester,
-                    address(this),
-                    _tradeDataInternal._buyInAmount
-                );
-            }
-            //TODO: the code here is the same no matter the collateral.
-            defaultLiquidityPool.commitTrade(address(ticket), payoutWithFees - _tradeDataInternal._buyInAmount);
-            defaultCollateral.safeTransfer(address(ticket), payoutWithFees);
-        } else {
-            ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
-                address(ticket),
-                payoutWithFees - _tradeDataInternal._buyInAmount
-            );
-            IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), payoutWithFees);
-        }
+        address collateralToUse = _tradeDataInternal._collateralPool == address(0)
+            ? address(defaultCollateral)
+            : _tradeDataInternal._collateral;
+
+        //TODO: reconsider the flow here, perhaps the liquidity pool can send directly to the ticket
+        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[collateralToUse]).commitTrade(
+            address(ticket),
+            payoutWithFees - _tradeDataInternal._buyInAmount
+        );
+        IERC20(collateralToUse).safeTransfer(address(ticket), payoutWithFees);
 
         emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout);
         emit TicketCreated(
@@ -883,19 +875,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit TicketMastercopyUpdated(_ticketMastercopy);
     }
 
-    /// @notice sets new LP address
-    /// @param _liquidityPool new LP address
-    // todo: is this really needed when the below method can be used?
-    function setDefaultLiquidityPool(address _liquidityPool) external onlyOwner {
-        if (address(defaultLiquidityPool) != address(0)) {
-            defaultCollateral.approve(address(defaultLiquidityPool), 0);
-        }
-        defaultLiquidityPool = ISportsAMMV2LiquidityPool(_liquidityPool);
-        liquidityPoolForCollateral[address(defaultCollateral)] = _liquidityPool;
-        defaultCollateral.approve(_liquidityPool, MAX_APPROVAL);
-        emit SetDefaultLiquidityPool(_liquidityPool);
-    }
-
     /// @notice sets new LP Pool with LP address and the supported collateral
     /// @param _collateralAddress collateral address that is supported by the pool
     /// @param _liquidityPool new LP address
@@ -968,7 +947,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address safeBox
     );
     event TicketMastercopyUpdated(address ticketMastercopy);
-    event SetDefaultLiquidityPool(address liquidityPool);
     event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);
