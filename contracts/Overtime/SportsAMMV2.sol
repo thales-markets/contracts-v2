@@ -42,6 +42,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
 
+    /* ========== STRUCT VARIABLES ========== */
+    struct TradeDataInternal {
+        uint _buyInAmount;
+        uint _expectedPayout;
+        uint _additionalSlippage;
+        address _differentRecipient;
+        bool _isLive;
+        address _requester;
+        address _collateral;
+        address _collateralPool;
+        uint _collateralPriceInUSD;
+    }
+
     /* ========== STATE VARIABLES ========== */
 
     // merkle tree root per game
@@ -96,23 +109,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
+    // cl client that processes live requests
     address public liveTradingProcessor;
-
-    struct TradeDataInternal {
-        uint _buyInAmount;
-        uint _expectedPayout;
-        uint _additionalSlippage;
-        address _differentRecipient;
-        bool _isLive;
-        address _requester;
-        address _collateral;
-        address _collateralPool;
-        uint _collateralPriceInUSD;
-    }
 
     mapping(address => address) public liquidityPoolForCollateral;
 
+    // the contract that processes all free bets
     address public freeBetsHolder;
+
+    // declare that it can receive eth
+    receive() external payable {}
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -145,8 +151,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         stakingThales = _stakingThales;
         safeBox = _safeBox;
     }
-
-    receive() external payable {}
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
@@ -421,10 +425,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _tickets array of tickets to be expired
     function expireTickets(address[] calldata _tickets) external onlyOwner {
         for (uint i = 0; i < _tickets.length; i++) {
-            if (Ticket(_tickets[i]).phase() == Ticket.Phase.Expiry) {
-                // TODO: not sure why payable is needed here
-                Ticket(_tickets[i]).expire(payable(msg.sender));
-            }
+            Ticket(_tickets[i]).expire(msg.sender);
         }
     }
 
@@ -503,12 +504,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         lqPool = liquidityPoolForCollateral[_collateral];
         if (lqPool != address(0)) {
             if (_collateral == multiCollateralOnOffRamp.WETH9() && _isEth) {
-                // WETH specific case
+                // wrap ETH
                 require(msg.value >= _buyInAmount, "Insuff ETH sent");
-                uint balanceBefore = IERC20(_collateral).balanceOf(address(this));
                 ICollateralUtility(_collateral).deposit{value: msg.value}();
-                uint balanceDiff = IERC20(_collateral).balanceOf(address(this)) - balanceBefore;
-                require(balanceDiff == msg.value, "Insuff WETH");
             } else {
                 // Generic case for any collateral used (THALES/ARB/OP)
                 IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
@@ -525,9 +523,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
             uint exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
             require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
+
+            // send any suprlus to SafeBox
             if (exactReceived > buyInAmountInDefaultCollateral) {
                 defaultCollateral.safeTransfer(safeBox, exactReceived - buyInAmountInDefaultCollateral);
             }
+
             buyInAmount = buyInAmountInDefaultCollateral;
         }
     }
@@ -780,10 +781,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         knownTickets.remove(_ticket);
-        // TODO: what happens if remove is called without checking if it exists first?
-        if (activeTicketsPerUser[ticketOwner].contains(_ticket)) {
-            activeTicketsPerUser[ticketOwner].remove(_ticket);
-        }
+        activeTicketsPerUser[ticketOwner].remove(_ticket);
+
         resolvedTicketsPerUser[ticketOwner].add(_ticket);
         emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 

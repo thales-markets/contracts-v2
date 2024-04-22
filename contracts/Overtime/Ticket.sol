@@ -208,11 +208,11 @@ contract Ticket is OwnedWithInit {
     }
 
     /// @notice expire ticket
-    function expire(address payable beneficiary) external onlyAMM {
+    function expire(address _beneficiary) external onlyAMM {
         require(phase() == Phase.Expiry, "Ticket not in expiry phase");
         require(!resolved, "Can't expire resolved ticket");
-        emit Expired(beneficiary);
-        _selfDestruct(beneficiary);
+        emit Expired(_beneficiary);
+        _selfDestruct(_beneficiary);
     }
 
     /// @notice withdraw collateral from the ticket
@@ -228,7 +228,7 @@ contract Ticket is OwnedWithInit {
         emit Resolved(_hasUserWon, _cancelled);
     }
 
-    function _selfDestruct(address payable beneficiary) internal {
+    function _selfDestruct(address beneficiary) internal {
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
             collateral.safeTransfer(beneficiary, balance);
