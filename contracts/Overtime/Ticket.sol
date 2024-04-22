@@ -132,9 +132,7 @@ contract Ticket is OwnedWithInit {
     /// @notice checks if the user won the ticket
     /// @return hasUserWon true/false
     function isUserTheWinner() external view returns (bool hasUserWon) {
-        if (areAllMarketsResolved()) {
-            hasUserWon = !isTicketLost();
-        }
+        hasUserWon = _isUserTheWinner();
     }
 
     /// @notice checks if the ticket ready to be exercised
@@ -161,7 +159,7 @@ contract Ticket is OwnedWithInit {
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice exercise ticket
-    function exercise() external onlyAMM {
+    function exercise(address _exerciseCollateral) external onlyAMM returns (uint) {
         require(!paused, "Market paused");
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
@@ -170,11 +168,7 @@ contract Ticket is OwnedWithInit {
         uint payout = payoutWithFees - fees;
         bool isCancelled = false;
 
-        if (isTicketLost()) {
-            if (payoutWithFees > 0) {
-                collateral.safeTransfer(address(sportsAMM), payoutWithFees);
-            }
-        } else {
+        if (_isUserTheWinner()) {
             finalPayout = payout;
             isCancelled = true;
             for (uint i = 0; i < numOfMarkets; i++) {
@@ -195,15 +189,22 @@ contract Ticket is OwnedWithInit {
             if (isCancelled) {
                 finalPayout = buyInAmount;
             }
-            collateral.safeTransfer(address(ticketOwner), finalPayout);
+            collateral.safeTransfer(
+                _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
+                    ? address(ticketOwner)
+                    : address(sportsAMM),
+                finalPayout
+            );
+        }
 
-            uint balance = collateral.balanceOf(address(this));
-            if (balance != 0) {
-                collateral.safeTransfer(address(sportsAMM), collateral.balanceOf(address(this)));
-            }
+        // if user is lost or if the user payout was less than anticipated due to cancelled games, send the remainder to AMM
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
         }
 
         _resolve(!isTicketLost(), isCancelled);
+        return finalPayout;
     }
 
     /// @notice expire ticket
@@ -231,6 +232,12 @@ contract Ticket is OwnedWithInit {
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
             collateral.safeTransfer(beneficiary, balance);
+        }
+    }
+
+    function _isUserTheWinner() internal view returns (bool hasUserWon) {
+        if (areAllMarketsResolved()) {
+            hasUserWon = !isTicketLost();
         }
     }
 
