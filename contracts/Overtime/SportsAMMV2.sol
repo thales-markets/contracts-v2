@@ -484,17 +484,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         buyInAmount = _buyInAmount;
         collateralAfterOnramp = _collateral;
         if (_collateral != address(0)) {
+            if (_isEth) {
+                // wrap ETH
+                require(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount, "Insuff ETH sent");
+                ICollateralUtility(_collateral).deposit{value: msg.value}();
+            } else {
+                // Generic case for any collateral used (THALES/ARB/OP)
+                IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
+            }
+
             lqPool = liquidityPoolForCollateral[_collateral];
             if (lqPool != address(0)) {
-                if (_isEth) {
-                    // wrap ETH
-                    require(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount, "Insuff ETH sent");
-                    ICollateralUtility(_collateral).deposit{value: msg.value}();
-                } else {
-                    // Generic case for any collateral used (THALES/ARB/OP)
-                    IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
-                }
-
                 // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
                 collateralPrice = IPriceFeed(ICollateralUtility(address(multiCollateralOnOffRamp)).priceFeed())
                     .rateForCurrency(ISportsAMMV2LiquidityPool(lqPool).collateralKey());
@@ -502,7 +502,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             } else {
                 require(multicollateralEnabled, "Multi-collat not enabled");
                 uint buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
-                IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
                 IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
                 uint exactReceived = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
                 require(exactReceived >= buyInAmountInDefaultCollateral, "Not enough received");
@@ -513,9 +512,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 }
 
                 buyInAmount = buyInAmountInDefaultCollateral;
-                collateralAfterOnramp = address(0);
+                collateralAfterOnramp = address(defaultCollateral);
             }
         } else {
+            collateralAfterOnramp = address(defaultCollateral);
             defaultCollateral.safeTransferFrom(_fromAddress, address(this), _buyInAmount);
         }
     }
@@ -553,10 +553,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
-        address collateralToUse = _tradeDataInternal._collateralPool == address(0)
-            ? address(defaultCollateral)
-            : _tradeDataInternal._collateral;
-
         ticket.initialize(
             Ticket.TicketInit(
                 markets,
@@ -565,18 +561,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 totalQuote,
                 address(this),
                 _tradeDataInternal._differentRecipient,
-                IERC20(collateralToUse),
+                IERC20(_tradeDataInternal._collateral),
                 (block.timestamp + riskManager.expiryDuration())
             )
         );
         _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
         //TODO: reconsider the flow here, perhaps the liquidity pool can send directly to the ticket
-        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[collateralToUse]).commitTrade(
+        ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
             address(ticket),
             payoutWithFees - _tradeDataInternal._buyInAmount
         );
-        IERC20(collateralToUse).safeTransfer(address(ticket), payoutWithFees);
+        IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), payoutWithFees);
 
         emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout);
         emit TicketCreated(
