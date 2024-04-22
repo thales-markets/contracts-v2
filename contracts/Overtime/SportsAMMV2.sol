@@ -478,7 +478,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal returns (address lqPool, uint collateralPrice, uint buyInAmount, address collateralAfterOnramp) {
         buyInAmount = _buyInAmount;
         collateralAfterOnramp = _collateral;
-        if (_collateral != address(0)) {
+        if (_collateral != address(0) && _collateral != address(defaultCollateral)) {
             if (_isEth) {
                 // wrap ETH
                 require(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount, "Insuff ETH sent");
