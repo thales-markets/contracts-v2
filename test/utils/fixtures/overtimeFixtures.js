@@ -684,7 +684,7 @@ async function deploySportsAMMV2Fixture() {
 		freeBetsHolder,
 		freeBetsHolderAddress,
 		collateralAddress,
-		collateralSixDecimalsAddress,
+		collateralSixDecimalsAddress, //TODO: not needed, can use .target annotation
 		collateralSixDecimals2Address,
 	};
 }
