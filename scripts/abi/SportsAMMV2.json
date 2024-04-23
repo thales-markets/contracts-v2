@@ -317,13 +317,13 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "collateral",
+        "name": "liquidityPool",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "liquidityPool",
+        "name": "collateral",
         "type": "address"
       }
     ],
@@ -702,6 +702,19 @@
     "outputs": [
       {
         "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "manager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2Manager",
         "name": "",
         "type": "address"
       }

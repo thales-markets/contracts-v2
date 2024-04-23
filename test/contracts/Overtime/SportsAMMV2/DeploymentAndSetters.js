@@ -16,13 +16,15 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 		ticketMastercopy,
 		sportsAMMV2LiquidityPool,
 		collateral,
+		collateral18,
 		referrals,
 		stakingThales,
 		safeBox,
 		owner,
 		secondAccount,
 		thirdAccount,
-		fourthAccount;
+		fourthAccount,
+		collateralAddress;
 
 	beforeEach(async () => {
 		({
@@ -33,10 +35,12 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			ticketMastercopy,
 			sportsAMMV2LiquidityPool,
 			collateral,
+			collateral18,
 			referrals,
 			stakingThales,
 			safeBox,
 			owner,
+			collateralAddress,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ secondAccount, thirdAccount, fourthAccount } = await loadFixture(deployAccountsFixture));
 	});
@@ -89,13 +93,13 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 				sportsAMMV2.connect(secondAccount).setAddresses(dummyAddress1, dummyAddress2)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await sportsAMMV2.setAddresses(dummyAddress1, dummyAddress2);
-			expect(await sportsAMMV2.defaultCollateral()).to.equal(dummyAddress1);
+			expect(await sportsAMMV2.setAddresses(collateral18.target, dummyAddress2));
+			expect(await sportsAMMV2.defaultCollateral()).to.equal(collateral18.target);
 			expect(await sportsAMMV2.riskManager()).to.equal(dummyAddress2);
 
-			await expect(sportsAMMV2.setAddresses(dummyAddress1, dummyAddress2))
+			await expect(sportsAMMV2.setAddresses(collateral18.target, dummyAddress2))
 				.to.emit(sportsAMMV2, 'AddressesUpdated')
-				.withArgs(dummyAddress1, dummyAddress2);
+				.withArgs(collateral18.target, dummyAddress2);
 		});
 
 		it('Should set the new ticket mastercopy', async () => {

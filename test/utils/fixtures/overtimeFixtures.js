@@ -33,6 +33,7 @@ async function deployAccountsFixture() {
 		thirdLiquidityProvider,
 		firstTrader,
 		secondTrader,
+		collateralAddress,
 	] = await ethers.getSigners();
 
 	return {
@@ -47,6 +48,7 @@ async function deployAccountsFixture() {
 		thirdLiquidityProvider,
 		firstTrader,
 		secondTrader,
+		collateralAddress,
 	};
 }
 
@@ -692,6 +694,8 @@ async function deploySportsAMMV2Fixture() {
 		freeBetsHolder,
 		freeBetsHolderAddress,
 		collateralAddress,
+		collateralSixDecimalsAddress, //TODO: not needed, can use .target annotation
+		collateralSixDecimals2Address,
 	};
 }
 

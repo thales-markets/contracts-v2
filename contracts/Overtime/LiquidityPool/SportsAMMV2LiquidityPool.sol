@@ -415,6 +415,10 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             (!withdrawalRequested[_user] || withdrawalShare[_user] > 0);
     }
 
+    function getCollateralPrice() public view returns (uint) {
+        return IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(collateralKey);
+    }
+
     /// @notice get the pool address for the ticket
     /// @param _ticket to check
     /// @return roundPool the pool address for the ticket
@@ -429,7 +433,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             return false;
         }
 
-        // TODO: uncomment, for test only
         Ticket ticket;
         address ticketAddress;
         for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
@@ -577,10 +580,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
 
             if (!_isDefaultCollateral) {
-                uint collateralPriceInUSD = IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(
-                    collateralKey
-                );
-                _amount = (_amount * collateralPriceInUSD) / ONE;
+                _amount = (_amount * getCollateralPrice()) / ONE;
             }
 
             if (collateralDecimals < stakingCollateralDecimals) {
