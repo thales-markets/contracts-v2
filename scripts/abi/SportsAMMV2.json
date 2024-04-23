@@ -711,19 +711,6 @@
   },
   {
     "inputs": [],
-    "name": "manager",
-    "outputs": [
-      {
-        "internalType": "contract ISportsAMMV2Manager",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "multiCollateralOnOffRamp",
     "outputs": [
       {
