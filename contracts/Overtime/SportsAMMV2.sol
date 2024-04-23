@@ -492,7 +492,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             lqPool = liquidityPoolForCollateral[_collateral];
             if (lqPool != address(0)) {
-                // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
                 collateralPrice = ISportsAMMV2LiquidityPool(lqPool).getCollateralPrice();
                 require(collateralPrice > 0, "PriceFeed returned 0 for collateral");
             } else {
@@ -593,6 +592,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_collateralPriceInUSD > 0) {
             uint collateralDecimals = ISportsAMMV2Manager(_tradeDataInternal._collateral).decimals();
             // TODO: perhaps a batch method can be created that transforms all 3?
+            // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
             _buyInAmount = _transformToUSD(
                 _buyInAmount,
                 _collateralPriceInUSD,
