@@ -70,9 +70,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // decimals of the default collateral
     uint private defaultCollateralDecimals;
 
-    // manager address
-    ISportsAMMV2Manager public manager;
-
     // risk manager address
     ISportsAMMV2RiskManager public riskManager;
 
@@ -370,7 +367,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _exerciseCollateral,
         bool _inEth
     ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        require(msg.sender == Ticket(_ticket).ticketOwner(), "Caller not the ticket owner");
+        require(msg.sender == Ticket(_ticket).ticketOwner(), "Caller not ticket owner");
         _exerciseTicket(_ticket, _exerciseCollateral, _inEth);
     }
 
