@@ -135,6 +135,7 @@ describe('Ticket Exercise and Expire', () => {
 			).to.be.equal(ZERO_ADDRESS);
 
 			expect(await userTicket.collateral()).to.be.equal(collateralAddress);
+
 			expect(Number(ethers.formatEther(balanceSixDecimalsOfTicket))).to.be.equal(0);
 
 			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
