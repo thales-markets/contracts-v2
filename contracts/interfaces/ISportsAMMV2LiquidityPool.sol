@@ -9,4 +9,6 @@ interface ISportsAMMV2LiquidityPool {
     function getTicketPool(address _ticket) external returns (address);
 
     function collateralKey() external view returns (bytes32);
+
+    function getCollateralPrice() external view returns (uint);
 }

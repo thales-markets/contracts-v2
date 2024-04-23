@@ -347,19 +347,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "liquidityPool",
-        "type": "address"
-      }
-    ],
-    "name": "SetDefaultLiquidityPool",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "freeBetsHolder",
         "type": "address"
       }
@@ -512,19 +499,6 @@
     "outputs": [
       {
         "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "defaultLiquidityPool",
-    "outputs": [
-      {
-        "internalType": "contract ISportsAMMV2LiquidityPool",
         "name": "",
         "type": "address"
       }
@@ -1121,19 +1095,6 @@
       }
     ],
     "name": "setAmounts",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_liquidityPool",
-        "type": "address"
-      }
-    ],
-    "name": "setDefaultLiquidityPool",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
