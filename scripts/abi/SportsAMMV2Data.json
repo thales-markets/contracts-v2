@@ -128,7 +128,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "user",
+        "name": "_user",
         "type": "address"
       }
     ],
@@ -334,7 +334,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "user",
+        "name": "_user",
         "type": "address"
       }
     ],
@@ -757,7 +757,7 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "gameId",
+        "name": "_gameId",
         "type": "bytes32"
       }
     ],

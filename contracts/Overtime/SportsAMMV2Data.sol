@@ -210,7 +210,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     }
 
     /// @notice return all ticket data for game
-    function getTicketsDataPerGame(bytes32 gameId) external view returns (TicketData[] memory) {
+    function getTicketsDataPerGame(bytes32 _gameId) external view returns (TicketData[] memory) {
         address[] memory ticketsArray = ticketsPerGame[_gameId].getPage(0, ticketsPerGame[_gameId].elements.length);
         return _getTicketsData(ticketsArray);
     }
