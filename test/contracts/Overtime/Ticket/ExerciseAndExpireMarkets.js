@@ -72,6 +72,7 @@ describe('Ticket Exercise and Expire', () => {
 			tradeDataCurrentRound,
 			tradeDataNextRound,
 			tradeDataCrossRounds,
+			collateralAddress,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
