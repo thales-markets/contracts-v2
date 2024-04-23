@@ -812,7 +812,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     modifier onlyWhitelistedAddresses(address sender) {
         require(
             sender == owner ||
-                ISportsAMMV2Manager(addressManager.getAddress("SportManager")).isWhitelistedAddress(
+                ISportsAMMV2Manager(addressManager.getAddress("SportsAMMV2Manager")).isWhitelistedAddress(
                     sender,
                     ISportsAMMV2Manager.Role.ROOT_SETTING
                 ),

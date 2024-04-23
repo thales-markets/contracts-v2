@@ -225,11 +225,11 @@ async function deploySportsAMMV2Fixture() {
 	await addressManager.setAddressInAddressBook('PriceFeed', priceFeedAddress, {
 		from: owner.address,
 	});
-	await addressManager.setAddressInAddressBook('SportManager', sportsAMMV2ManagerAddress, {
+	await addressManager.setAddressInAddressBook('SportsAMMV2Manager', sportsAMMV2ManagerAddress, {
 		from: owner.address,
 	});
 	await addressManager.setAddressInAddressBook(
-		'SportResultManager',
+		'SportsAMMV2ResultManager',
 		sportsAMMV2ResultManagerAddress,
 		{
 			from: owner.address,

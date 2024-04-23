@@ -64,7 +64,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function initialize(address _owner, ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external initializer {
         setOwner(_owner);
         sportsAMM = _sportsAMM;
-        resultManager = ISportsAMMV2ResultManager(sportsAMM.addressManager().getAddress("SportResultManager"));
+        resultManager = ISportsAMMV2ResultManager(sportsAMM.addressManager().getAddress("SportsAMMV2ResultManager"));
         riskManager = _riskManager;
     }
 

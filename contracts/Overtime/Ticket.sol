@@ -70,7 +70,7 @@ contract Ticket is OwnedWithInit {
         initialized = true;
         initOwner(msg.sender);
         sportsAMM = ISportsAMMV2(params._sportsAMM);
-        resultManager = ISportsAMMV2ResultManager(sportsAMM.addressManager().getAddress("SportResultManager"));
+        resultManager = ISportsAMMV2ResultManager(sportsAMM.addressManager().getAddress("SportsAMMV2ResultManager"));
         numOfMarkets = params._markets.length;
         for (uint i = 0; i < numOfMarkets; i++) {
             markets[i] = params._markets[i];
