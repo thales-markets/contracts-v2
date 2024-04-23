@@ -44,7 +44,8 @@ describe('Ticket Exercise and Expire', () => {
 		firstTrader,
 		tradeDataCurrentRound,
 		tradeDataNextRound,
-		tradeDataCrossRounds;
+		tradeDataCrossRounds,
+		collateralAddress;
 
 	beforeEach(async () => {
 		({
@@ -71,6 +72,7 @@ describe('Ticket Exercise and Expire', () => {
 			tradeDataCurrentRound,
 			tradeDataNextRound,
 			tradeDataCrossRounds,
+			collateralAddress,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
@@ -128,14 +130,19 @@ describe('Ticket Exercise and Expire', () => {
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const userTicket = await TicketContract.attach(ticketAddress);
 
-			expect(await userTicket.collateral()).to.be.equal(collateralSixDecimals.target);
+			expect(
+				await sportsAMMV2.liquidityPoolForCollateral(collateralSixDecimals.target)
+			).to.be.equal(ZERO_ADDRESS);
+
+			expect(await userTicket.collateral()).to.be.equal(collateralAddress);
+
 			expect(Number(ethers.formatEther(balanceSixDecimalsOfTicket))).to.be.equal(0);
 
 			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
-			await expect(sportsAMMV2.exerciseTicket(ticketAddress)).to.be.revertedWithPanic(0x11);
+			sportsAMMV2.exerciseTicket(ticketAddress);
 		});
 
 		it('Exercise market', async () => {
