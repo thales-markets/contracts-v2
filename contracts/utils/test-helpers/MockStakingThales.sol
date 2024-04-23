@@ -9,7 +9,7 @@ contract MockStakingThales {
 
     address public feeToken;
 
-    function updateVolume(address account, uint amount) external {
+    function updateVolume(address account, uint amount) public {
         uint decimals = ISportsAMMV2Manager(feeToken).decimals();
         if (amount == 0) {
             require(amount > 0, "zero amount received");
@@ -23,7 +23,18 @@ contract MockStakingThales {
         volume[account] = amount;
     }
 
-    function getFeeTokenDecimals() external view returns (uint feeTokenDecimals) {
+    function updateVolumeAtAmountDecimals(address account, uint amount, uint decimals) external {
+        uint actualAmount = amount;
+        uint stakingCollateralDecimals = getFeeTokenDecimals();
+        if (decimals < stakingCollateralDecimals) {
+            actualAmount = amount * 10 ** (18 - decimals);
+        } else if (decimals > stakingCollateralDecimals) {
+            actualAmount = amount / 10 ** (18 - stakingCollateralDecimals);
+        }
+        updateVolume(account, actualAmount);
+    }
+
+    function getFeeTokenDecimals() public view returns (uint feeTokenDecimals) {
         feeTokenDecimals = ISportsAMMV2Manager(feeToken).decimals();
     }
 

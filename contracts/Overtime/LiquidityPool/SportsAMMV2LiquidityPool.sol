@@ -575,21 +575,13 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     function updateStakingVolume(IStakingThales stakingThales, uint _amount, bool _isDefaultCollateral) internal {
         if (address(stakingThales) != address(0)) {
-            uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
-                .decimals();
             uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
 
             if (!_isDefaultCollateral) {
                 _amount = (_amount * getCollateralPrice()) / ONE;
             }
 
-            if (collateralDecimals < stakingCollateralDecimals) {
-                _amount = _amount * 10 ** (stakingCollateralDecimals - collateralDecimals);
-            } else if (collateralDecimals > stakingCollateralDecimals) {
-                _amount = _amount / 10 ** (collateralDecimals - stakingCollateralDecimals);
-            }
-
-            stakingThales.updateVolume(msg.sender, _amount);
+            stakingThales.updateVolumeAtAmountDecimals(msg.sender, _amount, collateralDecimals);
         }
     }
 

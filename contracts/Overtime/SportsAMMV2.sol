@@ -186,7 +186,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_collateral != address(0) && _collateral != address(defaultCollateral)) {
             if (liquidityPoolForCollateral[_collateral] == address(0)) {
                 buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
-                // TODO: require that this is greater than 0
                 useAmount = buyInAmountInDefaultCollateral;
             } else {
                 uint collateralDecimals = ISportsAMMV2Manager(address(_collateral)).decimals();
@@ -200,6 +199,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 );
             }
         }
+
+        require(useAmount > 0, "Can't trade 0 amount");
 
         (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(
             _tradeData,
@@ -601,15 +602,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount);
         riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _tradeDataInternal._additionalSlippage);
         if (address(stakingThales) != address(0)) {
-            uint stakingCollateralDecimals = ISportsAMMV2Manager(ISportsAMMV2Manager(address(stakingThales)).feeToken())
-                .decimals();
-            if (defaultCollateralDecimals < stakingCollateralDecimals) {
-                _buyInAmount = _buyInAmount * 10 ** (18 - defaultCollateralDecimals);
-            } else if (defaultCollateralDecimals > stakingCollateralDecimals) {
-                _buyInAmount = _buyInAmount / 10 ** (18 - stakingCollateralDecimals);
-            }
-            // TODO: might be simple to add an update volume method to stakingThales that accepts the number of decimals as input
-            stakingThales.updateVolume(_tradeDataInternal._differentRecipient, _buyInAmount);
+            stakingThales.updateVolumeAtAmountDecimals(
+                _tradeDataInternal._differentRecipient,
+                _buyInAmount,
+                defaultCollateralDecimals
+            );
         }
     }
 
