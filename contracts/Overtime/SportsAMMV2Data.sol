@@ -77,9 +77,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
-    function initialize(address _owner, ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external initializer {
+    function initialize(address _owner, ISportsAMMV2RiskManager _riskManager) external initializer {
         setOwner(_owner);
-        sportsAMM = _sportsAMM;
         riskManager = _riskManager;
     }
 

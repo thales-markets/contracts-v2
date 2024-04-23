@@ -21,6 +21,7 @@ const { ethers } = require('hardhat');
 
 describe('Ticket Exercise and Expire', () => {
 	let sportsAMMV2,
+		sportsAMMV2Data,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2ResultManager,
 		tradeDataCurrentRound,
@@ -37,6 +38,7 @@ describe('Ticket Exercise and Expire', () => {
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
+			sportsAMMV2Data,
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2ResultManager,
 			safeBox,
@@ -105,7 +107,7 @@ describe('Ticket Exercise and Expire', () => {
 			let swapAmount = parseInt(quote.payout.toString()) * 2;
 			collateral18.transfer(multiCollateral, swapAmount.toString());
 			collateral.transfer(multiCollateral, swapAmount.toString());
-			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			const ticketMarket1 = tradeDataCurrentRound[0];
@@ -186,7 +188,7 @@ describe('Ticket Exercise and Expire', () => {
 				to: multiCollateral.target,
 				value: swapAmount.toString(),
 			});
-			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			const ticketMarket1 = tradeDataCurrentRound[0];

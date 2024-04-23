@@ -82,7 +82,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "sportAMMData",
+        "name": "sportsAMMData",
         "type": "address"
       },
       {
@@ -610,7 +610,7 @@
       },
       {
         "internalType": "contract ISportsAMMV2Data",
-        "name": "_sportAMMData",
+        "name": "_sportsAMMData",
         "type": "address"
       },
       {
@@ -878,7 +878,7 @@
       },
       {
         "internalType": "address",
-        "name": "_sportAMMData",
+        "name": "_sportsAMMData",
         "type": "address"
       },
       {
@@ -1054,7 +1054,7 @@
   },
   {
     "inputs": [],
-    "name": "sportAMMData",
+    "name": "sportsAMMData",
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2Data",

@@ -56,7 +56,7 @@ describe('SportsAMMV2Data Read Data', () => {
 				false
 			);
 
-		const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+		const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
 		ticketAddress = activeTickets[0];
 		numberOfGamesOnTicket = tradeDataTenMarketsCurrentRound.length;
 	});

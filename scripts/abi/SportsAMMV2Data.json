@@ -967,11 +967,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract ISportsAMMV2",
-        "name": "_sportsAMM",
-        "type": "address"
-      },
-      {
         "internalType": "contract ISportsAMMV2RiskManager",
         "name": "_riskManager",
         "type": "address"

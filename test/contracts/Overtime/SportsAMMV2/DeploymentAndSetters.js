@@ -97,6 +97,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 						dummyAddress2,
 						dummyAddress1,
 						dummyAddress2,
+						dummyAddress2,
 						dummyAddress1,
 						dummyAddress2,
 						dummyAddress1
@@ -107,6 +108,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 				collateralAddress,
 				dummyAddress2,
 				dummyAddress1,
+				dummyAddress2,
 				dummyAddress2,
 				dummyAddress1,
 				dummyAddress2,
@@ -119,12 +121,14 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(await sportsAMMV2.referrals()).to.equal(dummyAddress1);
 			expect(await sportsAMMV2.stakingThales()).to.equal(dummyAddress2);
 			expect(await sportsAMMV2.safeBox()).to.equal(dummyAddress1);
+			expect(await sportsAMMV2.sportsAMMData()).to.equal(dummyAddress2);
 
 			await expect(
 				sportsAMMV2.setAddresses(
 					collateralAddress,
 					dummyAddress2,
 					dummyAddress1,
+					dummyAddress2,
 					dummyAddress2,
 					dummyAddress1,
 					dummyAddress2,
@@ -136,6 +140,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 					collateralAddress,
 					dummyAddress2,
 					dummyAddress1,
+					dummyAddress2,
 					dummyAddress2,
 					dummyAddress1,
 					dummyAddress2,
