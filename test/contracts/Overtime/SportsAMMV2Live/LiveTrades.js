@@ -82,6 +82,32 @@ describe('SportsAMMV2Live Live Trades', () => {
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
 		});
 
+		it('Should buy a live trade with referrer', async () => {
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
+
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+
+			await liveTradingProcessor
+				.connect(firstTrader)
+				.requestLiveTrade(
+					tradeDataCurrentRound[0].gameId,
+					tradeDataCurrentRound[0].sportId,
+					tradeDataCurrentRound[0].typeId,
+					tradeDataCurrentRound[0].position,
+					BUY_IN_AMOUNT,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					firstTrader,
+					secondAccount,
+					ZERO_ADDRESS
+				);
+
+			let requestId = await liveTradingProcessor.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
+		});
+
 		it('Should buy a live trade with WETH collateral', async () => {
 			console.log('quoteETH.payout : ', quoteETH.payout.toString());
 			expect(quoteETH.payout).to.equal(ethers.parseEther('0.0057142857142858'));
