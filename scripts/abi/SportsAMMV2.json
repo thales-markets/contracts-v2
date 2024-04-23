@@ -82,6 +82,12 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "sportAMMData",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "referrals",
         "type": "address"
       },
@@ -868,6 +874,11 @@
       {
         "internalType": "address",
         "name": "_resultManager",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_sportAMMData",
         "type": "address"
       },
       {

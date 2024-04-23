@@ -700,6 +700,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _manager,
         address _riskManager,
         address _resultManager,
+        address _sportAMMData,
         address _referrals,
         address _stakingThales,
         address _safeBox
@@ -709,6 +710,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         manager = ISportsAMMV2Manager(_manager);
         riskManager = ISportsAMMV2RiskManager(_riskManager);
         resultManager = ISportsAMMV2ResultManager(_resultManager);
+        sportAMMData = ISportsAMMV2Data(_sportAMMData);
         referrals = IReferrals(_referrals);
         stakingThales = IStakingThales(_stakingThales);
         safeBox = _safeBox;
@@ -718,6 +720,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _manager,
             _riskManager,
             _resultManager,
+            _sportAMMData,
             _referrals,
             _stakingThales,
             _safeBox
@@ -810,6 +813,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address manager,
         address riskManager,
         address resultManager,
+        address sportAMMData,
         address referrals,
         address stakingThales,
         address safeBox
