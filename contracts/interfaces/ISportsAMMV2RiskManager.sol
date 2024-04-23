@@ -68,4 +68,6 @@ interface ISportsAMMV2RiskManager {
     ) external view;
 
     function checkAndUpdateRisks(ISportsAMMV2.TradeData[] memory _tradeData, uint _buyInAmount) external;
+
+    function verifyMerkleTree(ISportsAMMV2.TradeData memory marketTradeData) external view;
 }

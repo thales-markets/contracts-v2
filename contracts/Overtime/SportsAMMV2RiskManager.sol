@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 // internal
 import "../utils/proxy/ProxyReentrancyGuard.sol";
@@ -275,6 +276,38 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 _updateRisk(marketTradeData, marketRiskAmount);
             }
         }
+    }
+
+    function verifyMerkleTree(ISportsAMMV2.TradeData memory marketTradeData) external view {
+        // Compute the merkle leaf from trade data
+        bytes memory encodePackedOutput = abi.encodePacked(
+            marketTradeData.gameId,
+            uint(marketTradeData.sportId),
+            uint(marketTradeData.typeId),
+            marketTradeData.maturity,
+            uint(marketTradeData.status),
+            int(marketTradeData.line),
+            uint(marketTradeData.playerId),
+            marketTradeData.odds
+        );
+
+        for (uint i; i < marketTradeData.combinedPositions.length; i++) {
+            for (uint j; j < marketTradeData.combinedPositions[i].length; j++) {
+                encodePackedOutput = abi.encodePacked(
+                    encodePackedOutput,
+                    uint(marketTradeData.combinedPositions[i][j].typeId),
+                    uint(marketTradeData.combinedPositions[i][j].position),
+                    int(marketTradeData.combinedPositions[i][j].line)
+                );
+            }
+        }
+
+        bytes32 leaf = keccak256(encodePackedOutput);
+        // verify the proof is valid
+        require(
+            MerkleProof.verify(marketTradeData.merkleProof, sportsAMM.rootPerGame(marketTradeData.gameId), leaf),
+            "Proof is not valid"
+        );
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
