@@ -399,15 +399,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _exerciseTicket(_ticket, _exerciseCollateral, _inEth);
     }
 
-    /// @notice pause/unapause provided tickets
-    /// @param _tickets array of tickets to be paused/unpaused
-    /// @param _paused pause/unpause
-    function setPausedTickets(address[] calldata _tickets, bool _paused) external onlyOwner {
-        for (uint i = 0; i < _tickets.length; i++) {
-            Ticket(_tickets[i]).setPaused(_paused);
-        }
-    }
-
     /// @notice expire provided tickets
     /// @param _tickets array of tickets to be expired
     function expireTickets(address[] calldata _tickets) external onlyOwner {

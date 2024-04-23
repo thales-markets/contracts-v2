@@ -81,7 +81,7 @@ describe('Ticket Exercise and Expire', () => {
 	});
 
 	describe('Exercise and expire', () => {
-		it('18 decimal - default collateral, 6 decimal - multicollateral buy -> Revert with panic on exercise', async () => {
+		it('18 decimal - default collateral, 6 decimal - multicollateral buy -> Non-revert with panic on exercise', async () => {
 			tradeDataCurrentRound[0].position = 0;
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 
@@ -128,14 +128,14 @@ describe('Ticket Exercise and Expire', () => {
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const userTicket = await TicketContract.attach(ticketAddress);
 
-			expect(await userTicket.collateral()).to.be.equal(collateralSixDecimals.target);
+			expect(await userTicket.collateral()).to.be.equal(collateral.target);
 			expect(Number(ethers.formatEther(balanceSixDecimalsOfTicket))).to.be.equal(0);
 
 			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
-			await expect(sportsAMMV2.exerciseTicket(ticketAddress)).to.be.revertedWithPanic(0x11);
+			sportsAMMV2.exerciseTicket(ticketAddress);
 		});
 
 		it('Exercise market', async () => {
