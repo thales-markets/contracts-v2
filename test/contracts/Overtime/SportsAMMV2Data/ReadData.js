@@ -73,6 +73,35 @@ describe('SportsAMMV2Data Read Data', () => {
 		});
 	});
 
+	describe('Sports AMM Data', () => {
+		it('Should read ticket data active/resolved', async () => {
+			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+			expect(await sportsAMMV2Data.isActiveTicket(ticketAddress)).to.be.equal(true);
+			expect(await sportsAMMV2Data.numOfActiveTickets()).to.be.equal(1);
+			const activeTicketsForUser = await sportsAMMV2Data.getActiveTicketsPerUser(
+				0,
+				100,
+				firstTrader
+			);
+			expect(activeTicketsForUser[0]).to.be.equal(ticketAddress);
+			expect(await sportsAMMV2Data.numOfActiveTicketsPerUser(firstTrader)).to.be.equal(1);
+
+			const resolvedTicketsForUser = await sportsAMMV2Data.getResolvedTicketsPerUser(
+				0,
+				100,
+				firstTrader
+			);
+			expect(resolvedTicketsForUser.length).to.be.equal(0);
+			expect(await sportsAMMV2Data.numOfResolvedTicketsPerUser(firstTrader)).to.be.equal(0);
+
+			const firstGameId = tradeDataTenMarketsCurrentRound[0].gameId;
+			const ticketsPerGame = await sportsAMMV2Data.getTicketsPerGame(0, 100, firstGameId);
+			expect(ticketsPerGame[0]).to.be.equal(ticketAddress);
+			expect(await sportsAMMV2Data.numOfTicketsPerGame(firstGameId)).to.be.equal(1);
+		});
+	});
+
 	describe('Tickets data', () => {
 		it('Should return tickets data', async () => {
 			const ticketsData = await sportsAMMV2Data.getTicketsData([ticketAddress]);
