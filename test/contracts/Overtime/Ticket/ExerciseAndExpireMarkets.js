@@ -13,29 +13,64 @@ const {
 	GAME_ID_3,
 	GAME_ID_4,
 	BUY_IN_AMOUNT,
+	BUY_IN_AMOUNT_SIX_DECIMALS,
 	ADDITIONAL_SLIPPAGE,
 } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
+const { ethers } = require('hardhat');
 
 describe('Ticket Exercise and Expire', () => {
 	let sportsAMMV2,
-		sportsAMMV2LiquidityPool,
 		sportsAMMV2ResultManager,
-		tradeDataCurrentRound,
-		tradeDataTenMarketsCurrentRound,
+		sportsAMMV2RiskManager,
+		sportsAMMV2LiquidityPool,
+		sportsAMMV2LiquidityPoolSixDecimals,
+		defaultLiquidityProviderSixDecimals,
+		sportsAMMV2LiquidityPoolSixDecimals2,
+		defaultLiquidityProviderSixDecimals2,
+		sportsAMMV2LiquidityPoolETH,
+		defaultLiquidityProviderETH,
+		weth,
+		collateral,
+		collateral18,
+		collateralSixDecimals,
+		collateralSixDecimals2,
+		multiCollateral,
+		positionalManager,
+		stakingThales,
+		safeBox,
+		priceFeed,
 		firstLiquidityProvider,
 		firstTrader,
-		safeBox,
-		secondAccount;
+		tradeDataCurrentRound,
+		tradeDataNextRound,
+		tradeDataCrossRounds;
 
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
-			sportsAMMV2LiquidityPool,
 			sportsAMMV2ResultManager,
+			sportsAMMV2RiskManager,
+			sportsAMMV2LiquidityPool,
+			sportsAMMV2LiquidityPoolSixDecimals,
+			defaultLiquidityProviderSixDecimals,
+			sportsAMMV2LiquidityPoolSixDecimals2,
+			defaultLiquidityProviderSixDecimals2,
+			sportsAMMV2LiquidityPoolETH,
+			defaultLiquidityProviderETH,
+			weth,
+			collateral,
+			collateral18,
+			collateralSixDecimals,
+			collateralSixDecimals2,
+			multiCollateral,
+			positionalManager,
+			stakingThales,
+			priceFeed,
 			safeBox,
 			tradeDataCurrentRound,
-			tradeDataTenMarketsCurrentRound,
+			tradeDataNextRound,
+			tradeDataCrossRounds,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
@@ -46,6 +81,63 @@ describe('Ticket Exercise and Expire', () => {
 	});
 
 	describe('Exercise and expire', () => {
+		it('18 decimal - default collateral, 6 decimal - multicollateral buy -> Revert with panic on exercise', async () => {
+			tradeDataCurrentRound[0].position = 0;
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await stakingThales.setFeeToken(collateral);
+			expect(await stakingThales.getFeeTokenDecimals()).to.be.equal(18);
+
+			// create a ticket
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT_SIX_DECIMALS,
+				collateralSixDecimals
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT_SIX_DECIMALS,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					collateralSixDecimals,
+					false
+				);
+
+			let volumeFirstTrader = await stakingThales.volume(firstTrader);
+			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
+
+			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const balanceSixDecimalsOfTicket = await collateralSixDecimals.balanceOf(ticketAddress);
+			const balanceDefaultCollateralOfTicket = await collateral.balanceOf(ticketAddress);
+
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[0]]
+			);
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			expect(await userTicket.collateral()).to.be.equal(collateralSixDecimals.target);
+			expect(Number(ethers.formatEther(balanceSixDecimalsOfTicket))).to.be.equal(0);
+
+			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
+			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
+			const phase = await userTicket.phase();
+			expect(phase).to.be.equal(1);
+			await expect(sportsAMMV2.exerciseTicket(ticketAddress)).to.be.revertedWithPanic(0x11);
+		});
+
 		it('Exercise market', async () => {
 			tradeDataCurrentRound[0].position = 0;
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
