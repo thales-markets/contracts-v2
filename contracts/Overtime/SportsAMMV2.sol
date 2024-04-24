@@ -348,7 +348,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
-            riskManager.verifyMerkleTree(marketTradeData);
+            riskManager.verifyMerkleTree(marketTradeData, rootPerGame[marketTradeData.gameId]);
 
             require(marketTradeData.odds.length > marketTradeData.position, "Invalid position");
             uint marketOdds = marketTradeData.odds[marketTradeData.position];

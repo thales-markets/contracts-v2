@@ -278,36 +278,36 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
-    function verifyMerkleTree(ISportsAMMV2.TradeData memory marketTradeData) external view {
+    /// @notice verifies the merkle root is the one that is expected
+    /// @param _marketTradeData trade data with all market info needed for ticket
+    /// @param _rootPerGame to verify against
+    function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure {
         // Compute the merkle leaf from trade data
         bytes memory encodePackedOutput = abi.encodePacked(
-            marketTradeData.gameId,
-            uint(marketTradeData.sportId),
-            uint(marketTradeData.typeId),
-            marketTradeData.maturity,
-            uint(marketTradeData.status),
-            int(marketTradeData.line),
-            uint(marketTradeData.playerId),
-            marketTradeData.odds
+            _marketTradeData.gameId,
+            uint(_marketTradeData.sportId),
+            uint(_marketTradeData.typeId),
+            _marketTradeData.maturity,
+            uint(_marketTradeData.status),
+            int(_marketTradeData.line),
+            uint(_marketTradeData.playerId),
+            _marketTradeData.odds
         );
 
-        for (uint i; i < marketTradeData.combinedPositions.length; i++) {
-            for (uint j; j < marketTradeData.combinedPositions[i].length; j++) {
+        for (uint i; i < _marketTradeData.combinedPositions.length; i++) {
+            for (uint j; j < _marketTradeData.combinedPositions[i].length; j++) {
                 encodePackedOutput = abi.encodePacked(
                     encodePackedOutput,
-                    uint(marketTradeData.combinedPositions[i][j].typeId),
-                    uint(marketTradeData.combinedPositions[i][j].position),
-                    int(marketTradeData.combinedPositions[i][j].line)
+                    uint(_marketTradeData.combinedPositions[i][j].typeId),
+                    uint(_marketTradeData.combinedPositions[i][j].position),
+                    int(_marketTradeData.combinedPositions[i][j].line)
                 );
             }
         }
 
         bytes32 leaf = keccak256(encodePackedOutput);
         // verify the proof is valid
-        require(
-            MerkleProof.verify(marketTradeData.merkleProof, sportsAMM.rootPerGame(marketTradeData.gameId), leaf),
-            "Proof is not valid"
-        );
+        require(MerkleProof.verify(_marketTradeData.merkleProof, _rootPerGame, leaf), "Proof is not valid");
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */

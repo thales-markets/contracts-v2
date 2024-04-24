@@ -1860,13 +1860,18 @@
           }
         ],
         "internalType": "struct ISportsAMMV2.TradeData",
-        "name": "marketTradeData",
+        "name": "_marketTradeData",
         "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_rootPerGame",
+        "type": "bytes32"
       }
     ],
     "name": "verifyMerkleTree",
     "outputs": [],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   }
 ]
