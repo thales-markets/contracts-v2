@@ -88,5 +88,26 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					false
 				);
 		});
+
+		it('Should buy a ticket (1 market) with referrer', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS
+			);
+
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
+
+			await sportsAMMV2.connect(firstTrader).trade(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				quote.payout,
+				ADDITIONAL_SLIPPAGE,
+				ZERO_ADDRESS,
+				firstLiquidityProvider, //referrer
+				ZERO_ADDRESS,
+				false
+			);
+		});
 	});
 });
