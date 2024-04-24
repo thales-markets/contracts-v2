@@ -1,0 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+interface ITicket {
+    function setPaused(bool _paused) external;
+}

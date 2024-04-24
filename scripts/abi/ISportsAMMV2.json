@@ -28,6 +28,19 @@
   {
     "inputs": [],
     "name": "manager",
+    "inputs": [],
+    "name": "manager",
+    "outputs": [
+      {
+        "internalType": "contract ISportsAMMV2Manager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2Manager",

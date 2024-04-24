@@ -615,6 +615,24 @@
     "inputs": [
       {
         "internalType": "address[]",
+        "name": "_tickets",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "_paused",
+        "type": "bool"
+      }
+    ],
+    "name": "setPausedTickets",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
         "name": "_whitelistedAddresses",
         "type": "address[]"
       },

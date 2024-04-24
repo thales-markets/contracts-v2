@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
+import "../interfaces/ISportsAMMV2Manager.sol";
 
 interface ISportsAMMV2 {
     struct CombinedPosition {
