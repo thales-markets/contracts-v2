@@ -70,4 +70,6 @@ interface ISportsAMMV2 {
         address _collateral,
         bool _isEth
     ) external returns (address _createdTicket);
+
+    function rootPerGame(bytes32 game) external view returns (bytes32);
 }
