@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
+import "../interfaces/ISportsAMMV2Manager.sol";
 
 interface ISportsAMMV2 {
     struct CombinedPosition {
@@ -37,6 +38,8 @@ interface ISportsAMMV2 {
     }
 
     function defaultCollateral() external view returns (IERC20);
+
+    function manager() external view returns (ISportsAMMV2Manager);
 
     function resultManager() external view returns (ISportsAMMV2ResultManager);
 

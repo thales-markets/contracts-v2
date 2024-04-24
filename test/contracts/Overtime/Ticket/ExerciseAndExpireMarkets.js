@@ -83,7 +83,7 @@ describe('Ticket Exercise and Expire', () => {
 	});
 
 	describe('Exercise and expire', () => {
-		it('18 decimal - default collateral, 6 decimal - multicollateral buy -> Revert with panic on exercise', async () => {
+		it('18 decimal - default collateral, 6 decimal - multicollateral buy -> Non-revert with panic on exercise', async () => {
 			tradeDataCurrentRound[0].position = 0;
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 

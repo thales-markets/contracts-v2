@@ -8,6 +8,7 @@ import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
+import "../interfaces/ITicket.sol";
 
 contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     uint private constant COLLATERAL_DEFAULT_DECIMALS = 18;
@@ -47,6 +48,21 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         uint collateralDecimals = ISportsAMMV2Manager(collateral).decimals();
         uint collateralTransformMultiplier = COLLATERAL_DEFAULT_DECIMALS - collateralDecimals;
         return value * (10 ** collateralTransformMultiplier);
+    }
+
+    /* ========== EXTERNAL READ FUNCTIONS ========== */
+
+    /// @notice pause/unapause provided tickets
+    /// @param _tickets array of tickets to be paused/unpaused
+    /// @param _paused pause/unpause
+    function setPausedTickets(address[] calldata _tickets, bool _paused) external {
+        require(
+            msg.sender == owner || whitelistedAddresses[msg.sender][ISportsAMMV2Manager.Role.TICKET_PAUSER],
+            "Invalid pauser"
+        );
+        for (uint i = 0; i < _tickets.length; i++) {
+            ITicket(_tickets[i]).setPaused(_paused);
+        }
     }
 
     /* ========== SETTERS ========== */

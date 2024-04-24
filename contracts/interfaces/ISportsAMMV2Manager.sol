@@ -5,7 +5,8 @@ interface ISportsAMMV2Manager {
     enum Role {
         ROOT_SETTING,
         RISK_MANAGING,
-        MARKET_RESOLVING
+        MARKET_RESOLVING,
+        TICKET_PAUSER
     }
 
     function isWhitelistedAddress(address _address, Role role) external view returns (bool);
