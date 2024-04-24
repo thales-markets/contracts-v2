@@ -17,7 +17,7 @@ async function createTicket() {
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('sportsAMMV2ManagerAddress', network);
 	console.log('Found SportsAMMV2 at:', sportsAMMV2Address);
-	console.log('Found sportsAMMV2Manager at:', sportsAMMV2ManagerAddress);
+	console.log('Found SportsAMMV2Manager at:', sportsAMMV2ManagerAddress);
 
 	const sportsAMMV2Contract = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2ManagerContract = await ethers.getContractFactory('SportsAMMV2Manager');
