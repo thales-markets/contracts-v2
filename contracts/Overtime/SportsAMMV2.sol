@@ -18,7 +18,6 @@ import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "./Ticket.sol";
 import "../interfaces/ISportsAMMV2.sol";
-import "../interfaces/ISportsAMMV2Data.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
@@ -73,8 +72,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     // result manager address
     ISportsAMMV2ResultManager public resultManager;
-
-    ISportsAMMV2Data public sportsAMMData;
 
     // referrals address
     IReferrals public referrals;

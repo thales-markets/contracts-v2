@@ -1038,19 +1038,6 @@
   },
   {
     "inputs": [],
-    "name": "sportsAMMData",
-    "outputs": [
-      {
-        "internalType": "contract ISportsAMMV2Data",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "stakingThales",
     "outputs": [
       {
