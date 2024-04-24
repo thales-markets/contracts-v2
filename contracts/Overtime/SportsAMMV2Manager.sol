@@ -151,28 +151,6 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         return whitelistedAddresses[_address][_role];
     }
 
-    /// @notice transforms collateral if needed - divide by 12 decimals (18 -> 6)
-    /// @param value value to be transformed
-    /// @param collateral collateral address
-    /// @return uint transformed value
-    // TODO: can be deleted
-    function transformCollateral(uint value, address collateral) external view returns (uint) {
-        uint collateralDecimals = ISportsAMMV2Manager(collateral).decimals();
-        uint collateralTransformMultiplier = COLLATERAL_DEFAULT_DECIMALS - collateralDecimals;
-        return value / (10 ** collateralTransformMultiplier);
-    }
-
-    /// @notice reverse collateral if needed - multiple by 12 decimals (6 -> 18)
-    /// @param value value to be reversed
-    /// @param collateral collateral address
-    /// @return uint revered value
-    // TODO: can be deleted
-    function reverseTransformCollateral(uint value, address collateral) external view returns (uint) {
-        uint collateralDecimals = ISportsAMMV2Manager(collateral).decimals();
-        uint collateralTransformMultiplier = COLLATERAL_DEFAULT_DECIMALS - collateralDecimals;
-        return value * (10 ** collateralTransformMultiplier);
-    }
-
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
     /// @notice pause/unapause provided tickets
