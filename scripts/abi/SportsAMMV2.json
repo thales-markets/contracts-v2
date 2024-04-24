@@ -82,12 +82,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "sportsAMMData",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "referrals",
         "type": "address"
       },
@@ -609,11 +603,6 @@
         "type": "address"
       },
       {
-        "internalType": "contract ISportsAMMV2Data",
-        "name": "_sportsAMMData",
-        "type": "address"
-      },
-      {
         "internalType": "contract IReferrals",
         "name": "_referrals",
         "type": "address"
@@ -874,11 +863,6 @@
       {
         "internalType": "address",
         "name": "_resultManager",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_sportsAMMData",
         "type": "address"
       },
       {

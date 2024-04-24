@@ -19,7 +19,7 @@ const { ethers } = require('hardhat');
 describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2ResultManager,
-		sportsAMMV2Data,
+		sportsAMMV2Manager,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolETH,
 		defaultLiquidityProviderETH,
@@ -37,7 +37,7 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 		({
 			sportsAMMV2,
 			sportsAMMV2ResultManager,
-			sportsAMMV2Data,
+			sportsAMMV2Manager,
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
 			defaultLiquidityProviderETH,
@@ -126,8 +126,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			expect(diffPayoutBuyIn.toFixed(4)).to.equal(diffCurrentRoundPoolBalance.toFixed(4));
 
 			// // get active ticket from Sports AMM
-			expect(await sportsAMMV2Data.numOfActiveTickets()).to.equal(1);
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			expect(await sportsAMMV2Manager.numOfActiveTickets()).to.equal(1);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			// // check ticket data on LP
@@ -290,8 +290,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			expect(diffPayoutBuyIn.toFixed(4)).to.equal(diffCurrentRoundPoolBalance.toFixed(4));
 
 			// get active ticket from Sports AMM
-			expect(await sportsAMMV2Data.numOfActiveTickets()).to.equal(1);
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			expect(await sportsAMMV2Manager.numOfActiveTickets()).to.equal(1);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			// check ticket data on LP
@@ -474,8 +474,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			expect(defaultLpBalanceBeforeTrade).to.not.equal(ZERO_ADDRESS);
 
 			// get active ticket from Sports AMM
-			expect(await sportsAMMV2Data.numOfActiveTickets()).to.equal(1);
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			expect(await sportsAMMV2Manager.numOfActiveTickets()).to.equal(1);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			// check current round data on LP
@@ -693,8 +693,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			expect(defaultRoundAddress).to.equal(defaultLpAddress);
 
 			// get active Ticket from Sports AMM
-			expect(await sportsAMMV2Data.numOfActiveTickets()).to.equal(1);
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			expect(await sportsAMMV2Manager.numOfActiveTickets()).to.equal(1);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			// check current round data on LP

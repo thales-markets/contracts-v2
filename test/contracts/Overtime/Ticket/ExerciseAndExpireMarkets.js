@@ -21,7 +21,7 @@ const { ethers } = require('hardhat');
 
 describe('Ticket Exercise and Expire', () => {
 	let sportsAMMV2,
-		sportsAMMV2Data,
+		sportsAMMV2Manager,
 		sportsAMMV2ResultManager,
 		sportsAMMV2RiskManager,
 		sportsAMMV2LiquidityPool,
@@ -51,7 +51,7 @@ describe('Ticket Exercise and Expire', () => {
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
-			sportsAMMV2Data,
+			sportsAMMV2Manager,
 			sportsAMMV2ResultManager,
 			sportsAMMV2RiskManager,
 			sportsAMMV2LiquidityPool,
@@ -115,7 +115,7 @@ describe('Ticket Exercise and Expire', () => {
 			let volumeFirstTrader = await stakingThales.volume(firstTrader);
 			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			const balanceSixDecimalsOfTicket = await collateralSixDecimals.balanceOf(ticketAddress);
@@ -184,7 +184,7 @@ describe('Ticket Exercise and Expire', () => {
 					ZERO_ADDRESS,
 					false
 				);
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			const ticketMarket1 = tradeDataCurrentRound[0];
@@ -243,7 +243,7 @@ describe('Ticket Exercise and Expire', () => {
 					ZERO_ADDRESS,
 					false
 				);
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const userTicket = await TicketContract.attach(ticketAddress);

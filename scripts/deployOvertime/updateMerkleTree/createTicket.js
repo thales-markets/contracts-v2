@@ -20,9 +20,9 @@ async function createTicket() {
 	console.log('Found sportsAMMV2Data at:', sportsAMMV2DataAddress);
 
 	const sportsAMMV2Contract = await ethers.getContractFactory('SportsAMMV2');
-	const sportsAMMV2DataContract = await ethers.getContractFactory('SportsAMMV2Data');
+	const sportsAMMV2ManagerContract = await ethers.getContractFactory('SportsAMMV2Manager');
 	const sportsAMMV2 = sportsAMMV2Contract.attach(sportsAMMV2Address);
-	const sportsAMMV2Data = sportsAMMV2DataContract.attach(sportsAMMV2DataAddress);
+	const sportsAMMV2Manager = sportsAMMV2ManagerContract.attach(sportsAMMV2ManagerAddress);
 
 	const nbaMoneylineCurrentRound = marketsTree[0].childMarkets[8];
 	const tradeDataCurrentRound = [];
@@ -44,7 +44,7 @@ async function createTicket() {
 	);
 
 	await tx.wait().then(async () => {
-		const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 10);
+		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 10);
 		const ticketAddress = activeTickets[0];
 		console.log(`Ticket with address ${ticketAddress} created`);
 	});

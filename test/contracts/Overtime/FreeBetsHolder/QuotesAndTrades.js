@@ -14,7 +14,7 @@ const { ZERO_ADDRESS } = require('../../../constants/general');
 
 describe('SportsAMMV2 Quotes And Trades', () => {
 	let sportsAMMV2,
-		sportsAMMV2Data,
+		sportsAMMV2Manager,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
@@ -30,7 +30,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
-			sportsAMMV2Data,
+			sportsAMMV2Manager,
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
@@ -178,7 +178,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				[[0]]
 			);
 
-			const activeTickets = await sportsAMMV2Data.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);

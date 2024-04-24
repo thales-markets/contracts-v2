@@ -226,15 +226,6 @@ async function deploySportsAMMV2Fixture() {
 		from: owner.address,
 	});
 
-	// deploy Sports AMM Data
-	const SportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
-	const sportsAMMV2Data = await upgrades.deployProxy(SportsAMMV2Data, [
-		owner.address,
-		sportsAMMV2RiskManagerAddress,
-	]);
-
-	const SportsAMMV2DataAddress = await sportsAMMV2Data.getAddress();
-
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
 		owner.address,
@@ -242,7 +233,6 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
 		sportsAMMV2ResultManagerAddress,
-		SportsAMMV2DataAddress,
 		referralsAddress,
 		stakingThalesAddress,
 		safeBox.address,
@@ -251,9 +241,20 @@ async function deploySportsAMMV2Fixture() {
 
 	await sportsAMMV2.setAmounts(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);
 	await sportsAMMV2RiskManager.setSportsAMM(sportsAMMV2Address);
-	await sportsAMMV2Data.setSportsAMM(sportsAMMV2Address);
+	await sportsAMMV2Manager.setSportsAMM(sportsAMMV2Address);
 
 	await sportsAMMV2.setMultiCollateralOnOffRamp(multiCollateralAddress, true);
+
+	// deploy Sports AMM Data
+	const SportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
+	const sportsAMMV2Data = await upgrades.deployProxy(SportsAMMV2Data, [
+		owner.address,
+		sportsAMMV2Address,
+		sportsAMMV2RiskManagerAddress,
+	]);
+
+	const SportsAMMV2DataAddress = await sportsAMMV2Data.getAddress();
+
 	// deploy ticket mastercopy
 	const TicketMastercopy = await ethers.getContractFactory('TicketMastercopy');
 	const ticketMastercopy = await TicketMastercopy.deploy();

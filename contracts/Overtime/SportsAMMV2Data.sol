@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import "../utils/libraries/AddressSetLib.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../interfaces/ISportsAMMV2.sol";
@@ -12,8 +11,6 @@ import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "./Ticket.sol";
 
 contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
-    using AddressSetLib for AddressSetLib.AddressSet;
-
     /* ========== STRUCT VARIABLES ========== */
     struct SportsAMMParameters {
         uint minBuyInAmount;
@@ -65,116 +62,10 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     ISportsAMMV2RiskManager public riskManager;
 
-    // stores active tickets
-    AddressSetLib.AddressSet internal knownTickets;
-
-    // stores active tickets per user
-    mapping(address => AddressSetLib.AddressSet) internal activeTicketsPerUser;
-
-    // stores resolved tickets per user
-    mapping(address => AddressSetLib.AddressSet) internal resolvedTicketsPerUser;
-
-    // stores tickets per game
-    mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
-
-    function initialize(address _owner, ISportsAMMV2RiskManager _riskManager) external initializer {
+    function initialize(address _owner, ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external initializer {
         setOwner(_owner);
+        sportsAMM = _sportsAMM;
         riskManager = _riskManager;
-    }
-
-    function saveTicketData(
-        ISportsAMMV2.TradeData[] memory _tradeData,
-        address ticket,
-        address user
-    ) external onlySportAMMV2 {
-        knownTickets.add(ticket);
-        activeTicketsPerUser[user].add(ticket);
-
-        for (uint i = 0; i < _tradeData.length; i++) {
-            ticketsPerGame[_tradeData[i].gameId].add(ticket);
-        }
-    }
-
-    function resolveTicketData(address _ticket, address _ticketOwner) external onlySportAMMV2 {
-        knownTickets.remove(_ticket);
-        activeTicketsPerUser[_ticketOwner].remove(_ticket);
-
-        resolvedTicketsPerUser[_ticketOwner].add(_ticket);
-    }
-
-    /* ========== EXTERNAL READ FUNCTIONS ========== */
-
-    function onlyKnownTickets(address _ticket) external view returns (bool) {
-        return knownTickets.contains(_ticket);
-    }
-
-    /// @notice is provided ticket active
-    /// @param _ticket ticket address
-    /// @return isActiveTicket true/false
-    function isActiveTicket(address _ticket) external view returns (bool) {
-        return knownTickets.contains(_ticket);
-    }
-
-    /// @notice gets batch of active tickets
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @return activeTickets
-    function getActiveTickets(uint _index, uint _pageSize) external view returns (address[] memory) {
-        return knownTickets.getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of active tickets
-    /// @return numOfActiveTickets
-    function numOfActiveTickets() external view returns (uint) {
-        return knownTickets.elements.length;
-    }
-
-    /// @notice gets batch of active tickets per user
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @param _user to get active tickets for
-    /// @return activeTickets
-    function getActiveTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
-        return activeTicketsPerUser[_user].getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of active tickets per user
-    /// @param _user to get number of active tickets for
-    /// @return numOfActiveTickets
-    function numOfActiveTicketsPerUser(address _user) external view returns (uint) {
-        return activeTicketsPerUser[_user].elements.length;
-    }
-
-    /// @notice gets batch of resolved tickets per user
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @param _user to get resolved tickets for
-    /// @return resolvedTickets
-    function getResolvedTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
-        return resolvedTicketsPerUser[_user].getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of resolved tickets per user
-    /// @param _user to get number of resolved tickets for
-    /// @return numOfResolvedTickets
-    function numOfResolvedTicketsPerUser(address _user) external view returns (uint) {
-        return resolvedTicketsPerUser[_user].elements.length;
-    }
-
-    /// @notice gets batch of tickets per game
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @param _gameId to get tickets for
-    /// @return resolvedTickets
-    function getTicketsPerGame(uint _index, uint _pageSize, bytes32 _gameId) external view returns (address[] memory) {
-        return ticketsPerGame[_gameId].getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of tickets per game
-    /// @param _gameId to get number of tickets for
-    /// @return numOfTickets
-    function numOfTicketsPerGame(bytes32 _gameId) external view returns (uint) {
-        return ticketsPerGame[_gameId].elements.length;
     }
 
     function getSportsAMMParameters() external view returns (SportsAMMParameters memory) {
@@ -194,23 +85,32 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     }
 
     /// @notice return all active ticket data for user
-    function getActiveTicketsDataPerUser(address _user) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = activeTicketsPerUser[_user].getPage(0, activeTicketsPerUser[_user].elements.length);
+    function getActiveTicketsDataPerUser(address user) external view returns (TicketData[] memory) {
+        address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(
+            0,
+            sportsAMM.manager().numOfActiveTicketsPerUser(user),
+            user
+        );
         return _getTicketsData(ticketsArray);
     }
 
     /// @notice return all resolved ticket data for user
-    function getResolvedTicketsDataPerUser(address _user) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = resolvedTicketsPerUser[_user].getPage(
+    function getResolvedTicketsDataPerUser(address user) external view returns (TicketData[] memory) {
+        address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(
             0,
-            resolvedTicketsPerUser[_user].elements.length
+            sportsAMM.manager().numOfResolvedTicketsPerUser(user),
+            user
         );
         return _getTicketsData(ticketsArray);
     }
 
     /// @notice return all ticket data for game
-    function getTicketsDataPerGame(bytes32 _gameId) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = ticketsPerGame[_gameId].getPage(0, ticketsPerGame[_gameId].elements.length);
+    function getTicketsDataPerGame(bytes32 gameId) external view returns (TicketData[] memory) {
+        address[] memory ticketsArray = sportsAMM.manager().getTicketsPerGame(
+            0,
+            sportsAMM.manager().numOfTicketsPerGame(gameId),
+            gameId
+        );
         return _getTicketsData(ticketsArray);
     }
 
@@ -282,7 +182,6 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return MarketResult(status, results);
     }
 
-    /* ========== SETTERS ========== */
     function setSportsAMM(ISportsAMMV2 _sportsAMM) external onlyOwner {
         sportsAMM = _sportsAMM;
         emit SportAMMChanged(address(_sportsAMM));
@@ -291,11 +190,6 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function setRiskManager(ISportsAMMV2RiskManager _riskManager) external onlyOwner {
         riskManager = _riskManager;
         emit RiskManagerChanged(address(_riskManager));
-    }
-
-    modifier onlySportAMMV2() {
-        require(msg.sender == address(sportsAMM), "Invalid sportsAMM");
-        _;
     }
 
     event SportAMMChanged(address sportsAMM);

@@ -123,7 +123,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2Manager _manager,
         ISportsAMMV2RiskManager _riskManager,
         ISportsAMMV2ResultManager _resultManager,
-        ISportsAMMV2Data _sportsAMMData,
         IReferrals _referrals,
         IStakingThales _stakingThales,
         address _safeBox
@@ -135,7 +134,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         manager = _manager;
         riskManager = _riskManager;
         resultManager = _resultManager;
-        sportsAMMData = _sportsAMMData;
         referrals = _referrals;
         stakingThales = _stakingThales;
         safeBox = _safeBox;
@@ -464,7 +462,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 (block.timestamp + riskManager.expiryDuration())
             )
         );
-        sportsAMMData.saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
+        manager.saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
         //TODO: reconsider the flow here, perhaps the liquidity pool can send directly to the ticket
         ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
@@ -638,7 +636,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
-        sportsAMMData.resolveTicketData(_ticket, ticketOwner);
+        manager.resolveTicketData(_ticket, ticketOwner);
         emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 
         if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
@@ -697,7 +695,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _manager,
         address _riskManager,
         address _resultManager,
-        address _sportsAMMData,
         address _referrals,
         address _stakingThales,
         address _safeBox
@@ -707,7 +704,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         manager = ISportsAMMV2Manager(_manager);
         riskManager = ISportsAMMV2RiskManager(_riskManager);
         resultManager = ISportsAMMV2ResultManager(_resultManager);
-        sportsAMMData = ISportsAMMV2Data(_sportsAMMData);
         referrals = IReferrals(_referrals);
         stakingThales = IStakingThales(_stakingThales);
         safeBox = _safeBox;
@@ -717,7 +713,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _manager,
             _riskManager,
             _resultManager,
-            _sportsAMMData,
             _referrals,
             _stakingThales,
             _safeBox
@@ -775,7 +770,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== MODIFIERS ========== */
 
     modifier onlyKnownTickets(address _ticket) {
-        require(sportsAMMData.onlyKnownTickets(_ticket), "Unknown ticket");
+        require(manager.onlyKnownTickets(_ticket), "Unknown ticket");
         _;
     }
 
@@ -810,7 +805,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address manager,
         address riskManager,
         address resultManager,
-        address sportsAMMData,
         address referrals,
         address stakingThales,
         address safeBox
