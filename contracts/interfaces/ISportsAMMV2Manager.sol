@@ -13,10 +13,6 @@ interface ISportsAMMV2Manager {
 
     function isWhitelistedAddress(address _address, Role role) external view returns (bool);
 
-    function transformCollateral(uint value, address collateral) external view returns (uint);
-
-    function reverseTransformCollateral(uint value, address collateral) external view returns (uint);
-
     function decimals() external view returns (uint);
 
     function feeToken() external view returns (address);
