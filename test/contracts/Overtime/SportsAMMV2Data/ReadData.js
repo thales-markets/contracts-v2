@@ -15,6 +15,7 @@ describe('SportsAMMV2Data Read Data', () => {
 	let sportsAMMV2Data,
 		sportsAMMV2,
 		sportsAMMV2LiquidityPool,
+		sportsAMMV2Manager,
 		sportsAMMV2ResultManager,
 		tradeDataTenMarketsCurrentRound,
 		firstTrader,
@@ -27,6 +28,7 @@ describe('SportsAMMV2Data Read Data', () => {
 			sportsAMMV2Data,
 			sportsAMMV2,
 			sportsAMMV2LiquidityPool,
+			sportsAMMV2Manager,
 			sportsAMMV2ResultManager,
 			tradeDataTenMarketsCurrentRound,
 		} = await loadFixture(deploySportsAMMV2Fixture));
@@ -56,7 +58,7 @@ describe('SportsAMMV2Data Read Data', () => {
 				false
 			);
 
-		const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 		ticketAddress = activeTickets[0];
 		numberOfGamesOnTicket = tradeDataTenMarketsCurrentRound.length;
 	});
@@ -70,6 +72,35 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(params.maxSupportedAmount).to.be.equal(RISK_MANAGER_INITAL_PARAMS.maxSupportedAmount);
 			expect(params.maxSupportedOdds).to.be.equal(RISK_MANAGER_INITAL_PARAMS.maxSupportedOdds);
 			expect(params.safeBoxFee).to.be.equal(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);
+		});
+	});
+
+	describe('Sports AMM Manager Data', () => {
+		it('Should read ticket data active/resolved from SportsAMMV2Manager', async () => {
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+			expect(await sportsAMMV2Manager.isActiveTicket(ticketAddress)).to.be.equal(true);
+			expect(await sportsAMMV2Manager.numOfActiveTickets()).to.be.equal(1);
+			const activeTicketsForUser = await sportsAMMV2Manager.getActiveTicketsPerUser(
+				0,
+				100,
+				firstTrader
+			);
+			expect(activeTicketsForUser[0]).to.be.equal(ticketAddress);
+			expect(await sportsAMMV2Manager.numOfActiveTicketsPerUser(firstTrader)).to.be.equal(1);
+
+			const resolvedTicketsForUser = await sportsAMMV2Manager.getResolvedTicketsPerUser(
+				0,
+				100,
+				firstTrader
+			);
+			expect(resolvedTicketsForUser.length).to.be.equal(0);
+			expect(await sportsAMMV2Manager.numOfResolvedTicketsPerUser(firstTrader)).to.be.equal(0);
+
+			const firstGameId = tradeDataTenMarketsCurrentRound[0].gameId;
+			const ticketsPerGame = await sportsAMMV2Manager.getTicketsPerGame(0, 100, firstGameId);
+			expect(ticketsPerGame[0]).to.be.equal(ticketAddress);
+			expect(await sportsAMMV2Manager.numOfTicketsPerGame(firstGameId)).to.be.equal(1);
 		});
 	});
 

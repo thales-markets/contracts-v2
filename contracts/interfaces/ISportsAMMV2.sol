@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
@@ -46,18 +47,6 @@ interface ISportsAMMV2 {
     function safeBoxFee() external view returns (uint);
 
     function exerciseTicket(address _ticket) external;
-
-    function getTicketsPerGame(uint _index, uint _pageSize, bytes32 _gameId) external view returns (address[] memory);
-
-    function numOfTicketsPerGame(bytes32 _gameId) external view returns (uint);
-
-    function getActiveTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory);
-
-    function numOfActiveTicketsPerUser(address _user) external view returns (uint);
-
-    function getResolvedTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory);
-
-    function numOfResolvedTicketsPerUser(address _user) external view returns (uint);
 
     function riskManager() external view returns (ISportsAMMV2RiskManager);
 

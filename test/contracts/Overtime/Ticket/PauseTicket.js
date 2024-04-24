@@ -88,7 +88,7 @@ describe('Pause tickets', () => {
 					ZERO_ADDRESS,
 					false
 				);
-			const activeTickets = await sportsAMMV2.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
 			const ticketMarket1 = tradeDataCurrentRound[0];

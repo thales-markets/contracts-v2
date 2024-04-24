@@ -11,8 +11,6 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../utils/proxy/ProxyReentrancyGuard.sol";
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
-import "../utils/libraries/AddressSetLib.sol";
-
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
@@ -33,7 +31,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== LIBRARIES ========== */
 
     using SafeERC20 for IERC20;
-    using AddressSetLib for AddressSetLib.AddressSet;
 
     /* ========== CONST VARIABLES ========== */
 
@@ -96,18 +93,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     // staking thales address
     IStakingThales public stakingThales;
-
-    // stores active tickets
-    AddressSetLib.AddressSet internal knownTickets;
-
-    // stores active tickets per user
-    mapping(address => AddressSetLib.AddressSet) internal activeTicketsPerUser;
-
-    // stores resolved tickets per user
-    mapping(address => AddressSetLib.AddressSet) internal resolvedTicketsPerUser;
-
-    // stores tickets per game
-    mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
     // CL client that processes live requests
     address public liveTradingProcessor;
@@ -208,75 +193,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             true,
             buyInAmountInDefaultCollateral
         );
-    }
-
-    /// @notice is provided ticket active
-    /// @param _ticket ticket address
-    /// @return isActiveTicket true/false
-    function isActiveTicket(address _ticket) external view returns (bool) {
-        return knownTickets.contains(_ticket);
-    }
-
-    /// @notice gets batch of active tickets
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @return activeTickets
-    function getActiveTickets(uint _index, uint _pageSize) external view returns (address[] memory) {
-        return knownTickets.getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of active tickets
-    /// @return numOfActiveTickets
-    function numOfActiveTickets() external view returns (uint) {
-        return knownTickets.elements.length;
-    }
-
-    /// @notice gets batch of active tickets per user
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @param _user to get active tickets for
-    /// @return activeTickets
-    function getActiveTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
-        return activeTicketsPerUser[_user].getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of active tickets per user
-    /// @param _user to get number of active tickets for
-    /// @return numOfActiveTickets
-    function numOfActiveTicketsPerUser(address _user) external view returns (uint) {
-        return activeTicketsPerUser[_user].elements.length;
-    }
-
-    /// @notice gets batch of resolved tickets per user
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @param _user to get resolved tickets for
-    /// @return resolvedTickets
-    function getResolvedTicketsPerUser(uint _index, uint _pageSize, address _user) external view returns (address[] memory) {
-        return resolvedTicketsPerUser[_user].getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of resolved tickets per user
-    /// @param _user to get number of resolved tickets for
-    /// @return numOfResolvedTickets
-    function numOfResolvedTicketsPerUser(address _user) external view returns (uint) {
-        return resolvedTicketsPerUser[_user].elements.length;
-    }
-
-    /// @notice gets batch of tickets per game
-    /// @param _index start index
-    /// @param _pageSize batch size
-    /// @param _gameId to get tickets for
-    /// @return resolvedTickets
-    function getTicketsPerGame(uint _index, uint _pageSize, bytes32 _gameId) external view returns (address[] memory) {
-        return ticketsPerGame[_gameId].getPage(_index, _pageSize);
-    }
-
-    /// @notice gets number of tickets per game
-    /// @param _gameId to get number of tickets for
-    /// @return numOfTickets
-    function numOfTicketsPerGame(bytes32 _gameId) external view returns (uint) {
-        return ticketsPerGame[_gameId].elements.length;
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
@@ -534,7 +450,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 (block.timestamp + riskManager.expiryDuration())
             )
         );
-        _saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
+        manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
         //TODO: reconsider the flow here, perhaps the liquidity pool can send directly to the ticket
         ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
@@ -607,15 +523,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _buyInAmount,
                 defaultCollateralDecimals
             );
-        }
-    }
-
-    function _saveTicketData(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) internal {
-        knownTickets.add(ticket);
-        activeTicketsPerUser[user].add(ticket);
-
-        for (uint i = 0; i < _tradeData.length; i++) {
-            ticketsPerGame[_tradeData[i].gameId].add(ticket);
         }
     }
 
@@ -717,11 +624,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
-
-        knownTickets.remove(_ticket);
-        activeTicketsPerUser[ticketOwner].remove(_ticket);
-
-        resolvedTicketsPerUser[ticketOwner].add(_ticket);
+        manager.resolveKnownTicket(_ticket, ticketOwner);
         emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 
         if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
@@ -750,7 +653,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice set roots of merkle tree
     /// @param _games game IDs
     /// @param _roots new roots
-    function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) public onlyWhitelistedAddresses(msg.sender) {
+    function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) public onlyWhitelistedAddresses {
         require(_games.length == _roots.length, "Invalid length");
         for (uint i; i < _games.length; i++) {
             rootPerGame[_games[i]] = _roots[i];
@@ -855,13 +758,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== MODIFIERS ========== */
 
     modifier onlyKnownTickets(address _ticket) {
-        require(knownTickets.contains(_ticket), "Unknown ticket");
+        require(manager.isKnownTicket(_ticket), "Unknown ticket");
         _;
     }
 
-    modifier onlyWhitelistedAddresses(address sender) {
+    modifier onlyWhitelistedAddresses() {
         require(
-            sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.ROOT_SETTING),
+            msg.sender == owner || manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.ROOT_SETTING),
             "Invalid sender"
         );
         _;
