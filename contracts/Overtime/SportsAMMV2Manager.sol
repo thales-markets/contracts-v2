@@ -55,8 +55,11 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     /// @notice pause/unapause provided tickets
     /// @param _tickets array of tickets to be paused/unpaused
     /// @param _paused pause/unpause
-    //TODO: add role for this
-    function setPausedTickets(address[] calldata _tickets, bool _paused) external onlyOwner {
+    function setPausedTickets(address[] calldata _tickets, bool _paused) external {
+        require(
+            msg.sender == owner || whitelistedAddresses[msg.sender][ISportsAMMV2Manager.Role.TICKET_PAUSER],
+            "Invalid pauser"
+        );
         for (uint i = 0; i < _tickets.length; i++) {
             ITicket(_tickets[i]).setPaused(_paused);
         }
