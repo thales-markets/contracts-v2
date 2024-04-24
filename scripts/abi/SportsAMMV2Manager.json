@@ -601,19 +601,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_sportsAMM",
-        "type": "address"
-      }
-    ],
-    "name": "setSportsAMM",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address[]",
         "name": "_tickets",
         "type": "address[]"
@@ -625,6 +612,19 @@
       }
     ],
     "name": "setPausedTickets",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "setSportsAMM",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
