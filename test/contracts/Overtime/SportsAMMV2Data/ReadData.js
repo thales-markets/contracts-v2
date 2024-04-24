@@ -75,8 +75,8 @@ describe('SportsAMMV2Data Read Data', () => {
 		});
 	});
 
-	describe('Sports AMM Data', () => {
-		it('Should read ticket data active/resolved', async () => {
+	describe('Sports AMM Manager Data', () => {
+		it('Should read ticket data active/resolved from SportsAMMV2Manager', async () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 			expect(await sportsAMMV2Manager.isActiveTicket(ticketAddress)).to.be.equal(true);
