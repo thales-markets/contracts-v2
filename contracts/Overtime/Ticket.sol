@@ -243,7 +243,8 @@ contract Ticket is OwnedWithInit {
 
     /* ========== SETTERS ========== */
 
-    function setPaused(bool _paused) external onlyAMM {
+    function setPaused(bool _paused) external {
+        require(msg.sender == address(sportsAMM.manager()), "Invalid sender");
         require(paused != _paused, "State not changed");
         paused = _paused;
         emit PauseUpdated(_paused);

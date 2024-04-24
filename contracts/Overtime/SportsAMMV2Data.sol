@@ -11,10 +11,7 @@ import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "./Ticket.sol";
 
 contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
-    ISportsAMMV2 public sportsAMM;
-
-    ISportsAMMV2RiskManager public riskManager;
-
+    /* ========== STRUCT VARIABLES ========== */
     struct SportsAMMParameters {
         uint minBuyInAmount;
         uint maxTicketSize;
@@ -59,6 +56,12 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isExercisable;
     }
 
+    /* ========== STATE VARIABLES ========== */
+
+    ISportsAMMV2 public sportsAMM;
+
+    ISportsAMMV2RiskManager public riskManager;
+
     function initialize(address _owner, ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external initializer {
         setOwner(_owner);
         sportsAMM = _sportsAMM;
@@ -83,9 +86,9 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     /// @notice return all active ticket data for user
     function getActiveTicketsDataPerUser(address user) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = sportsAMM.getActiveTicketsPerUser(
+        address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(
             0,
-            sportsAMM.numOfActiveTicketsPerUser(user),
+            sportsAMM.manager().numOfActiveTicketsPerUser(user),
             user
         );
         return _getTicketsData(ticketsArray);
@@ -93,9 +96,9 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     /// @notice return all resolved ticket data for user
     function getResolvedTicketsDataPerUser(address user) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = sportsAMM.getResolvedTicketsPerUser(
+        address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(
             0,
-            sportsAMM.numOfResolvedTicketsPerUser(user),
+            sportsAMM.manager().numOfResolvedTicketsPerUser(user),
             user
         );
         return _getTicketsData(ticketsArray);
@@ -103,7 +106,11 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     /// @notice return all ticket data for game
     function getTicketsDataPerGame(bytes32 gameId) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = sportsAMM.getTicketsPerGame(0, sportsAMM.numOfTicketsPerGame(gameId), gameId);
+        address[] memory ticketsArray = sportsAMM.manager().getTicketsPerGame(
+            0,
+            sportsAMM.manager().numOfTicketsPerGame(gameId),
+            gameId
+        );
         return _getTicketsData(ticketsArray);
     }
 
