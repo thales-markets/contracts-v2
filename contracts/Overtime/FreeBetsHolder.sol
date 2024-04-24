@@ -72,7 +72,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         uint _additionalSlippage,
         address _referrer,
         address _collateral
@@ -81,7 +81,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _createdTicket = sportsAMM.trade(
             _tradeData,
             _buyInAmount,
-            _expectedPayout,
+            _expectedQuote,
             _additionalSlippage,
             address(0),
             _referrer,
@@ -101,7 +101,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         uint16 _typeId,
         uint8 _position,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         uint _additionalSlippage,
         address _referrer,
         address _collateral
@@ -112,7 +112,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
             _typeId,
             _position,
             _buyInAmount,
-            _expectedPayout,
+            _expectedQuote,
             _additionalSlippage,
             address(0),
             _referrer,

@@ -50,7 +50,7 @@ describe('SportsAMMV2Data Read Data', () => {
 			.trade(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				quote.payout,
+				quote.totalQuote,
 				ADDITIONAL_SLIPPAGE,
 				ZERO_ADDRESS,
 				ZERO_ADDRESS,

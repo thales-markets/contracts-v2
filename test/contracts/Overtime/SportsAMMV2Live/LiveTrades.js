@@ -69,7 +69,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					ZERO_ADDRESS,
@@ -79,7 +79,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
 		});
 
 		it('Should buy a live trade with referrer', async () => {
@@ -95,7 +95,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					secondAccount,
@@ -105,7 +105,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
 		});
 
 		it('Should buy a live trade with WETH collateral', async () => {
@@ -122,7 +122,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					ETH_BUY_IN_AMOUNT,
-					quoteETH.payout,
+					quoteETH.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					ZERO_ADDRESS,
@@ -132,7 +132,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quoteETH.payout);
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quoteETH.totalQuote);
 		});
 
 		it('Fail for unsupported sports', async () => {
@@ -145,7 +145,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 						tradeDataCurrentRound[0].typeId,
 						tradeDataCurrentRound[0].position,
 						BUY_IN_AMOUNT,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						firstTrader,
 						ZERO_ADDRESS,
@@ -165,7 +165,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					ZERO_ADDRESS,
@@ -175,10 +175,10 @@ describe('SportsAMMV2Live Live Trades', () => {
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
 
 			await expect(
-				mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout)
+				mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote)
 			).to.be.revertedWith('Source must be the oracle of the request');
 		});
 
@@ -193,7 +193,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					ZERO_ADDRESS,
@@ -207,7 +207,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			await time.increase(61);
 
 			await expect(
-				mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout)
+				mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote)
 			).to.be.revertedWith('Request timed out');
 		});
 
@@ -222,7 +222,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					firstTrader,
 					ZERO_ADDRESS,
@@ -236,7 +236,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				mockChainlinkOracle.fulfillLiveTrade(
 					requestId,
 					true,
-					ethers.parseEther((ethers.formatEther(quote.payout) / 2).toString())
+					ethers.parseEther((ethers.formatEther(quote.totalQuote) * 2).toString())
 				)
 			).to.be.revertedWith('Slippage too high');
 		});
