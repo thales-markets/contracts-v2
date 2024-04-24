@@ -459,7 +459,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 (block.timestamp + riskManager.expiryDuration())
             )
         );
-        manager.saveTicketData(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
+        manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
 
         //TODO: reconsider the flow here, perhaps the liquidity pool can send directly to the ticket
         ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
@@ -633,7 +633,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
-        manager.resolveTicketData(_ticket, ticketOwner);
+        manager.resolveKnownTicket(_ticket, ticketOwner);
         emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 
         if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
@@ -767,7 +767,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== MODIFIERS ========== */
 
     modifier onlyKnownTickets(address _ticket) {
-        require(manager.onlyKnownTickets(_ticket), "Unknown ticket");
+        require(manager.isKnownTicket(_ticket), "Unknown ticket");
         _;
     }
 

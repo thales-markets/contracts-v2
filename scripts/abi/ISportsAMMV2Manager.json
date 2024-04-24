@@ -1,5 +1,102 @@
 [
   {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint16",
+            "name": "playerId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "_tradeData",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "address",
+        "name": "ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "addNewKnownTicket",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "decimals",
     "outputs": [
@@ -159,6 +256,25 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      }
+    ],
+    "name": "isKnownTicket",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_address",
         "type": "address"
       },
@@ -253,25 +369,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_ticket",
-        "type": "address"
-      }
-    ],
-    "name": "onlyKnownTickets",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "ticket",
         "type": "address"
       },
@@ -281,7 +378,7 @@
         "type": "address"
       }
     ],
-    "name": "resolveTicketData",
+    "name": "resolveKnownTicket",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -308,103 +405,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "bytes32",
-            "name": "gameId",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint16",
-            "name": "sportId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "typeId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maturity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "int24",
-            "name": "line",
-            "type": "int24"
-          },
-          {
-            "internalType": "uint16",
-            "name": "playerId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "odds",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "merkleProof",
-            "type": "bytes32[]"
-          },
-          {
-            "internalType": "uint8",
-            "name": "position",
-            "type": "uint8"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint16",
-                "name": "typeId",
-                "type": "uint16"
-              },
-              {
-                "internalType": "uint8",
-                "name": "position",
-                "type": "uint8"
-              },
-              {
-                "internalType": "int24",
-                "name": "line",
-                "type": "int24"
-              }
-            ],
-            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
-            "name": "combinedPositions",
-            "type": "tuple[][]"
-          }
-        ],
-        "internalType": "struct ISportsAMMV2.TradeData[]",
-        "name": "_tradeData",
-        "type": "tuple[]"
-      },
-      {
-        "internalType": "address",
-        "name": "ticket",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
-    ],
-    "name": "saveTicketData",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -39,29 +39,38 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
     /* ========== EXTERNAL FUNCTIONS ========== */
 
-    function saveTicketData(
+    /// @notice add new ticket to known and active per user and add tickets per game
+    /// @param _tradeData list of games
+    /// @param _ticket ticket address
+    /// @param _user to update the ticket for
+    function addNewKnownTicket(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        address ticket,
-        address user
+        address _ticket,
+        address _user
     ) external onlySportAMMV2 {
-        knownTickets.add(ticket);
-        activeTicketsPerUser[user].add(ticket);
+        knownTickets.add(_ticket);
+        activeTicketsPerUser[_user].add(_ticket);
 
         for (uint i = 0; i < _tradeData.length; i++) {
-            ticketsPerGame[_tradeData[i].gameId].add(ticket);
+            ticketsPerGame[_tradeData[i].gameId].add(_ticket);
         }
     }
 
-    function resolveTicketData(address _ticket, address _ticketOwner) external onlySportAMMV2 {
+    /// @notice remove known ticket from active and add as resolved
+    /// @param _ticket ticket address
+    /// @param _user to update the ticket for
+    function resolveKnownTicket(address _ticket, address _user) external onlySportAMMV2 {
         knownTickets.remove(_ticket);
-        activeTicketsPerUser[_ticketOwner].remove(_ticket);
+        activeTicketsPerUser[_user].remove(_ticket);
 
-        resolvedTicketsPerUser[_ticketOwner].add(_ticket);
+        resolvedTicketsPerUser[_user].add(_ticket);
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
-    function onlyKnownTickets(address _ticket) external view returns (bool) {
+    /// @notice check whether a ticket is known
+    /// @param _ticket ticket address
+    function isKnownTicket(address _ticket) external view returns (bool) {
         return knownTickets.contains(_ticket);
     }
 
@@ -145,6 +154,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     /// @param value value to be transformed
     /// @param collateral collateral address
     /// @return uint transformed value
+    // TODO: can be deleted
     function transformCollateral(uint value, address collateral) external view returns (uint) {
         uint collateralDecimals = ISportsAMMV2Manager(collateral).decimals();
         uint collateralTransformMultiplier = COLLATERAL_DEFAULT_DECIMALS - collateralDecimals;
@@ -155,6 +165,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     /// @param value value to be reversed
     /// @param collateral collateral address
     /// @return uint revered value
+    // TODO: can be deleted
     function reverseTransformCollateral(uint value, address collateral) external view returns (uint) {
         uint collateralDecimals = ISportsAMMV2Manager(collateral).decimals();
         uint collateralTransformMultiplier = COLLATERAL_DEFAULT_DECIMALS - collateralDecimals;
@@ -181,6 +192,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         }
     }
 
+    /// @notice set the address of SportsAMM
     function setSportsAMM(address _sportsAMM) external onlyOwner {
         sportsAMM = _sportsAMM;
         emit SportAMMChanged(address(_sportsAMM));
