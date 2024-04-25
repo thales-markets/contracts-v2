@@ -117,19 +117,19 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 			expect(firstTraderBalance).to.equal(ethers.parseEther('10'));
 
-			await freeBetsHolder
-				.connect(firstTrader)
-				.tradeLive(
-					tradeDataCurrentRound[0].gameId,
-					tradeDataCurrentRound[0].sportId,
-					tradeDataCurrentRound[0].typeId,
-					tradeDataCurrentRound[0].position,
-					BUY_IN_AMOUNT,
-					quote.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
-					collateralAddress
-				);
+			await freeBetsHolder.connect(firstTrader).tradeLive({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_differentRecipient: firstTrader,
+				_referrer: ZERO_ADDRESS,
+				_collateral: collateralAddress,
+			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
