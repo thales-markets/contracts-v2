@@ -430,6 +430,25 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_safeBox",
+        "type": "address"
+      }
+    ],
+    "name": "SetSafeBoxPerCollateral",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "ticket",
         "type": "address"
       },
@@ -885,6 +904,25 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "safeBoxPerCollateral",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_collateral",
         "type": "address"
       },
@@ -1057,6 +1095,24 @@
       }
     ],
     "name": "setRootsPerGames",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_safeBox",
+        "type": "address"
+      }
+    ],
+    "name": "setSafeBoxPerCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

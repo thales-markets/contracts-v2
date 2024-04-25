@@ -354,7 +354,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             require(marketTradeData.odds.length > marketTradeData.position, "Invalid position");
             uint marketOdds = marketTradeData.odds[marketTradeData.position];
-            marketOdds = marketOdds - ((addedPayoutPercentage * totalQuote) / ONE);
+            marketOdds = marketOdds - ((addedPayoutPercentage * marketOdds) / ONE);
 
             amountsToBuy[i] = (ONE * _buyInAmount) / marketOdds;
             totalQuote = totalQuote == 0 ? marketOdds : (totalQuote * marketOdds) / ONE;
@@ -644,7 +644,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice sets different amounts
     /// @param _safeBoxFee safe box fee paid on each trade
-    // TODO: could be maintained via address manager or system manager
     function setAmounts(uint _safeBoxFee) external onlyOwner {
         safeBoxFee = _safeBoxFee;
         emit AmountsUpdated(_safeBoxFee);
@@ -658,7 +657,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _referrals referrals address
     /// @param _stakingThales staking thales address
     /// @param _safeBox safeBox address
-    // TODO: lot of it could go to AddressManager. To avoid constant external calls, address manager could maintain a list of all  it needs to notify if a certain parameter is chained
     function setAddresses(
         IERC20 _defaultCollateral,
         address _manager,
