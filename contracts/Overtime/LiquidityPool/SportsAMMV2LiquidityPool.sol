@@ -415,7 +415,9 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             (!withdrawalRequested[_user] || withdrawalShare[_user] > 0);
     }
 
+    /// @notice return the price of the pool collateral
     function getCollateralPrice() public view returns (uint) {
+        //TODO: add static price of THALES in the price feed contract
         return IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(collateralKey);
     }
 
