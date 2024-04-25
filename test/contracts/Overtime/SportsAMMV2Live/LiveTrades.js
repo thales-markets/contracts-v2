@@ -61,20 +61,19 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
-			await liveTradingProcessor
-				.connect(firstTrader)
-				.requestLiveTrade(
-					tradeDataCurrentRound[0].gameId,
-					tradeDataCurrentRound[0].sportId,
-					tradeDataCurrentRound[0].typeId,
-					tradeDataCurrentRound[0].position,
-					BUY_IN_AMOUNT,
-					quote.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					firstTrader,
-					ZERO_ADDRESS,
-					ZERO_ADDRESS
-				);
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_differentRecipient: firstTrader,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
@@ -87,20 +86,19 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
-			await liveTradingProcessor
-				.connect(firstTrader)
-				.requestLiveTrade(
-					tradeDataCurrentRound[0].gameId,
-					tradeDataCurrentRound[0].sportId,
-					tradeDataCurrentRound[0].typeId,
-					tradeDataCurrentRound[0].position,
-					BUY_IN_AMOUNT,
-					quote.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					firstTrader,
-					secondAccount,
-					ZERO_ADDRESS
-				);
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_differentRecipient: firstTrader,
+				_referrer: secondAccount,
+				_collateral: ZERO_ADDRESS,
+			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
@@ -114,20 +112,19 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
-			await liveTradingProcessor
-				.connect(firstTrader)
-				.requestLiveTrade(
-					tradeDataCurrentRound[0].gameId,
-					tradeDataCurrentRound[0].sportId,
-					tradeDataCurrentRound[0].typeId,
-					tradeDataCurrentRound[0].position,
-					ETH_BUY_IN_AMOUNT,
-					quoteETH.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					firstTrader,
-					ZERO_ADDRESS,
-					weth
-				);
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: ETH_BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_differentRecipient: firstTrader,
+				_referrer: ZERO_ADDRESS,
+				_collateral: weth,
+			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
@@ -137,40 +134,38 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 		it('Fail for unsupported sports', async () => {
 			await expect(
-				liveTradingProcessor
-					.connect(firstTrader)
-					.requestLiveTrade(
-						tradeDataCurrentRound[0].gameId,
-						tradeDataCurrentRound[0].sportId,
-						tradeDataCurrentRound[0].typeId,
-						tradeDataCurrentRound[0].position,
-						BUY_IN_AMOUNT,
-						quote.totalQuote,
-						ADDITIONAL_SLIPPAGE,
-						firstTrader,
-						ZERO_ADDRESS,
-						ZERO_ADDRESS
-					)
+				liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+					_gameId: tradeDataCurrentRound[0].gameId,
+					_sportId: tradeDataCurrentRound[0].sportId,
+					_typeId: tradeDataCurrentRound[0].typeId,
+					_line: tradeDataCurrentRound[0].line,
+					_position: tradeDataCurrentRound[0].position,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: quote.totalQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_differentRecipient: firstTrader,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+				})
 			).to.be.revertedWith('Live trading not enabled on _sportId');
 		});
 
 		it('Fail for double fulfillment', async () => {
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
-			await liveTradingProcessor
-				.connect(firstTrader)
-				.requestLiveTrade(
-					tradeDataCurrentRound[0].gameId,
-					tradeDataCurrentRound[0].sportId,
-					tradeDataCurrentRound[0].typeId,
-					tradeDataCurrentRound[0].position,
-					BUY_IN_AMOUNT,
-					quote.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					firstTrader,
-					ZERO_ADDRESS,
-					ZERO_ADDRESS
-				);
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_differentRecipient: firstTrader,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
@@ -185,20 +180,19 @@ describe('SportsAMMV2Live Live Trades', () => {
 		it('Fail with delay on execution', async () => {
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
-			await liveTradingProcessor
-				.connect(firstTrader)
-				.requestLiveTrade(
-					tradeDataCurrentRound[0].gameId,
-					tradeDataCurrentRound[0].sportId,
-					tradeDataCurrentRound[0].typeId,
-					tradeDataCurrentRound[0].position,
-					BUY_IN_AMOUNT,
-					quote.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					firstTrader,
-					ZERO_ADDRESS,
-					ZERO_ADDRESS
-				);
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_differentRecipient: firstTrader,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
@@ -214,20 +208,19 @@ describe('SportsAMMV2Live Live Trades', () => {
 		it('Fail on slippage', async () => {
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
 
-			await liveTradingProcessor
-				.connect(firstTrader)
-				.requestLiveTrade(
-					tradeDataCurrentRound[0].gameId,
-					tradeDataCurrentRound[0].sportId,
-					tradeDataCurrentRound[0].typeId,
-					tradeDataCurrentRound[0].position,
-					BUY_IN_AMOUNT,
-					quote.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					firstTrader,
-					ZERO_ADDRESS,
-					ZERO_ADDRESS
-				);
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_differentRecipient: firstTrader,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
