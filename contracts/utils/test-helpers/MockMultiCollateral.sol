@@ -54,7 +54,7 @@ contract MockMultiCollateralOnOffRamp {
         if (
             collateral == collateralAddress["USDC"] ||
             collateral == collateralAddress["USDC2"] ||
-            collateral == collateralAddress["USDCT"]
+            collateral == collateralAddress["USDT"]
         ) {
             amountInUSD = collateralAmount * (10 ** 12);
         } else {

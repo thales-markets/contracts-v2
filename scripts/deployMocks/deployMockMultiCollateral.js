@@ -22,7 +22,7 @@ async function main() {
 	setTargetAddress('MultiCollateral', network, mockMultiCollateralAddress);
 
 	const mockPriceFeedAddress = getTargetAddress('PriceFeed', network);
-	const defaultCollateralAddress = getTargetAddress('DefaultCollaterals', network);
+	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 	await mockMultiCollateralDeployed.setSUSD(defaultCollateralAddress);
 	await mockMultiCollateralDeployed.setPriceFeed(mockPriceFeedAddress);
 
