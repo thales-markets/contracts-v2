@@ -61,7 +61,6 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 		});
@@ -84,7 +83,6 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 		});
@@ -103,7 +101,6 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				BUY_IN_AMOUNT,
 				quote.totalQuote,
 				ADDITIONAL_SLIPPAGE,
-				ZERO_ADDRESS,
 				firstLiquidityProvider, //referrer
 				ZERO_ADDRESS,
 				false

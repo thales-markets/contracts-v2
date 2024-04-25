@@ -85,7 +85,6 @@ describe('Pause tickets', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);

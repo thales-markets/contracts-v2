@@ -126,7 +126,6 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: quote.totalQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
-				_differentRecipient: firstTrader,
 				_referrer: ZERO_ADDRESS,
 				_collateral: collateralAddress,
 			});

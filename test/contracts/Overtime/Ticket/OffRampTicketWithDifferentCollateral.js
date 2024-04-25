@@ -101,7 +101,6 @@ describe('Ticket Exercise and Expire', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 			let swapAmount = parseInt(quote.payout.toString()) * 2;
@@ -178,7 +177,6 @@ describe('Ticket Exercise and Expire', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false

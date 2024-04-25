@@ -107,7 +107,6 @@ describe('Ticket Exercise and Expire', () => {
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
 				);
@@ -181,7 +180,6 @@ describe('Ticket Exercise and Expire', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
@@ -238,7 +236,6 @@ describe('Ticket Exercise and Expire', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false

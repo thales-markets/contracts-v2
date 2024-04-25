@@ -83,7 +83,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
             _buyInAmount,
             _expectedQuote,
             _additionalSlippage,
-            address(0),
             _referrer,
             _collateral,
             false

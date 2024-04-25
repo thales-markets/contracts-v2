@@ -105,7 +105,6 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 
@@ -179,7 +178,6 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 					buyInAmount,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
