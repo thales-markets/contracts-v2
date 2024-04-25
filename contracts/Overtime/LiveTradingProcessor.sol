@@ -34,7 +34,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint16 _typeId;
         uint8 _position;
         uint _buyInAmount;
-        uint _expectedPayout;
+        uint _expectedQuote;
         uint _additionalSlippage;
         address _differentRecipient;
         address _referrer;
@@ -69,7 +69,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /// @param _typeId for which to request a live trade
     /// @param _position for which to request a live trade
     /// @param _buyInAmount ticket buy-in amount
-    /// @param _expectedPayout expected payout
+    /// @param _expectedQuote expected payout
     /// @param _additionalSlippage the maximum slippage a user will accept
     /// @param _referrer who should get the referrer fee if any
     /// @param _collateral different collateral used for paymentAmount
@@ -81,7 +81,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint16 _typeId,
         uint8 _position,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         uint _additionalSlippage,
         address _differentRecipient, // in case a voucher is used
         address _referrer,
@@ -107,7 +107,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         req.addUint("_position", _position);
         req.add("_collateral", string(abi.encodePacked(_collateral)));
         req.addUint("_buyInAmount", _buyInAmount);
-        req.addUint("_expectedPayout", _expectedPayout);
+        req.addUint("_expectedQuote", _expectedQuote);
         req.addUint("_additionalSlippage", _additionalSlippage);
 
         if (_differentRecipient == address(0)) {
@@ -123,7 +123,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _typeId,
             _position,
             _buyInAmount,
-            _expectedPayout,
+            _expectedQuote,
             _additionalSlippage,
             _differentRecipient,
             _referrer,
@@ -141,7 +141,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _typeId,
             _position,
             _buyInAmount,
-            _expectedPayout,
+            _expectedQuote,
             _differentRecipient,
             _collateral
         );
@@ -151,11 +151,11 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /// @notice fulfillLiveTrade
     /// @param _requestId which is being fulfilled
     /// @param _allow whether the live trade should go through
-    /// @param _approvedPayoutAmount what will be the actual payout
+    /// @param _approvedQuote what will be the actual payout
     function fulfillLiveTrade(
         bytes32 _requestId,
         bool _allow,
-        uint _approvedPayoutAmount
+        uint _approvedQuote
     ) external whenNotPaused recordChainlinkFulfillment(_requestId) {
         //might be redundant as already done by Chainlink Client, but making double sure
         require(!requestIdFulfilled[_requestId], "Request ID already fulfilled");
@@ -164,7 +164,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
 
         require(
-            ((ONE * lTradeData._expectedPayout) / _approvedPayoutAmount) <= (ONE + lTradeData._additionalSlippage),
+            ((ONE * _approvedQuote) / lTradeData._expectedQuote) <= (ONE + lTradeData._additionalSlippage),
             "Slippage too high"
         );
 
@@ -192,7 +192,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 tradeData,
                 lTradeData._requester,
                 lTradeData._buyInAmount,
-                _approvedPayoutAmount,
+                _approvedQuote,
                 lTradeData._differentRecipient,
                 lTradeData._referrer,
                 lTradeData._collateral
@@ -219,7 +219,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             lTradeData._typeId,
             lTradeData._position,
             lTradeData._buyInAmount,
-            lTradeData._expectedPayout,
+            lTradeData._expectedQuote,
             lTradeData._collateral,
             block.timestamp
         );
@@ -279,7 +279,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint16 _typeId,
         uint8 _position,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         address _differentRecipient,
         address _collateral
     );
@@ -292,7 +292,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint16 _typeId,
         uint8 _position,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         address _collateral,
         uint timestamp
     );

@@ -67,7 +67,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					.trade(
 						tradeDataCurrentRound,
 						BUY_IN_AMOUNT,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						collateralAddress
@@ -95,7 +95,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					collateralAddress
@@ -125,7 +125,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					tradeDataCurrentRound[0].typeId,
 					tradeDataCurrentRound[0].position,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					collateralAddress
@@ -134,7 +134,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.payout);
+			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
 		});
 
 		it('Should claim winnings', async () => {
@@ -157,7 +157,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					collateralAddress
@@ -218,7 +218,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					collateralAddress

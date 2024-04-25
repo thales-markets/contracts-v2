@@ -51,7 +51,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -89,7 +89,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 				.trade(
 					tradeDataCurrentRound,
 					newBuyInAmount,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -150,7 +150,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					.trade(
 						tradeDataTenMarketsCurrentRound,
 						BUY_IN_AMOUNT,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
@@ -169,7 +169,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					.trade(
 						tradeDataNotActive,
 						BUY_IN_AMOUNT,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
@@ -192,14 +192,14 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					.trade(
 						tradeDataTenMarketsCurrentRound,
 						BUY_IN_AMOUNT,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Not trading');
+			).to.be.revertedWith('Illegal input amounts');
 		});
 
 		it('Should fail with "Risk per market and position exceeded"', async () => {
@@ -222,7 +222,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					.trade(
 						tradeDataTenMarketsCurrentRound,
 						buyInAmount,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
@@ -245,7 +245,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 				.trade(
 					tradeDataTenMarketsCurrentRound,
 					buyInAmount,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -274,7 +274,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					.trade(
 						tradeDataTenMarketsCurrentRound,
 						buyInAmount,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
@@ -301,7 +301,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					.trade(
 						sameGameDifferentPlayersDifferentProps,
 						BUY_IN_AMOUNT,
-						quote.payout,
+						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,

@@ -199,7 +199,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice make a trade and create a ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
-    /// @param _expectedPayout expected payout got from quote method
+    /// @param _expectedQuote expected payout got from quote method
     /// @param _additionalSlippage slippage tolerance
     /// @param _differentRecipient different recipent of the ticket
     /// @param _referrer referrer to get referral fee
@@ -209,13 +209,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         uint _additionalSlippage,
         address _differentRecipient,
         address _referrer,
         address _collateral,
         bool _isEth
     ) external payable nonReentrant notPaused returns (address _createdTicket) {
+        require(_expectedQuote > 0 && _buyInAmount > 0, "Illegal input amounts");
+
         if (_referrer != address(0)) {
             referrals.setReferrer(_referrer, msg.sender);
         }
@@ -236,7 +238,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
-                _expectedPayout,
+                (ONE * _buyInAmount) / _expectedQuote, // quote to expected payout
                 _additionalSlippage,
                 _differentRecipient,
                 false,
@@ -251,7 +253,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice make a live trade and create a ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
-    /// @param _expectedPayout expected payout got from LiveTradingProcessor method
+    /// @param _expectedQuote expected payout got from LiveTradingProcessor method
     /// @param _differentRecipient different recipient of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
@@ -260,7 +262,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2.TradeData[] calldata _tradeData,
         address _requester,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         address _differentRecipient,
         address _referrer,
         address _collateral
@@ -284,7 +286,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
-                _expectedPayout,
+                (ONE * _buyInAmount) / _expectedQuote, // quote to expected payout,
                 0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
                 _differentRecipient,
                 true,

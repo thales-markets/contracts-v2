@@ -415,7 +415,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 				.trade(
 					tradeDataCurrentRound,
 					ETH_BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -577,7 +577,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 				.trade(
 					tradeDataCurrentRound,
 					ETH_BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -686,7 +686,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 				.trade(
 					tradeDataCurrentRound,
 					ETH_BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,

@@ -192,7 +192,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_expectedPayout",
+        "name": "_expectedQuote",
         "type": "uint256"
       },
       {
@@ -265,7 +265,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_expectedPayout",
+        "name": "_expectedQuote",
         "type": "uint256"
       },
       {
@@ -388,7 +388,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_approvedPayoutAmount",
+        "name": "_approvedQuote",
         "type": "uint256"
       }
     ],
@@ -562,7 +562,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_expectedPayout",
+        "name": "_expectedQuote",
         "type": "uint256"
       },
       {
@@ -618,7 +618,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_expectedPayout",
+        "name": "_expectedQuote",
         "type": "uint256"
       },
       {

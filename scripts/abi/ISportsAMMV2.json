@@ -184,7 +184,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_expectedPayout",
+        "name": "_expectedQuote",
         "type": "uint256"
       },
       {
@@ -317,7 +317,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_expectedPayout",
+        "name": "_expectedQuote",
         "type": "uint256"
       },
       {

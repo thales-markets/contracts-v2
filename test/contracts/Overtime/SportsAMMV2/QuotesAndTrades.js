@@ -57,7 +57,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -80,7 +80,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				.trade(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
@@ -101,7 +101,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			await sportsAMMV2.connect(firstTrader).trade(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				quote.payout,
+				quote.totalQuote,
 				ADDITIONAL_SLIPPAGE,
 				ZERO_ADDRESS,
 				firstLiquidityProvider, //referrer
