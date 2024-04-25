@@ -54,7 +54,6 @@ describe('SportsAMMV2Data Read Data', () => {
 				ADDITIONAL_SLIPPAGE,
 				ZERO_ADDRESS,
 				ZERO_ADDRESS,
-				ZERO_ADDRESS,
 				false
 			);
 

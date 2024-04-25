@@ -89,7 +89,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 
@@ -246,7 +245,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -412,7 +410,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -623,7 +620,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false

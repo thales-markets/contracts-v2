@@ -144,7 +144,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "recipient",
+        "name": "requester",
         "type": "address"
       },
       {
@@ -223,7 +223,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "sender",
+        "name": "requester",
         "type": "address"
       },
       {
@@ -279,12 +279,6 @@
         "internalType": "uint256",
         "name": "_expectedQuote",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_differentRecipient",
-        "type": "address"
       },
       {
         "indexed": false,
@@ -603,11 +597,6 @@
       },
       {
         "internalType": "address",
-        "name": "_differentRecipient",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_referrer",
         "type": "address"
       },
@@ -663,11 +652,6 @@
             "internalType": "uint256",
             "name": "_additionalSlippage",
             "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "_differentRecipient",
-            "type": "address"
           },
           {
             "internalType": "address",

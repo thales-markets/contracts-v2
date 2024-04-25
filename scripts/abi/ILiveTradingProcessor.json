@@ -68,11 +68,6 @@
           },
           {
             "internalType": "address",
-            "name": "_differentRecipient",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
             "name": "_referrer",
             "type": "address"
           },

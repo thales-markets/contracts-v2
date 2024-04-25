@@ -194,11 +194,6 @@
       },
       {
         "internalType": "address",
-        "name": "_differentRecipient",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_referrer",
         "type": "address"
       },
@@ -306,11 +301,6 @@
         "type": "tuple[]"
       },
       {
-        "internalType": "address",
-        "name": "_requester",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "_buyInAmount",
         "type": "uint256"
@@ -322,7 +312,7 @@
       },
       {
         "internalType": "address",
-        "name": "_differentRecipient",
+        "name": "_recipient",
         "type": "address"
       },
       {

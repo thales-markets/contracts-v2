@@ -55,7 +55,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 
@@ -91,7 +90,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					newBuyInAmount,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -154,7 +152,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
-						ZERO_ADDRESS,
 						false
 					)
 			).to.be.revertedWith('Invalid position');
@@ -171,7 +168,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						BUY_IN_AMOUNT,
 						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
-						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						false
@@ -194,7 +190,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						BUY_IN_AMOUNT,
 						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
-						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						false
@@ -226,7 +221,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
-						ZERO_ADDRESS,
 						false
 					)
 			).to.be.revertedWith('Risk per market and position exceeded');
@@ -247,7 +241,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					buyInAmount,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -278,7 +271,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ADDITIONAL_SLIPPAGE,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
-						ZERO_ADDRESS,
 						false
 					)
 			).to.be.revertedWith('Risk per game exceeded');
@@ -303,7 +295,6 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						BUY_IN_AMOUNT,
 						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
-						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						ZERO_ADDRESS,
 						false

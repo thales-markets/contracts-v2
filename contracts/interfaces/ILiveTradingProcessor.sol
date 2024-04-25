@@ -11,7 +11,6 @@ interface ILiveTradingProcessor {
         uint _buyInAmount;
         uint _expectedQuote;
         uint _additionalSlippage;
-        address _differentRecipient; //TODO: should be removed
         address _referrer;
         address _collateral;
     }

@@ -418,7 +418,6 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					weth,
 					true,
 					{ value: ETH_BUY_IN_AMOUNT }
@@ -580,7 +579,6 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					weth,
 					true,
 					{ value: ETH_BUY_IN_AMOUNT }
@@ -688,7 +686,6 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 					ETH_BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
 					true,

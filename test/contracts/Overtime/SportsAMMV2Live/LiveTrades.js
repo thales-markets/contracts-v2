@@ -70,7 +70,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: quote.totalQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
-				_differentRecipient: firstTrader,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
 			});
@@ -95,7 +94,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: quote.totalQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
-				_differentRecipient: firstTrader,
 				_referrer: secondAccount,
 				_collateral: ZERO_ADDRESS,
 			});
@@ -121,7 +119,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_buyInAmount: ETH_BUY_IN_AMOUNT,
 				_expectedQuote: quote.totalQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
-				_differentRecipient: firstTrader,
 				_referrer: ZERO_ADDRESS,
 				_collateral: weth,
 			});
@@ -143,7 +140,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_buyInAmount: BUY_IN_AMOUNT,
 					_expectedQuote: quote.totalQuote,
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
-					_differentRecipient: firstTrader,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
 				})
@@ -162,7 +158,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: quote.totalQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
-				_differentRecipient: firstTrader,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
 			});
@@ -189,7 +184,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: quote.totalQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
-				_differentRecipient: firstTrader,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
 			});
@@ -217,7 +211,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: quote.totalQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
-				_differentRecipient: firstTrader,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
 			});

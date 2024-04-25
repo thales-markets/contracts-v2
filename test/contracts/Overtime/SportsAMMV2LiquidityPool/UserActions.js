@@ -415,7 +415,6 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 
@@ -575,7 +574,6 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
 					false
 				);
 
@@ -682,7 +680,6 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false

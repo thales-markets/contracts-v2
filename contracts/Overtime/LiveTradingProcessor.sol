@@ -93,7 +93,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _liveTradeData._position,
             _liveTradeData._buyInAmount,
             _liveTradeData._expectedQuote,
-            _liveTradeData._differentRecipient,
             _liveTradeData._collateral
         );
         requestCounter++;
@@ -142,10 +141,9 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
             address _createdTicket = sportsAMM.tradeLive(
                 tradeData,
-                requester,
                 lTradeData._buyInAmount,
                 _approvedQuote,
-                requester, // TODO: seems redundant to have both requester and different recipient
+                requester,
                 lTradeData._referrer,
                 lTradeData._collateral
             );
@@ -163,7 +161,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         requestIdFulfilled[_requestId] = true;
 
         emit LiveTradeFulfilled(
-            lTradeData._differentRecipient,
+            requester,
             _requestId,
             _allow,
             lTradeData._gameId,
@@ -224,7 +222,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /////// EVENTS
     event ContextReset(address _link, address _oracle, address _sportsAMM, bytes32 _jobSpecId, uint _paymentAmount);
     event LiveTradeRequested(
-        address sender,
+        address requester,
         uint requestCounter,
         bytes32 requestId,
         bytes32 _gameId,
@@ -234,11 +232,10 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint8 _position,
         uint _buyInAmount,
         uint _expectedQuote,
-        address _differentRecipient,
         address _collateral
     );
     event LiveTradeFulfilled(
-        address recipient,
+        address requester,
         bytes32 requestId,
         bool _allow,
         bytes32 _gameId,
