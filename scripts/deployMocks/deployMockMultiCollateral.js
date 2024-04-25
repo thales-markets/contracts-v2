@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat');
 
-const { setTargetAddress, delay } = require('../helpers');
+const { setTargetAddress, getTargetAddress, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -20,6 +20,12 @@ async function main() {
 
 	console.log('MockMultiCollateral deployed on:', mockMultiCollateralAddress);
 	setTargetAddress('MultiCollateral', network, mockMultiCollateralAddress);
+
+	const mockPriceFeedAddress = getTargetAddress('PriceFeed', network);
+	const defaultCollateralAddress = getTargetAddress('DefaultCollaterals', network);
+	await mockMultiCollateralDeployed.setSUSD(defaultCollateralAddress);
+	await mockMultiCollateralDeployed.setPriceFeed(mockPriceFeedAddress);
+
 	await delay(5000);
 
 	try {

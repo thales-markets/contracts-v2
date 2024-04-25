@@ -30,6 +30,14 @@ contract MockPriceFeed {
         return currencyKeys;
     }
 
+    function getRates() external view returns (uint[] memory rates) {
+        rates = new uint[](currencyKeys.length);
+        for (uint i = 0; i < currencyKeys.length; i++) {
+            bytes32 currencyKey = currencyKeys[i];
+            rates[i] = _getRateAndUpdatedTime(currencyKey).rate;
+        }
+    }
+
     function rateForCurrency(bytes32 currencyKey) external view returns (uint) {
         return _getRateAndUpdatedTime(currencyKey).rate;
     }
