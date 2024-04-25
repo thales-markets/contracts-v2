@@ -245,6 +245,41 @@
       "address": "0xAeDB908b82626F031E31140527b45c7C89d4bb53",
       "txHash": "0x7febb6f726eb2ed3865c6108a9fdeb059595e068fc7ea12bbd53058977ff425a",
       "kind": "transparent"
+    },
+    {
+      "address": "0x8d07D8564E7eb4ecacB62d7BFCd7357650B735bb",
+      "txHash": "0x80184c26fa2b5879b248e2390eb7e5a829f20afdc493ce8a9c0a6eca0f4df0ec",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xAE145Fe3Af36aAE9135c488E9B728eD504B2385C",
+      "txHash": "0xde3902278c520b320afe316703287583bed6519e0675fb8591b28783792122bb",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x93ca60840984348f8Dc4d81e274a12CAaDDC59aE",
+      "txHash": "0xc11b9e2d3518caacb390af38268ffaa7800e288716b075eefb604fba04b80337",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xCb99b139a30fa2C09a8396B4a1cCda06D91DdC72",
+      "txHash": "0x8b563af5e64eb87ee402bc51475998c2f4df315d0791cd466a283f9d8a5ba709",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xE0F7d10cEd47914B968664c993C61db708883868",
+      "txHash": "0xd2a28dc63478ccfc389f1a340c290d19694c219214d0719d0537188095368a2f",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xbF0fD4103c28E954EAe26C9F56318de9C5D44a2C",
+      "txHash": "0x1bbbbed78f5eecf0e2e22abe5cc725f52e9fc7c807d61cae0c2fd46d2a44cd28",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x001464DF99f368780c3b6cc68A809A748e8bb64e",
+      "txHash": "0xbce44b4961fe05c95c14b7fb0b6c0f7d7499a5403ea91528e7231fb396884d54",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -23663,6 +23698,186 @@
           "t_uint256": {
             "label": "uint256",
             "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "25921109d9b86b07441bca4ee1fbd225b34b240d30ab640db045c9f914a09274": {
+      "address": "0xAc9AfCaa141aA416E6bF712a816D86FA52795bBf",
+      "txHash": "0x670b310bee6e06d6c7944a87e2a8fc0fd46fa6a2c4d01c46075f6342182e8345",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "@thales-dao/contracts/contracts/utils/proxy/solidity-0.8.0/ProxyOwned.sol:7"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "@thales-dao/contracts/contracts/utils/proxy/solidity-0.8.0/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "@thales-dao/contracts/contracts/utils/proxy/solidity-0.8.0/ProxyOwned.sol:9"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "@thales-dao/contracts/contracts/utils/proxy/solidity-0.8.0/ProxyOwned.sol:10"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "@thales-dao/contracts/contracts/utils/proxy/solidity-0.8.0/ProxyPausable.sol:11"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "@thales-dao/contracts/contracts/utils/proxy/solidity-0.8.0/ProxyPausable.sol:12"
+          },
+          {
+            "label": "safeBox",
+            "offset": 1,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "AddressManager",
+            "src": "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol:15"
+          },
+          {
+            "label": "referrals",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "AddressManager",
+            "src": "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol:17"
+          },
+          {
+            "label": "stakingThales",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "AddressManager",
+            "src": "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol:19"
+          },
+          {
+            "label": "multiCollateralOnOffRamp",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address",
+            "contract": "AddressManager",
+            "src": "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol:21"
+          },
+          {
+            "label": "pyth",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_address",
+            "contract": "AddressManager",
+            "src": "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol:23"
+          },
+          {
+            "label": "speedMarketsAMM",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address",
+            "contract": "AddressManager",
+            "src": "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol:25"
+          },
+          {
+            "label": "addressBook",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_string_memory_ptr,t_address)",
+            "contract": "AddressManager",
+            "src": "@thales-dao/contracts/contracts/AddressManager/AddressManager.sol:27"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_string_memory_ptr,t_address)": {
+            "label": "mapping(string => address)",
+            "numberOfBytes": "32"
+          },
+          "t_string_memory_ptr": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string"
           }
         },
         "namespaces": {

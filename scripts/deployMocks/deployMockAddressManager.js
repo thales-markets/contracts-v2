@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat');
 
-const { setTargetAddress, delay } = require('../helpers');
+const { setTargetAddress, getTargetAddress, delay } = require('../helpers');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -11,13 +11,30 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const mockAddressManager = await ethers.getContractFactory('MockAddressManager');
+	const zero_address = '0x0000000000000000000000000000000000000000';
+	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
+	const safeBoxAddress = getTargetAddress('SafeBox', network);
+	const referralsAddress = getTargetAddress('Referrals', network);
+	const stakingThalesAddress = getTargetAddress('StakingThales', network);
+	const multiCollateralAddress = getTargetAddress('MultiCollateral', network);
+	const MockAddressManager = await ethers.getContractFactory('MockAddressManager');
 
-	const mockAddressManagerDeployed = await mockAddressManager.deploy();
+	const mockAddressManagerDeployed = await upgrades.deployProxy(
+		MockAddressManager,
+		[
+			protocolDAOAddress,
+			safeBoxAddress,
+			referralsAddress,
+			stakingThalesAddress,
+			multiCollateralAddress,
+			zero_address,
+			zero_address,
+		],
+		{ initialOwner: protocolDAOAddress }
+	);
 	await mockAddressManagerDeployed.waitForDeployment();
 
 	const mockAddressManagerAddress = await mockAddressManagerDeployed.getAddress();
-
 	console.log('MockAddressManager deployed on:', mockAddressManagerAddress);
 	setTargetAddress('AddressManager', network, mockAddressManagerAddress);
 	await delay(5000);
