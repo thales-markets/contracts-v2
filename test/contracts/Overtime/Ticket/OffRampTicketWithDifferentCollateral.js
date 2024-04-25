@@ -216,6 +216,7 @@ describe('Ticket Exercise and Expire', () => {
 			userBalanceAfter = parseInt(parseInt(userBalanceAfter.toString()) / 1e15);
 			calculatedBalance = parseInt(calculatedBalance / 1e15);
 			expect(userBalanceAfter).to.be.equal(calculatedBalance);
+
 		});
 	});
 });
