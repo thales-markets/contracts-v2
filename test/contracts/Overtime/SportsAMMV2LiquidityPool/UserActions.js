@@ -411,9 +411,8 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -571,9 +570,8 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -680,9 +678,8 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false

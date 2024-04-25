@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/IFreeBetsHolder.sol";
+import "../interfaces/ILiveTradingProcessor.sol";
 
 contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
@@ -27,21 +28,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint public maxAllowedExecutionDelay = 60;
 
-    struct LiveTradeData {
-        address _requester;
-        bytes32 _gameId;
-        uint16 _sportId;
-        uint16 _typeId;
-        uint8 _position;
-        uint _buyInAmount;
-        uint _expectedPayout;
-        uint _additionalSlippage;
-        address _differentRecipient;
-        address _referrer;
-        address _collateral;
-    }
-
-    mapping(bytes32 => LiveTradeData) public requestIdToTradeData;
+    mapping(bytes32 => ILiveTradingProcessor.LiveTradeData) public requestIdToTradeData;
+    mapping(bytes32 => address) public requestIdToRequester;
     mapping(bytes32 => bool) public requestIdToFulfillAllowed;
     mapping(bytes32 => bool) public requestIdFulfilled;
     mapping(bytes32 => uint) public timestampPerRequest;
@@ -64,71 +52,33 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     /// @notice requestLiveTrade
-    /// @param _gameId for which to request a live trade
-    /// @param _sportId for which to request a live trade
-    /// @param _typeId for which to request a live trade
-    /// @param _position for which to request a live trade
-    /// @param _buyInAmount ticket buy-in amount
-    /// @param _expectedPayout expected payout
-    /// @param _additionalSlippage the maximum slippage a user will accept
-    /// @param _referrer who should get the referrer fee if any
-    /// @param _collateral different collateral used for paymentAmount
-    //TODO: consider a struct for this
-    // TODO: add line as a parametar for live trades on totals
+    /// @param _liveTradeData for which to request a live trade
     function requestLiveTrade(
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _typeId,
-        uint8 _position,
-        uint _buyInAmount,
-        uint _expectedPayout,
-        uint _additionalSlippage,
-        address _differentRecipient, // in case a voucher is used
-        address _referrer,
-        address _collateral
+        ILiveTradingProcessor.LiveTradeData calldata _liveTradeData
     ) external whenNotPaused returns (bytes32 requestId) {
-        //TODO: consider how to prevent someone spamming this method
         require(
-            sportsAMM.riskManager().liveTradingPerSportAndTypeEnabled(_sportId, _typeId),
+            sportsAMM.riskManager().liveTradingPerSportAndTypeEnabled(_liveTradeData._sportId, _liveTradeData._typeId),
             "Live trading not enabled on _sportId"
         );
 
         Chainlink.Request memory req;
 
-        if (_collateral == address(sportsAMM.defaultCollateral())) {
-            _collateral = address(0);
-        }
-
         req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
-        req.add("_gameId", string(abi.encodePacked(_gameId)));
-        req.addUint("_sportId", _sportId);
-        req.addUint("_typeId", _typeId);
-        req.addUint("_position", _position);
-        req.add("_collateral", string(abi.encodePacked(_collateral)));
-        req.addUint("_buyInAmount", _buyInAmount);
-        req.addUint("_expectedPayout", _expectedPayout);
-        req.addUint("_additionalSlippage", _additionalSlippage);
-
-        if (_differentRecipient == address(0)) {
-            _differentRecipient = msg.sender;
-        }
+        req.add("_gameId", string(abi.encodePacked(_liveTradeData._gameId)));
+        req.addUint("_sportId", _liveTradeData._sportId);
+        req.addUint("_typeId", _liveTradeData._typeId);
+        req.addInt("_line", _liveTradeData._line);
+        req.addUint("_position", _liveTradeData._position);
+        req.add("_collateral", string(abi.encodePacked(_liveTradeData._collateral)));
+        req.addUint("_buyInAmount", _liveTradeData._buyInAmount);
+        req.addUint("_expectedQuote", _liveTradeData._expectedQuote);
+        req.addUint("_additionalSlippage", _liveTradeData._additionalSlippage);
 
         requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;
-        requestIdToTradeData[requestId] = LiveTradeData(
-            msg.sender,
-            _gameId,
-            _sportId,
-            _typeId,
-            _position,
-            _buyInAmount,
-            _expectedPayout,
-            _additionalSlippage,
-            _differentRecipient,
-            _referrer,
-            _collateral
-        );
+        requestIdToTradeData[requestId] = _liveTradeData;
+        requestIdToRequester[requestId] = msg.sender;
 
         counterToRequestId[requestCounter] = requestId;
 
@@ -136,14 +86,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             msg.sender,
             requestCounter,
             requestId,
-            _gameId,
-            _sportId,
-            _typeId,
-            _position,
-            _buyInAmount,
-            _expectedPayout,
-            _differentRecipient,
-            _collateral
+            _liveTradeData._gameId,
+            _liveTradeData._sportId,
+            _liveTradeData._typeId,
+            _liveTradeData._line,
+            _liveTradeData._position,
+            _liveTradeData._buyInAmount,
+            _liveTradeData._expectedQuote,
+            _liveTradeData._collateral
         );
         requestCounter++;
     }
@@ -151,20 +101,21 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /// @notice fulfillLiveTrade
     /// @param _requestId which is being fulfilled
     /// @param _allow whether the live trade should go through
-    /// @param _approvedPayoutAmount what will be the actual payout
+    /// @param _approvedQuote what will be the actual payout
     function fulfillLiveTrade(
         bytes32 _requestId,
         bool _allow,
-        uint _approvedPayoutAmount
+        uint _approvedQuote
     ) external whenNotPaused recordChainlinkFulfillment(_requestId) {
         //might be redundant as already done by Chainlink Client, but making double sure
         require(!requestIdFulfilled[_requestId], "Request ID already fulfilled");
         require((timestampPerRequest[_requestId] + maxAllowedExecutionDelay) > block.timestamp, "Request timed out");
 
-        LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
+        ILiveTradingProcessor.LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
+        address requester = requestIdToRequester[_requestId];
 
         require(
-            ((ONE * lTradeData._expectedPayout) / _approvedPayoutAmount) <= (ONE + lTradeData._additionalSlippage),
+            ((ONE * _approvedQuote) / lTradeData._expectedQuote) <= (ONE + lTradeData._additionalSlippage),
             "Slippage too high"
         );
 
@@ -180,7 +131,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 lTradeData._typeId, //type
                 block.timestamp + 60, //maturity, hardcode to timestamp with buffer
                 0, //status
-                0, //line
+                lTradeData._line, //line
                 0, //playerId
                 odds, //odds[]
                 merkleProofs, //merkleProof[]
@@ -190,15 +141,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
             address _createdTicket = sportsAMM.tradeLive(
                 tradeData,
-                lTradeData._requester,
                 lTradeData._buyInAmount,
-                _approvedPayoutAmount,
-                lTradeData._differentRecipient,
+                _approvedQuote,
+                requester,
                 lTradeData._referrer,
                 lTradeData._collateral
             );
 
-            if (lTradeData._requester == freeBetsHolder) {
+            if (requester == freeBetsHolder) {
                 IFreeBetsHolder(freeBetsHolder).confirmLiveTrade(
                     _requestId,
                     _createdTicket,
@@ -211,15 +161,16 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         requestIdFulfilled[_requestId] = true;
 
         emit LiveTradeFulfilled(
-            lTradeData._differentRecipient,
+            requester,
             _requestId,
             _allow,
             lTradeData._gameId,
             lTradeData._sportId,
             lTradeData._typeId,
+            lTradeData._line,
             lTradeData._position,
             lTradeData._buyInAmount,
-            lTradeData._expectedPayout,
+            lTradeData._expectedQuote,
             lTradeData._collateral,
             block.timestamp
         );
@@ -271,28 +222,29 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     /////// EVENTS
     event ContextReset(address _link, address _oracle, address _sportsAMM, bytes32 _jobSpecId, uint _paymentAmount);
     event LiveTradeRequested(
-        address sender,
+        address requester,
         uint requestCounter,
         bytes32 requestId,
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _typeId,
+        int24 _line,
         uint8 _position,
         uint _buyInAmount,
-        uint _expectedPayout,
-        address _differentRecipient,
+        uint _expectedQuote,
         address _collateral
     );
     event LiveTradeFulfilled(
-        address recipient,
+        address requester,
         bytes32 requestId,
         bool _allow,
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _typeId,
+        int24 _line,
         uint8 _position,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         address _collateral,
         uint timestamp
     );

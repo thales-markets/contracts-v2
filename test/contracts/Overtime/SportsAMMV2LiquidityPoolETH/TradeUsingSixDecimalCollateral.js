@@ -129,9 +129,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -315,9 +314,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -506,9 +504,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -731,9 +728,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateral,
 					false
@@ -929,9 +925,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateral,
 					false
@@ -1150,9 +1145,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -1392,9 +1386,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -1596,9 +1589,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -1793,9 +1785,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -1984,9 +1975,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					ETH_BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
 					true,
@@ -2152,9 +2142,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					ETH_BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					weth,
 					true,
@@ -2363,9 +2352,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals2,
 					false
@@ -2582,9 +2570,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals2,
 					false
@@ -2801,9 +2788,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateral,
 					false
@@ -3018,9 +3004,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateral,
 					false
@@ -3214,9 +3199,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -3389,9 +3373,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -3553,9 +3536,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateral18,
 					false
@@ -3717,9 +3699,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateral18,
 					false

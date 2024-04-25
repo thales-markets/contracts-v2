@@ -28,16 +28,6 @@ interface ISportsAMMV2 {
         CombinedPosition[][] combinedPositions;
     }
 
-    struct TradeParams {
-        uint _buyInAmount;
-        uint _expectedPayout;
-        uint _additionalSlippage;
-        address _differentRecipient;
-        address _collateral;
-        address _collateralPool;
-        uint _collateralPriceInUSD;
-    }
-
     function defaultCollateral() external view returns (IERC20);
 
     function manager() external view returns (ISportsAMMV2Manager);
@@ -52,10 +42,9 @@ interface ISportsAMMV2 {
 
     function tradeLive(
         TradeData[] calldata _tradeData,
-        address _requester,
         uint _buyInAmount,
-        uint _expectedPayout,
-        address _differentRecipient,
+        uint _expectedQuote,
+        address _recipient,
         address _referrer,
         address _collateral
     ) external returns (address _createdTicket);
@@ -63,9 +52,8 @@ interface ISportsAMMV2 {
     function trade(
         TradeData[] calldata _tradeData,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         uint _additionalSlippage,
-        address _differentRecipient,
         address _referrer,
         address _collateral,
         bool _isEth

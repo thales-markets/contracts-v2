@@ -104,9 +104,8 @@ describe('Ticket Exercise and Expire', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT_SIX_DECIMALS,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					collateralSixDecimals,
 					false
@@ -177,9 +176,8 @@ describe('Ticket Exercise and Expire', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -236,9 +234,8 @@ describe('Ticket Exercise and Expire', () => {
 				.trade(
 					tradeDataCurrentRound,
 					BUY_IN_AMOUNT,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false

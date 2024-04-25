@@ -101,9 +101,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 				.trade(
 					tradeDataTenMarketsCurrentRound,
 					buyInAmount,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false
@@ -177,9 +176,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 				.trade(
 					tradeDataTenMarketsCurrentRound,
 					buyInAmount,
-					quote.payout,
+					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false

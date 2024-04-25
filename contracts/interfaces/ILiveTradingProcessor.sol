@@ -2,19 +2,20 @@
 pragma solidity ^0.8.20;
 
 interface ILiveTradingProcessor {
+    struct LiveTradeData {
+        bytes32 _gameId;
+        uint16 _sportId;
+        uint16 _typeId;
+        int24 _line;
+        uint8 _position;
+        uint _buyInAmount;
+        uint _expectedQuote;
+        uint _additionalSlippage;
+        address _referrer;
+        address _collateral;
+    }
+
     function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedAmount) external;
 
-    //TODO: use a struct
-    function requestLiveTrade(
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _typeId,
-        uint8 _position,
-        uint _buyInAmount,
-        uint _expectedPayout,
-        uint _additionalSlippage,
-        address _differentRecipient,
-        address _referrer,
-        address _collateral
-    ) external returns (bytes32);
+    function requestLiveTrade(LiveTradeData calldata _liveTradeData) external returns (bytes32);
 }

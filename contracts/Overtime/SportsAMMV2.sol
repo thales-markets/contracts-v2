@@ -41,9 +41,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmount;
         uint _expectedPayout;
         uint _additionalSlippage;
-        address _differentRecipient;
+        address _recipient;
         bool _isLive;
-        address _requester;
         address _collateral;
         address _collateralPool;
         uint _collateralPriceInUSD;
@@ -166,7 +165,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint useAmount = _buyInAmount;
         buyInAmountInDefaultCollateral = _buyInAmount;
 
-        // TODO: I might prefer insisting on always sending the collateral
+        // TODO: Might prefer insisting on always sending the collateral
         if (_collateral != address(0) && _collateral != address(defaultCollateral)) {
             if (liquidityPoolForCollateral[_collateral] == address(0)) {
                 buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
@@ -199,9 +198,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice make a trade and create a ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
-    /// @param _expectedPayout expected payout got from quote method
+    /// @param _expectedQuote expected payout got from quote method
     /// @param _additionalSlippage slippage tolerance
-    /// @param _differentRecipient different recipent of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
     /// @param _isEth pay with ETH
@@ -209,19 +207,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         uint _additionalSlippage,
-        address _differentRecipient,
         address _referrer,
         address _collateral,
         bool _isEth
     ) external payable nonReentrant notPaused returns (address _createdTicket) {
+        require(_expectedQuote > 0 && _buyInAmount > 0, "Illegal input amounts");
+
         if (_referrer != address(0)) {
             referrals.setReferrer(_referrer, msg.sender);
-        }
-
-        if (_differentRecipient == address(0)) {
-            _differentRecipient = msg.sender;
         }
 
         address useLPpool;
@@ -236,11 +231,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
-                _expectedPayout,
+                (ONE * _buyInAmount) / _expectedQuote, // quote to expected payout
                 _additionalSlippage,
-                _differentRecipient,
-                false,
                 msg.sender,
+                false,
                 _collateral,
                 useLPpool,
                 collateralPriceInUSD
@@ -251,44 +245,42 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice make a live trade and create a ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
-    /// @param _expectedPayout expected payout got from LiveTradingProcessor method
-    /// @param _differentRecipient different recipient of the ticket
+    /// @param _expectedQuote expected payout got from LiveTradingProcessor method
+    /// @param _recipient different recipient of the ticket
     /// @param _referrer referrer to get referral fee
     /// @param _collateral different collateral used for payment
     /// @return _createdTicket the address of the created ticket
     function tradeLive(
         ISportsAMMV2.TradeData[] calldata _tradeData,
-        address _requester,
         uint _buyInAmount,
-        uint _expectedPayout,
-        address _differentRecipient,
+        uint _expectedQuote,
+        address _recipient,
         address _referrer,
         address _collateral
     ) external nonReentrant notPaused returns (address _createdTicket) {
         require(msg.sender == liveTradingProcessor, "OnlyLiveTradingProcessor");
 
         if (_referrer != address(0)) {
-            referrals.setReferrer(_referrer, _requester);
+            referrals.setReferrer(_referrer, _recipient);
         }
 
-        require(_differentRecipient != address(0), "UndefinedRecipient");
+        require(_recipient != address(0), "UndefinedRecipient");
         address useLPpool;
         uint collateralPriceInUSD;
         (useLPpool, collateralPriceInUSD, _buyInAmount, _collateral) = _handleCollateral(
             _buyInAmount,
             _collateral,
-            _requester,
+            _recipient,
             false
         );
         _createdTicket = _trade(
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
-                _expectedPayout,
+                (ONE * _buyInAmount) / _expectedQuote, // quote to expected payout,
                 0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
-                _differentRecipient,
+                _recipient,
                 true,
-                _requester,
                 _collateral,
                 useLPpool,
                 collateralPriceInUSD
@@ -444,14 +436,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 fees,
                 totalQuote,
                 address(this),
-                _tradeDataInternal._differentRecipient,
+                _tradeDataInternal._recipient,
                 IERC20(_tradeDataInternal._collateral),
                 (block.timestamp + riskManager.expiryDuration())
             )
         );
-        manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._differentRecipient);
+        manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._recipient);
 
-        //TODO: reconsider the flow here, perhaps the liquidity pool can send directly to the ticket
         ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
             address(ticket),
             payoutWithFees - _tradeDataInternal._buyInAmount
@@ -461,7 +452,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout);
         emit TicketCreated(
             address(ticket),
-            _tradeDataInternal._differentRecipient,
+            _tradeDataInternal._recipient,
             _tradeDataInternal._buyInAmount,
             fees,
             payout,
@@ -518,7 +509,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _tradeDataInternal._additionalSlippage);
         if (address(stakingThales) != address(0)) {
             stakingThales.updateVolumeAtAmountDecimals(
-                _tradeDataInternal._differentRecipient,
+                _tradeDataInternal._recipient,
                 _buyInAmount,
                 defaultCollateralDecimals
             );
@@ -740,14 +731,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /* ========== EVENTS ========== */
 
     event NewTicket(Ticket.MarketData[] markets, address ticket, uint buyInAmount, uint payout);
-    event TicketCreated(
-        address ticket,
-        address differentRecipient,
-        uint buyInAmount,
-        uint fees,
-        uint payout,
-        uint totalQuote
-    );
+    event TicketCreated(address ticket, address recipient, uint buyInAmount, uint fees, uint payout, uint totalQuote);
 
     event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
     event ReferrerPaid(address refferer, address trader, uint amount, uint volume);

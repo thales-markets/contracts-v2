@@ -4,15 +4,15 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-// internal
-// TODO: why do we still use these synthetix contracts?
 import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../utils/proxy/ProxyReentrancyGuard.sol";
+import "../utils/libraries/AddressSetLib.sol";
+
 import "../interfaces/ISportsAMMV2.sol";
 import "../interfaces/ILiveTradingProcessor.sol";
+
 import "./Ticket.sol";
-import "../utils/libraries/AddressSetLib.sol";
 
 contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -72,7 +72,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
-        uint _expectedPayout,
+        uint _expectedQuote,
         uint _additionalSlippage,
         address _referrer,
         address _collateral
@@ -81,11 +81,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _createdTicket = sportsAMM.trade(
             _tradeData,
             _buyInAmount,
-            _expectedPayout,
+            _expectedQuote,
             _additionalSlippage,
-            address(0),
             _referrer,
-            _collateral == address(sportsAMM.defaultCollateral()) ? address(0) : _collateral,
+            _collateral,
             false
         );
         ticketToUser[_createdTicket] = msg.sender;
@@ -94,32 +93,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /// @notice request a live ticket for a user if he has enough free bet in given collateral
-    // TODO: stack too deep issues if more modifiers are added, but consider whether nonreentrancy guard is needed
     function tradeLive(
-        bytes32 _gameId,
-        uint16 _sportId,
-        uint16 _typeId,
-        uint8 _position,
-        uint _buyInAmount,
-        uint _expectedPayout,
-        uint _additionalSlippage,
-        address _referrer,
-        address _collateral
-    ) external notPaused canTrade(msg.sender, _collateral, _buyInAmount) {
-        bytes32 _requestId = liveTradingProcessor.requestLiveTrade(
-            _gameId,
-            _sportId,
-            _typeId,
-            _position,
-            _buyInAmount,
-            _expectedPayout,
-            _additionalSlippage,
-            address(0),
-            _referrer,
-            _collateral
-        );
+        ILiveTradingProcessor.LiveTradeData calldata _liveTradeData
+    ) external notPaused canTrade(msg.sender, _liveTradeData._collateral, _liveTradeData._buyInAmount) {
+        bytes32 _requestId = liveTradingProcessor.requestLiveTrade(_liveTradeData);
         liveRequestsPerUser[_requestId] = msg.sender;
-        emit FreeBetLiveTradeRequested(msg.sender, _buyInAmount, _requestId);
+        emit FreeBetLiveTradeRequested(msg.sender, _liveTradeData._buyInAmount, _requestId);
     }
 
     /// @notice confirm a live ticket purchase. As live betting is a 2 step approach, the LiveTradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
