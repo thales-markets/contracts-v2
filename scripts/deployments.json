@@ -15,7 +15,7 @@
 		"SportsAMMV2ResultManagerImplementation": "0xFc01Ea559523d3735D9045532eb6d53f175E7a8c",
 		"SportsAMMV2ResultManagerProxyAdmin": "0x4E3896065f554C8A9ae00527e4857a60df5501D5",
 		"SportsAMMV2": "0xe58C88622EC9eaF137089A2Df94B53B6521F55A3",
-		"SportsAMMV2Implementation": "0x7BEBE8b4AF820f2f4FBfD3AA866AF629EbC115B0",
+		"SportsAMMV2Implementation": "0x1e82C7D63824BB369EaBC495227b00D51Eeb6bEe",
 		"SportsAMMV2ProxyAdmin": "0xDDd11D047D3deb9e24b833749945488C0086E823",
 		"TicketMastercopy": "0xCD6e942131D269F7d9D8526a461Fc019937a3580",
 		"SportsAMMV2LiquidityPool": "0xb8A39E39EcCcEA80D87b489497cc58ecbA21D3c2",
@@ -30,7 +30,7 @@
 		"SportsAMMV2DataImplementation": "0xAef0F8A0F597A15EF9af2cB9F208CB306D166B2B",
 		"SportsAMMV2DataProxyAdmin": "0x8fdeC98adEda8F6Cb46BFadEb41CEDD87B13e274",
 		"MockChainlinkOracle": "0x13De488552594aAbC5dE42f77A3Ed61f745411BA",
-		"LiveTradingProcessor": "0x54d1EFfa31CF27849fb155b8763b8F23F47326Cb",
+		"LiveTradingProcessor": "0x2A34F47E7A12aB77dbB5d87A77d9ee116CD1Bfe9",
 		"ChainlinkResolver": "0xbd0E2A7990126CCE51c47A946162D6DC8F2F2e9c",
 		"SportsAMMV2LiquidityPoolData": "0xd61FA46d4e3CD47584a56fC20856Fdd197135756",
 		"SportsAMMV2LiquidityPoolDataImplementation": "0xa49A562E226cb47ae7422837E06390e7C6b9Ae17",
@@ -54,7 +54,8 @@
 		"SportsAMMV2LiquidityPoolWETHProxyAdmin": "0x5B856f98de36AaeE154b74165A3d6DCb8F1c8a00",
 		"DefaultLiquidityProviderWETH": "0xA2e704003301cba3fd0a70b197040d5Ce14F7CAF",
 		"DefaultLiquidityProviderWETHImplementation": "0x8280270f70f8Ef0CB22800cF21Fd6f83B38FDAF6",
-		"DefaultLiquidityProviderWETHProxyAdmin": "0xb6439579ee06cE9641De2A7B94791C0Ef87b4Df8"
+		"DefaultLiquidityProviderWETHProxyAdmin": "0xb6439579ee06cE9641De2A7B94791C0Ef87b4Df8",
+		"FreeBetsHolder": "0xAeDB908b82626F031E31140527b45c7C89d4bb53"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
