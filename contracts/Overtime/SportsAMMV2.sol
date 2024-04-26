@@ -507,8 +507,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout = _tradeDataInternal._expectedPayout;
         if (_collateralPriceInUSD > 0) {
             uint collateralDecimals = ISportsAMMV2Manager(_tradeDataInternal._collateral).decimals();
-            // TODO: perhaps a batch method can be created that transforms all 3?
-            // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
             _buyInAmount = _transformToUSD(
                 _buyInAmount,
                 _collateralPriceInUSD,
