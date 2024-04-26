@@ -209,6 +209,11 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @param _ticket to trade
     function transferToPool(address _ticket, uint _amount) external whenNotPaused roundClosingNotPrepared onlyAMM {
         uint ticketRound = getTicketRound(_ticket);
+
+        // if this is a past round, but not the default one, then we send the funds to the current round
+        if (ticketRound > 1 && ticketRound < round) {
+            ticketRound = round;
+        }
         address liquidityPoolRound = ticketRound <= 1 ? defaultLiquidityProvider : _getOrCreateRoundPool(ticketRound);
         collateral.safeTransferFrom(address(sportsAMM), liquidityPoolRound, _amount);
         if (isTradingTicketInARound[ticketRound][_ticket]) {
