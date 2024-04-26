@@ -98,6 +98,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // the contract that processes all free bets
     address public freeBetsHolder;
 
+    // support bonus payouts for some collaterals (e.g. THALES)
+    mapping(address => uint) public addedPayoutPercentagePerCollateral;
+
+    // support different SB per collateral, namely THALES as a collateral will be directly burned
+    mapping(address => address) public safeBoxPerCollateral;
+
     // declare that it can receive eth
     receive() external payable {}
 
@@ -189,7 +195,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeData,
             useAmount,
             true,
-            buyInAmountInDefaultCollateral
+            buyInAmountInDefaultCollateral,
+            _collateral
         );
     }
 
@@ -321,7 +328,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
         bool _shouldCheckRisks,
-        uint _buyInAmountInDefaultCollateral
+        uint _buyInAmountInDefaultCollateral,
+        address _collateral
     )
         internal
         view
@@ -337,6 +345,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         amountsToBuy = new uint[](numOfMarkets);
         uint maxSupportedOdds = riskManager.maxSupportedOdds();
 
+        uint addedPayoutPercentage = addedPayoutPercentagePerCollateral[_collateral];
+
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
@@ -344,6 +354,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             require(marketTradeData.odds.length > marketTradeData.position, "Invalid position");
             uint marketOdds = marketTradeData.odds[marketTradeData.position];
+            marketOdds = marketOdds - ((addedPayoutPercentage * marketOdds) / ONE);
 
             amountsToBuy[i] = (ONE * _buyInAmount) / marketOdds;
             totalQuote = totalQuote == 0 ? marketOdds : (totalQuote * marketOdds) / ONE;
@@ -352,6 +363,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             if (totalQuote < maxSupportedOdds) {
                 totalQuote = maxSupportedOdds;
             }
+
             payout = (_buyInAmount * ONE) / totalQuote;
             fees = _getFees(_buyInAmount);
 
@@ -419,7 +431,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint fees = _getFees(_tradeDataInternal._buyInAmount);
 
         if (!_tradeDataInternal._isLive) {
-            (totalQuote, payout, fees, , ) = _tradeQuote(_tradeData, _tradeDataInternal._buyInAmount, false, 0);
+            (totalQuote, payout, fees, , ) = _tradeQuote(
+                _tradeData,
+                _tradeDataInternal._buyInAmount,
+                false,
+                0,
+                _tradeDataInternal._collateral
+            );
         }
 
         uint payoutWithFees = payout + fees;
@@ -489,8 +507,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout = _tradeDataInternal._expectedPayout;
         if (_collateralPriceInUSD > 0) {
             uint collateralDecimals = ISportsAMMV2Manager(_tradeDataInternal._collateral).decimals();
-            // TODO: perhaps a batch method can be created that transforms all 3?
-            // TODO: a cleaner solution would be to extend the price feed contract to have a method to return the price at a fixed number of decimals
             _buyInAmount = _transformToUSD(
                 _buyInAmount,
                 _collateralPriceInUSD,
@@ -559,7 +575,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (fees > referrerShare) {
             uint safeBoxAmount = fees - referrerShare;
             if (ammBalance >= safeBoxAmount) {
-                _collateral.safeTransfer(safeBox, safeBoxAmount);
+                _collateral.safeTransfer(
+                    safeBoxPerCollateral[address(_collateral)] != address(0)
+                        ? safeBoxPerCollateral[address(_collateral)]
+                        : safeBox,
+                    safeBoxAmount
+                );
                 emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
             }
         }
@@ -621,7 +642,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice sets different amounts
     /// @param _safeBoxFee safe box fee paid on each trade
-    // TODO: could be maintained via address manager or system manager
     function setAmounts(uint _safeBoxFee) external onlyOwner {
         safeBoxFee = _safeBoxFee;
         emit AmountsUpdated(_safeBoxFee);
@@ -635,7 +655,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _referrals referrals address
     /// @param _stakingThales staking thales address
     /// @param _safeBox safeBox address
-    // TODO: lot of it could go to AddressManager. To avoid constant external calls, address manager could maintain a list of all  it needs to notify if a certain parameter is chained
     function setAddresses(
         IERC20 _defaultCollateral,
         address _manager,
@@ -713,6 +732,22 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
     }
 
+    /// @notice sets additional payout percentage for certain collaterals
+    /// @param _collateral to add extra payout for
+    /// @param _addedPayout percentage amount for extra payout
+    function setAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout) external onlyOwner {
+        addedPayoutPercentagePerCollateral[_collateral] = _addedPayout;
+        emit SetAddedPayoutPercentagePerCollateral(_collateral, _addedPayout);
+    }
+
+    /// @notice sets dedicated SafeBox per collateral
+    /// @param _collateral to set dedicated SafeBox for
+    /// @param _safeBox for the given collateral
+    function setSafeBoxPerCollateral(address _collateral, address _safeBox) external onlyOwner {
+        safeBoxPerCollateral[_collateral] = _safeBox;
+        emit SetSafeBoxPerCollateral(_collateral, _safeBox);
+    }
+
     /* ========== MODIFIERS ========== */
 
     modifier onlyKnownTickets(address _ticket) {
@@ -753,4 +788,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);
     event SetFreeBetsHolder(address freeBetsHolder);
+    event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
+    event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
 }
