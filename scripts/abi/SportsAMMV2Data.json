@@ -205,6 +205,11 @@
           },
           {
             "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
             "name": "ticketOwner",
             "type": "address"
           },
@@ -267,6 +272,11 @@
             "internalType": "bool",
             "name": "isExercisable",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "finalPayout",
+            "type": "uint256"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -382,6 +392,11 @@
           },
           {
             "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
             "name": "ticketOwner",
             "type": "address"
           },
@@ -444,6 +459,11 @@
             "internalType": "bool",
             "name": "isExercisable",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "finalPayout",
+            "type": "uint256"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -484,6 +504,11 @@
             "internalType": "uint256",
             "name": "safeBoxFee",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.SportsAMMParameters",
@@ -599,6 +624,11 @@
           },
           {
             "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
             "name": "ticketOwner",
             "type": "address"
           },
@@ -661,6 +691,11 @@
             "internalType": "bool",
             "name": "isExercisable",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "finalPayout",
+            "type": "uint256"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -776,6 +811,11 @@
           },
           {
             "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
             "name": "ticketOwner",
             "type": "address"
           },
@@ -838,6 +878,11 @@
             "internalType": "bool",
             "name": "isExercisable",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "finalPayout",
+            "type": "uint256"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
