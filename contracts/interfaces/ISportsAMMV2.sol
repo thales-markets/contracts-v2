@@ -60,4 +60,6 @@ interface ISportsAMMV2 {
     ) external returns (address _createdTicket);
 
     function rootPerGame(bytes32 game) external view returns (bytes32);
+
+    function paused() external view returns (bool);
 }

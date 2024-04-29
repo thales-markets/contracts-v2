@@ -13,8 +13,9 @@ async function main() {
 
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
+	const collateralKey = ethers.encodeBytes32String('USDC');
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
-	const stakingThalesAddress = getTargetAddress('StakingThales', network);
+	const addressManagerAddress = getTargetAddress('AddressManager', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
 	const maxAllowedDeposit = ethers.parseEther('100000');
 	const minDepositAmount = ethers.parseEther('20');
@@ -30,8 +31,9 @@ async function main() {
 			{
 				_owner: owner.address,
 				_sportsAMM: sportsAMMV2Address,
-				_stakingThales: stakingThalesAddress,
+				_addressManager: addressManagerAddress,
 				_collateral: defaultCollateralAddress,
+				_collateralKey: collateralKey,
 				_roundLength: week,
 				_maxAllowedDeposit: maxAllowedDeposit,
 				_minDepositAmount: minDepositAmount,
@@ -79,9 +81,13 @@ async function main() {
 	if (isTestNetwork(networkObj.chainId)) {
 		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
-		await sportsAMMV2Deployed.setDefaultLiquidityPool(sportsAMMV2LiquidityPoolAddress, {
-			from: owner.address,
-		});
+		await sportsAMMV2Deployed.setLiquidityPoolForCollateral(
+			defaultCollateralAddress,
+			sportsAMMV2LiquidityPoolAddress,
+			{
+				from: owner.address,
+			}
+		);
 		console.log('SportsAMMV2LiquidityPool set in SportsAMMV2');
 	}
 
