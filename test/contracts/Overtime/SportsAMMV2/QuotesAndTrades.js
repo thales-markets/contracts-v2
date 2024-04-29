@@ -90,8 +90,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				);
 
 			const roots = await sportsAMMV2.getRootsPerGames([
-				tradeDataCurrentRound[0].gameId,
-				tradeDataCurrentRound[1].gameId,
+				tradeDataTenMarketsCurrentRound[0].gameId,
+				tradeDataTenMarketsCurrentRound[1].gameId,
 			]);
 			expect(roots.length).to.be.greaterThan(1);
 		});
