@@ -619,7 +619,7 @@
         "type": "uint256"
       }
     ],
-    "name": "exerciseDefualtRoundTicketsReadyToBeExercisedBatch",
+    "name": "exerciseDefaultRoundTicketsReadyToBeExercisedBatch",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

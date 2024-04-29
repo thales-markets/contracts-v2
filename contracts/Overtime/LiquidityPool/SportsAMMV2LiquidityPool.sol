@@ -387,7 +387,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     /// @notice iterate all default round tickets in the current round and exercise those ready to be exercised (batch)
     /// @param _batchSize number of tickets to be processed
-    function exerciseDefualtRoundTicketsReadyToBeExercisedBatch(
+    function exerciseDefaultRoundTicketsReadyToBeExercisedBatch(
         uint _batchSize
     ) external nonReentrant whenNotPaused roundClosingNotPrepared {
         _exerciseTicketsReadyToBeExercisedBatch(_batchSize, 1);
