@@ -368,21 +368,13 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     }
 
     /// @notice iterate all tickets in the current round and exercise those ready to be exercised
-    function exerciseTicketsReadyToBeExercised() public roundClosingNotPrepared {
-        Ticket ticket;
-        address ticketAddress;
-        for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
-            ticketAddress = tradingTicketsPerRound[round][i];
-            if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
-                ticket = Ticket(ticketAddress);
-                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
-                    sportsAMM.exerciseTicket(ticketAddress);
-                }
-                if (ticket.isUserTheWinner() || ticket.resolved()) {
-                    ticketAlreadyExercisedInRound[round][ticketAddress] = true;
-                }
-            }
-        }
+    function exerciseTicketsReadyToBeExercised() public roundClosingNotPrepared whenNotPaused {
+        _exerciseTicketsReadyToBeExercised(round);
+    }
+
+    /// @notice iterate all tickets in the default round and exercise those ready to be exercised
+    function exerciseDefaultRoundTicketsReadyToBeExercised() external whenNotPaused {
+        _exerciseTicketsReadyToBeExercised(1);
     }
 
     /// @notice iterate all tickets in the current round and exercise those ready to be exercised (batch)
@@ -390,23 +382,15 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function exerciseTicketsReadyToBeExercisedBatch(
         uint _batchSize
     ) external nonReentrant whenNotPaused roundClosingNotPrepared {
-        require(_batchSize > 0, "Batch size has to be greater than 0");
-        uint count = 0;
-        Ticket ticket;
-        for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
-            if (count == _batchSize) break;
-            address ticketAddress = tradingTicketsPerRound[round][i];
-            if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
-                ticket = Ticket(ticketAddress);
-                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
-                    sportsAMM.exerciseTicket(ticketAddress);
-                }
-                if (ticket.isUserTheWinner() || ticket.resolved()) {
-                    ticketAlreadyExercisedInRound[round][ticketAddress] = true;
-                    count += 1;
-                }
-            }
-        }
+        _exerciseTicketsReadyToBeExercisedBatch(_batchSize, round);
+    }
+
+    /// @notice iterate all default round tickets in the current round and exercise those ready to be exercised (batch)
+    /// @param _batchSize number of tickets to be processed
+    function exerciseDefaultRoundTicketsReadyToBeExercisedBatch(
+        uint _batchSize
+    ) external nonReentrant whenNotPaused roundClosingNotPrepared {
+        _exerciseTicketsReadyToBeExercisedBatch(_batchSize, 1);
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -422,7 +406,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     /// @notice return the price of the pool collateral
     function getCollateralPrice() public view returns (uint) {
-        //TODO: add static price of THALES in the price feed contract
         return IPriceFeed(addressManager.getAddress("PriceFeed")).rateForCurrency(collateralKey);
     }
 
@@ -507,6 +490,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     if (i == 0) {
                         ticketRound = (maturity - firstRoundStartTime) / roundLength + 2;
                     } else {
+                        // if ticket is cross rounds, use the default round
                         if (((maturity - firstRoundStartTime) / roundLength + 2) != ticketRound) {
                             ticketRound = 1;
                             break;
@@ -532,6 +516,43 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
+
+    function _exerciseTicketsReadyToBeExercisedBatch(uint _batchSize, uint _roundNumber) internal {
+        require(_batchSize > 0, "Batch size has to be greater than 0");
+        uint count = 0;
+        Ticket ticket;
+        for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
+            if (count == _batchSize) break;
+            address ticketAddress = tradingTicketsPerRound[_roundNumber][i];
+            if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
+                ticket = Ticket(ticketAddress);
+                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
+                    sportsAMM.exerciseTicket(ticketAddress);
+                }
+                if (ticket.isUserTheWinner() || ticket.resolved()) {
+                    ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
+                    count += 1;
+                }
+            }
+        }
+    }
+
+    function _exerciseTicketsReadyToBeExercised(uint _roundNumber) internal {
+        Ticket ticket;
+        address ticketAddress;
+        for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
+            ticketAddress = tradingTicketsPerRound[_roundNumber][i];
+            if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
+                ticket = Ticket(ticketAddress);
+                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
+                    sportsAMM.exerciseTicket(ticketAddress);
+                }
+                if (ticket.isUserTheWinner() || ticket.resolved()) {
+                    ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
+                }
+            }
+        }
+    }
 
     function _depositAsDefault(uint _amount, address _roundPool, uint _round) internal {
         require(defaultLiquidityProvider != address(0), "Default LP not set");
