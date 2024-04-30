@@ -142,6 +142,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
+    /// @notice get roots for the list of games
+    /// @param _games to return roots for
+    function getRootsPerGames(bytes32[] calldata _games) external view returns (bytes32[] memory _roots) {
+        _roots = new bytes32[](_games.length);
+        for (uint i; i < _games.length; i++) {
+            _roots[i] = rootPerGame[_games[i]];
+        }
+    }
+
     /// @notice gets trade quote
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount

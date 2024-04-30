@@ -626,6 +626,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_games",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getRootsPerGames",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_roots",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "initNonReentrant",
     "outputs": [],
