@@ -4,12 +4,12 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // internal
-import "../utils/libraries/AddressSetLib.sol";
-import "../utils/proxy/ProxyOwned.sol";
-import "../utils/proxy/ProxyPausable.sol";
-import "../interfaces/ISportsAMMV2Manager.sol";
-import "../interfaces/ISportsAMMV2RiskManager.sol";
-import "../interfaces/ITicket.sol";
+import "../../utils/libraries/AddressSetLib.sol";
+import "../../utils/proxy/ProxyOwned.sol";
+import "../../utils/proxy/ProxyPausable.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
+import "../../interfaces/ISportsAMMV2RiskManager.sol";
+import "../../interfaces/ITicket.sol";
 
 contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     using AddressSetLib for AddressSetLib.AddressSet;

@@ -5,14 +5,14 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 // internal
-import "../utils/proxy/ProxyReentrancyGuard.sol";
-import "../utils/proxy/ProxyOwned.sol";
-import "../utils/proxy/ProxyPausable.sol";
+import "../../utils/proxy/ProxyReentrancyGuard.sol";
+import "../../utils/proxy/ProxyOwned.sol";
+import "../../utils/proxy/ProxyPausable.sol";
 
-import "../interfaces/ISportsAMMV2Manager.sol";
-import "../interfaces/ISportsAMMV2RiskManager.sol";
-import "../interfaces/ISportsAMMV2.sol";
-import "../interfaces/ISportsAMMV2ResultManager.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
+import "../../interfaces/ISportsAMMV2RiskManager.sol";
+import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ISportsAMMV2ResultManager.sol";
 
 /// @title Sports AMM V2 Risk Manager contract
 /// @author vladan

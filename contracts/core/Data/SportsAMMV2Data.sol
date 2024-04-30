@@ -3,12 +3,12 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import "../utils/proxy/ProxyOwned.sol";
-import "../utils/proxy/ProxyPausable.sol";
-import "../interfaces/ISportsAMMV2.sol";
-import "../interfaces/ISportsAMMV2RiskManager.sol";
-import "../interfaces/ISportsAMMV2ResultManager.sol";
-import "./Ticket.sol";
+import "../../utils/proxy/ProxyOwned.sol";
+import "../../utils/proxy/ProxyPausable.sol";
+import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ISportsAMMV2RiskManager.sol";
+import "../../interfaces/ISportsAMMV2ResultManager.sol";
+import "./../AMM/Ticket.sol";
 
 contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     /* ========== STRUCT VARIABLES ========== */

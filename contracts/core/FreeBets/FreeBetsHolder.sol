@@ -4,15 +4,15 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../utils/proxy/ProxyOwned.sol";
-import "../utils/proxy/ProxyPausable.sol";
-import "../utils/proxy/ProxyReentrancyGuard.sol";
-import "../utils/libraries/AddressSetLib.sol";
+import "../../utils/proxy/ProxyOwned.sol";
+import "../../utils/proxy/ProxyPausable.sol";
+import "../../utils/proxy/ProxyReentrancyGuard.sol";
+import "../../utils/libraries/AddressSetLib.sol";
 
-import "../interfaces/ISportsAMMV2.sol";
-import "../interfaces/ILiveTradingProcessor.sol";
+import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ILiveTradingProcessor.sol";
 
-import "./Ticket.sol";
+import "./../AMM/Ticket.sol";
 
 contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
