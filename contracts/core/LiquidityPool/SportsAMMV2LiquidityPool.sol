@@ -16,7 +16,7 @@ import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
 import "./SportsAMMV2LiquidityPoolRound.sol";
 
-import "../Ticket.sol";
+import "../AMM/Ticket.sol";
 import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 

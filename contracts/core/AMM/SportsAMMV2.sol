@@ -7,22 +7,22 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 // internal
-import "../utils/proxy/ProxyReentrancyGuard.sol";
-import "../utils/proxy/ProxyOwned.sol";
-import "../utils/proxy/ProxyPausable.sol";
+import "../../utils/proxy/ProxyReentrancyGuard.sol";
+import "../../utils/proxy/ProxyOwned.sol";
+import "../../utils/proxy/ProxyPausable.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "./Ticket.sol";
-import "../interfaces/ISportsAMMV2.sol";
-import "../interfaces/ISportsAMMV2Manager.sol";
-import "../interfaces/ISportsAMMV2RiskManager.sol";
-import "../interfaces/ISportsAMMV2ResultManager.sol";
-import "../interfaces/ISportsAMMV2LiquidityPool.sol";
-import "../interfaces/IWeth.sol";
-import "../interfaces/IFreeBetsHolder.sol";
+import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
+import "../../interfaces/ISportsAMMV2RiskManager.sol";
+import "../../interfaces/ISportsAMMV2ResultManager.sol";
+import "../../interfaces/ISportsAMMV2LiquidityPool.sol";
+import "../../interfaces/IWeth.sol";
+import "../../interfaces/IFreeBetsHolder.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan

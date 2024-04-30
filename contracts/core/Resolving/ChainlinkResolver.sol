@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../interfaces/ISportsAMMV2.sol";
-import "../interfaces/ISportsAMMV2ResultManager.sol";
+import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ISportsAMMV2ResultManager.sol";
 
 contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;

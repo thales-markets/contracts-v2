@@ -8,21 +8,21 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 // internal
-import "../utils/proxy/ProxyReentrancyGuard.sol";
-import "../utils/proxy/ProxyOwned.sol";
-import "../utils/proxy/ProxyPausable.sol";
-import "../utils/libraries/AddressSetLib.sol";
+import "../../utils/proxy/ProxyReentrancyGuard.sol";
+import "../../utils/proxy/ProxyOwned.sol";
+import "../../utils/proxy/ProxyPausable.sol";
+import "../../utils/libraries/AddressSetLib.sol";
 
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 
-import "./Ticket.sol";
-import "../interfaces/ISportsAMMV2.sol";
-import "../interfaces/ISportsAMMV2Manager.sol";
-import "../interfaces/ISportsAMMV2RiskManager.sol";
-import "../interfaces/ISportsAMMV2ResultManager.sol";
-import "../interfaces/ISportsAMMV2LiquidityPool.sol";
+import "../AMM//Ticket.sol";
+import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
+import "../../interfaces/ISportsAMMV2RiskManager.sol";
+import "../../interfaces/ISportsAMMV2ResultManager.sol";
+import "../../interfaces/ISportsAMMV2LiquidityPool.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
