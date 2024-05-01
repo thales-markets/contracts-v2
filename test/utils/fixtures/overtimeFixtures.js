@@ -9,6 +9,7 @@ const {
 const {
 	DEFAULT_AMOUNT,
 	DEFAULT_AMOUNT_SIX_DECIMALS,
+	ADDITIONAL_SLIPPAGE,
 	ETH_DEFAULT_AMOUNT,
 	BUY_IN_AMOUNT,
 } = require('../../constants/overtime');
@@ -34,6 +35,7 @@ async function deployAccountsFixture() {
 		firstTrader,
 		secondTrader,
 		collateralAddress,
+		safeBoxTHALES,
 	] = await ethers.getSigners();
 
 	return {
@@ -49,6 +51,7 @@ async function deployAccountsFixture() {
 		firstTrader,
 		secondTrader,
 		collateralAddress,
+		safeBoxTHALES,
 	};
 }
 
@@ -57,6 +60,8 @@ async function deployTokenFixture() {
 	const collateral = await ExoticUSD.deploy();
 
 	const collateral18 = await ExoticUSD.deploy();
+
+	const collateralTHALES = await ExoticUSD.deploy();
 
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
 	const collateralSixDecimals = await ExoticUSDC.deploy();
@@ -68,6 +73,7 @@ async function deployTokenFixture() {
 		collateral18,
 		collateralSixDecimals,
 		collateralSixDecimals2,
+		collateralTHALES,
 	};
 }
 
@@ -81,10 +87,17 @@ async function deploySportsAMMV2Fixture() {
 		thirdLiquidityProvider,
 		firstTrader,
 		secondTrader,
+		safeBoxTHALES,
 	} = await deployAccountsFixture();
-	const { collateral, collateral18, collateralSixDecimals, collateralSixDecimals2 } =
-		await deployTokenFixture();
+	const {
+		collateral,
+		collateral18,
+		collateralSixDecimals,
+		collateralSixDecimals2,
+		collateralTHALES,
+	} = await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
+	const collateralTHALESAddress = await collateralTHALES.getAddress();
 	const collateral18Address = await collateral18.getAddress();
 	// deploy Address Manager
 	const AddressManager = await ethers.getContractFactory('MockAddressManager');
@@ -281,6 +294,24 @@ async function deploySportsAMMV2Fixture() {
 		},
 	]);
 
+	// deploy Sports AMM THALES liqudity pool
+	const sportsAMMV2THALESLiquidityPool = await upgrades.deployProxy(SportsAMMV2LiquidityPool, [
+		{
+			_owner: owner.address,
+			_sportsAMM: sportsAMMV2Address,
+			_addressManager: addressManagerAddress,
+			_collateral: collateralTHALESAddress,
+			_collateralKey: ethers.encodeBytes32String('SUSD'),
+			_roundLength: SPORTS_AMM_LP_INITAL_PARAMS.roundLength,
+			_maxAllowedDeposit: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit,
+			_minDepositAmount: SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount,
+			_maxAllowedUsers: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedUsers,
+			_utilizationRate: SPORTS_AMM_LP_INITAL_PARAMS.utilizationRate,
+			_safeBox: safeBox.address,
+			_safeBoxImpact: SPORTS_AMM_LP_INITAL_PARAMS.safeBoxImpact,
+		},
+	]);
+
 	const sportsAMMV2LiquidityPoolSixDecimals = await upgrades.deployProxy(SportsAMMV2LiquidityPool, [
 		{
 			_owner: owner.address,
@@ -322,6 +353,8 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2LiquidityPoolSixDecimalsAddress =
 		await sportsAMMV2LiquidityPoolSixDecimals.getAddress();
 
+	const sportsAMMV2THALESLiquidityPoolAddress = await sportsAMMV2THALESLiquidityPool.getAddress();
+
 	const sportsAMMV2LiquidityPoolSixDecimals2Address =
 		await sportsAMMV2LiquidityPoolSixDecimals2.getAddress();
 
@@ -347,6 +380,10 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
 	);
 
+	sportsAMMV2THALESLiquidityPool.setPoolRoundMastercopy(
+		sportsAMMV2LiquidityPoolRoundMastercopyAddress
+	);
+
 	// deploy default liqudity provider
 	const DefaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
 	const defaultLiquidityProvider = await upgrades.deployProxy(DefaultLiquidityProvider, [
@@ -363,6 +400,14 @@ async function deploySportsAMMV2Fixture() {
 		DefaultLiquidityProvider,
 		[owner.address, sportsAMMV2LiquidityPoolSixDecimals2Address, collateralSixDecimals2Address]
 	);
+
+	const defaultLiquidityProviderTHALES = await upgrades.deployProxy(DefaultLiquidityProvider, [
+		owner.address,
+		sportsAMMV2THALESLiquidityPoolAddress,
+		collateralTHALESAddress,
+	]);
+	const defaultLiquidityProviderTHALESAddress = defaultLiquidityProviderTHALES.getAddress();
+	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderTHALESAddress);
 
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 
@@ -460,6 +505,12 @@ async function deploySportsAMMV2Fixture() {
 		.connect(thirdLiquidityProvider)
 		.approve(sportsAMMV2LiquidityPool, DEFAULT_AMOUNT);
 
+	await collateralTHALES.setDefaultAmount(DEFAULT_AMOUNT);
+	await collateralTHALES.mintForUser(firstLiquidityProvider);
+	await collateralTHALES
+		.connect(firstLiquidityProvider)
+		.approve(sportsAMMV2THALESLiquidityPool, DEFAULT_AMOUNT);
+
 	await collateralSixDecimals.mintForUser(firstLiquidityProvider);
 	await collateralSixDecimals.mintForUser(secondLiquidityProvider);
 	await collateralSixDecimals.mintForUser(thirdLiquidityProvider);
@@ -489,6 +540,11 @@ async function deploySportsAMMV2Fixture() {
 	await collateral.mintForUser(secondTrader);
 	await collateral.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 	await collateral.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+
+	await collateralTHALES.mintForUser(firstTrader);
+	await collateralTHALES.mintForUser(secondTrader);
+	await collateralTHALES.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+	await collateralTHALES.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 
 	await collateral18.mintForUser(firstTrader);
 	await collateral18.mintForUser(secondTrader);
@@ -524,6 +580,12 @@ async function deploySportsAMMV2Fixture() {
 	await collateralSixDecimals2.transfer(
 		await defaultLiquidityProviderSixDecimals2.getAddress(),
 		DEFAULT_AMOUNT_SIX_DECIMALS
+	);
+
+	await collateralTHALES.mintForUser(owner);
+	await collateralTHALES.transfer(
+		await defaultLiquidityProviderTHALES.getAddress(),
+		DEFAULT_AMOUNT
 	);
 
 	// send collateral to multicollateral so it can convert other collaterals
@@ -642,6 +704,20 @@ async function deploySportsAMMV2Fixture() {
 
 	await sportsAMMV2.setFreeBetsHolder(freeBetsHolderAddress);
 
+	await sportsAMMV2.setLiquidityPoolForCollateral(
+		collateralTHALESAddress,
+		sportsAMMV2THALESLiquidityPoolAddress
+	);
+
+	await sportsAMMV2.setAddedPayoutPercentagePerCollateral(
+		collateralTHALESAddress,
+		ADDITIONAL_SLIPPAGE
+	);
+
+	await sportsAMMV2.setSafeBoxPerCollateral(collateralTHALESAddress, safeBoxTHALES.address);
+
+	const safeBoxTHALESAddress = safeBoxTHALES.address;
+
 	return {
 		owner,
 		sportsAMMV2Manager,
@@ -688,8 +764,12 @@ async function deploySportsAMMV2Fixture() {
 		freeBetsHolder,
 		freeBetsHolderAddress,
 		collateralAddress,
-		collateralSixDecimalsAddress, //TODO: not needed, can use .target annotation
+		collateralSixDecimalsAddress,
 		collateralSixDecimals2Address,
+		safeBoxTHALESAddress,
+		collateralTHALES,
+		collateralTHALESAddress,
+		sportsAMMV2THALESLiquidityPool,
 	};
 }
 

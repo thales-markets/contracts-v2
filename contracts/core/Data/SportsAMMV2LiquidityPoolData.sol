@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "../../utils/proxy/ProxyOwned.sol";
 import "../../utils/proxy/ProxyPausable.sol";
-import "./SportsAMMV2LiquidityPool.sol";
+import "./../LiquidityPool/SportsAMMV2LiquidityPool.sol";
 
 contract SportsAMMV2LiquidityPoolData is Initializable, ProxyOwned, ProxyPausable {
     struct LiquidityPoolData {

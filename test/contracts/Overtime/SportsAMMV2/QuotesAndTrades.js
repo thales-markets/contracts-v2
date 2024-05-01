@@ -63,6 +63,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ZERO_ADDRESS,
 					false
 				);
+
+			const roots = await sportsAMMV2.getRootsPerGames([tradeDataCurrentRound[0].gameId]);
+			expect(roots.length).to.be.greaterThan(0);
 		});
 
 		it('Should buy a ticket (10 markets)', async () => {
@@ -85,6 +88,12 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 					ZERO_ADDRESS,
 					false
 				);
+
+			const roots = await sportsAMMV2.getRootsPerGames([
+				tradeDataTenMarketsCurrentRound[0].gameId,
+				tradeDataTenMarketsCurrentRound[1].gameId,
+			]);
+			expect(roots.length).to.be.greaterThan(1);
 		});
 
 		it('Should buy a ticket (1 market) with referrer', async () => {

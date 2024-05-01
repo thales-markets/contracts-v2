@@ -1,5 +1,5 @@
 const marketsTree = require(
-	`../../scripts/deployOvertime/updateMerkleTree/treeMarketsAndHashes.json`
+	`../../scripts/deployContracts/updateMerkleTree/treeMarketsAndHashes.json`
 );
 
 const INVALID_SPORT_ID = 8999;

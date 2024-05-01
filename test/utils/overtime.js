@@ -1,4 +1,4 @@
-const markets = require(`../../scripts/deployOvertime/updateMerkleTree/markets.json`);
+const markets = require(`../../scripts/deployContracts/updateMerkleTree/markets.json`);
 const { ONE_DAY_IN_SECS, ONE_WEEK_IN_SECS } = require('../constants/general');
 const { getMerkleTree } = require('./merkleTree/merkleTree');
 const fs = require('fs');
