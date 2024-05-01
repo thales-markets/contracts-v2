@@ -58,7 +58,8 @@
 		"FreeBetsHolder": "0xAeDB908b82626F031E31140527b45c7C89d4bb53",
 		"MockMultiCollateralOnOffRampV1": "0xF10c6f46e18a7e6AD9b13c9cE1FF063D3E45D510",
 		"MockMultiCollateralOnOffRampV1Implementation": "0x384aB342620513b48064Ec0e53e464d63C238d98",
-		"MockUniswap": "0x6D5966FD23ce34227fe2B0B00AA831703763B634"
+		"MockUniswap": "0xb0d70493ECD2E4753a4bB91fA6be159597F4d1F5",
+		"MockPositionalManager": "0x3E381A2756aaD5bb4fB0850865DC3DaBF9B1Ea67"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",

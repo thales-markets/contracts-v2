@@ -88,7 +88,7 @@ async function main() {
 	console.log('tx ', i++);
 	await mockMultiCollateralDeployed.setPriceFeedKeyPerAsset(
 		ethers.encodeBytes32String('THALES'),
-		wethAddress
+		thalesAddress
 	);
 	console.log('tx ', i++);
 
