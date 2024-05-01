@@ -18,6 +18,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint maxSupportedAmount;
         uint maxSupportedOdds;
         uint safeBoxFee;
+        bool paused;
     }
 
     struct MarketData {
@@ -41,6 +42,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address id;
         MarketData[] marketsData;
         MarketResult[] marketsResult;
+        address collateral;
         address ticketOwner;
         uint buyInAmount;
         uint fees;
@@ -54,6 +56,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isLost;
         bool isUserTheWinner;
         bool isExercisable;
+        uint finalPayout;
     }
 
     /* ========== STATE VARIABLES ========== */
@@ -75,7 +78,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 riskManager.maxTicketSize(),
                 riskManager.maxSupportedAmount(),
                 riskManager.maxSupportedOdds(),
-                sportsAMM.safeBoxFee()
+                sportsAMM.safeBoxFee(),
+                sportsAMM.paused()
             );
     }
 
@@ -129,6 +133,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 ticketsArray[i],
                 marketsData,
                 marketsResult,
+                address(ticket.collateral()),
                 ticket.ticketOwner(),
                 ticket.buyInAmount(),
                 ticket.fees(),
@@ -141,7 +146,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 ticket.cancelled(),
                 ticket.isTicketLost(),
                 ticket.isUserTheWinner(),
-                ticket.isTicketExercisable()
+                ticket.isTicketExercisable(),
+                ticket.finalPayout()
             );
         }
         return tickets;
