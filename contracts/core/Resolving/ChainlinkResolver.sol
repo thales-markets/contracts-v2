@@ -58,10 +58,14 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
     }
 
     /// @notice requestMarketResolving
+    /// @param _sportId sports id
+    /// @param _date date on which game/games are played
     /// @param _gameIds for which to request resolving
     /// @param _typeIds for which to request resolving
     /// @param _playerIds for which to request resolving
     function requestMarketResolving(
+        uint256 _sportId,
+        uint256 _date,
         string[] calldata _gameIds,
         string[] calldata _typeIds,
         string[] calldata _playerIds
@@ -74,9 +78,11 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
 
         req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillMarketResolve.selector);
 
-        req.addStringArray("_gameIds", _gameIds);
-        req.addStringArray("_typeIds", _typeIds);
-        req.addStringArray("_playerIds", _playerIds);
+        req.addUint("date", _date);
+        req.addUint("sportId", _sportId);
+        req.addStringArray("gameIds", _gameIds);
+        req.addStringArray("typeIds", _typeIds);
+        req.addStringArray("playerIds", _playerIds);
 
         bytes32 requestId = sendChainlinkRequest(req, paymentAmount);
 
@@ -100,13 +106,14 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
         //might be redundant as already done by Chainlink Client, but making double sure
         require(!requestIdFulfilled[_requestId], "Request ID already fulfilled");
 
-        //TODO: validate that results are matching the requested data length
-
         MarketResolveData memory marketData = requestIdToMarketResolveData[_requestId];
 
         bytes32[] memory _gameIds = new bytes32[](marketData._gameIds.length);
         uint16[] memory _typeIds = new uint16[](marketData._typeIds.length);
         uint16[] memory _playerIds = new uint16[](marketData._playerIds.length);
+
+        require(_results.length == _gameIds.length, "Results not of same length as requested");
+
         for (uint i = 0; i < marketData._gameIds.length; i++) {
             _gameIds[i] = stringToBytes32(marketData._gameIds[i]);
             _typeIds[i] = uint16(st2num(marketData._typeIds[i]));
