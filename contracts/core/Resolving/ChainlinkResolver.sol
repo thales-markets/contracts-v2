@@ -84,9 +84,9 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
         req.addStringArray("typeIds", _typeIds);
         req.addStringArray("playerIds", _playerIds);
 
-        bytes32 requestId = sendChainlinkRequest(req, paymentAmount);
-
         _putLink(msg.sender, paymentAmount);
+
+        bytes32 requestId = sendChainlinkRequest(req, paymentAmount);
 
         MarketResolveData memory data = MarketResolveData(requestId, _gameIds, _typeIds, _playerIds);
         requestIdToMarketResolveData[requestId] = data;
