@@ -12,6 +12,7 @@ const {
 	GAME_ID_2,
 	GAME_ID_3,
 	GAME_ID_4,
+	SPORT_ID_NBA,
 } = require('../../../constants/overtime');
 
 const bytes32 = require('bytes32');
@@ -32,6 +33,8 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 			await chainlinkResolver
 				.connect(firstTrader)
 				.requestMarketResolving(
+					SPORT_ID_NBA,
+					'1715117924',
 					[bytes32({ input: GAME_ID_3 }), bytes32({ input: GAME_ID_4 })],
 					['0', '0'],
 					['0', '0']
