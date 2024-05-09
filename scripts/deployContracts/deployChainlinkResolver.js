@@ -67,7 +67,7 @@ async function main() {
 				mockSpecId,
 				paymentAmount,
 			],
-			contract: 'contracts/Overtime/ChainlinkResolver.sol:ChainlinkResolver',
+			contract: 'contracts/core/Resolving/ChainlinkResolver.sol:ChainlinkResolver',
 		});
 	} catch (e) {
 		console.log(e);
