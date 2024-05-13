@@ -59,6 +59,13 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint finalPayout;
     }
 
+    enum ResultType {
+        Unassigned,
+        ExactPosition,
+        OverUnder,
+        CombinedPositions
+    }
+
     /* ========== STATE VARIABLES ========== */
 
     ISportsAMMV2 public sportsAMM;
@@ -116,6 +123,32 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             gameId
         );
         return _getTicketsData(ticketsArray);
+    }
+
+    function getResolvedStatusForMarkets(
+        bytes32[] memory _gameIds,
+        uint16[] memory _typeIds,
+        uint16[] memory _playerIds
+    ) external view returns (bool[] memory resolvedMarkets) {
+        if (_gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length) {
+            resolvedMarkets = new bool[](_gameIds.length);
+            for (uint i = 0; i < _gameIds.length; i++) {
+                uint8 resultType = sportsAMM.resultManager().resultTypePerMarketType(_typeIds[i]);
+                if (resultType == uint8(ResultType.CombinedPositions)) {
+                    // difficult to obtain combined position
+                    // for now ignore and have it false
+                } else {
+                    ISportsAMMV2.CombinedPosition[] memory combinedPositions = new ISportsAMMV2.CombinedPosition[](0);
+                    resolvedMarkets[i] = sportsAMM.resultManager().isMarketResolved(
+                        _gameIds[i],
+                        _typeIds[i],
+                        _playerIds[i],
+                        0,
+                        combinedPositions
+                    );
+                }
+            }
+        }
     }
 
     function _getTicketsData(address[] memory ticketsArray) internal view returns (TicketData[] memory) {
