@@ -15,10 +15,10 @@ const {
 } = require('../../../constants/overtime');
 
 describe('SportsAMMV2ResultManager Results Management', () => {
-	let sportsAMMV2ResultManager, secondAccount;
+	let sportsAMMV2ResultManager, sportsAMMV2Data, secondAccount;
 
 	beforeEach(async () => {
-		({ sportsAMMV2ResultManager } = await loadFixture(deploySportsAMMV2Fixture));
+		({ sportsAMMV2ResultManager, sportsAMMV2Data } = await loadFixture(deploySportsAMMV2Fixture));
 		({ secondAccount } = await loadFixture(deployAccountsFixture));
 	});
 
@@ -151,6 +151,75 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 				.withArgs(GAME_ID_3, 0, 0, [0])
 				.to.emit(sportsAMMV2ResultManager, 'ResultsPerMarketSet')
 				.withArgs(GAME_ID_4, 0, 0, [1]);
+		});
+
+		it('Should get results per markets from SportsAMMV2Data', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_1, 0, 0)).to.equal(
+				false
+			);
+			await expect(
+				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_1, 0, 0, 0)
+			).to.be.revertedWithoutReason();
+			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_2, 0, 0)).to.equal(
+				false
+			);
+			await expect(
+				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_2, 0, 0, 0)
+			).to.be.revertedWithoutReason();
+
+			await expect(
+				sportsAMMV2ResultManager
+					.connect(secondAccount)
+					.setResultsPerMarkets([GAME_ID_1, GAME_ID_2], [0, 0], [0, 0], [[1], [2]])
+			).to.be.revertedWith('Invalid sender');
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[GAME_ID_1, GAME_ID_2],
+				[0, 0],
+				[0, 0],
+				[[1], [2]]
+			);
+
+			// check results set for game 1
+			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_1, 0, 0)).to.equal(true);
+			expect(await sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_1, 0, 0, 0)).to.equal(1);
+			await expect(
+				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_1, 0, 0, 1)
+			).to.be.revertedWithoutReason();
+			expect(await sportsAMMV2ResultManager.isMarketResolved(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				true
+			);
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+			expect((await sportsAMMV2ResultManager.getResultsPerMarket(GAME_ID_1, 0, 0)).length).to.equal(
+				1
+			);
+			expect((await sportsAMMV2ResultManager.getResultsPerMarket(GAME_ID_2, 0, 0)).length).to.equal(
+				1
+			);
+
+			let resolved = await sportsAMMV2Data.getResolvedStatusForMarkets(
+				[GAME_ID_1, GAME_ID_2],
+				[0, 0],
+				[0, 0]
+			);
+			expect(resolved.length).to.equal(2);
+			expect(resolved[0]).to.equal(true);
+			expect(resolved[1]).to.equal(true);
+
+			let results = await sportsAMMV2Data.getResultsForMarkets(
+				[GAME_ID_1, GAME_ID_2],
+				[0, 0],
+				[0, 0]
+			);
+			expect(results.length).to.equal(2);
+			expect(results[0].length).to.equal(1);
+			expect(results[1].length).to.equal(1);
+			expect(results[0][0].toString()).to.equal('1');
+			expect(results[1][0].toString()).to.equal('2');
 		});
 
 		it('Should fail with "Results already set per market"', async () => {
