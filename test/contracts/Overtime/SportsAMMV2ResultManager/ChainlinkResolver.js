@@ -67,10 +67,10 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 			console.log('requestId is ' + requestId);
 
 			await expect(mockChainlinkOracle.fulfillMarketResolve(requestId, [[-9999], [-9999]]))
-				.to.emit(sportsAMMV2ResultManager, 'GameCancelled')
-				.withArgs(GAME_ID_3)
-				.to.emit(sportsAMMV2ResultManager, 'GameCancelled')
-				.withArgs(GAME_ID_4);
+				.to.emit(sportsAMMV2ResultManager, 'MarketExplicitlyCancelled')
+				.withArgs(GAME_ID_3, 0, 0, 0)
+				.to.emit(sportsAMMV2ResultManager, 'MarketExplicitlyCancelled')
+				.withArgs(GAME_ID_4, 0, 0, 0);
 		});
 
 		it('Should cancel a market via chainlink', async () => {

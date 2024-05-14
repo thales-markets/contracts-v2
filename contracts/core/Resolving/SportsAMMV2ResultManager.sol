@@ -234,12 +234,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint16 playerId = _playerIds[i];
             int24[] memory results = _results[i];
             if (results[0] == CANCEL_ID) {
-                // cancelation logic - if moneyline, cancel the whole game, otherwise just the specific market
-                if (typeId == 0) {
-                    _cancelGame(gameId);
-                } else {
-                    _cancelMarket(gameId, typeId, playerId, 0);
-                }
+                _cancelMarket(gameId, typeId, playerId, 0);
             } else {
                 ResultType resultType = resultTypePerMarketType[typeId];
                 require(resultType != ResultType.Unassigned, "Result type not set");
