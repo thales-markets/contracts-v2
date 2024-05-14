@@ -201,7 +201,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 				1
 			);
 
-			let resolved = await sportsAMMV2Data.getResolvedStatusForMarkets(
+			let resolved = await sportsAMMV2Data.areMarketsResolved(
 				[GAME_ID_1, GAME_ID_2],
 				[0, 0],
 				[0, 0]

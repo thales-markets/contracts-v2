@@ -125,7 +125,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return _getTicketsData(ticketsArray);
     }
 
-    function getResolvedStatusForMarkets(
+    function areMarketsResolved(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
         uint16[] memory _playerIds
