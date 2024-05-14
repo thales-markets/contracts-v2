@@ -298,5 +298,13 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 				sportsAMMV2ResultManager.cancelMarkets([GAME_ID_3, GAME_ID_3], [0, 0], [0, 0], [0, 0])
 			).to.be.revertedWith('Market already cancelled');
 		});
+
+		it('Cancel game using single cancel method"', async () => {
+			await sportsAMMV2ResultManager.cancelGame(GAME_ID_1);
+		});
+
+		it('Cancel market using single cancel method"', async () => {
+			await sportsAMMV2ResultManager.cancelMarket(GAME_ID_1, 0, 0, 0);
+		});
 	});
 });
