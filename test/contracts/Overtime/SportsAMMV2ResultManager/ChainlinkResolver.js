@@ -27,7 +27,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 	});
 
 	describe('Results setters', () => {
-		it('Should set results per markets', async () => {
+		it('Should set results per markets via chainlink', async () => {
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 
 			await chainlinkResolver
@@ -48,6 +48,93 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 				.withArgs(GAME_ID_3, 0, 0, [0])
 				.to.emit(sportsAMMV2ResultManager, 'ResultsPerMarketSet')
 				.withArgs(GAME_ID_4, 0, 0, [1]);
+		});
+
+		it('Should cancel a game via chainlink', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await chainlinkResolver
+				.connect(firstTrader)
+				.requestMarketResolving(
+					SPORT_ID_NBA,
+					'1715117924',
+					[bytes32({ input: GAME_ID_3 }), bytes32({ input: GAME_ID_4 })],
+					['0', '0'],
+					['0', '0']
+				);
+
+			let requestId = await chainlinkResolver.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+
+			await expect(mockChainlinkOracle.fulfillMarketResolve(requestId, [[-9999], [-9999]]))
+				.to.emit(sportsAMMV2ResultManager, 'MarketExplicitlyCancelled')
+				.withArgs(GAME_ID_3, 0, 0, 0)
+				.to.emit(sportsAMMV2ResultManager, 'MarketExplicitlyCancelled')
+				.withArgs(GAME_ID_4, 0, 0, 0);
+		});
+
+		it('Should cancel a market via chainlink', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await chainlinkResolver
+				.connect(firstTrader)
+				.requestMarketResolving(
+					SPORT_ID_NBA,
+					'1715117924',
+					[bytes32({ input: GAME_ID_3 }), bytes32({ input: GAME_ID_4 })],
+					['1', '2'],
+					['0', '0']
+				);
+
+			let requestId = await chainlinkResolver.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+
+			//emit MarketExplicitlyCancelled(_gameId, _typeId, _playerId, _line);
+
+			await expect(mockChainlinkOracle.fulfillMarketResolve(requestId, [[-9999], [-9999]]))
+				.to.emit(sportsAMMV2ResultManager, 'MarketExplicitlyCancelled')
+				.withArgs(GAME_ID_3, 1, 0, 0)
+				.to.emit(sportsAMMV2ResultManager, 'MarketExplicitlyCancelled')
+				.withArgs(GAME_ID_4, 2, 0, 0);
+
+			expect(await sportsAMMV2ResultManager.isMarketExplicitlyCancelled(GAME_ID_3, 1, 0, 0)).to.eq(
+				true
+			);
+			expect(await sportsAMMV2ResultManager.isMarketExplicitlyCancelled(GAME_ID_3, 1, 0, 1)).to.eq(
+				false
+			);
+		});
+
+		it('Should cancel a market and resolve one normally via chainlink', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await chainlinkResolver
+				.connect(firstTrader)
+				.requestMarketResolving(
+					SPORT_ID_NBA,
+					'1715117924',
+					[bytes32({ input: GAME_ID_3 }), bytes32({ input: GAME_ID_4 })],
+					['1', '0'],
+					['0', '0']
+				);
+
+			let requestId = await chainlinkResolver.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+
+			//emit MarketExplicitlyCancelled(_gameId, _typeId, _playerId, _line);
+
+			await expect(mockChainlinkOracle.fulfillMarketResolve(requestId, [[-9999], [1]]))
+				.to.emit(sportsAMMV2ResultManager, 'MarketExplicitlyCancelled')
+				.withArgs(GAME_ID_3, 1, 0, 0)
+				.to.emit(sportsAMMV2ResultManager, 'ResultsPerMarketSet')
+				.withArgs(GAME_ID_4, 0, 0, [1]);
+
+			expect(await sportsAMMV2ResultManager.isMarketExplicitlyCancelled(GAME_ID_3, 1, 0, 0)).to.eq(
+				true
+			);
+			expect(await sportsAMMV2ResultManager.isMarketExplicitlyCancelled(GAME_ID_3, 1, 0, 1)).to.eq(
+				false
+			);
 		});
 
 		it('Setters', async () => {

@@ -65,15 +65,15 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
-        req.add("_gameId", string(abi.encodePacked(_liveTradeData._gameId)));
-        req.addUint("_sportId", _liveTradeData._sportId);
-        req.addUint("_typeId", _liveTradeData._typeId);
-        req.addInt("_line", _liveTradeData._line);
-        req.addUint("_position", _liveTradeData._position);
-        req.add("_collateral", string(abi.encodePacked(_liveTradeData._collateral)));
-        req.addUint("_buyInAmount", _liveTradeData._buyInAmount);
-        req.addUint("_expectedQuote", _liveTradeData._expectedQuote);
-        req.addUint("_additionalSlippage", _liveTradeData._additionalSlippage);
+        req.add("gameId", string(abi.encodePacked(_liveTradeData._gameId)));
+        req.addUint("sportId", _liveTradeData._sportId);
+        req.addUint("typeId", _liveTradeData._typeId);
+        req.addInt("line", _liveTradeData._line);
+        req.addUint("position", _liveTradeData._position);
+        req.add("collateral", string(abi.encodePacked(_liveTradeData._collateral)));
+        req.addUint("buyInAmount", _liveTradeData._buyInAmount);
+        req.addUint("expectedQuote", _liveTradeData._expectedQuote);
+        req.addUint("additionalSlippage", _liveTradeData._additionalSlippage);
 
         requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;

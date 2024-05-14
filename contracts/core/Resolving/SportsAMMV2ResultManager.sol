@@ -45,6 +45,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     uint private constant MAX_APPROVAL = type(uint256).max;
 
     uint public constant TYPE_ID_SPREAD = 10001;
+    int24 public constant CANCEL_ID = -9999;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -224,16 +225,24 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
+            //skip cancelled games
+            if (isGameCancelled[gameId]) {
+                continue;
+            }
+
             uint16 typeId = _typeIds[i];
             uint16 playerId = _playerIds[i];
             int24[] memory results = _results[i];
-            ResultType resultType = resultTypePerMarketType[typeId];
-
-            require(resultType != ResultType.Unassigned, "Result type not set");
-            if (!areResultsPerMarketSet[gameId][typeId][playerId]) {
-                resultsPerMarket[gameId][typeId][playerId] = results;
-                areResultsPerMarketSet[gameId][typeId][playerId] = true;
-                emit ResultsPerMarketSet(gameId, typeId, playerId, results);
+            if (results[0] == CANCEL_ID) {
+                _cancelMarket(gameId, typeId, playerId, 0);
+            } else {
+                ResultType resultType = resultTypePerMarketType[typeId];
+                require(resultType != ResultType.Unassigned, "Result type not set");
+                if (!areResultsPerMarketSet[gameId][typeId][playerId]) {
+                    resultsPerMarket[gameId][typeId][playerId] = results;
+                    areResultsPerMarketSet[gameId][typeId][playerId] = true;
+                    emit ResultsPerMarketSet(gameId, typeId, playerId, results);
+                }
             }
         }
     }
@@ -243,11 +252,20 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function cancelGames(bytes32[] memory _gameIds) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
-
-            require(!isGameCancelled[gameId], "Game already cancelled");
-            isGameCancelled[gameId] = true;
-            emit GameCancelled(gameId);
+            _cancelGame(gameId);
         }
+    }
+
+    /// @notice cancel specific game
+    /// @param _gameId game ID to cancel
+    function cancelGame(bytes32 _gameId) external onlyWhitelistedAddresses(msg.sender) {
+        _cancelGame(_gameId);
+    }
+
+    function _cancelGame(bytes32 _gameId) internal {
+        require(!isGameCancelled[_gameId], "Game already cancelled");
+        isGameCancelled[_gameId] = true;
+        emit GameCancelled(_gameId);
     }
 
     /// @notice cancel specific markets
@@ -265,11 +283,32 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint16 typeId = _typeIds[i];
             uint16 playerId = _playerIds[i];
             int24 line = _lines[i];
-
-            require(!_isMarketCancelled(gameId, typeId, playerId, line), "Market already cancelled");
-            isMarketExplicitlyCancelled[gameId][typeId][playerId][line] = true;
-            emit MarketExplicitlyCancelled(gameId, typeId, playerId, line);
+            _cancelMarket(gameId, typeId, playerId, line);
         }
+    }
+
+    /// @notice cancel specific markets
+    /// @param _gameId game ID to cancel
+    /// @param _typeId type ID to cancel
+    /// @param _playerId player ID to cancel
+    /// @param _line player ID to cancel
+    function cancelMarket(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint16 _playerId,
+        int24 _line
+    ) external onlyWhitelistedAddresses(msg.sender) {
+        _cancelMarket(_gameId, _typeId, _playerId, _line);
+    }
+
+    /// @notice cancel specific markets
+    /// @param _gameId game ID to cancel
+    /// @param _typeId type ID to cancel
+    /// @param _playerId player IDs to cancel
+    function _cancelMarket(bytes32 _gameId, uint16 _typeId, uint16 _playerId, int24 _line) internal {
+        require(!_isMarketCancelled(_gameId, _typeId, _playerId, _line), "Market already cancelled");
+        isMarketExplicitlyCancelled[_gameId][_typeId][_playerId][_line] = true;
+        emit MarketExplicitlyCancelled(_gameId, _typeId, _playerId, _line);
     }
 
     /// @notice set result types for specific markets
@@ -301,7 +340,10 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         uint16 _playerId,
         int24 _line
     ) internal view returns (bool) {
-        return isGameCancelled[_gameId] || isMarketExplicitlyCancelled[_gameId][_typeId][_playerId][_line];
+        return
+            isGameCancelled[_gameId] ||
+            isMarketExplicitlyCancelled[_gameId][_typeId][_playerId][_line] ||
+            isMarketExplicitlyCancelled[_gameId][_typeId][_playerId][0];
     }
 
     function _getMarketPositionStatus(

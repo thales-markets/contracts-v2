@@ -59,4 +59,19 @@ interface ISportsAMMV2ResultManager {
         uint16[] memory _playerIds,
         int24[][] memory _results
     ) external;
+
+    function isGameCancelled(bytes32 _gameId) external view returns (bool);
+
+    function cancelGames(bytes32[] memory _gameIds) external;
+
+    function cancelMarkets(
+        bytes32[] memory _gameIds,
+        uint16[] memory _typeIds,
+        uint16[] memory _playerIds,
+        int24[] memory _lines
+    ) external;
+
+    function cancelMarket(bytes32 _gameId, uint16 _typeId, uint16 _playerId, int24 _line) external;
+
+    function cancelGame(bytes32 _gameId) external;
 }

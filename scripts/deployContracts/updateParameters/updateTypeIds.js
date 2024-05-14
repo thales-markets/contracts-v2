@@ -18,42 +18,30 @@ async function main() {
 	const SportsAMMV2ResultManagerAddress = getTargetAddress('SportsAMMV2ResultManager', network);
 
 	const sportsAMMV2ResultManager = await ethers.getContractFactory('SportsAMMV2ResultManager');
-    const sportsAMMV2ResultManagerDeployed = sportsAMMV2ResultManager.attach(SportsAMMV2ResultManagerAddress);
+	const sportsAMMV2ResultManagerDeployed = sportsAMMV2ResultManager.attach(
+		SportsAMMV2ResultManagerAddress
+	);
 
-    const typeIds = [
-        0, 
-        10001, 
-        10002,
-        10003,
-        10004, 
-        10005,
-        10006, 
-        10009,
-        10021, 
-        10022, 
-        10031,
-        10032
-    ]
+	const typeIds = [0, 10001, 10002, 10003, 10004, 10005, 10006, 10009, 10021, 10022, 10031, 10032];
 
+	const resultTypeIds = [
+		RESULT_TYPE.ExactPosition, // 0
+		RESULT_TYPE.OverUnder, // 10001
+		RESULT_TYPE.OverUnder, // 10002
+		RESULT_TYPE.ExactPosition, // 10003
+		RESULT_TYPE.CombinedPositions, // 10004
+		RESULT_TYPE.ExactPosition, // 10005
+		RESULT_TYPE.CombinedPositions, // 10006
+		RESULT_TYPE.ExactPosition, // 10009
+		RESULT_TYPE.ExactPosition, // 10021
+		RESULT_TYPE.ExactPosition, // 10022
+		RESULT_TYPE.OverUnder, // 10031
+		RESULT_TYPE.OverUnder, // 10032
+	];
 
-    const resultTypeIds = [
-        RESULT_TYPE.ExactPosition, // 0
-        RESULT_TYPE.OverUnder, // 10001
-        RESULT_TYPE.OverUnder, // 10002
-        RESULT_TYPE.ExactPosition, // 10003
-        RESULT_TYPE.CombinedPositions, // 10004
-        RESULT_TYPE.ExactPosition, // 10005
-        RESULT_TYPE.CombinedPositions, // 10006
-        RESULT_TYPE.ExactPosition, // 10009
-        RESULT_TYPE.ExactPosition, // 10021
-        RESULT_TYPE.ExactPosition, // 10022
-        RESULT_TYPE.OverUnder, // 10031
-        RESULT_TYPE.OverUnder // 10032
-    ]
+	await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(typeIds, resultTypeIds);
 
-    await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(typeIds, resultTypeIds);
-
-    console.log("Results types set")
+	console.log('Results types set');
 }
 
 main()

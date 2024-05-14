@@ -62,7 +62,7 @@ async function main() {
 				mockSpecId,
 				paymentAmount,
 			],
-			contract: 'contracts/Overtime/LiveTradingProcessor.sol:LiveTradingProcessor',
+			contract: 'contracts/core/LiveTrading/LiveTradingProcessor.sol:LiveTradingProcessor',
 		});
 	} catch (e) {
 		console.log(e);
