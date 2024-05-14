@@ -5,6 +5,88 @@
         "internalType": "bytes32",
         "name": "_gameId",
         "type": "bytes32"
+      }
+    ],
+    "name": "cancelGame",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "cancelGames",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_playerId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      }
+    ],
+    "name": "cancelMarket",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint16[]",
+        "name": "_typeIds",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "uint16[]",
+        "name": "_playerIds",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "int24[]",
+        "name": "_lines",
+        "type": "int24[]"
+      }
+    ],
+    "name": "cancelMarkets",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
       },
       {
         "internalType": "uint16",
@@ -144,6 +226,25 @@
       {
         "internalType": "bool",
         "name": "isCancelled",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isGameCancelled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
         "type": "bool"
       }
     ],
