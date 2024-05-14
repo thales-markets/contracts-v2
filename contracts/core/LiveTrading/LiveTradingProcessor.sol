@@ -65,12 +65,11 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
-        req.add("gameId", string(abi.encodePacked(_liveTradeData._gameId)));
+        req.add("gameId", _liveTradeData._gameId);
         req.addUint("sportId", _liveTradeData._sportId);
         req.addUint("typeId", _liveTradeData._typeId);
         req.addInt("line", _liveTradeData._line);
         req.addUint("position", _liveTradeData._position);
-        req.add("collateral", string(abi.encodePacked(_liveTradeData._collateral)));
         req.addUint("buyInAmount", _liveTradeData._buyInAmount);
         req.addUint("expectedQuote", _liveTradeData._expectedQuote);
         req.addUint("additionalSlippage", _liveTradeData._additionalSlippage);
@@ -86,7 +85,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             msg.sender,
             requestCounter,
             requestId,
-            _liveTradeData._gameId,
+            stringToBytes32(_liveTradeData._gameId),
             _liveTradeData._sportId,
             _liveTradeData._typeId,
             _liveTradeData._line,
@@ -126,7 +125,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             ISportsAMMV2.CombinedPosition[][] memory comPositions = new ISportsAMMV2.CombinedPosition[][](3);
 
             tradeData[0] = ISportsAMMV2.TradeData(
-                lTradeData._gameId,
+                stringToBytes32(lTradeData._gameId),
                 lTradeData._sportId,
                 lTradeData._typeId, //type
                 block.timestamp + 60, //maturity, hardcode to timestamp with buffer
@@ -164,7 +163,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             requester,
             _requestId,
             _allow,
-            lTradeData._gameId,
+            stringToBytes32(lTradeData._gameId),
             lTradeData._sportId,
             lTradeData._typeId,
             lTradeData._line,
@@ -217,6 +216,17 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
         maxAllowedExecutionDelay = _maxAllowedExecutionDelay;
         emit SetMaxAllowedExecutionDelay(_maxAllowedExecutionDelay);
+    }
+
+    //// UTILITY
+    function stringToBytes32(string memory source) internal pure returns (bytes32 result) {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+        assembly {
+            result := mload(add(source, 32))
+        }
     }
 
     /////// EVENTS

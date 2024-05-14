@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 interface ILiveTradingProcessor {
     struct LiveTradeData {
-        bytes32 _gameId;
+        string _gameId;
         uint16 _sportId;
         uint16 _typeId;
         int24 _line;
