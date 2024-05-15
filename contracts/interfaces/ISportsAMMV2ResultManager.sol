@@ -53,6 +53,8 @@ interface ISportsAMMV2ResultManager {
         uint16 _playerId
     ) external view returns (int24[] memory results);
 
+    function resultTypePerMarketType(uint _typeId) external view returns (uint8 marketType);
+
     function setResultsPerMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
