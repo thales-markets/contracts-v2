@@ -234,5 +234,25 @@ describe('SportsAMMV2Live Live Trades', () => {
 					.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
+
+		it('Send empty gameid', async () => {
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: '',
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
+
+			let requestId = await liveTradingProcessor.counterToRequestId(0);
+			console.log('requestId is ' + requestId);
+		});
 	});
 });
