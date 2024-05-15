@@ -125,6 +125,39 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return _getTicketsData(ticketsArray);
     }
 
+    function getUnresolvedGameIdsWithActiveTicketsOf(
+        bytes32[] memory _gameIds
+    )
+        external
+        view
+        returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
+    {
+        ISportsAMMV2.CombinedPosition[] memory combinedPositions = new ISportsAMMV2.CombinedPosition[](0);
+        bool resolved;
+        uint[] memory ticketsPerGame = new uint[](_gameIds.length);
+        uint counter;
+        for (uint i = 0; i < _gameIds.length; i++) {
+            resolved = sportsAMM.resultManager().isMarketResolved(_gameIds[i], 0, 0, 0, combinedPositions);
+            uint numOfTicketsPerGame = sportsAMM.manager().numOfTicketsPerGame(_gameIds[i]);
+            if (!resolved && numOfTicketsPerGame > 0) {
+                counter++;
+                ticketsPerGame[i] = numOfTicketsPerGame;
+            }
+        }
+        activeGameIds = new bytes32[](counter);
+        numOfTicketsPerGameId = new uint[](counter);
+        ticketsPerGameId = new address[][](counter);
+        counter = 0;
+        for (uint i = 0; i < _gameIds.length; i++) {
+            if (ticketsPerGame[i] > 0) {
+                activeGameIds[counter] = _gameIds[i];
+                numOfTicketsPerGameId[counter] = ticketsPerGame[i];
+                ticketsPerGameId[counter] = sportsAMM.manager().getTicketsPerGame(0, ticketsPerGame[i], _gameIds[i]);
+                counter++;
+            }
+        }
+    }
+
     function areMarketsResolved(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
