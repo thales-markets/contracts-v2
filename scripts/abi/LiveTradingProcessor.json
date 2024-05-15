@@ -556,9 +556,9 @@
     "name": "requestIdToTradeData",
     "outputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "string",
         "name": "_gameId",
-        "type": "bytes32"
+        "type": "string"
       },
       {
         "internalType": "uint16",
@@ -614,9 +614,9 @@
       {
         "components": [
           {
-            "internalType": "bytes32",
+            "internalType": "string",
             "name": "_gameId",
-            "type": "bytes32"
+            "type": "string"
           },
           {
             "internalType": "uint16",
