@@ -134,10 +134,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             resolvedMarkets = new bool[](_gameIds.length);
             for (uint i = 0; i < _gameIds.length; i++) {
                 uint8 resultType = sportsAMM.resultManager().resultTypePerMarketType(_typeIds[i]);
-                if (resultType == uint8(ResultType.CombinedPositions)) {
-                    // difficult to obtain combined position
-                    // for now ignore and have it false
-                } else {
+                if (resultType != uint8(ResultType.CombinedPositions)) {
                     ISportsAMMV2.CombinedPosition[] memory combinedPositions = new ISportsAMMV2.CombinedPosition[](0);
                     resolvedMarkets[i] = sportsAMM.resultManager().isMarketResolved(
                         _gameIds[i],
