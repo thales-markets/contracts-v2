@@ -57,6 +57,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isUserTheWinner;
         bool isExercisable;
         uint finalPayout;
+        bool isLive;
     }
 
     enum ResultType {
@@ -224,7 +225,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 ticket.isTicketLost(),
                 ticket.isUserTheWinner(),
                 ticket.isTicketExercisable(),
-                ticket.finalPayout()
+                ticket.finalPayout(),
+                ticket.isLive()
             );
         }
         return tickets;
