@@ -25,7 +25,8 @@ describe('SportsAMMV2Live Live Trades', () => {
 		mockChainlinkOracle,
 		sportsAMMV2RiskManager,
 		weth,
-		quote;
+		quote,
+		sportsAMMV2Manager;
 
 	beforeEach(async () => {
 		({
@@ -37,6 +38,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			mockChainlinkOracle,
 			weth,
 			sportsAMMV2RiskManager,
+			sportsAMMV2Manager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
@@ -78,6 +80,16 @@ describe('SportsAMMV2Live Live Trades', () => {
 			console.log('requestId is ' + requestId);
 
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			const marketData = await userTicket.markets(0);
+
+			expect(marketData.odd).to.equal(ethers.parseEther('0.5'));
 		});
 
 		it('Should buy a live trade with referrer', async () => {
