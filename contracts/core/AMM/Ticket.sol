@@ -38,6 +38,7 @@ contract Ticket is OwnedWithInit {
         address _ticketOwner;
         IERC20 _collateral;
         uint _expiry;
+        bool _isLive;
     }
 
     ISportsAMMV2 public sportsAMM;
@@ -55,6 +56,8 @@ contract Ticket is OwnedWithInit {
     bool public paused;
     bool public initialized;
     bool public cancelled;
+
+    bool public isLive;
 
     mapping(uint => MarketData) public markets;
 
@@ -79,6 +82,7 @@ contract Ticket is OwnedWithInit {
         ticketOwner = params._ticketOwner;
         collateral = params._collateral;
         expiry = params._expiry;
+        isLive = params._isLive;
         createdAt = block.timestamp;
     }
 
