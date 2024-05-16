@@ -125,21 +125,18 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return _getTicketsData(ticketsArray);
     }
 
-    function getUnresolvedGameIdsWithActiveTicketsOf(
+    function getOnlyActiveGameIdsAndTicketsOf(
         bytes32[] memory _gameIds
     )
         external
         view
         returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
     {
-        ISportsAMMV2.CombinedPosition[] memory combinedPositions = new ISportsAMMV2.CombinedPosition[](0);
-        bool resolved;
         uint[] memory ticketsPerGame = new uint[](_gameIds.length);
         uint counter;
         for (uint i = 0; i < _gameIds.length; i++) {
-            resolved = sportsAMM.resultManager().isMarketResolved(_gameIds[i], 0, 0, 0, combinedPositions);
             uint numOfTicketsPerGame = sportsAMM.manager().numOfTicketsPerGame(_gameIds[i]);
-            if (!resolved && numOfTicketsPerGame > 0) {
+            if (numOfTicketsPerGame > 0) {
                 counter++;
                 ticketsPerGame[i] = numOfTicketsPerGame;
             }
