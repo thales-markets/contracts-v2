@@ -4,7 +4,15 @@ const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, RESULT_TYPE } = require('../../../constants/overtime');
+const {
+	BUY_IN_AMOUNT,
+	ADDITIONAL_SLIPPAGE,
+	RESULT_TYPE,
+	GAME_ID_1,
+	GAME_ID_2,
+	GAME_ID_3,
+	GAME_ID_4,
+} = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
 const {
 	SPORTS_AMM_INITAL_PARAMS,
@@ -104,6 +112,20 @@ describe('SportsAMMV2Data Read Data', () => {
 	});
 
 	describe('Tickets data', () => {
+		it('Should return unresolved games data', async () => {
+			let result = await sportsAMMV2Data.getOnlyActiveGameIdsAndTicketsOf([
+				GAME_ID_1,
+				GAME_ID_2,
+				GAME_ID_3,
+				GAME_ID_4,
+			]);
+			expect(result[0][0]).to.be.equal(GAME_ID_3);
+			expect(result[0][1]).to.be.equal(GAME_ID_4);
+			expect(result[1][0].toString()).to.be.equal('1');
+			expect(result[1][1].toString()).to.be.equal('1');
+			expect(result[2][0][0]).to.be.equal(ticketAddress);
+			expect(result[2][1][0]).to.be.equal(ticketAddress);
+		});
 		it('Should return tickets data', async () => {
 			const ticketsData = await sportsAMMV2Data.getTicketsData([ticketAddress]);
 
