@@ -465,7 +465,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 address(this),
                 _tradeDataInternal._recipient,
                 IERC20(_tradeDataInternal._collateral),
-                (block.timestamp + riskManager.expiryDuration())
+                (block.timestamp + riskManager.expiryDuration()),
+                _tradeDataInternal._isLive
             )
         );
         manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._recipient);
