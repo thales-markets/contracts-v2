@@ -90,6 +90,8 @@ describe('SportsAMMV2Live Live Trades', () => {
 			const marketData = await userTicket.markets(0);
 
 			expect(marketData.odd).to.equal(ethers.parseEther('0.5'));
+
+			expect(await userTicket.isLive()).to.eq(true);
 		});
 
 		it('Should buy a live trade with referrer', async () => {
