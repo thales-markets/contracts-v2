@@ -122,6 +122,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             ISportsAMMV2.TradeData[] memory tradeData = new ISportsAMMV2.TradeData[](1);
             bytes32[] memory merkleProofs;
             uint[] memory odds = new uint[](3);
+            odds[lTradeData._position] = _approvedQuote;
             ISportsAMMV2.CombinedPosition[][] memory comPositions = new ISportsAMMV2.CombinedPosition[][](3);
 
             tradeData[0] = ISportsAMMV2.TradeData(
@@ -169,7 +170,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             lTradeData._line,
             lTradeData._position,
             lTradeData._buyInAmount,
-            lTradeData._expectedQuote,
+            _approvedQuote,
             lTradeData._collateral,
             block.timestamp
         );
