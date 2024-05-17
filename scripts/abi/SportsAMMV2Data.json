@@ -116,6 +116,11 @@
         "internalType": "uint16[]",
         "name": "_playerIds",
         "type": "uint16[]"
+      },
+      {
+        "internalType": "int24[]",
+        "name": "_lines",
+        "type": "int24[]"
       }
     ],
     "name": "areMarketsResolved",

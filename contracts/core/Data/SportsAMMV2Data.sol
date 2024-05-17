@@ -159,7 +159,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function areMarketsResolved(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds
+        uint16[] memory _playerIds,
+        int24[] memory _lines
     ) external view returns (bool[] memory resolvedMarkets) {
         if (_gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length) {
             resolvedMarkets = new bool[](_gameIds.length);
@@ -171,7 +172,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                         _gameIds[i],
                         _typeIds[i],
                         _playerIds[i],
-                        0,
+                        _lines[i],
                         combinedPositions
                     );
                 }
