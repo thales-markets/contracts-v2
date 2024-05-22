@@ -621,7 +621,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint offramped;
             if (_inEth) {
                 offramped = multiCollateralOnOffRamp.offrampIntoEth(userWonAmount);
-                (bool sent, ) = payable(ticketOwner).call.value(amount)("");
+                (bool sent, ) = payable(ticketOwner).call{value: offramped}("");
                 require(sent, "Failed to send Ether");
             } else {
                 offramped = multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWonAmount);
