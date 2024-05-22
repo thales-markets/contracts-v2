@@ -319,6 +319,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     withdrawalShare[user] = 0;
                     usersPerRound[round + 1].push(user);
                     balancesPerRound[round + 1][user] = balanceAfterCurRound - amountToClaim;
+                    updateStakingVolume(stakingThales, user, (balanceAfterCurRound - amountToClaim), isDefaultCollateral);
                 } else {
                     balancesPerRound[round + 1][user] = 0;
                     collateral.safeTransferFrom(roundPool, user, balanceAfterCurRound);
