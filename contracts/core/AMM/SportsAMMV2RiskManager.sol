@@ -134,7 +134,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _maturity
     ) external view returns (uint cap) {
@@ -335,7 +335,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) internal view returns (bool) {
         bytes32 gameId = _marketTradeData.gameId;
         uint16 typeId = _marketTradeData.typeId;
-        uint16 playerId = _marketTradeData.playerId;
+        uint24 playerId = _marketTradeData.playerId;
 
         return
             riskPerMarketTypeAndPosition[gameId][typeId][playerId][_marketTradeData.position] + int(marketRiskAmount) >
@@ -388,7 +388,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     function _updateRisk(ISportsAMMV2.TradeData memory _marketTradeData, uint marketRiskAmount) internal {
         bytes32 gameId = _marketTradeData.gameId;
         uint16 typeId = _marketTradeData.typeId;
-        uint16 playerId = _marketTradeData.playerId;
+        uint24 playerId = _marketTradeData.playerId;
         uint8 position = _marketTradeData.position;
 
         for (uint j = 0; j < _marketTradeData.odds.length; j++) {
@@ -419,7 +419,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _maturity
     ) internal view returns (uint cap) {
@@ -741,7 +741,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetCapPerSport(uint sportId, uint cap);
     event SetCapPerSportChild(uint sportId, uint cap);
     event SetCapPerSportAndType(uint sportId, uint typeId, uint cap);
-    event SetCapPerMarket(bytes32 gameId, uint16 typeId, uint16 playerId, int24 line, uint cap);
+    event SetCapPerMarket(bytes32 gameId, uint16 typeId, uint24 playerId, int24 line, uint cap);
 
     event SetRiskMultiplierPerSport(uint sportId, uint riskMultiplier);
     event SetRiskMultiplierPerGame(bytes32 gameId, uint riskMultiplier);

@@ -21,7 +21,7 @@ interface ISportsAMMV2 {
         uint maturity;
         uint8 status;
         int24 line;
-        uint16 playerId;
+        uint24 playerId;
         uint[] odds;
         bytes32[] merkleProof;
         uint8 position;

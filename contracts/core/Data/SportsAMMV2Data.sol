@@ -27,7 +27,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint16 typeId;
         uint maturity;
         int24 line;
-        uint16 playerId;
+        uint24 playerId;
         uint8 position;
         uint odd;
         ISportsAMMV2.CombinedPosition[] combinedPositions;
@@ -210,7 +210,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             uint maturity,
             ,
             int24 line,
-            uint16 playerId,
+            uint24 playerId,
             uint8 position,
             uint odd
         ) = ticket.markets(marketIndex);
@@ -220,7 +220,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     }
 
     function _getMarketResult(Ticket ticket, uint marketIndex) internal view returns (MarketResult memory) {
-        (bytes32 gameId, , uint16 typeId, , , int24 line, uint16 playerId, uint8 position, ) = ticket.markets(marketIndex);
+        (bytes32 gameId, , uint16 typeId, , , int24 line, uint24 playerId, uint8 position, ) = ticket.markets(marketIndex);
         ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(marketIndex);
 
         ISportsAMMV2ResultManager.MarketPositionStatus status = sportsAMM.resultManager().getMarketPositionStatus(

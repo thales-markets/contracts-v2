@@ -84,9 +84,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "indexed": false,
@@ -465,9 +465,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "_playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "internalType": "int24",
@@ -651,9 +651,9 @@
             "type": "int24"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint24",
             "name": "playerId",
-            "type": "uint16"
+            "type": "uint24"
           },
           {
             "internalType": "uint256[]",
@@ -776,9 +776,9 @@
             "type": "int24"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint24",
             "name": "playerId",
-            "type": "uint16"
+            "type": "uint24"
           },
           {
             "internalType": "uint256[]",
@@ -1817,9 +1817,9 @@
             "type": "int24"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint24",
             "name": "playerId",
-            "type": "uint16"
+            "type": "uint24"
           },
           {
             "internalType": "uint256[]",
