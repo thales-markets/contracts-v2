@@ -58,7 +58,7 @@ interface ISportsAMMV2ResultManager {
     function setResultsPerMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds,
+        uint24[] memory _playerIds,
         int24[][] memory _results
     ) external;
 
@@ -69,7 +69,7 @@ interface ISportsAMMV2ResultManager {
     function cancelMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds,
+        uint24[] memory _playerIds,
         int24[] memory _lines
     ) external;
 
