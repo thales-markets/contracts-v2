@@ -60,6 +60,13 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isLive;
     }
 
+    struct TicketMarketInfo {
+        bytes32 gameId;
+        uint16 typeId;
+        uint16 playerId;
+        int24 line;
+    }
+
     enum ResultType {
         Unassigned,
         ExactPosition,
@@ -127,31 +134,64 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     }
 
     function getOnlyActiveGameIdsAndTicketsOf(
-        bytes32[] memory _gameIds
+        bytes32[] memory _gameIds,
+        uint _startIndex,
+        uint _pageSize
     )
         external
         view
         returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
     {
-        uint[] memory ticketsPerGame = new uint[](_gameIds.length);
-        uint counter;
-        for (uint i = 0; i < _gameIds.length; i++) {
-            uint numOfTicketsPerGame = sportsAMM.manager().numOfTicketsPerGame(_gameIds[i]);
-            if (numOfTicketsPerGame > 0) {
-                counter++;
-                ticketsPerGame[i] = numOfTicketsPerGame;
+        (activeGameIds, numOfTicketsPerGameId, ticketsPerGameId) = _getOnlyActiveGameIdsAndTicketsOf(
+            _gameIds,
+            _startIndex,
+            _pageSize
+        );
+    }
+
+    function getAllActiveGameIdsTypeIdsPlayerIdsLinesForGameIds(
+        bytes32[] memory _gameIds,
+        uint _startIndex,
+        uint _pageSize
+    ) external view returns (TicketMarketInfo[] memory finalTicketsInfo) {
+        bytes32[] memory activeGameIds;
+        uint[] memory numOfTicketsPerGameId;
+        address[][] memory ticketsPerGameId;
+        (activeGameIds, numOfTicketsPerGameId, ticketsPerGameId) = _getOnlyActiveGameIdsAndTicketsOf(
+            _gameIds,
+            _startIndex,
+            _pageSize
+        );
+        // Get number of matches
+        uint matchCounter;
+        for (uint i = 0; i < activeGameIds.length; i++) {
+            for (uint j = 0; j < numOfTicketsPerGameId[i]; j++) {
+                matchCounter += Ticket(ticketsPerGameId[i][j]).numOfMarkets();
             }
         }
-        activeGameIds = new bytes32[](counter);
-        numOfTicketsPerGameId = new uint[](counter);
-        ticketsPerGameId = new address[][](counter);
-        counter = 0;
-        for (uint i = 0; i < _gameIds.length; i++) {
-            if (ticketsPerGame[i] > 0) {
-                activeGameIds[counter] = _gameIds[i];
-                numOfTicketsPerGameId[counter] = ticketsPerGame[i];
-                ticketsPerGameId[counter] = sportsAMM.manager().getTicketsPerGame(0, ticketsPerGame[i], _gameIds[i]);
-                counter++;
+        TicketMarketInfo[] memory ticketsMarkets = new TicketMarketInfo[](matchCounter);
+        matchCounter = 0;
+        MarketData memory marketData;
+        for (uint i = 0; i < activeGameIds.length; i++) {
+            for (uint j = 0; j < numOfTicketsPerGameId[i]; j++) {
+                Ticket ticket = Ticket(ticketsPerGameId[i][j]);
+                for (uint t = 0; t < ticket.numOfMarkets(); t++) {
+                    marketData = _getMarketData(ticket, t);
+                    ticketsMarkets[matchCounter].gameId = marketData.gameId;
+                    ticketsMarkets[matchCounter].typeId = marketData.typeId;
+                    ticketsMarkets[matchCounter].playerId = marketData.playerId;
+                    ticketsMarkets[matchCounter].line = marketData.line;
+                    matchCounter++;
+                }
+            }
+        }
+        (matchCounter, numOfTicketsPerGameId) = _getUniqueTypeIdsPlayerIds(ticketsMarkets);
+        finalTicketsInfo = new TicketMarketInfo[](matchCounter);
+        matchCounter = 0;
+        for (uint i = 0; i < ticketsMarkets.length; i++) {
+            if (numOfTicketsPerGameId[i] == 1) {
+                finalTicketsInfo[matchCounter] = ticketsMarkets[i];
+                ++matchCounter;
             }
         }
     }
@@ -266,6 +306,62 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         int24[] memory results = sportsAMM.resultManager().getResultsPerMarket(gameId, typeId, playerId);
 
         return MarketResult(status, results);
+    }
+
+    function _getOnlyActiveGameIdsAndTicketsOf(
+        bytes32[] memory _gameIds,
+        uint _startIndex,
+        uint _pageSize
+    )
+        internal
+        view
+        returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
+    {
+        uint[] memory ticketsPerGame = new uint[](_pageSize);
+        uint counter;
+        for (uint i = _startIndex; i < _pageSize; i++) {
+            uint numOfTicketsPerGame = sportsAMM.manager().numOfTicketsPerGame(_gameIds[i]);
+            if (numOfTicketsPerGame > 0) {
+                counter++;
+                ticketsPerGame[i] = numOfTicketsPerGame;
+            }
+        }
+        activeGameIds = new bytes32[](counter);
+        numOfTicketsPerGameId = new uint[](counter);
+        ticketsPerGameId = new address[][](counter);
+        counter = 0;
+        for (uint i = 0; i < _gameIds.length; i++) {
+            if (ticketsPerGame[i] > 0) {
+                activeGameIds[counter] = _gameIds[i];
+                numOfTicketsPerGameId[counter] = ticketsPerGame[i];
+                ticketsPerGameId[counter] = sportsAMM.manager().getTicketsPerGame(0, ticketsPerGame[i], _gameIds[i]);
+                counter++;
+            }
+        }
+    }
+
+    function _getUniqueTypeIdsPlayerIds(
+        TicketMarketInfo[] memory ticketsMarkets
+    ) internal pure returns (uint numOfUniqueMatches, uint[] memory uniqueIndexes) {
+        bytes32[] memory uniqueHashes = new bytes32[](ticketsMarkets.length);
+        uniqueIndexes = new uint[](ticketsMarkets.length);
+        bytes32 currentHash;
+        bool isUnique;
+        for (uint i = 0; i < ticketsMarkets.length; i++) {
+            currentHash = keccak256(abi.encode(ticketsMarkets[i]));
+            isUnique = true;
+            for (uint j = 0; j < numOfUniqueMatches; j++) {
+                if (currentHash == uniqueHashes[j]) {
+                    isUnique = false;
+                    break;
+                }
+            }
+            if (isUnique) {
+                uniqueHashes[numOfUniqueMatches] = currentHash;
+                uniqueIndexes[i] = 1;
+                numOfUniqueMatches++;
+            }
+        }
     }
 
     function setSportsAMM(ISportsAMMV2 _sportsAMM) external onlyOwner {
