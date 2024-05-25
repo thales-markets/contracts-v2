@@ -115,8 +115,11 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         maxAllowedDeposit = params._maxAllowedDeposit;
         minDepositAmount = params._minDepositAmount;
         maxAllowedUsers = params._maxAllowedUsers;
+        require(params._utilizationRate <= 1e18, "Utilization rate can't exceed 100%");
         utilizationRate = params._utilizationRate;
         safeBox = params._safeBox;
+
+        require(params._safeBoxImpact <= 1e18, "Safe Box impact can't exceed 100%");
         safeBoxImpact = params._safeBoxImpact;
 
         collateral.approve(params._sportsAMM, MAX_APPROVAL);
@@ -273,7 +276,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
         // if no allocation for current round
         if (allocationPerRound[round] == 0) {
-            profitAndLossPerRound[round] = 1;
+            profitAndLossPerRound[round] = 1 ether;
         } else {
             profitAndLossPerRound[round] = (currentBalance * ONE) / allocationPerRound[round];
         }
@@ -681,6 +684,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice set utilization rate parameter
     /// @param _utilizationRate value as percentage
     function setUtilizationRate(uint _utilizationRate) external onlyOwner {
+        require(_utilizationRate <= 1e18, "Utilization rate can't exceed 100%");
         utilizationRate = _utilizationRate;
         emit UtilizationRateChanged(_utilizationRate);
     }
@@ -690,6 +694,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @param _safeBoxImpact how much is the SafeBox percentage
     function setSafeBoxParams(address _safeBox, uint _safeBoxImpact) external onlyOwner {
         safeBox = _safeBox;
+        require(safeBoxImpact <= 1e18, "Safe Box impact can't exceed 100%");
         safeBoxImpact = _safeBoxImpact;
         emit SetSafeBoxParams(_safeBox, _safeBoxImpact);
     }

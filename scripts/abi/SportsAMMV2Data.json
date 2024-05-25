@@ -306,6 +306,11 @@
             "internalType": "uint256",
             "name": "finalPayout",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLive",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -493,6 +498,11 @@
             "internalType": "uint256",
             "name": "finalPayout",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLive",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -754,6 +764,11 @@
             "internalType": "uint256",
             "name": "finalPayout",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLive",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -941,6 +956,11 @@
             "internalType": "uint256",
             "name": "finalPayout",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLive",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
