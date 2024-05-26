@@ -330,9 +330,9 @@
                 "type": "int24"
               },
               {
-                "internalType": "uint16",
+                "internalType": "uint24",
                 "name": "playerId",
-                "type": "uint16"
+                "type": "uint24"
               },
               {
                 "internalType": "uint8",
@@ -528,9 +528,9 @@
         "type": "int24"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "internalType": "uint8",

@@ -110,14 +110,14 @@ contract ChainlinkResolver is ChainlinkClient, Ownable, Pausable {
 
         bytes32[] memory _gameIds = new bytes32[](marketData._gameIds.length);
         uint16[] memory _typeIds = new uint16[](marketData._typeIds.length);
-        uint16[] memory _playerIds = new uint16[](marketData._playerIds.length);
+        uint24[] memory _playerIds = new uint24[](marketData._playerIds.length);
 
         require(_results.length == _gameIds.length, "Results not of same length as requested");
 
         for (uint i = 0; i < marketData._gameIds.length; i++) {
             _gameIds[i] = stringToBytes32(marketData._gameIds[i]);
             _typeIds[i] = uint16(st2num(marketData._typeIds[i]));
-            _playerIds[i] = uint16(st2num(marketData._playerIds[i]));
+            _playerIds[i] = uint24(st2num(marketData._playerIds[i]));
         }
 
         resultManager.setResultsPerMarkets(_gameIds, _typeIds, _playerIds, _results);

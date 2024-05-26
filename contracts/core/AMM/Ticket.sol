@@ -23,7 +23,7 @@ contract Ticket is OwnedWithInit {
         uint maturity;
         uint8 status;
         int24 line;
-        uint16 playerId;
+        uint24 playerId;
         uint8 position;
         uint odd;
         ISportsAMMV2.CombinedPosition[] combinedPositions;

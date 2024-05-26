@@ -27,7 +27,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint16 typeId;
         uint maturity;
         int24 line;
-        uint16 playerId;
+        uint24 playerId;
         uint8 position;
         uint odd;
         ISportsAMMV2.CombinedPosition[] combinedPositions;
@@ -129,7 +129,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function areMarketsResolved(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds
+        uint24[] memory _playerIds
     ) external view returns (bool[] memory resolvedMarkets) {
         if (_gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length) {
             resolvedMarkets = new bool[](_gameIds.length);
@@ -152,7 +152,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function getResultsForMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds
+        uint24[] memory _playerIds
     ) external view returns (int24[][] memory resultsForMarkets) {
         if (_gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length) {
             resultsForMarkets = new int24[][](_gameIds.length);
@@ -210,7 +210,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             uint maturity,
             ,
             int24 line,
-            uint16 playerId,
+            uint24 playerId,
             uint8 position,
             uint odd
         ) = ticket.markets(marketIndex);
@@ -220,7 +220,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     }
 
     function _getMarketResult(Ticket ticket, uint marketIndex) internal view returns (MarketResult memory) {
-        (bytes32 gameId, , uint16 typeId, , , int24 line, uint16 playerId, uint8 position, ) = ticket.markets(marketIndex);
+        (bytes32 gameId, , uint16 typeId, , , int24 line, uint24 playerId, uint8 position, ) = ticket.markets(marketIndex);
         ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(marketIndex);
 
         ISportsAMMV2ResultManager.MarketPositionStatus status = sportsAMM.resultManager().getMarketPositionStatus(
