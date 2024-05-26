@@ -55,7 +55,7 @@ async function main() {
 		await hre.run('verify:verify', {
 			address: sportsAMMV2LiquidityPoolRoundMastercopyAddress,
 			contract:
-				'contracts/Overtime/LiquidityPool/SportsAMMV2LiquidityPoolRoundMastercopy.sol:SportsAMMV2LiquidityPoolRoundMastercopy',
+				'contracts/core/LiquidityPool/SportsAMMV2LiquidityPoolRoundMastercopy.sol:SportsAMMV2LiquidityPoolRoundMastercopy',
 		});
 	} catch (e) {
 		console.log(e);
