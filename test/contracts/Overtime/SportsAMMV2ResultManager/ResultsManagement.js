@@ -204,6 +204,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 			let resolved = await sportsAMMV2Data.areMarketsResolved(
 				[GAME_ID_1, GAME_ID_2],
 				[0, 0],
+				[0, 0],
 				[0, 0]
 			);
 			expect(resolved.length).to.equal(2);
