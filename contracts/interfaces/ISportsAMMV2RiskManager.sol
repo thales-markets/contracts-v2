@@ -49,7 +49,7 @@ interface ISportsAMMV2RiskManager {
         bytes32 _gameId,
         uint16 _sportId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _maturity
     ) external view returns (uint cap);

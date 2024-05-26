@@ -15,7 +15,7 @@ interface ISportsAMMV2ResultManager {
     function isMarketResolved(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isResolved);
@@ -23,7 +23,7 @@ interface ISportsAMMV2ResultManager {
     function getMarketPositionStatus(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _position,
         ISportsAMMV2.CombinedPosition[] memory _combinedPositions
@@ -32,7 +32,7 @@ interface ISportsAMMV2ResultManager {
     function isWinningMarketPosition(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _position,
         ISportsAMMV2.CombinedPosition[] memory _combinedPositions
@@ -41,7 +41,7 @@ interface ISportsAMMV2ResultManager {
     function isCancelledMarketPosition(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _position,
         ISportsAMMV2.CombinedPosition[] memory _combinedPositions
@@ -50,7 +50,7 @@ interface ISportsAMMV2ResultManager {
     function getResultsPerMarket(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId
+        uint24 _playerId
     ) external view returns (int24[] memory results);
 
     function resultTypePerMarketType(uint _typeId) external view returns (uint8 marketType);
@@ -58,7 +58,7 @@ interface ISportsAMMV2ResultManager {
     function setResultsPerMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds,
+        uint24[] memory _playerIds,
         int24[][] memory _results
     ) external;
 
@@ -69,11 +69,11 @@ interface ISportsAMMV2ResultManager {
     function cancelMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds,
+        uint24[] memory _playerIds,
         int24[] memory _lines
     ) external;
 
-    function cancelMarket(bytes32 _gameId, uint16 _typeId, uint16 _playerId, int24 _line) external;
+    function cancelMarket(bytes32 _gameId, uint16 _typeId, uint24 _playerId, int24 _line) external;
 
     function cancelGame(bytes32 _gameId) external;
 }

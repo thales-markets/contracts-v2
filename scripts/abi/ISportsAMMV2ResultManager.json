@@ -38,9 +38,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "_playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "internalType": "int24",
@@ -66,9 +66,9 @@
         "type": "uint16[]"
       },
       {
-        "internalType": "uint16[]",
+        "internalType": "uint24[]",
         "name": "_playerIds",
-        "type": "uint16[]"
+        "type": "uint24[]"
       },
       {
         "internalType": "int24[]",
@@ -94,9 +94,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "_playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "internalType": "int24",
@@ -155,9 +155,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "_playerId",
-        "type": "uint16"
+        "type": "uint24"
       }
     ],
     "name": "getResultsPerMarket",
@@ -184,9 +184,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "_playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "internalType": "int24",
@@ -264,9 +264,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "_playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "internalType": "int24",
@@ -320,9 +320,9 @@
         "type": "uint16"
       },
       {
-        "internalType": "uint16",
+        "internalType": "uint24",
         "name": "_playerId",
-        "type": "uint16"
+        "type": "uint24"
       },
       {
         "internalType": "int24",
@@ -400,9 +400,9 @@
         "type": "uint16[]"
       },
       {
-        "internalType": "uint16[]",
+        "internalType": "uint24[]",
         "name": "_playerIds",
-        "type": "uint16[]"
+        "type": "uint24[]"
       },
       {
         "internalType": "int24[][]",
