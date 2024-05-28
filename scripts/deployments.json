@@ -31,7 +31,7 @@
 		"SportsAMMV2DataProxyAdmin": "0x8fdeC98adEda8F6Cb46BFadEb41CEDD87B13e274",
 		"MockChainlinkOracle": "0x13De488552594aAbC5dE42f77A3Ed61f745411BA",
 		"LiveTradingProcessor": "0xaa6c39E2Dd45dc08A4aF562440C970aBcDBdd6eA",
-		"ChainlinkResolver": "0x57eb29B2367592FcA10758bF7bf2fd6AaBf52C67",
+		"ChainlinkResolver": "0x2cbE8F5f9AdceDFc0D366e9226d319068673411a",
 		"SportsAMMV2LiquidityPoolData": "0xd61FA46d4e3CD47584a56fC20856Fdd197135756",
 		"SportsAMMV2LiquidityPoolDataImplementation": "0xa49A562E226cb47ae7422837E06390e7C6b9Ae17",
 		"SportsAMMV2LiquidityPoolDataProxyAdmin": "0x4d7C8Dbc59E126D97964C10319Da1Fb81Ca28011",
