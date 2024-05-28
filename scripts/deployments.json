@@ -108,7 +108,7 @@
 		"DefaultLiquidityProviderTHALES": "0x99810Fa9988124d04aaa34E37e6BEAaB626Adf47",
 		"DefaultLiquidityProviderImplementationTHALES": "0x02443C24a84Dd7211A8131c2aE0aA7f5F343cf64",
 		"DefaultLiquidityProviderProxyAdminTHALES": "0x024B8b16eBF439E182ed41DFe748521EE897cBA9",
-		"OvertimePaymentToken": "0x86e1b303Ad6BFF1641Add957872F28585Cc11B0b",
+		"OvertimePaymentToken": "0x924236bF55274fa265dEa0fcF80cA694c9fd019F",
 		"MultiCollateralOnOffRampUSDC": "0xdD462615884E70C80037cCf8Aa0f82cb06056D81",
 		"MultiCollateralOnOffRampImplementationUSDC": "0x8ebBF37C80aFE0Fcfa569DeAc810bDe641225E4f",
 		"ChainlinkResolver": "0xc5a00fF7Dc2a127E8F63721DbbEd67d506C38211",
