@@ -111,7 +111,8 @@
 		"OvertimePaymentToken": "0x86e1b303Ad6BFF1641Add957872F28585Cc11B0b",
 		"MultiCollateralOnOffRampUSDC": "0xdD462615884E70C80037cCf8Aa0f82cb06056D81",
 		"MultiCollateralOnOffRampImplementationUSDC": "0x8ebBF37C80aFE0Fcfa569DeAc810bDe641225E4f",
-		"ChainlinkResolver": "0xc5a00fF7Dc2a127E8F63721DbbEd67d506C38211"
+		"ChainlinkResolver": "0xc5a00fF7Dc2a127E8F63721DbbEd67d506C38211",
+		"LiveTradingProcessor": "0x3b834149F21B9A6C2DDC9F6ce97F2FD1097F8EAB"
 	},
 	"arbitrumOne": {
 		"ProtocolDAO": "0x0089282AC624BbBDA7eC472d63ee99643d7eDf4a",
