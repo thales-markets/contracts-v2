@@ -103,7 +103,7 @@
 		"DefaultLiquidityProviderImplementationWETH": "0x02443C24a84Dd7211A8131c2aE0aA7f5F343cf64",
 		"DefaultLiquidityProviderProxyAdminWETH": "0xc773023B624144dBfd9C47187cb41EA0C3b33D8C",
 		"SportsAMMV2LiquidityPoolTHALES": "0xE59206b08cC96Da0818522C75eE3Fd4EBB7c0A47",
-		"SportsAMMV2LiquidityPoolImplementationTHALES": "0xe2FCBAC654970bAd1d88B4F6e10d0Ac6152c584E",
+		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x6FdA84271AC33473b4d294A1E4548CdE4Cc1196C",
 		"SportsAMMV2LiquidityPoolProxyAdminTHALES": "0x922a0C5285A15450E59e94FF19777798b1535cB0",
 		"DefaultLiquidityProviderTHALES": "0x99810Fa9988124d04aaa34E37e6BEAaB626Adf47",
 		"DefaultLiquidityProviderImplementationTHALES": "0x02443C24a84Dd7211A8131c2aE0aA7f5F343cf64",
