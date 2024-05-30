@@ -94,26 +94,29 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isResolved) {
-        ResultType resultType = resultTypePerMarketType[_typeId];
-        if (resultType == ResultType.CombinedPositions) {
+        if (isGameCancelled[_gameId]) {
             isResolved = true;
-            for (uint i = 0; i < combinedPositions.length; i++) {
-                ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
-                bool isCombinedPositionMarketResolved = _isMarketResolved(
-                    _gameId,
-                    combinedPosition.typeId,
-                    0,
-                    combinedPosition.line
-                );
-                if (!isCombinedPositionMarketResolved) {
-                    isResolved = false;
-                    break;
-                }
-            }
         } else {
-            isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line);
+            ResultType resultType = resultTypePerMarketType[_typeId];
+            if (resultType == ResultType.CombinedPositions) {
+                isResolved = true;
+                for (uint i = 0; i < combinedPositions.length; i++) {
+                    ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
+                    bool isCombinedPositionMarketResolved = _isMarketResolved(
+                        _gameId,
+                        combinedPosition.typeId,
+                        0,
+                        combinedPosition.line
+                    );
+                    if (!isCombinedPositionMarketResolved) {
+                        isResolved = false;
+                        break;
+                    }
+                }
+            } else {
+                isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line);
+            }
         }
-        return isResolved;
     }
 
     /// @notice is specific market cancelled

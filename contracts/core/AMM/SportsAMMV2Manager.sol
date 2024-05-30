@@ -170,7 +170,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
     /// @notice enables whitelist addresses of given array
     /// @param _whitelistedAddresses array of whitelisted addresses
-    /// @param _role adding or removing from whitelist (true: add, false: remove)
+    /// @param _role for which whitelisting is assign/unassigned
     /// @param _flag adding or removing from whitelist (true: add, false: remove)
     function setWhitelistedAddresses(
         address[] calldata _whitelistedAddresses,
@@ -181,7 +181,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         for (uint256 index = 0; index < _whitelistedAddresses.length; index++) {
             if (whitelistedAddresses[_whitelistedAddresses[index]][_role] != _flag) {
                 whitelistedAddresses[_whitelistedAddresses[index]][_role] = _flag;
-                emit AddedIntoWhitelist(_whitelistedAddresses[index], _role, _flag);
+                emit WhitelistStatusChanged(_whitelistedAddresses[index], _role, _flag);
             }
         }
     }
@@ -201,5 +201,5 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     /* ========== EVENTS ========== */
 
     event SportAMMChanged(address sportsAMM);
-    event AddedIntoWhitelist(address whitelistedAddresses, ISportsAMMV2Manager.Role role, bool flag);
+    event WhitelistStatusChanged(address whitelistedAddresses, ISportsAMMV2Manager.Role role, bool flag);
 }

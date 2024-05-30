@@ -14,31 +14,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "whitelistedAddresses",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum ISportsAMMV2Manager.Role",
-        "name": "role",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "flag",
-        "type": "bool"
-      }
-    ],
-    "name": "AddedIntoWhitelist",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -103,6 +78,31 @@
       }
     ],
     "name": "SportAMMChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "whitelistedAddresses",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ISportsAMMV2Manager.Role",
+        "name": "role",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "flag",
+        "type": "bool"
+      }
+    ],
+    "name": "WhitelistStatusChanged",
     "type": "event"
   },
   {
