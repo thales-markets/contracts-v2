@@ -90,7 +90,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function isMarketResolved(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isResolved) {
@@ -125,7 +125,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function isMarketCancelled(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isCancelled) {
@@ -154,7 +154,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function getMarketPositionStatus(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _position,
         ISportsAMMV2.CombinedPosition[] memory _combinedPositions
@@ -165,7 +165,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function isWinningMarketPosition(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _position,
         ISportsAMMV2.CombinedPosition[] memory _combinedPositions
@@ -186,7 +186,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function isCancelledMarketPosition(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint _position,
         ISportsAMMV2.CombinedPosition[] memory _combinedPositions
@@ -205,7 +205,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function getResultsPerMarket(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId
+        uint24 _playerId
     ) external view returns (int24[] memory results) {
         return resultsPerMarket[_gameId][_typeId][_playerId];
     }
@@ -220,7 +220,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function setResultsPerMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds,
+        uint24[] memory _playerIds,
         int24[][] memory _results
     ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
@@ -231,7 +231,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             }
 
             uint16 typeId = _typeIds[i];
-            uint16 playerId = _playerIds[i];
+            uint24 playerId = _playerIds[i];
             int24[] memory results = _results[i];
             if (results[0] == CANCEL_ID) {
                 _cancelMarket(gameId, typeId, playerId, 0);
@@ -275,13 +275,13 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function cancelMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
-        uint16[] memory _playerIds,
+        uint24[] memory _playerIds,
         int24[] memory _lines
     ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
             uint16 typeId = _typeIds[i];
-            uint16 playerId = _playerIds[i];
+            uint24 playerId = _playerIds[i];
             int24 line = _lines[i];
             _cancelMarket(gameId, typeId, playerId, line);
         }
@@ -295,7 +295,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function cancelMarket(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line
     ) external onlyWhitelistedAddresses(msg.sender) {
         _cancelMarket(_gameId, _typeId, _playerId, _line);
@@ -305,7 +305,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     /// @param _gameId game ID to cancel
     /// @param _typeId type ID to cancel
     /// @param _playerId player IDs to cancel
-    function _cancelMarket(bytes32 _gameId, uint16 _typeId, uint16 _playerId, int24 _line) internal {
+    function _cancelMarket(bytes32 _gameId, uint16 _typeId, uint24 _playerId, int24 _line) internal {
         require(!_isMarketCancelled(_gameId, _typeId, _playerId, _line), "Market already cancelled");
         isMarketExplicitlyCancelled[_gameId][_typeId][_playerId][_line] = true;
         emit MarketExplicitlyCancelled(_gameId, _typeId, _playerId, _line);
@@ -330,14 +330,14 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     /* ========== INTERNAL FUNCTIONS ========== */
 
-    function _isMarketResolved(bytes32 _gameId, uint16 _typeId, uint16 _playerId, int24 _line) internal view returns (bool) {
+    function _isMarketResolved(bytes32 _gameId, uint16 _typeId, uint24 _playerId, int24 _line) internal view returns (bool) {
         return areResultsPerMarketSet[_gameId][_typeId][_playerId] || _isMarketCancelled(_gameId, _typeId, _playerId, _line);
     }
 
     function _isMarketCancelled(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line
     ) internal view returns (bool) {
         return
@@ -349,7 +349,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function _getMarketPositionStatus(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint position,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
@@ -364,7 +364,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     function _getMarketSinglePositionStatus(
         bytes32 _gameId,
         uint16 _typeId,
-        uint16 _playerId,
+        uint24 _playerId,
         int24 _line,
         uint position
     ) internal view returns (ISportsAMMV2ResultManager.MarketPositionStatus status) {
@@ -464,9 +464,9 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     /* ========== EVENTS ========== */
 
-    event ResultsPerMarketSet(bytes32 gameId, uint16 typeId, uint16 playerId, int24[] result);
+    event ResultsPerMarketSet(bytes32 gameId, uint16 typeId, uint24 playerId, int24[] result);
     event GameCancelled(bytes32 gameId);
-    event MarketExplicitlyCancelled(bytes32 gameId, uint16 typeId, uint16 playerId, int24 line);
+    event MarketExplicitlyCancelled(bytes32 gameId, uint16 typeId, uint24 playerId, int24 line);
     event ResultTypePerMarketTypeSet(uint16 marketTypeId, uint resultType);
 
     event SetSportsManager(address manager);

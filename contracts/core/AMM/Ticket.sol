@@ -3,10 +3,9 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 // internal
-import "../../utils/OwnedWithInit.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 
-contract Ticket is OwnedWithInit {
+contract Ticket {
     using SafeERC20 for IERC20;
     uint private constant ONE = 1e18;
 
@@ -23,7 +22,7 @@ contract Ticket is OwnedWithInit {
         uint maturity;
         uint8 status;
         int24 line;
-        uint16 playerId;
+        uint24 playerId;
         uint8 position;
         uint odd;
         ISportsAMMV2.CombinedPosition[] combinedPositions;
@@ -70,7 +69,6 @@ contract Ticket is OwnedWithInit {
     function initialize(TicketInit calldata params) external {
         require(!initialized, "Ticket already initialized");
         initialized = true;
-        initOwner(msg.sender);
         sportsAMM = ISportsAMMV2(params._sportsAMM);
         numOfMarkets = params._markets.length;
         for (uint i = 0; i < numOfMarkets; i++) {

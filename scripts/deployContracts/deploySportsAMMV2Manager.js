@@ -25,7 +25,7 @@ async function main() {
 
 	console.log('SportsAMMV2Manager deployed on:', sportsAMMV2ManagerAddress);
 	setTargetAddress('SportsAMMV2Manager', network, sportsAMMV2ManagerAddress);
-	await delay(5000);
+	await delay(10000);
 
 	const sportsAMMV2ManagerImplementationAddress = await getImplementationAddress(
 		ethers.provider,

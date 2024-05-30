@@ -170,7 +170,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         allocationPerRound[nextRound] += amount;
         totalDeposited += amount;
         IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
-        updateStakingVolume(stakingThales, amount, address(sportsAMM.defaultCollateral()) == address(collateral));
+        updateStakingVolume(
+            stakingThales,
+            msg.sender,
+            amount,
+            address(sportsAMM.defaultCollateral()) == address(collateral)
+        );
 
         emit Deposited(msg.sender, amount, round);
     }
@@ -307,7 +312,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             if (!withdrawalRequested[user] && (profitAndLossPerRound[round] > 0)) {
                 balancesPerRound[round + 1][user] = balancesPerRound[round + 1][user] + balanceAfterCurRound;
                 usersPerRound[round + 1].push(user);
-                updateStakingVolume(stakingThales, balanceAfterCurRound, isDefaultCollateral);
+                updateStakingVolume(stakingThales, user, balanceAfterCurRound, isDefaultCollateral);
             } else {
                 if (withdrawalShare[user] > 0) {
                     uint amountToClaim = (balanceAfterCurRound * withdrawalShare[user]) / ONE;
@@ -317,6 +322,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     withdrawalShare[user] = 0;
                     usersPerRound[round + 1].push(user);
                     balancesPerRound[round + 1][user] = balanceAfterCurRound - amountToClaim;
+                    updateStakingVolume(stakingThales, user, (balanceAfterCurRound - amountToClaim), isDefaultCollateral);
                 } else {
                     balancesPerRound[round + 1][user] = 0;
                     collateral.safeTransferFrom(roundPool, user, balanceAfterCurRound);
@@ -604,7 +610,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
-    function updateStakingVolume(IStakingThales stakingThales, uint _amount, bool _isDefaultCollateral) internal {
+    function updateStakingVolume(
+        IStakingThales stakingThales,
+        address _forUser,
+        uint _amount,
+        bool _isDefaultCollateral
+    ) internal {
         if (address(stakingThales) != address(0)) {
             uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
 
@@ -612,7 +623,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 _amount = (_amount * getCollateralPrice()) / ONE;
             }
 
-            stakingThales.updateVolumeAtAmountDecimals(msg.sender, _amount, collateralDecimals);
+            stakingThales.updateVolumeAtAmountDecimals(_forUser, _amount, collateralDecimals);
         }
     }
 

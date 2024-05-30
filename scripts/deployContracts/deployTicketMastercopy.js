@@ -36,7 +36,7 @@ async function main() {
 	try {
 		await hre.run('verify:verify', {
 			address: ticketMastercopyAddress,
-			contract: 'contracts/Overtime/TicketMastercopy.sol:TicketMastercopy',
+			contract: 'contracts/core/AMM/TicketMastercopy.sol:TicketMastercopy',
 		});
 	} catch (e) {
 		console.log(e);
