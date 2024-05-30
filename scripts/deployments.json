@@ -59,7 +59,8 @@
 		"MockMultiCollateralOnOffRampV1": "0xF10c6f46e18a7e6AD9b13c9cE1FF063D3E45D510",
 		"MockMultiCollateralOnOffRampV1Implementation": "0x384aB342620513b48064Ec0e53e464d63C238d98",
 		"MockUniswap": "0xb0d70493ECD2E4753a4bB91fA6be159597F4d1F5",
-		"MockPositionalManager": "0x3E381A2756aaD5bb4fB0850865DC3DaBF9B1Ea67"
+		"MockPositionalManager": "0x3E381A2756aaD5bb4fB0850865DC3DaBF9B1Ea67",
+		"PackingSwapPaths": "0x1aFE3fF5d7528794a2cF44972811736a6971fDC1"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
