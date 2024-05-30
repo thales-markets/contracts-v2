@@ -22,7 +22,12 @@ async function main() {
 		SportsAMMV2ResultManagerAddress
 	);
 
-	const typeIds = [0, 10001, 10002, 10003, 10004, 10005, 10006, 10009, 10021, 10022, 10031, 10032];
+	const typeIds = [
+		0, 10001, 10002, 10003, 10004, 10005, 10006, 10009, 10021, 10022, 10031, 10032, 10101, 10102,
+		10041, 10042, 10017, 10018, 10111, 10112, 10211, 10212, 11010, 11011, 11012, 11019, 11029,
+		11035, 11038, 11039, 11047, 11049, 11051, 11052, 11053, 11055, 11056, 11057, 11058, 11060,
+		11086, 11087, 11088, 11097,
+	];
 
 	const resultTypeIds = [
 		RESULT_TYPE.ExactPosition, // 0
@@ -37,11 +42,47 @@ async function main() {
 		RESULT_TYPE.ExactPosition, // 10022
 		RESULT_TYPE.OverUnder, // 10031
 		RESULT_TYPE.OverUnder, // 10032
+		RESULT_TYPE.OverUnder, // 10101
+		RESULT_TYPE.OverUnder, // 10102
+		RESULT_TYPE.OverUnder, // 10041
+		RESULT_TYPE.OverUnder, // 10042
+		RESULT_TYPE.OverUnder, // 10017
+		RESULT_TYPE.OverUnder, // 10018
+		RESULT_TYPE.OverUnder, // 10111
+		RESULT_TYPE.OverUnder, // 10112
+		RESULT_TYPE.OverUnder, // 10211
+		RESULT_TYPE.OverUnder, // 10212
+		RESULT_TYPE.OverUnder, // 11010,
+		RESULT_TYPE.OverUnder, // 11011,
+		RESULT_TYPE.OverUnder, // 11012,
+		RESULT_TYPE.OverUnder, // 11019,
+		RESULT_TYPE.OverUnder, // 11029,
+		RESULT_TYPE.OverUnder, // 11035,
+		RESULT_TYPE.OverUnder, // 11038,
+		RESULT_TYPE.OverUnder, // 11039,
+		RESULT_TYPE.OverUnder, // 11047,
+		RESULT_TYPE.OverUnder, // 11049,
+		RESULT_TYPE.OverUnder, // 11051,
+		RESULT_TYPE.OverUnder, // 11052,
+		RESULT_TYPE.OverUnder, // 11053,
+		RESULT_TYPE.OverUnder, // 11055,
+		RESULT_TYPE.OverUnder, // 11056,
+		RESULT_TYPE.OverUnder, // 11057,
+		RESULT_TYPE.OverUnder, // 11058,
+		RESULT_TYPE.OverUnder, // 11060,
+		RESULT_TYPE.OverUnder, // 11086,
+		RESULT_TYPE.OverUnder, // 11087,
+		RESULT_TYPE.OverUnder, // 11088,
+		RESULT_TYPE.OverUnder, // 11097
 	];
 
-	await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(typeIds, resultTypeIds);
+	if (resultTypeIds.length == typeIds.length) {
+		await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(typeIds, resultTypeIds);
 
-	console.log('Results types set');
+		console.log('Results types set');
+	} else {
+		console.log('Results types lengths dont match');
+	}
 }
 
 main()
