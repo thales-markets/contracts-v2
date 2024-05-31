@@ -132,26 +132,29 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isCancelled) {
-        ResultType resultType = resultTypePerMarketType[_typeId];
-        if (resultType == ResultType.CombinedPositions) {
+        if (isGameCancelled[_gameId]) {
             isCancelled = true;
-            for (uint i = 0; i < combinedPositions.length; i++) {
-                ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
-                bool isCombinedPositionMarketCancelled = _isMarketCancelled(
-                    _gameId,
-                    combinedPosition.typeId,
-                    0,
-                    combinedPosition.line
-                );
-                if (!isCombinedPositionMarketCancelled) {
-                    isCancelled = false;
-                    break;
-                }
-            }
         } else {
-            isCancelled = _isMarketCancelled(_gameId, _typeId, _playerId, _line);
+            ResultType resultType = resultTypePerMarketType[_typeId];
+            if (resultType == ResultType.CombinedPositions) {
+                isCancelled = true;
+                for (uint i = 0; i < combinedPositions.length; i++) {
+                    ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
+                    bool isCombinedPositionMarketCancelled = _isMarketCancelled(
+                        _gameId,
+                        combinedPosition.typeId,
+                        0,
+                        combinedPosition.line
+                    );
+                    if (!isCombinedPositionMarketCancelled) {
+                        isCancelled = false;
+                        break;
+                    }
+                }
+            } else {
+                isCancelled = _isMarketCancelled(_gameId, _typeId, _playerId, _line);
+            }
         }
-        return isCancelled;
     }
 
     function getMarketPositionStatus(
