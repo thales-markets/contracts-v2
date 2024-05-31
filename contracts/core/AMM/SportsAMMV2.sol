@@ -454,7 +454,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _checkRisksLimitsAndUpdateStakingVolume(_tradeData, totalQuote, payout, _tradeDataInternal);
 
         // clone a ticket
-        Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData);
+        Ticket.MarketData[] memory markets = _getTicketMarkets(
+            _tradeData,
+            addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral]
+        );
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
         ticket.initialize(
@@ -544,12 +547,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     function _getTicketMarkets(
-        ISportsAMMV2.TradeData[] memory _tradeData
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _addedPayoutPercentage
     ) internal pure returns (Ticket.MarketData[] memory markets) {
         markets = new Ticket.MarketData[](_tradeData.length);
 
         for (uint i = 0; i < _tradeData.length; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+
+            uint marketOdds = marketTradeData.odds[marketTradeData.position] -
+                ((_addedPayoutPercentage * marketTradeData.odds[marketTradeData.position]) / ONE);
 
             markets[i] = Ticket.MarketData(
                 marketTradeData.gameId,
@@ -560,7 +567,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 marketTradeData.line,
                 marketTradeData.playerId,
                 marketTradeData.position,
-                marketTradeData.odds[marketTradeData.position],
+                marketOdds,
                 marketTradeData.combinedPositions[marketTradeData.position]
             );
         }
