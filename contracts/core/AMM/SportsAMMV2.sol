@@ -448,6 +448,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _tradeDataInternal._collateral
             );
         }
+        //TODO: ensure added payout is added on Live trading too
 
         uint payoutWithFees = payout + fees;
         _checkRisksLimitsAndUpdateStakingVolume(_tradeData, totalQuote, payout, _tradeDataInternal);
