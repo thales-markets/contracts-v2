@@ -652,7 +652,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice sets different amounts
     /// @param _safeBoxFee safe box fee paid on each trade
     function setAmounts(uint _safeBoxFee) external onlyOwner {
-        require(_safeBoxFee < 1e17, "Safe Box fee can't exceed 10%");
+        require(_safeBoxFee <= 1e17, "Safe Box fee can't exceed 10%");
         safeBoxFee = _safeBoxFee;
         emit AmountsUpdated(_safeBoxFee);
     }
