@@ -31,6 +31,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         Unassigned,
         ExactPosition,
         OverUnder,
+        Spread,
         CombinedPositions
     }
 
@@ -378,11 +379,11 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
             for (uint i = 0; i < marketResults.length; i++) {
                 int marketResult = marketResults[i];
-                if (resultType == ResultType.OverUnder) {
+                if (resultType == ResultType.OverUnder || resultType == ResultType.Spread) {
                     if (marketResult == _line) {
                         return ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
                     } else {
-                        OverUnderType winningPosition = _typeId == TYPE_ID_SPREAD
+                        OverUnderType winningPosition = resultType == ResultType.Spread
                             ? (marketResult < _line ? OverUnderType.Over : OverUnderType.Under)
                             : (marketResult > _line ? OverUnderType.Over : OverUnderType.Under);
                         if (uint(winningPosition) == position) {
