@@ -29,7 +29,7 @@ describe('SportsAMMV2ResultManager Results Check', () => {
 			[
 				RESULT_TYPE.ExactPosition,
 				RESULT_TYPE.OverUnder,
-				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.Spread,
 				RESULT_TYPE.CombinedPositions,
 			]
 		);

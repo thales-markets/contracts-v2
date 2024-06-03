@@ -166,19 +166,21 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
+            require(
+                marketTradeData.odds[marketTradeData.position] > 0 && marketTradeData.odds[marketTradeData.position] <= ONE,
+                "Invalid odds"
+            );
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
-            if (amountToBuy > _buyInAmount) {
-                uint marketRiskAmount = amountToBuy - _buyInAmount;
+            uint marketRiskAmount = amountToBuy - _buyInAmount;
 
-                if (
-                    _isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount) ||
-                    _isRiskPerGameExceeded(marketTradeData, marketRiskAmount)
-                ) {
-                    isMarketOutOfLiquidity[i] = true;
-                    riskStatus = ISportsAMMV2RiskManager.RiskStatus.OutOfLiquidity;
-                } else if (_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
-                    riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
-                }
+            if (_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
+                riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
+            } else if (
+                _isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount) ||
+                _isRiskPerGameExceeded(marketTradeData, marketRiskAmount)
+            ) {
+                isMarketOutOfLiquidity[i] = true;
+                riskStatus = ISportsAMMV2RiskManager.RiskStatus.OutOfLiquidity;
             }
         }
     }

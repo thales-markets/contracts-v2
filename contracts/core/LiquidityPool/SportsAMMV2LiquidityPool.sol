@@ -115,8 +115,11 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         maxAllowedDeposit = params._maxAllowedDeposit;
         minDepositAmount = params._minDepositAmount;
         maxAllowedUsers = params._maxAllowedUsers;
+        require(params._utilizationRate <= 1e18, "Utilization rate can't exceed 100%");
         utilizationRate = params._utilizationRate;
         safeBox = params._safeBox;
+
+        require(params._safeBoxImpact <= 1e18, "Safe Box impact can't exceed 100%");
         safeBoxImpact = params._safeBoxImpact;
 
         collateral.approve(params._sportsAMM, MAX_APPROVAL);
@@ -166,13 +169,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
         allocationPerRound[nextRound] += amount;
         totalDeposited += amount;
-        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
-        updateStakingVolume(
-            stakingThales,
-            msg.sender,
-            amount,
-            address(sportsAMM.defaultCollateral()) == address(collateral)
-        );
+        _updateStakingVolume(msg.sender, amount, address(sportsAMM.defaultCollateral()) == address(collateral));
 
         emit Deposited(msg.sender, amount, round);
     }
@@ -278,7 +275,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
         // if no allocation for current round
         if (allocationPerRound[round] == 0) {
-            profitAndLossPerRound[round] = 1;
+            profitAndLossPerRound[round] = 1 ether;
         } else {
             profitAndLossPerRound[round] = (currentBalance * ONE) / allocationPerRound[round];
         }
@@ -295,7 +292,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         require(usersProcessedInRound < usersPerRound[round].length, "All users already processed");
         require(_batchSize > 0, "Batch size has to be greater than 0");
 
-        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
         address roundPool = roundPools[round];
 
         uint endCursor = usersProcessedInRound + _batchSize;
@@ -309,7 +305,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             if (!withdrawalRequested[user] && (profitAndLossPerRound[round] > 0)) {
                 balancesPerRound[round + 1][user] = balancesPerRound[round + 1][user] + balanceAfterCurRound;
                 usersPerRound[round + 1].push(user);
-                updateStakingVolume(stakingThales, user, balanceAfterCurRound, isDefaultCollateral);
+                _updateStakingVolume(user, balanceAfterCurRound, isDefaultCollateral);
             } else {
                 if (withdrawalShare[user] > 0) {
                     uint amountToClaim = (balanceAfterCurRound * withdrawalShare[user]) / ONE;
@@ -319,7 +315,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     withdrawalShare[user] = 0;
                     usersPerRound[round + 1].push(user);
                     balancesPerRound[round + 1][user] = balanceAfterCurRound - amountToClaim;
-                    updateStakingVolume(stakingThales, user, (balanceAfterCurRound - amountToClaim), isDefaultCollateral);
+                    _updateStakingVolume(user, (balanceAfterCurRound - amountToClaim), isDefaultCollateral);
                 } else {
                     balancesPerRound[round + 1][user] = 0;
                     collateral.safeTransferFrom(roundPool, user, balanceAfterCurRound);
@@ -526,36 +522,28 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function _exerciseTicketsReadyToBeExercisedBatch(uint _batchSize, uint _roundNumber) internal {
         require(_batchSize > 0, "Batch size has to be greater than 0");
         uint count = 0;
-        Ticket ticket;
         for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
             if (count == _batchSize) break;
-            address ticketAddress = tradingTicketsPerRound[_roundNumber][i];
-            if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
-                ticket = Ticket(ticketAddress);
-                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
-                    sportsAMM.exerciseTicket(ticketAddress);
-                }
-                if (ticket.isUserTheWinner() || ticket.resolved()) {
-                    ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
-                    count += 1;
-                }
-            }
+            _exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i]);
+            count += 1;
         }
     }
 
     function _exerciseTicketsReadyToBeExercised(uint _roundNumber) internal {
-        Ticket ticket;
-        address ticketAddress;
         for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
-            ticketAddress = tradingTicketsPerRound[_roundNumber][i];
-            if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
-                ticket = Ticket(ticketAddress);
-                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
-                    sportsAMM.exerciseTicket(ticketAddress);
-                }
-                if (ticket.isUserTheWinner() || ticket.resolved()) {
-                    ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
-                }
+            _exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i]);
+        }
+    }
+
+    function _exerciseTicket(uint _roundNumber, address ticketAddress) internal {
+        if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
+            Ticket ticket = Ticket(ticketAddress);
+            bool isWinner = ticket.isUserTheWinner();
+            if (ticket.isTicketExercisable() && !isWinner) {
+                sportsAMM.exerciseTicket(ticketAddress);
+            }
+            if (isWinner || ticket.resolved()) {
+                ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
             }
         }
     }
@@ -607,12 +595,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
-    function updateStakingVolume(
-        IStakingThales stakingThales,
-        address _forUser,
-        uint _amount,
-        bool _isDefaultCollateral
-    ) internal {
+    function _updateStakingVolume(address _forUser, uint _amount, bool _isDefaultCollateral) internal {
+        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
         if (address(stakingThales) != address(0)) {
             uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
 
@@ -682,7 +666,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     }
 
     /// @notice Set length of rounds
-    /// @param _roundLength Length of a round in miliseconds
+    /// @param _roundLength Length of a round in seconds
     function setRoundLength(uint _roundLength) external onlyOwner {
         require(!started, "Can't change round length after start");
         roundLength = _roundLength;
@@ -692,6 +676,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice set utilization rate parameter
     /// @param _utilizationRate value as percentage
     function setUtilizationRate(uint _utilizationRate) external onlyOwner {
+        require(_utilizationRate <= 1e18, "Utilization rate can't exceed 100%");
         utilizationRate = _utilizationRate;
         emit UtilizationRateChanged(_utilizationRate);
     }
@@ -701,6 +686,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @param _safeBoxImpact how much is the SafeBox percentage
     function setSafeBoxParams(address _safeBox, uint _safeBoxImpact) external onlyOwner {
         safeBox = _safeBox;
+        require(safeBoxImpact <= 1e18, "Safe Box impact can't exceed 100%");
         safeBoxImpact = _safeBoxImpact;
         emit SetSafeBoxParams(_safeBox, _safeBoxImpact);
     }

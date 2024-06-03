@@ -47,9 +47,9 @@ describe('SportsAMMV2Manager Deployment and Setters', () => {
 			await expect(
 				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, 2, !isWhitelisted)
 			)
-				.to.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
+				.to.emit(sportsAMMV2Manager, 'WhitelistStatusChanged')
 				.withArgs(thirdAccount.address, 2, !isWhitelisted)
-				.to.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
+				.to.emit(sportsAMMV2Manager, 'WhitelistStatusChanged')
 				.withArgs(fourthAccount.address, 2, !isWhitelisted);
 		});
 
@@ -82,8 +82,8 @@ describe('SportsAMMV2Manager Deployment and Setters', () => {
 			await expect(
 				sportsAMMV2Manager.setWhitelistedAddresses(whitelistedAddresses, 2, isWhitelisted)
 			)
-				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist')
-				.to.not.emit(sportsAMMV2Manager, 'AddedIntoWhitelist');
+				.to.not.emit(sportsAMMV2Manager, 'WhitelistStatusChanged')
+				.to.not.emit(sportsAMMV2Manager, 'WhitelistStatusChanged');
 		});
 	});
 });
