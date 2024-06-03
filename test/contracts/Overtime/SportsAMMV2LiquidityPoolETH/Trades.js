@@ -56,7 +56,7 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			[
 				RESULT_TYPE.ExactPosition,
 				RESULT_TYPE.OverUnder,
-				RESULT_TYPE.OverUnder,
+				RESULT_TYPE.Spread,
 				RESULT_TYPE.CombinedPositions,
 			]
 		);
