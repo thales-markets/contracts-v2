@@ -435,10 +435,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2.TradeData[] memory _tradeData,
         TradeDataInternal memory _tradeDataInternal
     ) internal returns (address) {
-        uint totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
-        uint payout = _tradeDataInternal._expectedPayout;
-        uint fees = _getFees(_tradeDataInternal._buyInAmount);
-
+        uint totalQuote;
+        uint payout;
+        uint fees;
+        uint addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
         if (!_tradeDataInternal._isLive) {
             (totalQuote, payout, fees, , ) = _tradeQuote(
                 _tradeData,
@@ -447,16 +447,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 0,
                 _tradeDataInternal._collateral
             );
+        } else {
+            payout =
+                _tradeDataInternal._expectedPayout +
+                ((addedPayoutPercentage * _tradeDataInternal._expectedPayout) / ONE);
+            totalQuote = (ONE * _tradeDataInternal._buyInAmount) / payout;
+            fees = _getFees(_tradeDataInternal._buyInAmount);
         }
 
         uint payoutWithFees = payout + fees;
         _checkRisksLimitsAndUpdateStakingVolume(_tradeData, totalQuote, payout, _tradeDataInternal);
 
         // clone a ticket
-        Ticket.MarketData[] memory markets = _getTicketMarkets(
-            _tradeData,
-            addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral]
-        );
+        Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData, addedPayoutPercentage);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
         ticket.initialize(
@@ -659,7 +662,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice sets different amounts
     /// @param _safeBoxFee safe box fee paid on each trade
     function setAmounts(uint _safeBoxFee) external onlyOwner {
-        require(_safeBoxFee < 1e17, "Safe Box fee can't exceed 10%");
+        require(_safeBoxFee <= 1e17, "Safe Box fee can't exceed 10%");
         safeBoxFee = _safeBoxFee;
         emit AmountsUpdated(_safeBoxFee);
     }
