@@ -6,7 +6,7 @@
 	},
 	{
 		"id": 10001,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SPREAD"
 	},
 	{
@@ -61,7 +61,7 @@
 	},
 	{
 		"id": 10013,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SECOND_SPREAD"
 	},
 	{
@@ -171,47 +171,47 @@
 	},
 	{
 		"id": 10041,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_FIRST_PERIOD_SPREAD"
 	},
 	{
 		"id": 10042,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SECOND_PERIOD_SPREAD"
 	},
 	{
 		"id": 10043,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_THIRD_PERIOD_SPREAD"
 	},
 	{
 		"id": 10044,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_FOURTH_PERIOD_SPREAD"
 	},
 	{
 		"id": 10045,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_FIFTH_PERIOD_SPREAD"
 	},
 	{
 		"id": 10046,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SIXTH_PERIOD_SPREAD"
 	},
 	{
 		"id": 10047,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SEVENTH_PERIOD_SPREAD"
 	},
 	{
 		"id": 10048,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_EIGHTH_PERIOD_SPREAD"
 	},
 	{
 		"id": 10049,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_NINTH_PERIOD_SPREAD"
 	},
 	{
@@ -306,47 +306,47 @@
 	},
 	{
 		"id": 10071,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_FIRST_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10072,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SECOND_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10073,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_THIRD_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10074,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_FOURTH_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10075,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_FIFTH_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10076,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SIXTH_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10077,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_SEVENTH_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10078,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_EIGHTH_PERIOD_SPREAD_SECONDARY"
 	},
 	{
 		"id": 10079,
-		"result_type": 3,
+		"result_type": 4,
 		"name": "CHILD_NINTH_PERIOD_SPREAD_SECONDARY"
 	},
 	{

@@ -57,8 +57,8 @@ const RESULT_TYPE = {
 	Unassigned: 0,
 	ExactPosition: 1,
 	OverUnder: 2,
-	Spread: 3,
-	CombinedPositions: 4,
+	CombinedPositions: 3,
+	Spread: 4,
 };
 
 const MARKET_POSITION_STATUS = {
