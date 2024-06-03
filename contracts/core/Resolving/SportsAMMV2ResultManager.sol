@@ -45,7 +45,6 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
 
-    uint public constant TYPE_ID_SPREAD = 10001;
     int24 public constant CANCEL_ID = -9999;
 
     /* ========== STATE VARIABLES ========== */
