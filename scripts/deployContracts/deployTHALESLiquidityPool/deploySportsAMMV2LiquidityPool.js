@@ -13,7 +13,7 @@ async function main() {
 
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const thalesCollateralAddress = getTargetAddress('THALES', network);
-	const collateralKey = ethers.encodeBytes32String('ETH');
+	const collateralKey = ethers.encodeBytes32String('THALES');
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const addressManagerAddress = getTargetAddress('AddressManager', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);

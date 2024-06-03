@@ -247,7 +247,7 @@ contract Ticket {
 
     function setPaused(bool _paused) external {
         require(msg.sender == address(sportsAMM.manager()), "Invalid sender");
-        require(paused != _paused, "State not changed");
+        if (paused == _paused) return;
         paused = _paused;
         emit PauseUpdated(_paused);
     }

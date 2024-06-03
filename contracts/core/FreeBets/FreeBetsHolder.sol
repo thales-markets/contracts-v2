@@ -129,7 +129,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes back to the freebet balance
-    function confirmTicketResolved(address _resolvedTicket) external notPaused {
+    function confirmTicketResolved(address _resolvedTicket) external {
         require(msg.sender == address(sportsAMM), "Only allowed from SportsAMM");
 
         address _user = ticketToUser[_resolvedTicket];
@@ -137,15 +137,18 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         require(activeTicketsPerUser[_user].contains(_resolvedTicket), "Unknown active ticket");
 
         uint _exercized = Ticket(_resolvedTicket).finalPayout();
+        uint _earned;
         if (_exercized > 0) {
-            uint _earned = _exercized - Ticket(_resolvedTicket).buyInAmount();
+            IERC20 _collateral = Ticket(_resolvedTicket).collateral();
+            uint buyInAmount = Ticket(_resolvedTicket).buyInAmount();
+            balancePerUserAndCollateral[_user][address(_collateral)] += buyInAmount;
+
+            _earned = _exercized - buyInAmount;
             if (_earned > 0) {
-                IERC20 _collateral = Ticket(_resolvedTicket).collateral();
                 _collateral.safeTransfer(_user, _earned);
-                balancePerUserAndCollateral[_user][address(_collateral)] += Ticket(_resolvedTicket).buyInAmount();
             }
         }
-        emit FreeBetTicketResolved(_resolvedTicket, _user);
+        emit FreeBetTicketResolved(_resolvedTicket, _user, _earned);
 
         activeTicketsPerUser[_user].remove(_resolvedTicket);
         resolvedTicketsPerUser[_user].add(_resolvedTicket);
@@ -165,7 +168,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         } else {
             IERC20(_collateral).approve(address(sportsAMM), 0);
         }
-        emit AddSupportedCollateral(_collateral, _supported);
+        emit CollateralSupportChanged(_collateral, _supported);
     }
 
     /* ========== GETTERS ========== */
@@ -216,7 +219,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
-    event AddSupportedCollateral(address collateral, bool supported);
-    event FreeBetTicketResolved(address ticket, address user);
+    event CollateralSupportChanged(address collateral, bool supported);
+    event FreeBetTicketResolved(address ticket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
 }

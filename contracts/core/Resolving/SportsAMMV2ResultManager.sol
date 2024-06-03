@@ -94,26 +94,29 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isResolved) {
-        ResultType resultType = resultTypePerMarketType[_typeId];
-        if (resultType == ResultType.CombinedPositions) {
+        if (isGameCancelled[_gameId]) {
             isResolved = true;
-            for (uint i = 0; i < combinedPositions.length; i++) {
-                ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
-                bool isCombinedPositionMarketResolved = _isMarketResolved(
-                    _gameId,
-                    combinedPosition.typeId,
-                    0,
-                    combinedPosition.line
-                );
-                if (!isCombinedPositionMarketResolved) {
-                    isResolved = false;
-                    break;
-                }
-            }
         } else {
-            isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line);
+            ResultType resultType = resultTypePerMarketType[_typeId];
+            if (resultType == ResultType.CombinedPositions) {
+                isResolved = true;
+                for (uint i = 0; i < combinedPositions.length; i++) {
+                    ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
+                    bool isCombinedPositionMarketResolved = _isMarketResolved(
+                        _gameId,
+                        combinedPosition.typeId,
+                        0,
+                        combinedPosition.line
+                    );
+                    if (!isCombinedPositionMarketResolved) {
+                        isResolved = false;
+                        break;
+                    }
+                }
+            } else {
+                isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line);
+            }
         }
-        return isResolved;
     }
 
     /// @notice is specific market cancelled
@@ -223,6 +226,12 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         uint24[] memory _playerIds,
         int24[][] memory _results
     ) external onlyWhitelistedAddresses(msg.sender) {
+        require(
+            _gameIds.length == _typeIds.length &&
+                _typeIds.length == _playerIds.length &&
+                _playerIds.length == _results.length,
+            "Incorrect params"
+        );
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
             //skip cancelled games
@@ -278,6 +287,10 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         uint24[] memory _playerIds,
         int24[] memory _lines
     ) external onlyWhitelistedAddresses(msg.sender) {
+        require(
+            _gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length && _playerIds.length == _lines.length,
+            "Incorrect params"
+        );
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
             uint16 typeId = _typeIds[i];
@@ -315,6 +328,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     /// @param _marketTypeIds market type IDs to set result type for
     /// @param _resultTypes result types to set
     function setResultTypesPerMarketTypes(uint16[] memory _marketTypeIds, uint[] memory _resultTypes) external onlyOwner {
+        require(_marketTypeIds.length == _resultTypes.length, "Incorrect params");
         for (uint i; i < _marketTypeIds.length; i++) {
             uint16 marketTypeId = _marketTypeIds[i];
             uint resultType = _resultTypes[i];
@@ -458,6 +472,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     /// @notice sets the address of a contract that can resolve markets via chainlink node
     /// @param _chainlinkResolver the address of chainlink node client
     function setChainlinkResolver(address _chainlinkResolver) external onlyOwner {
+        require(_chainlinkResolver != address(0), "Invalid address");
         chainlinkResolver = _chainlinkResolver;
         emit SetChainlinkResolver(_chainlinkResolver);
     }
