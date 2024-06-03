@@ -65,7 +65,7 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 			await expect(
 				sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
 					[TYPE_ID_TOTAL, TYPE_ID_WINNER_TOTAL],
-					[RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions + 1]
+					[RESULT_TYPE.OverUnder, RESULT_TYPE.CombinedPositions + 2]
 				)
 			).to.be.revertedWith('Invalid result type');
 			await expect(
