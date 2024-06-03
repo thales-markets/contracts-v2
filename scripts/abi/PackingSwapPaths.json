@@ -1,0 +1,41 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "inToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint24",
+        "name": "feeIn",
+        "type": "uint24"
+      },
+      {
+        "internalType": "address[]",
+        "name": "proxies",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint24[]",
+        "name": "feesOut",
+        "type": "uint24[]"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      }
+    ],
+    "name": "getEncodedPacked",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "encoded",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

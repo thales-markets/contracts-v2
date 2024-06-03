@@ -30,8 +30,8 @@
 		"SportsAMMV2DataImplementation": "0xADb8D1f6A0D91Ac42921A151fB2fC403Af1c84e4",
 		"SportsAMMV2DataProxyAdmin": "0x8fdeC98adEda8F6Cb46BFadEb41CEDD87B13e274",
 		"MockChainlinkOracle": "0x13De488552594aAbC5dE42f77A3Ed61f745411BA",
-		"LiveTradingProcessor": "0xaa6c39E2Dd45dc08A4aF562440C970aBcDBdd6eA",
-		"ChainlinkResolver": "0x57eb29B2367592FcA10758bF7bf2fd6AaBf52C67",
+		"LiveTradingProcessor": "0xE36E722479e423A4D3fBBB617DeD66936F304cFA",
+		"ChainlinkResolver": "0x4364FC5aA986360F034B7A172C13ec885d0DE48d",
 		"SportsAMMV2LiquidityPoolData": "0xd61FA46d4e3CD47584a56fC20856Fdd197135756",
 		"SportsAMMV2LiquidityPoolDataImplementation": "0xa49A562E226cb47ae7422837E06390e7C6b9Ae17",
 		"SportsAMMV2LiquidityPoolDataProxyAdmin": "0x4d7C8Dbc59E126D97964C10319Da1Fb81Ca28011",
@@ -59,7 +59,8 @@
 		"MockMultiCollateralOnOffRampV1": "0xF10c6f46e18a7e6AD9b13c9cE1FF063D3E45D510",
 		"MockMultiCollateralOnOffRampV1Implementation": "0x384aB342620513b48064Ec0e53e464d63C238d98",
 		"MockUniswap": "0xb0d70493ECD2E4753a4bB91fA6be159597F4d1F5",
-		"MockPositionalManager": "0x3E381A2756aaD5bb4fB0850865DC3DaBF9B1Ea67"
+		"MockPositionalManager": "0x3E381A2756aaD5bb4fB0850865DC3DaBF9B1Ea67",
+		"PackingSwapPaths": "0x1aFE3fF5d7528794a2cF44972811736a6971fDC1"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
@@ -108,7 +109,11 @@
 		"DefaultLiquidityProviderTHALES": "0x99810Fa9988124d04aaa34E37e6BEAaB626Adf47",
 		"DefaultLiquidityProviderImplementationTHALES": "0x02443C24a84Dd7211A8131c2aE0aA7f5F343cf64",
 		"DefaultLiquidityProviderProxyAdminTHALES": "0x024B8b16eBF439E182ed41DFe748521EE897cBA9",
-		"OvertimePaymentToken": "0x86e1b303Ad6BFF1641Add957872F28585Cc11B0b"
+		"OvertimePaymentToken": "0x924236bF55274fa265dEa0fcF80cA694c9fd019F",
+		"MultiCollateralOnOffRampUSDC": "0xdD462615884E70C80037cCf8Aa0f82cb06056D81",
+		"MultiCollateralOnOffRampImplementationUSDC": "0x8ebBF37C80aFE0Fcfa569DeAc810bDe641225E4f",
+		"ChainlinkResolver": "0xc5a00fF7Dc2a127E8F63721DbbEd67d506C38211",
+		"LiveTradingProcessor": "0x3b834149F21B9A6C2DDC9F6ce97F2FD1097F8EAB"
 	},
 	"arbitrumOne": {
 		"ProtocolDAO": "0x0089282AC624BbBDA7eC472d63ee99643d7eDf4a",
