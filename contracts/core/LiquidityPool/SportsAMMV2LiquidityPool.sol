@@ -532,8 +532,9 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         uint count = 0;
         for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
             if (count == _batchSize) break;
-            _exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i]);
-            count += 1;
+            if (_exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i])) {
+                count += 1;
+            }
         }
     }
 
@@ -543,7 +544,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
-    function _exerciseTicket(uint _roundNumber, address ticketAddress) internal {
+    function _exerciseTicket(uint _roundNumber, address ticketAddress) internal returns (bool exercised) {
         if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
             Ticket ticket = Ticket(ticketAddress);
             bool isWinner = ticket.isUserTheWinner();
@@ -552,6 +553,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             }
             if (isWinner || ticket.resolved()) {
                 ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
+                exercised = true;
             }
         }
     }

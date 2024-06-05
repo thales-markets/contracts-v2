@@ -167,7 +167,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
             require(
-                marketTradeData.odds[marketTradeData.position] > 0 && marketTradeData.odds[marketTradeData.position] <= ONE,
+                marketTradeData.odds[marketTradeData.position] > 0 && marketTradeData.odds[marketTradeData.position] < ONE,
                 "Invalid odds"
             );
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
@@ -180,7 +180,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 _isRiskPerGameExceeded(marketTradeData, marketRiskAmount)
             ) {
                 isMarketOutOfLiquidity[i] = true;
-                riskStatus = ISportsAMMV2RiskManager.RiskStatus.OutOfLiquidity;
+                // only set if no previous status was set
+                if (riskStatus == ISportsAMMV2RiskManager.RiskStatus.NoRisk) {
+                    riskStatus = ISportsAMMV2RiskManager.RiskStatus.OutOfLiquidity;
+                }
             }
         }
     }
