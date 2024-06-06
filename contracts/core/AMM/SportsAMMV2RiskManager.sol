@@ -97,6 +97,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // the period of time in seconds after mauturity when ticket expires
     uint public expiryDuration;
 
+    // divider on how much of cap should be used on live betting
+    mapping(uint => uint) public liveCapDividerPerSport;
+
+    // default live cap divider
+    uint public defaultLiveCapDivider;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -127,6 +133,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _playerId to get cap for
     /// @param _maturity used for dynamic liquidity check
     /// @param _line used for dynamic liquidity check
+    /// @param _isLive whether this is a live bet
     /// @return cap cap to use
     function calculateCapToBeUsed(
         bytes32 _gameId,
@@ -134,9 +141,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16 _typeId,
         uint24 _playerId,
         int24 _line,
-        uint _maturity
+        uint _maturity,
+        bool _isLive
     ) external view returns (uint cap) {
-        return _calculateCapToBeUsed(_gameId, _sportId, _typeId, _playerId, _line, _maturity);
+        return _calculateCapToBeUsed(_gameId, _sportId, _typeId, _playerId, _line, _maturity, _isLive);
     }
 
     /// @notice calculate max available total risk on game
@@ -158,7 +166,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @return isMarketOutOfLiquidity array of boolean values that indicates if some market is out of liquidity
     function checkRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        uint _buyInAmount
+        uint _buyInAmount,
+        bool _isLive
     ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity) {
         uint numOfMarkets = _tradeData.length;
         isMarketOutOfLiquidity = new bool[](numOfMarkets);
@@ -176,7 +185,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             if (_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
                 riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
             } else if (
-                _isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount) ||
+                _isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive) ||
                 _isRiskPerGameExceeded(marketTradeData, marketRiskAmount)
             ) {
                 isMarketOutOfLiquidity[i] = true;
@@ -256,7 +265,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _buyInAmount ticket buy-in amount
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        uint _buyInAmount
+        uint _buyInAmount,
+        bool _isLive
     ) external onlySportsAMM(msg.sender) {
         for (uint i = 0; i < _tradeData.length; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
@@ -271,7 +281,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 uint marketRiskAmount = amountToBuy - _buyInAmount;
 
                 require(
-                    !_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount),
+                    !_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive),
                     "Risk per market and position exceeded"
                 );
                 require(!_isRiskPerGameExceeded(marketTradeData, marketRiskAmount), "Risk per game exceeded");
@@ -334,7 +344,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     function _isRiskPerMarketAndPositionExceeded(
         ISportsAMMV2.TradeData memory _marketTradeData,
-        uint marketRiskAmount
+        uint marketRiskAmount,
+        bool _isLive
     ) internal view returns (bool) {
         bytes32 gameId = _marketTradeData.gameId;
         uint16 typeId = _marketTradeData.typeId;
@@ -349,7 +360,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                     typeId,
                     playerId,
                     _marketTradeData.line,
-                    _marketTradeData.maturity
+                    _marketTradeData.maturity,
+                    _isLive
                 )
             );
     }
@@ -424,7 +436,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16 _typeId,
         uint24 _playerId,
         int24 _line,
-        uint _maturity
+        uint _maturity,
+        bool _isLive
     ) internal view returns (uint cap) {
         if (_maturity > block.timestamp) {
             cap = capPerMarket[_gameId][_typeId][_playerId][_line];
@@ -440,6 +453,16 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                         cap = typeCap > 0 ? typeCap : sportCap / 2;
                     }
                 }
+            }
+
+            if (_isLive) {
+                cap =
+                    cap /
+                    (
+                        liveCapDividerPerSport[_sportId] > 0 ? liveCapDividerPerSport[_sportId] : defaultLiveCapDivider > 0
+                            ? defaultLiveCapDivider
+                            : 1
+                    );
             }
 
             uint dynamicLiquidityCutoffTime = dynamicLiquidityCutoffTimePerSport[_sportId];
@@ -469,7 +492,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint _maturity
     ) internal view returns (uint totalRisk) {
         // get cap for parent market
-        uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity);
+        uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity, false);
         uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId);
 
         return (capToBeUsed * riskMultiplier);
@@ -693,6 +716,22 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit TimesUpdated(_minimalTimeLeftToMaturity, _expiryDuration);
     }
 
+    /// @notice sets divider to reduce prematch cap for type by
+    /// @param _divider to reduce prematch cap for type by
+    function setLiveCapDivider(uint _sportId, uint _divider) external onlyWhitelistedAddresses(msg.sender) {
+        require(_divider > 0 && _divider <= 10, "Divider out of range");
+        liveCapDividerPerSport[_sportId] = _divider;
+        emit SetLiveCapDivider(_sportId, _divider);
+    }
+
+    /// @notice sets divider to reduce prematch cap for type by
+    /// @param _divider to reduce prematch cap for type by
+    function setDefaultLiveCapDivider(uint _divider) external onlyWhitelistedAddresses(msg.sender) {
+        require(_divider > 0 && _divider <= 10, "Divider out of range");
+        defaultLiveCapDivider = _divider;
+        emit SetDefaultLiveCapDivider(_divider);
+    }
+
     /* ========== INTERNAL SETTERS ========== */
 
     function _setCapPerSport(uint _sportId, uint _capPerSport) internal {
@@ -751,4 +790,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetCombiningPerSportEnabled(uint _sportID, bool _enabled);
     event TicketParamsUpdated(uint minBuyInAmount, uint maxTicketSize, uint maxSupportedAmount, uint maxSupportedOdds);
     event TimesUpdated(uint minimalTimeLeftToMaturity, uint expiryDuration);
+
+    event SetLiveCapDivider(uint _sportId, uint _divider);
+    event SetDefaultLiveCapDivider(uint _divider);
 }

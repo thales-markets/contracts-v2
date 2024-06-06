@@ -121,7 +121,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -307,7 +308,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -496,7 +498,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -722,7 +725,12 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			expect(currentRoundPoolBalanceBeforeTrade.toString()).to.equal(initialDeposit18.toString());
 			// create a ticket
 
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, collateral);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateral,
+				false
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -919,7 +927,12 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			expect(currentRoundPoolBalanceBeforeTrade.toString()).to.equal(initialDeposit18.toString());
 			// create a ticket
 
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, collateral);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateral,
+				false
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -1137,7 +1150,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -1378,7 +1392,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -1581,7 +1596,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -1777,7 +1793,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -1968,7 +1985,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				ETH_BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -2135,7 +2153,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				ETH_BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -2344,7 +2363,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals2
+				collateralSixDecimals2,
+				false
 			);
 
 			await sportsAMMV2
@@ -2562,7 +2582,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals2
+				collateralSixDecimals2,
+				false
 			);
 
 			await sportsAMMV2
@@ -2781,7 +2802,12 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			await sportsAMMV2.setLiquidityPoolForCollateral(collateral, ZERO_ADDRESS);
 			// create a ticket
 
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, collateral);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateral,
+				false
+			);
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -2997,7 +3023,12 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 
 			// create a ticket
 
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, collateral);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateral,
+				false
+			);
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -3191,7 +3222,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -3365,7 +3397,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -3528,7 +3561,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				collateral18
+				collateral18,
+				false
 			);
 
 			await sportsAMMV2
@@ -3691,7 +3725,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				collateral18
+				collateral18,
+				false
 			);
 
 			await sportsAMMV2

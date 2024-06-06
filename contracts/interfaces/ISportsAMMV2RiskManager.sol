@@ -51,12 +51,14 @@ interface ISportsAMMV2RiskManager {
         uint16 _typeId,
         uint24 _playerId,
         int24 _line,
-        uint _maturity
+        uint _maturity,
+        bool _isLive
     ) external view returns (uint cap);
 
     function checkRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        uint _buyInAmount
+        uint _buyInAmount,
+        bool _isLive
     ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity);
 
     function checkLimits(
@@ -67,7 +69,7 @@ interface ISportsAMMV2RiskManager {
         uint _additionalSlippage
     ) external view;
 
-    function checkAndUpdateRisks(ISportsAMMV2.TradeData[] memory _tradeData, uint _buyInAmount) external;
+    function checkAndUpdateRisks(ISportsAMMV2.TradeData[] memory _tradeData, uint _buyInAmount, bool _isLive) external;
 
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure;
 }

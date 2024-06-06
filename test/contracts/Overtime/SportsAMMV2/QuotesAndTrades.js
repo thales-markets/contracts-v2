@@ -35,7 +35,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));
@@ -47,7 +48,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));
@@ -72,7 +74,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal('28679719907924413133');
@@ -100,7 +103,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));

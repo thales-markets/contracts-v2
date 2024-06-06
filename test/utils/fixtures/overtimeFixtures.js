@@ -224,6 +224,8 @@ async function deploySportsAMMV2Fixture() {
 		RISK_MANAGER_INITAL_PARAMS.expiryDuration
 	);
 
+	await sportsAMMV2RiskManager.setDefaultLiveCapDivider(2);
+
 	// deploy Sports AMM
 
 	const stakingThalesAddress = await stakingThales.getAddress();
