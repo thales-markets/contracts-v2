@@ -643,5 +643,10 @@
 		"id": 11097,
 		"result_type": 2,
 		"name": "PROP_SHOTS_RECORDED"
+	},
+	{
+		"id": 11098,
+		"result_type": 2,
+		"name": "PROP_BLOCKS_RECORDED"
 	}
 ]
