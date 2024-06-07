@@ -37,7 +37,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 		it('Should pass with one market on ticket', async () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataCurrentRound,
-				BUY_IN_AMOUNT
+				BUY_IN_AMOUNT,
+				false
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -45,13 +46,18 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 		it('Should pass with 10 markets on ticket', async () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
-				BUY_IN_AMOUNT
+				BUY_IN_AMOUNT,
+				false
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
 		});
 		it('Should pass with 0 buy-in amount', async () => {
-			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(tradeDataCurrentRound, 0);
+			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
+				tradeDataCurrentRound,
+				0,
+				false
+			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
 		});
@@ -74,7 +80,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
-				buyInAmount
+				buyInAmount,
+				false
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);
@@ -94,7 +101,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -114,7 +122,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
-				buyInAmount
+				buyInAmount,
+				false
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);
@@ -137,7 +146,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
-				buyInAmount
+				buyInAmount,
+				false
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);
@@ -169,7 +179,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -187,7 +198,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
-				buyInAmount
+				buyInAmount,
+				false
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);

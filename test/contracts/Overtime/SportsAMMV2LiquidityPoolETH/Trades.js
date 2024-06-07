@@ -92,7 +92,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				ETH_BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -254,7 +255,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				ETH_BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -429,7 +431,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataNextRound,
 				ETH_BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -645,7 +648,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCrossRounds,
 				ETH_BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)

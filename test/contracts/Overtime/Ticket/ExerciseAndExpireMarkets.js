@@ -96,7 +96,8 @@ describe('Ticket Exercise and Expire', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT_SIX_DECIMALS,
-				collateralSixDecimals
+				collateralSixDecimals,
+				false
 			);
 
 			await sportsAMMV2
@@ -166,7 +167,8 @@ describe('Ticket Exercise and Expire', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));
@@ -224,7 +226,8 @@ describe('Ticket Exercise and Expire', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));

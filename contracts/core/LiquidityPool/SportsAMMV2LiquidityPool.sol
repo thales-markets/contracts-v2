@@ -169,7 +169,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
         allocationPerRound[nextRound] += amount;
         totalDeposited += amount;
-        _updateStakingVolume(msg.sender, amount, address(sportsAMM.defaultCollateral()) == address(collateral));
+        _updateStakingVolume(
+            IStakingThales(addressManager.getAddress("StakingThales")),
+            msg.sender,
+            amount,
+            address(sportsAMM.defaultCollateral()) == address(collateral)
+        );
 
         emit Deposited(msg.sender, amount, round);
     }
@@ -299,13 +304,16 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             endCursor = usersPerRound[round].length;
         }
         bool isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(collateral);
+
+        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
+
         for (uint i = usersProcessedInRound; i < endCursor; i++) {
             address user = usersPerRound[round][i];
             uint balanceAfterCurRound = (balancesPerRound[round][user] * profitAndLossPerRound[round]) / ONE;
             if (!withdrawalRequested[user] && (profitAndLossPerRound[round] > 0)) {
                 balancesPerRound[round + 1][user] = balancesPerRound[round + 1][user] + balanceAfterCurRound;
                 usersPerRound[round + 1].push(user);
-                _updateStakingVolume(user, balanceAfterCurRound, isDefaultCollateral);
+                _updateStakingVolume(stakingThales, user, balanceAfterCurRound, isDefaultCollateral);
             } else {
                 if (withdrawalShare[user] > 0) {
                     uint amountToClaim = (balanceAfterCurRound * withdrawalShare[user]) / ONE;
@@ -315,7 +323,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     withdrawalShare[user] = 0;
                     usersPerRound[round + 1].push(user);
                     balancesPerRound[round + 1][user] = balanceAfterCurRound - amountToClaim;
-                    _updateStakingVolume(user, (balanceAfterCurRound - amountToClaim), isDefaultCollateral);
+                    _updateStakingVolume(stakingThales, user, (balanceAfterCurRound - amountToClaim), isDefaultCollateral);
                 } else {
                     balancesPerRound[round + 1][user] = 0;
                     collateral.safeTransferFrom(roundPool, user, balanceAfterCurRound);
@@ -524,8 +532,9 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         uint count = 0;
         for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
             if (count == _batchSize) break;
-            _exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i]);
-            count += 1;
+            if (_exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i])) {
+                count += 1;
+            }
         }
     }
 
@@ -535,7 +544,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
-    function _exerciseTicket(uint _roundNumber, address ticketAddress) internal {
+    function _exerciseTicket(uint _roundNumber, address ticketAddress) internal returns (bool exercised) {
         if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
             Ticket ticket = Ticket(ticketAddress);
             bool isWinner = ticket.isUserTheWinner();
@@ -544,6 +553,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             }
             if (isWinner || ticket.resolved()) {
                 ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
+                exercised = true;
             }
         }
     }
@@ -595,8 +605,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
-    function _updateStakingVolume(address _forUser, uint _amount, bool _isDefaultCollateral) internal {
-        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
+    function _updateStakingVolume(
+        IStakingThales stakingThales,
+        address _forUser,
+        uint _amount,
+        bool _isDefaultCollateral
+    ) internal {
         if (address(stakingThales) != address(0)) {
             uint collateralDecimals = ISportsAMMV2Manager(address(collateral)).decimals();
 

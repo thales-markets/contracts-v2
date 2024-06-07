@@ -71,7 +71,8 @@ describe('Pause tickets', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal(ethers.parseEther('20'));

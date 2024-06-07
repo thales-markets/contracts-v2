@@ -88,7 +88,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				(await time.latest()) - ONE_DAY_IN_SECS
+				(await time.latest()) - ONE_DAY_IN_SECS,
+				false
 			);
 
 			expect(cap).to.equal(0);
@@ -101,7 +102,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 
 			expect(cap).to.equal(defaultCap);
@@ -114,7 +116,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
-				maturity
+				maturity,
+				false
 			);
 
 			expect(cap).to.equal(ethers.parseEther((ethers.formatEther(defaultCap) / 2).toString()));
@@ -129,7 +132,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 
 			expect(cap).to.equal(newCapForSport);
@@ -144,7 +148,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
-				maturity
+				maturity,
+				false
 			);
 
 			expect(cap).to.equal(ethers.parseEther((ethers.formatEther(newCapForSport) / 2).toString()));
@@ -159,7 +164,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
-				maturity
+				maturity,
+				false
 			);
 
 			expect(cap).to.equal(newCapForSportChild);
@@ -178,7 +184,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
-				maturity
+				maturity,
+				false
 			);
 
 			expect(cap).to.equal(newCapForSportAndType);
@@ -199,7 +206,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				TYPE_ID_TOTAL,
 				0,
 				TOTAL_LINE,
-				maturity
+				maturity,
+				false
 			);
 
 			expect(cap).to.equal(newCapForMarket);
@@ -215,7 +223,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 			expect(cap).to.equal(defaultCap);
 
@@ -233,7 +242,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 4).toString()));
 
@@ -251,7 +261,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 			expect(cap).to.equal(ethers.parseEther((formattedDefaultCap / 2).toString()));
 
@@ -266,7 +277,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 			expect(Number(ethers.formatEther(cap))).to.approximately((formattedDefaultCap * 3) / 4, 1);
 
@@ -285,7 +297,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 			expect(Number(ethers.formatEther(cap))).to.approximately((formattedDefaultCap * 5) / 8, 1);
 
@@ -299,7 +312,8 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 				0,
 				0,
 				0,
-				maturity
+				maturity,
+				false
 			);
 			expect(cap).to.equal(defaultCap);
 		});

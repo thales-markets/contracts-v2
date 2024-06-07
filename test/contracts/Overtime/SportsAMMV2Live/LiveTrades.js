@@ -53,8 +53,13 @@ describe('SportsAMMV2Live Live Trades', () => {
 			.deposit(ethers.parseEther('1'));
 		await sportsAMMV2LiquidityPoolETH.start();
 
-		quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
-		quoteETH = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, ETH_BUY_IN_AMOUNT, ZERO_ADDRESS);
+		quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, ZERO_ADDRESS, false);
+		quoteETH = await sportsAMMV2.tradeQuote(
+			tradeDataCurrentRound,
+			ETH_BUY_IN_AMOUNT,
+			ZERO_ADDRESS,
+			false
+		);
 	});
 
 	describe('Live Trade', () => {
@@ -267,6 +272,55 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
+		});
+
+		it('Default Cap checker', async () => {
+			const capRegular = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				tradeDataCurrentRound[0].gameId,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				tradeDataCurrentRound[0].maturity,
+				false
+			);
+
+			const capLive = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				tradeDataCurrentRound[0].gameId,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				tradeDataCurrentRound[0].maturity,
+				true
+			);
+
+			expect(capRegular / capLive).to.equal(2);
+		});
+
+		it('Dedicated live cap checker', async () => {
+			await sportsAMMV2RiskManager.setLiveCapDivider(SPORT_ID_NBA, 10);
+			const capRegular = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				tradeDataCurrentRound[0].gameId,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				tradeDataCurrentRound[0].maturity,
+				false
+			);
+
+			const capLive = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				tradeDataCurrentRound[0].gameId,
+				SPORT_ID_NBA,
+				0,
+				0,
+				0,
+				tradeDataCurrentRound[0].maturity,
+				true
+			);
+
+			expect(capRegular / capLive).to.equal(10);
 		});
 	});
 });
