@@ -481,6 +481,12 @@
         "internalType": "uint256",
         "name": "totalQuote",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
       }
     ],
     "name": "TicketCreated",
@@ -1506,6 +1512,11 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLive",
+        "type": "bool"
       }
     ],
     "name": "tradeQuote",

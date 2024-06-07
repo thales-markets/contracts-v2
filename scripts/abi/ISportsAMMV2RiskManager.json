@@ -30,6 +30,11 @@
         "internalType": "uint256",
         "name": "_maturity",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLive",
+        "type": "bool"
       }
     ],
     "name": "calculateCapToBeUsed",
@@ -128,6 +133,11 @@
         "internalType": "uint256",
         "name": "_buyInAmount",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLive",
+        "type": "bool"
       }
     ],
     "name": "checkAndUpdateRisks",
@@ -253,6 +263,11 @@
         "internalType": "uint256",
         "name": "_buyInAmount",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLive",
+        "type": "bool"
       }
     ],
     "name": "checkRisks",

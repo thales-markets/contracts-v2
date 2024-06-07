@@ -37,7 +37,8 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			await expect(
@@ -55,7 +56,8 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			await expect(
@@ -74,7 +76,12 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 		let quote;
 
 		beforeEach(async () => {
-			quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 		});
 
 		it('Should fail with "Low buy-in amount"', async () => {

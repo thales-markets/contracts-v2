@@ -63,13 +63,15 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			const quoteTHALES = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				collateralTHALESAddress
+				collateralTHALESAddress,
+				false
 			);
 
 			expect(quoteTHALES.payout).greaterThan(quote.payout);
@@ -108,7 +110,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			expect(quote.payout).to.equal('28679719907924413133');
@@ -116,7 +119,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quoteTHALES = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				collateralTHALESAddress
+				collateralTHALESAddress,
+				false
 			);
 
 			expect(quoteTHALES.payout).greaterThan(quote.payout);
@@ -138,7 +142,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
@@ -178,7 +183,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const quoteTHALES = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				collateralTHALESAddress
+				collateralTHALESAddress,
+				false
 			);
 
 			const userBalanceBefore = await collateralTHALES.balanceOf(firstTrader);

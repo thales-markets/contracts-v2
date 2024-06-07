@@ -78,7 +78,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -236,7 +237,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -402,7 +404,12 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(defaultLpBalanceBeforeTrade).to.equal(DEFAULT_AMOUNT);
 
 			// create a ticket for the next round - use defaul LP
-			const quote = await sportsAMMV2.tradeQuote(tradeDataNextRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataNextRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -612,7 +619,12 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(defaultLpBalanceBeforeTrade).to.equal(DEFAULT_AMOUNT);
 
 			// create a ticket for cross rounds - use defaul LP
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCrossRounds, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -818,7 +830,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -984,7 +997,12 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(defaultLpBalanceBeforeTrade).to.equal(DEFAULT_AMOUNT);
 
 			// create a ticket for the next round - use defaul LP
-			const quote = await sportsAMMV2.tradeQuote(tradeDataNextRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataNextRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -1186,7 +1204,12 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			let defaultLpBalanceBeforeTrade = await collateral.balanceOf(defaultLpAddress);
 
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCrossRounds, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(
@@ -1250,7 +1273,12 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			let defaultLpBalanceBeforeTrade = await collateral.balanceOf(defaultLpAddress);
 
-			const quote = await sportsAMMV2.tradeQuote(tradeDataCrossRounds, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 			await sportsAMMV2
 				.connect(firstTrader)
 				.trade(

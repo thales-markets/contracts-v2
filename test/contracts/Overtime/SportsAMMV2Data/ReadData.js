@@ -50,7 +50,8 @@ describe('SportsAMMV2Data Read Data', () => {
 		const quote = await sportsAMMV2.tradeQuote(
 			tradeDataTenMarketsCurrentRound,
 			BUY_IN_AMOUNT,
-			ZERO_ADDRESS
+			ZERO_ADDRESS,
+			false
 		);
 
 		await sportsAMMV2

@@ -44,7 +44,12 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			const formattedOdds1 = Number(ethers.formatEther(tradeDataCurrentRound[0].odds[1]));
 			const marketRisk0 = formattedBuyInAmount / formattedOdds0 - formattedBuyInAmount;
 
-			let quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			let quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -81,7 +86,12 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			const marketRisk1 = formattedNewBuyInAmount / formattedOdds1 - formattedNewBuyInAmount;
 
 			tradeDataCurrentRound[0].position = 1;
-			quote = await sportsAMMV2.tradeQuote(tradeDataCurrentRound, newBuyInAmount, ZERO_ADDRESS);
+			quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				newBuyInAmount,
+				ZERO_ADDRESS,
+				false
+			);
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -130,7 +140,11 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 
 		it('Should fail with "Only the AMM may perform these methods"', async () => {
 			await expect(
-				sportsAMMV2RiskManager.checkAndUpdateRisks(tradeDataTenMarketsCurrentRound, BUY_IN_AMOUNT)
+				sportsAMMV2RiskManager.checkAndUpdateRisks(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					false
+				)
 			).to.be.revertedWith('Only the AMM may perform these methods');
 		});
 
@@ -138,7 +152,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			tradeDataTenMarketsCurrentRound[0].position = 3;
@@ -158,7 +173,12 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 		});
 
 		it('Should fail with "Not trading"', async () => {
-			let quote = await sportsAMMV2.tradeQuote(tradeDataNotActive, BUY_IN_AMOUNT, ZERO_ADDRESS);
+			let quote = await sportsAMMV2.tradeQuote(
+				tradeDataNotActive,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
 
 			await expect(
 				sportsAMMV2
@@ -179,7 +199,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			await expect(
@@ -203,7 +224,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			await sportsAMMV2RiskManager.setDefaultCapAndDefaultRiskMultiplier(
@@ -232,7 +254,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			let quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -253,7 +276,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			quote = await sportsAMMV2.tradeQuote(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			await sportsAMMV2RiskManager.setDefaultCapAndDefaultRiskMultiplier(
@@ -282,7 +306,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				sameGameDifferentPlayersDifferentProps,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS
+				ZERO_ADDRESS,
+				false
 			);
 
 			await sportsAMMV2RiskManager.setCombiningPerSportEnabled(SPORT_ID_NBA, false);
