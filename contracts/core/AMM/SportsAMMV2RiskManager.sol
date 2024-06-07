@@ -342,7 +342,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                     combinedPosition.line,
                     _marketTradeData.combinedPositions[_marketTradeData.position] // redundant, sent for compability
                 );
-                if (!isResolved) break;
+                if (isResolved) break;
             }
         } else {
             isResolved = resultManager.isMarketResolved(
