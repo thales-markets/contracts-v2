@@ -1,0 +1,652 @@
+[
+	{
+		"id": 10004,
+		"result_type": 3,
+		"name": "WINNER_TOTAL"
+	},
+	{
+		"id": 10006,
+		"result_type": 3,
+		"name": "HALFTIME_FULLTIME"
+	},
+	{
+		"id": 10007,
+		"result_type": 3,
+		"name": "GOALS"
+	},
+	{
+		"id": 10008,
+		"result_type": 3,
+		"name": "HALFTIME_FULLTIME_GOALS"
+	},
+	{
+		"id": 0,
+		"result_type": 1,
+		"name": "MONEYLINE"
+	},
+	{
+		"id": 10001,
+		"result_type": 4,
+		"name": "CHILD_SPREAD"
+	},
+	{
+		"id": 10002,
+		"result_type": 2,
+		"name": "CHILD_TOTALS"
+	},
+	{
+		"id": 10003,
+		"result_type": 1,
+		"name": "CHILD_DOUBLE_CHANCE"
+	},
+	{
+		"id": 10004,
+		"result_type": 2,
+		"name": "CHILD_COMBINED"
+	},
+	{
+		"id": 10005,
+		"result_type": 2,
+		"name": "CHILD_ODD_EVEN"
+	},
+	{
+		"id": 10006,
+		"result_type": 2,
+		"name": "CHILD_HALFTIME_FULLTIME"
+	},
+	{
+		"id": 10007,
+		"result_type": 2,
+		"name": "CHILD_GOALS"
+	},
+	{
+		"id": 10008,
+		"result_type": 2,
+		"name": "CHILD_HALFTIME_FULLTIME_GOALS"
+	},
+	{
+		"id": 10009,
+		"result_type": 2,
+		"name": "CHILD_SCORE_SCORE"
+	},
+	{
+		"id": 10011,
+		"result_type": 1,
+		"name": "CHILD_SECOND_MONEYLINE"
+	},
+	{
+		"id": 10012,
+		"result_type": 1,
+		"name": "CHILD_THIRD_MONEYLINE"
+	},
+	{
+		"id": 10013,
+		"result_type": 4,
+		"name": "CHILD_SECOND_SPREAD"
+	},
+	{
+		"id": 10014,
+		"result_type": 2,
+		"name": "CHILD_SECOND_TOTAL"
+	},
+	{
+		"id": 10015,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_DOUBLE_CHANCE"
+	},
+	{
+		"id": 10016,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_DOUBLE_CHANCE"
+	},
+	{
+		"id": 10021,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10022,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10023,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10024,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10025,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10026,
+		"result_type": 1,
+		"name": "CHILD_SIXTH_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10027,
+		"result_type": 1,
+		"name": "CHILD_SEVENTH_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10028,
+		"result_type": 1,
+		"name": "CHILD_EIGHTH_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10029,
+		"result_type": 1,
+		"name": "CHILD_NINTH_PERIOD_MONEYLINE"
+	},
+	{
+		"id": 10031,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL"
+	},
+	{
+		"id": 10032,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL"
+	},
+	{
+		"id": 10033,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL"
+	},
+	{
+		"id": 10034,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL"
+	},
+	{
+		"id": 10035,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL"
+	},
+	{
+		"id": 10036,
+		"result_type": 2,
+		"name": "CHILD_SIXTH_PERIOD_TOTAL"
+	},
+	{
+		"id": 10037,
+		"result_type": 2,
+		"name": "CHILD_SEVENTH_PERIOD_TOTAL"
+	},
+	{
+		"id": 10038,
+		"result_type": 2,
+		"name": "CHILD_EIGHTH_PERIOD_TOTAL"
+	},
+	{
+		"id": 10039,
+		"result_type": 2,
+		"name": "CHILD_NINTH_PERIOD_TOTAL"
+	},
+	{
+		"id": 10041,
+		"result_type": 4,
+		"name": "CHILD_FIRST_PERIOD_SPREAD"
+	},
+	{
+		"id": 10042,
+		"result_type": 4,
+		"name": "CHILD_SECOND_PERIOD_SPREAD"
+	},
+	{
+		"id": 10043,
+		"result_type": 4,
+		"name": "CHILD_THIRD_PERIOD_SPREAD"
+	},
+	{
+		"id": 10044,
+		"result_type": 4,
+		"name": "CHILD_FOURTH_PERIOD_SPREAD"
+	},
+	{
+		"id": 10045,
+		"result_type": 4,
+		"name": "CHILD_FIFTH_PERIOD_SPREAD"
+	},
+	{
+		"id": 10046,
+		"result_type": 4,
+		"name": "CHILD_SIXTH_PERIOD_SPREAD"
+	},
+	{
+		"id": 10047,
+		"result_type": 4,
+		"name": "CHILD_SEVENTH_PERIOD_SPREAD"
+	},
+	{
+		"id": 10048,
+		"result_type": 4,
+		"name": "CHILD_EIGHTH_PERIOD_SPREAD"
+	},
+	{
+		"id": 10049,
+		"result_type": 4,
+		"name": "CHILD_NINTH_PERIOD_SPREAD"
+	},
+	{
+		"id": 10051,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10052,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10053,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10054,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10055,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10056,
+		"result_type": 1,
+		"name": "CHILD_SIXTH_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10057,
+		"result_type": 1,
+		"name": "CHILD_SEVENTH_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10058,
+		"result_type": 1,
+		"name": "CHILD_EIGHTH_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10059,
+		"result_type": 1,
+		"name": "CHILD_NINTH_PERIOD_MONEYLINE_SECONDARY"
+	},
+	{
+		"id": 10061,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10062,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10063,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10064,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10065,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10066,
+		"result_type": 2,
+		"name": "CHILD_SIXTH_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10067,
+		"result_type": 2,
+		"name": "CHILD_SEVENTH_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10068,
+		"result_type": 2,
+		"name": "CHILD_EIGHTH_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10069,
+		"result_type": 2,
+		"name": "CHILD_NINTH_PERIOD_TOTAL_SECONDARY"
+	},
+	{
+		"id": 10071,
+		"result_type": 4,
+		"name": "CHILD_FIRST_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10072,
+		"result_type": 4,
+		"name": "CHILD_SECOND_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10073,
+		"result_type": 4,
+		"name": "CHILD_THIRD_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10074,
+		"result_type": 4,
+		"name": "CHILD_FOURTH_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10075,
+		"result_type": 4,
+		"name": "CHILD_FIFTH_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10076,
+		"result_type": 4,
+		"name": "CHILD_SIXTH_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10077,
+		"result_type": 4,
+		"name": "CHILD_SEVENTH_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10078,
+		"result_type": 4,
+		"name": "CHILD_EIGHTH_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10079,
+		"result_type": 4,
+		"name": "CHILD_NINTH_PERIOD_SPREAD_SECONDARY"
+	},
+	{
+		"id": 10081,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10082,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10083,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10084,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10085,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10086,
+		"result_type": 2,
+		"name": "CHILD_SIXTH_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10087,
+		"result_type": 2,
+		"name": "CHILD_SEVENTH_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10088,
+		"result_type": 2,
+		"name": "CHILD_EIGHTH_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10089,
+		"result_type": 2,
+		"name": "CHILD_NINTH_PERIOD_ODD_EVEN"
+	},
+	{
+		"id": 10091,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10092,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10093,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10094,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10095,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10096,
+		"result_type": 2,
+		"name": "CHILD_SIXTH_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10097,
+		"result_type": 2,
+		"name": "CHILD_SEVENTH_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10098,
+		"result_type": 2,
+		"name": "CHILD_EIGHTH_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10099,
+		"result_type": 2,
+		"name": "CHILD_NINTH_PERIOD_ODD_EVEN_SECONDARY"
+	},
+	{
+		"id": 10101,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10102,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10103,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10104,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10105,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10106,
+		"result_type": 2,
+		"name": "CHILD_SIXTH_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10107,
+		"result_type": 2,
+		"name": "CHILD_SEVENTH_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10108,
+		"result_type": 2,
+		"name": "CHILD_EIGHTH_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10109,
+		"result_type": 2,
+		"name": "CHILD_NINTH_PERIOD_SCORE_SCORE"
+	},
+	{
+		"id": 10017,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE"
+	},
+	{
+		"id": 10018,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE"
+	},
+	{
+		"id": 10111,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_FIRST_PERIOD"
+	},
+	{
+		"id": 10112,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_FIRST_PERIOD"
+	},
+	{
+		"id": 10211,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_SECOND_PERIOD"
+	},
+	{
+		"id": 10212,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_SECOND_PERIOD"
+	},
+	{
+		"id": 11010,
+		"result_type": 2,
+		"name": "PROP_HOME_RUNS"
+	},
+	{
+		"id": 11011,
+		"result_type": 2,
+		"name": "PROP_BASES_RECORDED"
+	},
+	{
+		"id": 11012,
+		"result_type": 2,
+		"name": "PROP_HITS_RECORDED"
+	},
+	{
+		"id": 11019,
+		"result_type": 2,
+		"name": "PROP_PITCHED_STRIKEOUTS"
+	},
+	{
+		"id": 11029,
+		"result_type": 2,
+		"name": "PROP_PLAYER_POINTS"
+	},
+	{
+		"id": 11035,
+		"result_type": 2,
+		"name": "PROP_PLAYER_REBOUNDS"
+	},
+	{
+		"id": 11038,
+		"result_type": 2,
+		"name": "PROP_THREE_POINTERS"
+	},
+	{
+		"id": 11039,
+		"result_type": 2,
+		"name": "PROP_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11047,
+		"result_type": 2,
+		"name": "PROP_PITCHER_HITS_ALLOWED"
+	},
+	{
+		"id": 11049,
+		"result_type": 2,
+		"name": "PROP_FIRST_TOUCHDOWN"
+	},
+	{
+		"id": 11051,
+		"result_type": 2,
+		"name": "PROP_PASSING_YARDS"
+	},
+	{
+		"id": 11052,
+		"result_type": 2,
+		"name": "PROP_PASSING_TOUCHDOWNS"
+	},
+	{
+		"id": 11053,
+		"result_type": 2,
+		"name": "PROP_RUSHING_YARDS"
+	},
+	{
+		"id": 11055,
+		"result_type": 2,
+		"name": "PROP_TOUCHDOWN_SCORED"
+	},
+	{
+		"id": 11056,
+		"result_type": 2,
+		"name": "PROP_LAST_TOUCHDOWN_SCORED"
+	},
+	{
+		"id": 11057,
+		"result_type": 2,
+		"name": "PROP_REC_YARDS"
+	},
+	{
+		"id": 11058,
+		"result_type": 2,
+		"name": "PROP_PLAYER_RECEPTIONS"
+	},
+	{
+		"id": 11060,
+		"result_type": 2,
+		"name": "PROP_FIELD_GOALS_MADE"
+	},
+	{
+		"id": 11086,
+		"result_type": 2,
+		"name": "PROP_PLAYER_GOAL_SCORED"
+	},
+	{
+		"id": 11087,
+		"result_type": 2,
+		"name": "PROP_DOUBLE_DOUBLE"
+	},
+	{
+		"id": 11088,
+		"result_type": 2,
+		"name": "PROP_TRIPLE_DOUBLE"
+	},
+	{
+		"id": 11097,
+		"result_type": 2,
+		"name": "PROP_SHOTS_RECORDED"
+	},
+	{
+		"id": 11098,
+		"result_type": 2,
+		"name": "PROP_BLOCKS_RECORDED"
+	}
+]

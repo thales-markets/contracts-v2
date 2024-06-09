@@ -31,8 +31,8 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         Unassigned,
         ExactPosition,
         OverUnder,
-        Spread,
-        CombinedPositions
+        CombinedPositions,
+        Spread
     }
 
     enum OverUnderType {
@@ -337,7 +337,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint resultType = _resultTypes[i];
 
             require(
-                resultType > uint(ResultType.Unassigned) && resultType <= uint(ResultType.CombinedPositions),
+                resultType > uint(ResultType.Unassigned) && resultType <= uint(ResultType.Spread),
                 "Invalid result type"
             );
             resultTypePerMarketType[marketTypeId] = ResultType(resultType);
