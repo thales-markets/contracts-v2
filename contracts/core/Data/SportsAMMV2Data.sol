@@ -317,6 +317,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         view
         returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
     {
+        _pageSize = _pageSize > _gameIds.length ? _gameIds.length : _pageSize;
         uint[] memory ticketsPerGame = new uint[](_pageSize);
         uint counter;
         for (uint i = _startIndex; i < _pageSize; i++) {
