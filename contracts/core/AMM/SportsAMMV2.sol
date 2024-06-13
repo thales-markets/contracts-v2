@@ -493,7 +493,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
         IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), payoutWithFees);
 
-        emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout);
+        emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout, _tradeDataInternal._isLive);
         emit TicketCreated(
             address(ticket),
             _tradeDataInternal._recipient,
@@ -597,7 +597,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 referrerShare = (_buyInAmount * referrerFeeByTier) / ONE;
                 if (ammBalance >= referrerShare) {
                     _collateral.safeTransfer(referrer, referrerShare);
-                    emit ReferrerPaid(referrer, _tickerOwner, referrerShare, _buyInAmount);
+                    emit ReferrerPaid(referrer, _tickerOwner, referrerShare, _buyInAmount, address(_collateral));
                     ammBalance -= referrerShare;
                 }
             }
@@ -612,7 +612,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                         : safeBox,
                     safeBoxAmount
                 );
-                emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount);
+                emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount, address(_collateral));
             }
         }
     }
@@ -796,7 +796,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EVENTS ========== */
 
-    event NewTicket(Ticket.MarketData[] markets, address ticket, uint buyInAmount, uint payout);
+    event NewTicket(Ticket.MarketData[] markets, address ticket, uint buyInAmount, uint payout, bool isLive);
     event TicketCreated(
         address ticket,
         address recipient,
@@ -808,8 +808,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     );
 
     event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
-    event ReferrerPaid(address refferer, address trader, uint amount, uint volume);
-    event SafeBoxFeePaid(uint safeBoxFee, uint safeBoxAmount);
+    event ReferrerPaid(address refferer, address trader, uint amount, uint volume, address collateral);
+    event SafeBoxFeePaid(uint safeBoxFee, uint safeBoxAmount, address collateral);
 
     event GameRootUpdated(bytes32 game, bytes32 root);
     event AmountsUpdated(uint safeBoxFee);
