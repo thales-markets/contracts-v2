@@ -140,6 +140,16 @@
         "internalType": "address",
         "name": "user",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
       }
     ],
     "name": "getActiveTicketsDataPerUser",
@@ -422,6 +432,16 @@
         "internalType": "address",
         "name": "user",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
       }
     ],
     "name": "getResolvedTicketsDataPerUser",
@@ -880,6 +900,16 @@
         "internalType": "bytes32",
         "name": "gameId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
       }
     ],
     "name": "getTicketsDataPerGame",
