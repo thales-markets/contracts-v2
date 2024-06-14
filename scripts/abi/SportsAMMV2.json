@@ -241,6 +241,12 @@
         "internalType": "uint256",
         "name": "payout",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isLive",
+        "type": "bool"
       }
     ],
     "name": "NewTicket",
@@ -317,6 +323,12 @@
         "internalType": "uint256",
         "name": "volume",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
       }
     ],
     "name": "ReferrerPaid",
@@ -336,6 +348,12 @@
         "internalType": "uint256",
         "name": "safeBoxAmount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
       }
     ],
     "name": "SafeBoxFeePaid",
