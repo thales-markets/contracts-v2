@@ -379,12 +379,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     /// @notice iterate all tickets in the current round and exercise those ready to be exercised
     function exerciseTicketsReadyToBeExercised() public roundClosingNotPrepared whenNotPaused {
-        _exerciseTicketsReadyToBeExercised(round);
+        _exerciseBatchOfTicketsReadyToBeExercised(tradingTicketsPerRound[round].length, round);
     }
 
     /// @notice iterate all tickets in the default round and exercise those ready to be exercised
     function exerciseDefaultRoundTicketsReadyToBeExercised() external whenNotPaused {
-        _exerciseTicketsReadyToBeExercised(1);
+        _exerciseBatchOfTicketsReadyToBeExercised(tradingTicketsPerRound[1].length, 1);
     }
 
     /// @notice iterate all tickets in the current round and exercise those ready to be exercised (batch)
@@ -392,7 +392,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function exerciseTicketsReadyToBeExercisedBatch(
         uint _batchSize
     ) external nonReentrant whenNotPaused roundClosingNotPrepared {
-        _exerciseTicketsReadyToBeExercisedBatch(_batchSize, round);
+        _exerciseBatchOfTicketsReadyToBeExercised(_batchSize, round);
     }
 
     /// @notice iterate all default round tickets in the current round and exercise those ready to be exercised (batch)
@@ -400,7 +400,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function exerciseDefaultRoundTicketsReadyToBeExercisedBatch(
         uint _batchSize
     ) external nonReentrant whenNotPaused roundClosingNotPrepared {
-        _exerciseTicketsReadyToBeExercisedBatch(_batchSize, 1);
+        _exerciseBatchOfTicketsReadyToBeExercised(_batchSize, 1);
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -527,20 +527,14 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     /* ========== INTERNAL FUNCTIONS ========== */
 
-    function _exerciseTicketsReadyToBeExercisedBatch(uint _batchSize, uint _roundNumber) internal {
-        require(_batchSize > 0, "Batch size has to be greater than 0");
-        uint count = 0;
-        for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
-            if (count == _batchSize) break;
-            if (_exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i])) {
-                count += 1;
+    function _exerciseBatchOfTicketsReadyToBeExercised(uint _batchSize, uint _roundNumber) internal {
+        if (_batchSize > 0) {
+            _batchSize = _batchSize > tradingTicketsPerRound[_roundNumber].length
+                ? tradingTicketsPerRound[_roundNumber].length
+                : _batchSize;
+            for (uint i = 0; i < _batchSize; i++) {
+                _exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i]);
             }
-        }
-    }
-
-    function _exerciseTicketsReadyToBeExercised(uint _roundNumber) internal {
-        for (uint i = 0; i < tradingTicketsPerRound[_roundNumber].length; i++) {
-            _exerciseTicket(_roundNumber, tradingTicketsPerRound[_roundNumber][i]);
         }
     }
 
