@@ -3127,7 +3127,7 @@
             "label": "sportsAMM",
             "offset": 1,
             "slot": "3",
-            "type": "t_contract(ISportsAMMV2)19165",
+            "type": "t_contract(ISportsAMMV2)9255",
             "contract": "SportsAMMV2Data",
             "src": "contracts/core/Data/SportsAMMV2Data.sol:79"
           },
@@ -3135,7 +3135,7 @@
             "label": "riskManager",
             "offset": 0,
             "slot": "4",
-            "type": "t_contract(ISportsAMMV2RiskManager)19630",
+            "type": "t_contract(ISportsAMMV2RiskManager)9726",
             "contract": "SportsAMMV2Data",
             "src": "contracts/core/Data/SportsAMMV2Data.sol:81"
           }
@@ -3145,7 +3145,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_struct(InitializableStorage)371_storage": {
+          "t_struct(InitializableStorage)10_storage": {
             "label": "struct Initializable.InitializableStorage",
             "members": [
               {
@@ -3171,11 +3171,11 @@
             "label": "address",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2)19165": {
+          "t_contract(ISportsAMMV2)9255": {
             "label": "contract ISportsAMMV2",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2RiskManager)19630": {
+          "t_contract(ISportsAMMV2RiskManager)9726": {
             "label": "contract ISportsAMMV2RiskManager",
             "numberOfBytes": "20"
           },
