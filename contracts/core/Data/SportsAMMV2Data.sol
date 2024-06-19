@@ -104,32 +104,38 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     }
 
     /// @notice return all active ticket data for user
-    function getActiveTicketsDataPerUser(address user) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(
-            0,
-            sportsAMM.manager().numOfActiveTicketsPerUser(user),
-            user
-        );
+    function getActiveTicketsDataPerUser(
+        address user,
+        uint _startIndex,
+        uint _pageSize
+    ) external view returns (TicketData[] memory) {
+        uint numOfActiveTicketsPerUser = sportsAMM.manager().numOfActiveTicketsPerUser(user);
+        _pageSize = _pageSize > numOfActiveTicketsPerUser ? numOfActiveTicketsPerUser : _pageSize;
+        address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(_startIndex, _pageSize, user);
         return _getTicketsData(ticketsArray);
     }
 
     /// @notice return all resolved ticket data for user
-    function getResolvedTicketsDataPerUser(address user) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(
-            0,
-            sportsAMM.manager().numOfResolvedTicketsPerUser(user),
-            user
-        );
+    function getResolvedTicketsDataPerUser(
+        address user,
+        uint _startIndex,
+        uint _pageSize
+    ) external view returns (TicketData[] memory) {
+        uint numOfResolvedTickets = sportsAMM.manager().numOfResolvedTicketsPerUser(user);
+        _pageSize = _pageSize > numOfResolvedTickets ? numOfResolvedTickets : _pageSize;
+        address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
         return _getTicketsData(ticketsArray);
     }
 
     /// @notice return all ticket data for game
-    function getTicketsDataPerGame(bytes32 gameId) external view returns (TicketData[] memory) {
-        address[] memory ticketsArray = sportsAMM.manager().getTicketsPerGame(
-            0,
-            sportsAMM.manager().numOfTicketsPerGame(gameId),
-            gameId
-        );
+    function getTicketsDataPerGame(
+        bytes32 gameId,
+        uint _startIndex,
+        uint _pageSize
+    ) external view returns (TicketData[] memory) {
+        uint numOfTicketsPerGame = sportsAMM.manager().numOfTicketsPerGame(gameId);
+        _pageSize = _pageSize > numOfTicketsPerGame ? numOfTicketsPerGame : _pageSize;
+        address[] memory ticketsArray = sportsAMM.manager().getTicketsPerGame(_startIndex, _pageSize, gameId);
         return _getTicketsData(ticketsArray);
     }
 
@@ -317,6 +323,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         view
         returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
     {
+        _pageSize = _pageSize > _gameIds.length ? _gameIds.length : _pageSize;
         uint[] memory ticketsPerGame = new uint[](_pageSize);
         uint counter;
         for (uint i = _startIndex; i < _pageSize; i++) {
