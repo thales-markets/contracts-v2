@@ -174,7 +174,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_maxTicketSize",
+        "name": "_ticketSize",
         "type": "uint256"
       }
     ],

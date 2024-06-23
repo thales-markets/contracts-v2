@@ -67,7 +67,7 @@ interface ISportsAMMV2RiskManager {
         uint _payout,
         uint _expectedPayout,
         uint _additionalSlippage,
-        uint _maxTicketSize
+        uint _ticketSize
     ) external view;
 
     function checkAndUpdateRisks(ISportsAMMV2.TradeData[] memory _tradeData, uint _buyInAmount, bool _isLive) external;
