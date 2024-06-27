@@ -243,13 +243,20 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
-			const [, freeBetsData] = await sportsAMMV2Data.getActiveTicketsDataPerUserWithFreeBets(
+			const [, activeFreeBetsData] = await sportsAMMV2Data.getActiveTicketsDataPerUser(
 				firstTrader,
 				0,
 				100
 			);
-			expect(freeBetsData.length).to.be.equal(1);
-			expect(freeBetsData[0].id).to.be.equal(ticketAddress);
+			expect(activeFreeBetsData.length).to.be.equal(1);
+			expect(activeFreeBetsData[0].id).to.be.equal(ticketAddress);
+
+			const [, resolvedFreeBets] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
+				firstTrader,
+				0,
+				100
+			);
+			expect(resolvedFreeBets.length).to.be.equal(0);
 		});
 	});
 });
