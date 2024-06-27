@@ -8,6 +8,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ISportsAMMV2RiskManager.sol";
 import "../../interfaces/ISportsAMMV2ResultManager.sol";
+import "../../interfaces/IFreeBetsHolder.sol";
 import "./../AMM/Ticket.sol";
 
 contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
@@ -101,6 +102,26 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     /// @notice return all ticket data for an array of tickets
     function getTicketsData(address[] calldata ticketsArray) external view returns (TicketData[] memory) {
         return _getTicketsData(ticketsArray);
+    }
+
+    /// @notice return all active ticket data for user
+    function getActiveTicketsDataPerUserWithFreeBets(
+        address user,
+        uint _startIndex,
+        uint _pageSize
+    ) external view returns (TicketData[] memory, TicketData[] memory) {
+        uint numOfFreeBetsTickets = sportsAMM.freeBetsHolder().numOfActiveTicketsPerUser(user);
+        uint freeBetsPageSize = _pageSize > numOfFreeBetsTickets ? numOfFreeBetsTickets : _pageSize;
+        address[] memory freeBetsArray = sportsAMM.freeBetsHolder().getActiveTicketsPerUser(
+            _startIndex,
+            freeBetsPageSize,
+            user
+        );
+
+        uint numOfActiveTicketsPerUser = sportsAMM.manager().numOfActiveTicketsPerUser(user);
+        _pageSize = _pageSize > numOfActiveTicketsPerUser ? numOfActiveTicketsPerUser : _pageSize;
+        address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(_startIndex, _pageSize, user);
+        return (_getTicketsData(ticketsArray), _getTicketsData(freeBetsArray));
     }
 
     /// @notice return all active ticket data for user

@@ -6,6 +6,7 @@ import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
+import "../interfaces/IFreeBetsHolder.sol";
 
 interface ISportsAMMV2 {
     struct CombinedPosition {
@@ -39,6 +40,8 @@ interface ISportsAMMV2 {
     function exerciseTicket(address _ticket) external;
 
     function riskManager() external view returns (ISportsAMMV2RiskManager);
+
+    function freeBetsHolder() external view returns (IFreeBetsHolder);
 
     function tradeLive(
         TradeData[] calldata _tradeData,
