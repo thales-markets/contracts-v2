@@ -104,7 +104,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return _getTicketsData(ticketsArray);
     }
 
-    /// @notice return all active ticket data for user
+    /// @notice return all active ticket data for user with free bets
     function getActiveTicketsDataPerUserWithFreeBets(
         address user,
         uint _startIndex,
