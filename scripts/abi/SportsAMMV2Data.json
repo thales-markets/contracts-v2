@@ -329,7 +329,7 @@
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
-        "name": "",
+        "name": "ticketsData",
         "type": "tuple[]"
       },
       {
@@ -507,7 +507,7 @@
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
-        "name": "",
+        "name": "freeBetsData",
         "type": "tuple[]"
       }
     ],
@@ -799,7 +799,7 @@
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
-        "name": "",
+        "name": "ticketsData",
         "type": "tuple[]"
       },
       {
@@ -977,7 +977,7 @@
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
-        "name": "",
+        "name": "freeBetsData",
         "type": "tuple[]"
       }
     ],

@@ -109,10 +109,11 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address user,
         uint _startIndex,
         uint _pageSize
-    ) external view returns (TicketData[] memory, TicketData[] memory) {
+    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData) {
         address[] memory freeBetsArray = sportsAMM.freeBetsHolder().getActiveTicketsPerUser(_startIndex, _pageSize, user);
         address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(_startIndex, _pageSize, user);
-        return (_getTicketsData(ticketsArray), _getTicketsData(freeBetsArray));
+        ticketsData = _getTicketsData(ticketsArray);
+        freeBetsData = _getTicketsData(freeBetsArray);
     }
 
     /// @notice return all resolved ticket data for user with free bets
@@ -120,10 +121,11 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address user,
         uint _startIndex,
         uint _pageSize
-    ) external view returns (TicketData[] memory, TicketData[] memory) {
+    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData) {
         address[] memory freeBetsArray = sportsAMM.freeBetsHolder().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
         address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
-        return (_getTicketsData(ticketsArray), _getTicketsData(freeBetsArray));
+        ticketsData = _getTicketsData(ticketsArray);
+        freeBetsData = _getTicketsData(freeBetsArray);
     }
 
     /// @notice return all ticket data for game
