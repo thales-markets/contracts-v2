@@ -14,6 +14,7 @@ const { ZERO_ADDRESS } = require('../../../constants/general');
 
 describe('SportsAMMV2 Quotes And Trades', () => {
 	let sportsAMMV2,
+		sportsAMMV2Data,
 		sportsAMMV2Manager,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
@@ -30,6 +31,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
+			sportsAMMV2Data,
 			sportsAMMV2Manager,
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
@@ -237,6 +239,24 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			expect(numResolved).to.equal(0);
 
 			await freeBetsHolder.getResolvedTicketsPerUser(0, 1, firstTrader);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const [, activeFreeBetsData] = await sportsAMMV2Data.getActiveTicketsDataPerUser(
+				firstTrader,
+				0,
+				100
+			);
+			expect(activeFreeBetsData.length).to.be.equal(1);
+			expect(activeFreeBetsData[0].id).to.be.equal(ticketAddress);
+
+			const [, resolvedFreeBets] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
+				firstTrader,
+				0,
+				100
+			);
+			expect(resolvedFreeBets.length).to.be.equal(0);
 		});
 	});
 });

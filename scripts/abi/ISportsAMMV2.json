@@ -27,6 +27,19 @@
   },
   {
     "inputs": [],
+    "name": "freeBetsHolder",
+    "outputs": [
+      {
+        "internalType": "contract IFreeBetsHolder",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "manager",
     "outputs": [
       {

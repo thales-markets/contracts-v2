@@ -29,6 +29,20 @@ async function main() {
 	setTargetAddress('FreeBetsHolder', network, freeBetsHolderAddress);
 	await delay(5000);
 
+	const freeBetsHolderImplementationAddress = await getImplementationAddress(
+		ethers.provider,
+		freeBetsHolderAddress
+	);
+	console.log('FreeBetsHolder Implementation:', freeBetsHolderImplementationAddress);
+	setTargetAddress('FreeBetsHolderImplementation', network, freeBetsHolderImplementationAddress);
+
+	const freeBetsHolderProxyAdminAddress = await getAdminAddress(
+		ethers.provider,
+		freeBetsHolderAddress
+	);
+	console.log('FreeBetsHolder Proxy Admin:', freeBetsHolderProxyAdminAddress);
+	setTargetAddress('FreeBetsHolderProxyAdmin', network, freeBetsHolderProxyAdminAddress);
+
 	if (isTestNetwork(networkObj.chainId)) {
 		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
@@ -43,7 +57,7 @@ async function main() {
 	try {
 		await hre.run('verify:verify', {
 			address: freeBetsHolderAddress,
-			contract: 'contracts/Overtime/FreeBetsHolder.sol:FreeBetsHolder',
+			contract: 'contracts/core/FreeBets/FreeBetsHolder.sol:FreeBetsHolder',
 		});
 	} catch (e) {
 		console.log(e);

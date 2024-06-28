@@ -150,9 +150,25 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(ticketsData[0].resolved).to.be.equal(false);
 		});
 
+		it('Should return active tickets data per user with free bets', async () => {
+			const firstTraderAddress = await firstTrader.getAddress();
+			const [ticketsData, freeBetsData] = await sportsAMMV2Data.getActiveTicketsDataPerUser(
+				firstTrader,
+				0,
+				100
+			);
+
+			expect(freeBetsData.length).to.be.equal(0);
+			expect(ticketsData.length).to.be.equal(1);
+			expect(ticketsData[0].id).to.be.equal(ticketAddress);
+			expect(ticketsData[0].marketsData.length).to.be.equal(numberOfGamesOnTicket);
+			expect(ticketsData[0].marketsResult.length).to.be.equal(numberOfGamesOnTicket);
+			expect(ticketsData[0].resolved).to.be.equal(false);
+			expect(ticketsData[0].ticketOwner).to.be.equal(firstTraderAddress);
+		});
 		it('Should return active tickets data per user', async () => {
 			const firstTraderAddress = await firstTrader.getAddress();
-			const ticketsData = await sportsAMMV2Data.getActiveTicketsDataPerUser(firstTrader, 0, 100);
+			const [ticketsData] = await sportsAMMV2Data.getActiveTicketsDataPerUser(firstTrader, 0, 100);
 
 			expect(ticketsData.length).to.be.equal(1);
 			expect(ticketsData[0].id).to.be.equal(ticketAddress);
@@ -174,7 +190,11 @@ describe('SportsAMMV2Data Read Data', () => {
 			await sportsAMMV2.exerciseTicket(ticketAddress);
 
 			const firstTraderAddress = await firstTrader.getAddress();
-			const ticketsData = await sportsAMMV2Data.getResolvedTicketsDataPerUser(firstTrader, 0, 100);
+			const [ticketsData] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
+				firstTrader,
+				0,
+				100
+			);
 
 			expect(ticketsData.length).to.be.equal(1);
 			expect(ticketsData[0].id).to.be.equal(ticketAddress);

@@ -8,6 +8,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ISportsAMMV2RiskManager.sol";
 import "../../interfaces/ISportsAMMV2ResultManager.sol";
+import "../../interfaces/IFreeBetsHolder.sol";
 import "./../AMM/Ticket.sol";
 
 contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
@@ -103,28 +104,28 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         return _getTicketsData(ticketsArray);
     }
 
-    /// @notice return all active ticket data for user
+    /// @notice return all active ticket data for user with free bets
     function getActiveTicketsDataPerUser(
         address user,
         uint _startIndex,
         uint _pageSize
-    ) external view returns (TicketData[] memory) {
-        uint numOfActiveTicketsPerUser = sportsAMM.manager().numOfActiveTicketsPerUser(user);
-        _pageSize = _pageSize > numOfActiveTicketsPerUser ? numOfActiveTicketsPerUser : _pageSize;
+    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData) {
+        address[] memory freeBetsArray = sportsAMM.freeBetsHolder().getActiveTicketsPerUser(_startIndex, _pageSize, user);
         address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(_startIndex, _pageSize, user);
-        return _getTicketsData(ticketsArray);
+        ticketsData = _getTicketsData(ticketsArray);
+        freeBetsData = _getTicketsData(freeBetsArray);
     }
 
-    /// @notice return all resolved ticket data for user
+    /// @notice return all resolved ticket data for user with free bets
     function getResolvedTicketsDataPerUser(
         address user,
         uint _startIndex,
         uint _pageSize
-    ) external view returns (TicketData[] memory) {
-        uint numOfResolvedTickets = sportsAMM.manager().numOfResolvedTicketsPerUser(user);
-        _pageSize = _pageSize > numOfResolvedTickets ? numOfResolvedTickets : _pageSize;
+    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData) {
+        address[] memory freeBetsArray = sportsAMM.freeBetsHolder().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
         address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
-        return _getTicketsData(ticketsArray);
+        ticketsData = _getTicketsData(ticketsArray);
+        freeBetsData = _getTicketsData(freeBetsArray);
     }
 
     /// @notice return all ticket data for game
