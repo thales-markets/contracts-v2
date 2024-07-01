@@ -15,18 +15,18 @@ async function main() {
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 	const sportsAMMV2ResultManagerAddress = getTargetAddress('SportsAMMV2ResultManager', network);
 
-	let defaultCap = ethers.parseEther('1000');
-	let defaultRiskMultiplier = 3;
-	let maxCap = ethers.parseEther('20000');
-	let maxRiskMultiplier = 5;
+	let defaultCap = '1000000000';
+	let defaultRiskMultiplier = '3';
+	let maxCap = '20000000000';
+	let maxRiskMultiplier = '10';
 
-	const minBuyInAmount = ethers.parseEther('3');
-	const maxTicketSize = 10;
-	const maxSupportedAmount = ethers.parseEther('20000');
-	const maxSupportedOdds = ethers.parseEther('0.01');
+	const minBuyInAmount = '3000000';
+	const maxTicketSize = '15';
+	const maxSupportedAmount = '20000000000';
+	const maxSupportedOdds = '6666666666666666';
 
-	const minimalTimeLeftToMaturity = 10;
-	const expiryDuration = 7776000;
+	const minimalTimeLeftToMaturity = '10';
+	const expiryDuration = '7776000';
 
 	const sportsAMMV2RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
 	const sportsAMMV2RiskManagerDeployed = await upgrades.deployProxy(

@@ -10,13 +10,14 @@ async function main() {
 	console.log('Owner is:', owner.address);
 	console.log('Network:', network);
 
-	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
-	const mockChainlinkOracleAddress = getTargetAddress('MockChainlinkOracle', network);
+	const defaultCollateralAddress = getTargetAddress('OvertimePaymentToken', network);
+	// const mockChainlinkOracleAddress = getTargetAddress('MockChainlinkOracle', network);
+	const mockChainlinkOracleAddress = '0x8318B56352DB3Cf696BaFEF4Bb0f71eeD910aCCa';
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const sportsAMMV2ResultManagerAddress = getTargetAddress('SportsAMMV2ResultManager', network);
 
-	const mockSpecId = '0x7370656349640000000000000000000000000000000000000000000000000000';
-	const paymentAmount = 0;
+	const mockSpecId = '0x6131313939363663346238643438373838633563376333396235633838353264';
+	const paymentAmount = ethers.parseEther('1');
 
 	const chainlinkResolver = await ethers.getContractFactory('ChainlinkResolver');
 
@@ -37,12 +38,12 @@ async function main() {
 	await delay(5000);
 
 	if (isTestNetwork(networkObj.chainId)) {
-		const mockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
-		const mockChainlinkOracleDeployed = mockChainlinkOracle.attach(mockChainlinkOracleAddress);
-		await mockChainlinkOracleDeployed.setChainlinkResolver(chainlinkResolverAddress, {
-			from: owner.address,
-		});
-		console.log('ChainlinkResolver set in MockChainlinkOracle');
+		// const mockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
+		// const mockChainlinkOracleDeployed = mockChainlinkOracle.attach(mockChainlinkOracleAddress);
+		// await mockChainlinkOracleDeployed.setChainlinkResolver(chainlinkResolverAddress, {
+		// 	from: owner.address,
+		// });
+		// console.log('ChainlinkResolver set in MockChainlinkOracle');
 
 		const sportsAMMV2ResultManager = await ethers.getContractFactory('SportsAMMV2ResultManager');
 		const sportsAMMV2ResultManagerDeployed = sportsAMMV2ResultManager.attach(

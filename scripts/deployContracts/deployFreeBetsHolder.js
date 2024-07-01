@@ -1,4 +1,5 @@
 const { ethers } = require('hardhat');
+const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
 const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../helpers');
 
 async function main() {
@@ -17,7 +18,7 @@ async function main() {
 	const FreeBetsHolder = await ethers.getContractFactory('FreeBetsHolder');
 	const freeBetsHolderDeployed = await upgrades.deployProxy(
 		FreeBetsHolder,
-		[protocolDAOAddress, sportsAMMV2Address, liveTradingProcessorAddress],
+		[owner.address, sportsAMMV2Address, liveTradingProcessorAddress],
 		{ initialOwner: protocolDAOAddress }
 	);
 
