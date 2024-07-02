@@ -20,6 +20,7 @@ Everything about the [THALES token](https://thales.io/about/thales-token).
 
 - [Thales Markets](https://thalesmarket.io/)
 - [Overtime (Sport) Markets](https://overtimemarkets.xyz/)
+- [Overtime v2](https://v2.overtimemarkets.xyz/)
 
 ### Community
 
@@ -32,7 +33,7 @@ List off all deployed contracts are listed [here](https://contracts.thalesmarket
 
 ### Audits
 
-TBD
+[iosiro](https://iosiro.com/audits/thales-sports-ammv2-smart-contract-audit)
 
 ### Testing
 
