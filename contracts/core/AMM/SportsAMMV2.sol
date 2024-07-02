@@ -549,7 +549,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             );
         }
         riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount, _tradeDataInternal._isLive);
-        riskManager.checkLimits(_buyInAmount, _totalQuote, _payout, _expectedPayout, _tradeDataInternal._additionalSlippage);
+        riskManager.checkLimits(
+            _buyInAmount,
+            _totalQuote,
+            _payout,
+            _expectedPayout,
+            _tradeDataInternal._additionalSlippage,
+            _tradeData.length
+        );
         if (address(stakingThales) != address(0)) {
             stakingThales.updateVolumeAtAmountDecimals(
                 _tradeDataInternal._recipient,

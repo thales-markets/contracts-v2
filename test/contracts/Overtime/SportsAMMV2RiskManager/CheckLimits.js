@@ -47,7 +47,8 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					quote.totalQuote,
 					quote.payout,
 					quote.payout,
-					ADDITIONAL_SLIPPAGE
+					ADDITIONAL_SLIPPAGE,
+					10
 				)
 			).to.not.be.reverted;
 		});
@@ -66,7 +67,8 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					quote.totalQuote,
 					quote.payout,
 					quote.payout,
-					ADDITIONAL_SLIPPAGE
+					ADDITIONAL_SLIPPAGE,
+					10
 				)
 			).to.not.be.reverted;
 		});
@@ -91,9 +93,23 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					quote.totalQuote,
 					quote.payout,
 					quote.payout,
-					ADDITIONAL_SLIPPAGE
+					ADDITIONAL_SLIPPAGE,
+					10
 				)
 			).to.be.revertedWith('Low buy-in amount');
+		});
+
+		it('Should fail with "Exceeded max ticket size"', async () => {
+			await expect(
+				sportsAMMV2RiskManager.checkLimits(
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					quote.payout,
+					quote.payout,
+					ADDITIONAL_SLIPPAGE,
+					11
+				)
+			).to.be.revertedWith('Exceeded max ticket size');
 		});
 
 		it('Should fail with "Exceeded max supported odds"', async () => {
@@ -103,7 +119,8 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					ethers.parseEther('0.001'),
 					quote.payout,
 					quote.payout,
-					ADDITIONAL_SLIPPAGE
+					ADDITIONAL_SLIPPAGE,
+					10
 				)
 			).to.be.revertedWith('Exceeded max supported odds');
 		});
@@ -115,7 +132,8 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					quote.totalQuote,
 					ethers.parseEther('100000'),
 					quote.payout,
-					ADDITIONAL_SLIPPAGE
+					ADDITIONAL_SLIPPAGE,
+					10
 				)
 			).to.be.revertedWith('Exceeded max supported amount');
 		});
@@ -127,7 +145,8 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					quote.totalQuote,
 					quote.payout,
 					ethers.parseEther('1000'),
-					ADDITIONAL_SLIPPAGE
+					ADDITIONAL_SLIPPAGE,
+					10
 				)
 			).to.be.revertedWith('Slippage too high');
 		});

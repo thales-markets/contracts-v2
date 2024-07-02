@@ -82,6 +82,47 @@
         "type": "address"
       }
     ],
+    "name": "getCurrentRoundTicketsData",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "totalTickets",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "numOfClosedTickets",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "numOfPendingTickets",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address[]",
+            "name": "pendingTickets",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct SportsAMMV2LiquidityPoolData.RoundTicketsData",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract SportsAMMV2LiquidityPool",
+        "name": "liquidityPool",
+        "type": "address"
+      }
+    ],
     "name": "getLiquidityPoolData",
     "outputs": [
       {
