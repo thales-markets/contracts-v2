@@ -211,6 +211,32 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "liveTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "SetLiveTradingProcessor",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "SetSportsAMM",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "user",
         "type": "address"
       },
@@ -636,6 +662,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_liveTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "setLiveTradingProcessor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_owner",
         "type": "address"
       }
@@ -654,6 +693,19 @@
       }
     ],
     "name": "setPaused",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "setSportsAMM",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

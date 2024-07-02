@@ -168,10 +168,10 @@
 		"DefaultLiquidityProviderTHALES": "0xe2FCBAC654970bAd1d88B4F6e10d0Ac6152c584E",
 		"DefaultLiquidityProviderImplementationTHALES": "0x482610a1c1f8C5057bca7ed1a5148C00d868d020",
 		"DefaultLiquidityProviderProxyAdminTHALES": "0x0Bd34be27d081162A3Ec337D683c67707Dfada1F",
-		"ChainlinkResolver": "0x67f1ef347ed40eB1146685093F8Fc8A9421896D4",
-		"LiveTradingProcessor": "0xA67A7A3d0C3166feEA63944f70870a7C115a5516",
-		"FreeBetsHolder": "0x095D7CDEB1E0eDBA191aB1a7C39d5beABF9fFd1A",
-		"FreeBetsHolderImplementation": "0x4485F2369d7331c22A4C5935a58cEf45694Ed0C9",
-		"FreeBetsHolderProxyAdmin": "0x69C728FDD87dda63218220bb742d2c1ddE7eaE37"
+		"ChainlinkResolver": "0x4f2822D4e60af7f9F70E7e45BC1941fe3461231e",
+		"LiveTradingProcessor": "0x3b250d77b982Fd3eb67ddEa5191cE0115cC226a7",
+		"FreeBetsHolder": "0xd1F2b87a9521315337855A132e5721cfe272BBd9",
+		"FreeBetsHolderImplementation": "0xE59206b08cC96Da0818522C75eE3Fd4EBB7c0A47",
+		"FreeBetsHolderProxyAdmin": "0x609AB342035075F360e6fFbb1c43Dc3E96B9FCF3"
 	}
 }
