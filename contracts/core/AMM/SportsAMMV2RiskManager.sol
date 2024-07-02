@@ -203,18 +203,21 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _payout actual payout
     /// @param _expectedPayout expected payout got from quote method
     /// @param _additionalSlippage slippage tolerance
+    /// @param _ticketSize number of games in ticket
     function checkLimits(
         uint _buyInAmount,
         uint _totalQuote,
         uint _payout,
         uint _expectedPayout,
-        uint _additionalSlippage
+        uint _additionalSlippage,
+        uint _ticketSize
     ) external view {
         // apply all checks
         require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
         require(_totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
         require((_payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
         require(((ONE * _expectedPayout) / _payout) <= (ONE + _additionalSlippage), "Slippage too high");
+        require(_ticketSize <= maxTicketSize, "Exceeded max ticket size");
     }
 
     /// @notice returns risk data for given sports and types

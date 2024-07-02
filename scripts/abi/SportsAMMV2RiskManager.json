@@ -750,6 +750,11 @@
         "internalType": "uint256",
         "name": "_additionalSlippage",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_ticketSize",
+        "type": "uint256"
       }
     ],
     "name": "checkLimits",
