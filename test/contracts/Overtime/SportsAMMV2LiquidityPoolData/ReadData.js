@@ -4,14 +4,25 @@ const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
+const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE } = require('../../../constants/overtime');
+const { ZERO_ADDRESS } = require('../../../constants/general');
 
 describe('SportsAMMV2LiquidityPoolData Read Data', () => {
-	let sportsAMMV2LiquidityPoolData, sportsAMMV2LiquidityPool;
+	let sportsAMMV2,
+		sportsAMMV2LiquidityPoolData,
+		sportsAMMV2LiquidityPool,
+		firstTrader,
+		firstLiquidityProvider,
+		tradeDataTenMarketsCurrentRound;
 
 	beforeEach(async () => {
-		({ sportsAMMV2LiquidityPoolData, sportsAMMV2LiquidityPool } =
-			await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider } = await loadFixture(deployAccountsFixture));
+		({
+			sportsAMMV2,
+			sportsAMMV2LiquidityPoolData,
+			sportsAMMV2LiquidityPool,
+			tradeDataTenMarketsCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture));
+		({ firstTrader, firstLiquidityProvider } = await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
@@ -36,6 +47,39 @@ describe('SportsAMMV2LiquidityPoolData Read Data', () => {
 			);
 
 			expect(liquidityPoolData.balanceCurrentRound).to.be.equal(ethers.parseEther('1000'));
+		});
+	});
+
+	describe('Sports AMM liquidity pool round tickets data', () => {
+		beforeEach(async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+		});
+
+		it('Should return current round tickets data', async () => {
+			const currentRoundTicketsData =
+				await sportsAMMV2LiquidityPoolData.getCurrentRoundTicketsData(sportsAMMV2LiquidityPool);
+
+			expect(currentRoundTicketsData.totalTickets).to.be.equal(1);
+			expect(currentRoundTicketsData.numOfClosedTickets).to.be.equal(0);
+			expect(currentRoundTicketsData.numOfPendingTickets).to.be.equal(1);
+			expect(currentRoundTicketsData.pendingTickets.length).to.be.equal(1);
 		});
 	});
 });

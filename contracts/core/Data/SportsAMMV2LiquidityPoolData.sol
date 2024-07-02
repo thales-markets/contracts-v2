@@ -32,6 +32,13 @@ contract SportsAMMV2LiquidityPoolData is Initializable, ProxyOwned, ProxyPausabl
         uint withdrawalShare;
     }
 
+    struct RoundTicketsData {
+        uint totalTickets;
+        uint numOfClosedTickets;
+        uint numOfPendingTickets;
+        address[] pendingTickets;
+    }
+
     function initialize(address _owner) external initializer {
         setOwner(_owner);
     }
@@ -77,6 +84,41 @@ contract SportsAMMV2LiquidityPoolData is Initializable, ProxyOwned, ProxyPausabl
                 liquidityPool.balancesPerRound(round + 1, user),
                 liquidityPool.withdrawalRequested(user),
                 liquidityPool.withdrawalShare(user)
+            );
+    }
+
+    /// @notice getCurrentRoundTicketsData returns current round ticket data
+    /// @param liquidityPool SportsAMMV2LiquidityPool
+    /// @return RoundTicketsData
+    function getCurrentRoundTicketsData(
+        SportsAMMV2LiquidityPool liquidityPool
+    ) external view returns (RoundTicketsData memory) {
+        uint round = liquidityPool.round();
+        uint numberOfTradingTickets = liquidityPool.getNumberOfTradingTicketsPerRound(round);
+        address[] memory tradingTickets = new address[](numberOfTradingTickets);
+        address ticket;
+        uint counter;
+        for (uint i = 0; i < numberOfTradingTickets; i++) {
+            ticket = liquidityPool.tradingTicketsPerRound(round, i);
+            if (!liquidityPool.ticketAlreadyExercisedInRound(round, ticket)) {
+                tradingTickets[i] = ticket;
+                ++counter;
+            }
+        }
+        address[] memory pendingTickets = new address[](counter);
+        uint j;
+        for (uint i = 0; i < numberOfTradingTickets; i++) {
+            if (tradingTickets[i] != address(0) && j < counter) {
+                pendingTickets[j] = tradingTickets[i];
+                ++j;
+            }
+        }
+        return
+            RoundTicketsData(
+                numberOfTradingTickets,
+                (numberOfTradingTickets - pendingTickets.length),
+                pendingTickets.length,
+                pendingTickets
             );
     }
 }
