@@ -46,13 +46,8 @@
 	},
 	{
 		"id": 10005,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_ODD_EVEN"
-	},
-	{
-		"id": 10006,
-		"result_type": 2,
-		"name": "CHILD_HALFTIME_FULLTIME"
 	},
 	{
 		"id": 10007,
@@ -60,13 +55,8 @@
 		"name": "CHILD_GOALS"
 	},
 	{
-		"id": 10008,
-		"result_type": 2,
-		"name": "CHILD_HALFTIME_FULLTIME_GOALS"
-	},
-	{
 		"id": 10009,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SCORE_SCORE"
 	},
 	{
@@ -371,137 +361,137 @@
 	},
 	{
 		"id": 10081,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10082,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SECOND_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10083,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_THIRD_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10084,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FOURTH_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10085,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FIFTH_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10086,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SIXTH_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10087,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SEVENTH_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10088,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_EIGHTH_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10089,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_NINTH_PERIOD_ODD_EVEN"
 	},
 	{
 		"id": 10091,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10092,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SECOND_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10093,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_THIRD_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10094,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FOURTH_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10095,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FIFTH_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10096,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SIXTH_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10097,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SEVENTH_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10098,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_EIGHTH_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10099,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_NINTH_PERIOD_ODD_EVEN_SECONDARY"
 	},
 	{
 		"id": 10101,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10102,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SECOND_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10103,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_THIRD_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10104,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FOURTH_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10105,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_FIFTH_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10106,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SIXTH_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10107,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_SEVENTH_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10108,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_EIGHTH_PERIOD_SCORE_SCORE"
 	},
 	{
 		"id": 10109,
-		"result_type": 2,
+		"result_type": 1,
 		"name": "CHILD_NINTH_PERIOD_SCORE_SCORE"
 	},
 	{
@@ -648,5 +638,30 @@
 		"id": 11098,
 		"result_type": 2,
 		"name": "PROP_BLOCKS_RECORDED"
+	},
+	{
+		"id": 10010,
+		"result_type": 4,
+		"name": "CHILD_DRAW_NO_BET"
+	},
+	{
+		"id": 10121,
+		"result_type": 4,
+		"name": "CHILD_FIRST_PERIOD_DRAW_NO_BET"
+	},
+	{
+		"id": 10122,
+		"result_type": 4,
+		"name": "CHILD_SECOND_PERIOD_DRAW_NO_BET"
+	},
+	{
+		"id": 10123,
+		"result_type": 4,
+		"name": "CHILD_THIRD_PERIOD_DRAW_NO_BET"
+	},
+	{
+		"id": 10124,
+		"result_type": 4,
+		"name": "CHILD_FOURTH_PERIOD_DRAW_NO_BET"
 	}
 ]
