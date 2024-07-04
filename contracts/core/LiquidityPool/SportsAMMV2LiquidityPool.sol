@@ -449,13 +449,13 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     /// @notice iterate all tickets in the current round and return true if at least one can be exercised
     /// @return bool
-    function hasTicketsReadyToBeExercised() public view returns (bool) {
+    function hasTicketsReadyToBeExercised() external view returns (bool) {
         return _hasTicketsReadyToBeExercised(round);
     }
 
     /// @notice iterate all tickets in the default round and return true if at least one can be exercised
     /// @return bool
-    function hasDefaultRoundTicketsReadyToBeExercised() public view returns (bool) {
+    function hasDefaultRoundTicketsReadyToBeExercised() external view returns (bool) {
         return _hasTicketsReadyToBeExercised(1);
     }
 

@@ -149,6 +149,11 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			// exercise ticket on LP (hasTicketsReadyToBeExercised should be false since it is winning ticket for the user)
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
+			// exercise ticket on LP (hasTicketsReadyToBeExercised should be false since there are no default round tickets)
+			expect(await sportsAMMV2LiquidityPool.hasDefaultRoundTicketsReadyToBeExercised()).to.equal(
+				false
+			);
+
 			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercised();
 			expect(
 				await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(currentRound, ticketAddress)
@@ -808,6 +813,9 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			let buyInAmountAfterFees = ethers.formatEther(BUY_IN_AMOUNT) - ethers.formatEther(quote.fees);
 			expect(defaultLpProfit.toFixed(8)).to.equal(Number(buyInAmountAfterFees).toFixed(8));
 
+			expect(await sportsAMMV2LiquidityPool.hasDefaultRoundTicketsReadyToBeExercised()).to.equal(
+				false
+			);
 			await sportsAMMV2LiquidityPool.exerciseDefaultRoundTicketsReadyToBeExercisedBatch(1);
 			await sportsAMMV2LiquidityPool.exerciseDefaultRoundTicketsReadyToBeExercised();
 			let defaultLpBalanceAfterExerciseDefaultRound = await collateral.balanceOf(defaultLpAddress);
