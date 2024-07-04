@@ -780,6 +780,19 @@
   },
   {
     "inputs": [],
+    "name": "hasDefaultRoundTicketsReadyToBeExercised",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "hasTicketsReadyToBeExercised",
     "outputs": [
       {
