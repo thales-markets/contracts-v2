@@ -447,14 +447,24 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         return true;
     }
 
-    /// @notice iterate all ticket in the current round and return true if at least one can be exercised
+    /// @notice iterate all tickets in the current round and return true if at least one can be exercised
     /// @return bool
-    function hasTicketsReadyToBeExercised() public view returns (bool) {
+    function hasTicketsReadyToBeExercised() external view returns (bool) {
+        return _hasTicketsReadyToBeExercised(round);
+    }
+
+    /// @notice iterate all tickets in the default round and return true if at least one can be exercised
+    /// @return bool
+    function hasDefaultRoundTicketsReadyToBeExercised() external view returns (bool) {
+        return _hasTicketsReadyToBeExercised(1);
+    }
+
+    function _hasTicketsReadyToBeExercised(uint _round) internal view returns (bool) {
         Ticket ticket;
         address ticketAddress;
-        for (uint i = 0; i < tradingTicketsPerRound[round].length; i++) {
-            ticketAddress = tradingTicketsPerRound[round][i];
-            if (!ticketAlreadyExercisedInRound[round][ticketAddress]) {
+        for (uint i = 0; i < tradingTicketsPerRound[_round].length; i++) {
+            ticketAddress = tradingTicketsPerRound[_round][i];
+            if (!ticketAlreadyExercisedInRound[_round][ticketAddress]) {
                 ticket = Ticket(ticketAddress);
                 if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
                     return true;
