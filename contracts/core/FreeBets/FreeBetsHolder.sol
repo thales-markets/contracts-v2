@@ -123,9 +123,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
         ticketToUser[_createdTicket] = _user;
 
-        activeTicketsPerUser[msg.sender].add(_createdTicket);
+        activeTicketsPerUser[_user].add(_createdTicket);
 
-        emit FreeBetTrade(_createdTicket, _buyInAmount, msg.sender, true);
+        emit FreeBetTrade(_createdTicket, _buyInAmount, _user, true);
     }
 
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes back to the freebet balance
