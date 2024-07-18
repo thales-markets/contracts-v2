@@ -663,5 +663,10 @@
 		"id": 10124,
 		"result_type": 4,
 		"name": "CHILD_FOURTH_PERIOD_DRAW_NO_BET"
+	},
+	{
+		"id": 10131,
+		"result_type": 1,
+		"name": "CHILD_WILL_THERE_BE_OVERTIME"
 	}
 ]
