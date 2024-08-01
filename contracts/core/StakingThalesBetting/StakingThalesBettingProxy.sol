@@ -31,8 +31,6 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
 
     mapping(address => mapping(address => uint)) public balancePerUserAndCollateral;
 
-    mapping(address => bool) public supportedCollateral;
-
     mapping(address => address) public ticketToUser;
 
     mapping(address => uint) public paidPerTicket;
@@ -61,24 +59,6 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         stakingCollateral = IERC20(_stakingToken);
     }
 
-    // /// @notice fund a batch of users with free bets in chosen collateral
-    // function fundBatch(address[] calldata _users, address _collateral, uint _amountPerUser) external notPaused {
-    //     require(supportedCollateral[_collateral], "Unsupported collateral");
-    //     IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amountPerUser * _users.length);
-    //     for (uint256 index = 0; index < _users.length; index++) {
-    //         address _user = _users[index];
-    //         balancePerUserAndCollateral[_user][_collateral] += _amountPerUser;
-    //         emit UserFunded(_user, _collateral, _amountPerUser, msg.sender);
-    //     }
-    // }
-
-    /// @notice fund a single user with free bets in chosen collateral
-    // function approveStakedThalesForStaking(uint _amount) external notPaused {
-    //     require(stakingThales.stakedBalanceOf(msg.sender) >= _amount, "Staked amount too low");
-    //     approvedStakingAmountForTrading[msg.sender] = _amount;
-    //     emit StakingAmountApprovedForTrading(msg.sender, _amount);
-    // }
-
     /// @notice buy a ticket for a user if he has enough free bet in given collateral
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
@@ -90,7 +70,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         require(stakingThales.stakedBalanceOf(msg.sender) >= _buyInAmount, "Staked amount too low");
         stakingThales.decreaseStakingBalanceFor(msg.sender, _buyInAmount);
         // signal decrease of stakingAmount
-        stakingCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
+        // stakingCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
         address _createdTicket = sportsAMM.trade(
             _tradeData,
             _buyInAmount,
@@ -120,7 +100,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         require(stakingThales.stakedBalanceOf(_user) >= _buyInAmount, "Staked amount too low");
         // signal decrease of stakingAmount
         stakingThales.decreaseStakingBalanceFor(_user, _buyInAmount);
-        stakingCollateral.safeTransferFrom(address(stakingThales), address(this), _buyInAmount);
+        // stakingCollateral.safeTransferFrom(address(stakingThales), address(this), _buyInAmount);
     }
 
     /// @notice confirm a live ticket purchase. As live betting is a 2 step approach, the LiveTradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
@@ -140,7 +120,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         }
         // signal decrease of stakingAmount
         stakingThales.decreaseStakingBalanceFor(_user, _buyInAmount);
-        stakingCollateral.safeTransferFrom(_user, address(this), _buyInAmount);
+        // stakingCollateral.safeTransferFrom(_user, address(this), _buyInAmount);
 
         ticketToUser[_createdTicket] = _user;
 
@@ -158,18 +138,9 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         require(activeTicketsPerUser[_user].contains(_resolvedTicket), "Unknown active ticket");
 
         uint _exercized = Ticket(_resolvedTicket).finalPayout();
-        uint _earned;
-        if (_exercized > 0) {
-            IERC20 _collateral = Ticket(_resolvedTicket).collateral();
-            uint buyInAmount = Ticket(_resolvedTicket).buyInAmount();
-            balancePerUserAndCollateral[_user][address(_collateral)] += buyInAmount;
-
-            _earned = _exercized - buyInAmount;
-            if (_earned > 0) {
-                _collateral.safeTransfer(_user, _earned);
-            }
-        }
-        emit StakingTokensTicketResolved(_resolvedTicket, _user, _earned);
+        stakingThales.increaseStakingBalanceFor(_user, _exercized);
+        // stakingCollateral.safeTransfer(address(stakingThales), _exercized);
+        emit StakingTokensTicketResolved(_resolvedTicket, _user, _exercized);
 
         activeTicketsPerUser[_user].remove(_resolvedTicket);
         resolvedTicketsPerUser[_user].add(_resolvedTicket);
