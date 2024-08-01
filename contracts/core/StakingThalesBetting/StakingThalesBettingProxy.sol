@@ -49,13 +49,14 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         address _owner,
         address _sportsAMMV2,
         address _liveTradingProcessor,
+        address _stakingThales,
         address _stakingToken
     ) external initializer {
         setOwner(_owner);
         initNonReentrant();
         sportsAMM = ISportsAMMV2(_sportsAMMV2);
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
-        stakingThales = sportsAMM.stakingThales();
+        stakingThales = IStakingThales(_stakingThales);
         stakingCollateral = IERC20(_stakingToken);
     }
 
