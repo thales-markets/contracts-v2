@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
+import "../../interfaces/IStakingThalesBettingProxy.sol";
 
 contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
@@ -37,10 +38,13 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     uint public requestCounter;
     mapping(uint => bytes32) public counterToRequestId;
 
+    address public stakingThalesBettinProxy;
+
     constructor(
         address _link,
         address _oracle,
         address _sportsAMM,
+        address _stakingThalesBettinProxy,
         bytes32 _jobSpecId,
         uint _paymentAmount
     ) Ownable(msg.sender) {
@@ -49,6 +53,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         sportsAMM = ISportsAMMV2(_sportsAMM);
         jobSpecId = _jobSpecId;
         paymentAmount = _paymentAmount;
+        stakingThalesBettinProxy = _stakingThalesBettinProxy;
     }
 
     /// @notice requestLiveTrade
@@ -139,6 +144,13 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 comPositions //combinedPositions[]
             );
 
+            if (requester == stakingThalesBettinProxy) {
+                IStakingThalesBettingProxy(stakingThalesBettinProxy).preConfirmLiveTrade(
+                    _requestId,
+                    lTradeData._buyInAmount
+                );
+            }
+
             address _createdTicket = sportsAMM.tradeLive(
                 tradeData,
                 lTradeData._buyInAmount,
@@ -154,6 +166,12 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                     _createdTicket,
                     lTradeData._buyInAmount,
                     lTradeData._collateral
+                );
+            } else if (requester == stakingThalesBettinProxy) {
+                IStakingThalesBettingProxy(stakingThalesBettinProxy).confirmLiveTrade(
+                    _requestId,
+                    _createdTicket,
+                    lTradeData._buyInAmount
                 );
             }
         }

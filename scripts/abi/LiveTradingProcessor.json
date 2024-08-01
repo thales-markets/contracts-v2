@@ -17,6 +17,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "_stakingThalesBettinProxy",
+        "type": "address"
+      },
+      {
         "internalType": "bytes32",
         "name": "_jobSpecId",
         "type": "bytes32"
@@ -758,6 +763,19 @@
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stakingThalesBettinProxy",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }
