@@ -713,5 +713,60 @@
 		"id": 11201,
 		"result_type": 2,
 		"name": "PROP_SIGNIFICANT_STRIKES"
+	},
+	{
+		"id": 10100,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE"
+	},
+	{
+		"id": 10200,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_FIRST_PERIOD"
+	},
+	{
+		"id": 10201,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_SECOND_PERIOD"
+	},
+	{
+		"id": 10143,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_EXACT_HOME_TEAM"
+	},
+	{
+		"id": 10144,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_EXACT_AWAY_TEAM"
+	},
+	{
+		"id": 10145,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_EXACT_HOME_TEAM"
+	},
+	{
+		"id": 10146,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_EXACT_AWAY_TEAM"
+	},
+	{
+		"id": 10147,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_EXACT_HOME_TEAM"
+	},
+	{
+		"id": 10148,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_EXACT_AWAY_TEAM"
+	},
+	{
+		"id": 10019,
+		"result_type": 1,
+		"name": "CHILD_FIRST_SCORE"
+	},
+	{
+		"id": 10020,
+		"result_type": 1,
+		"name": "CHILD_LAST_SCORE"
 	}
 ]
