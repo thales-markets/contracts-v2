@@ -33,7 +33,7 @@
 	"dependencies": {
 		"@openzeppelin/contracts": "^5.0.0",
 		"@openzeppelin/contracts-upgradeable": "^5.0.0",
-		"@thales-dao/contracts": "^0.0.10",
+		"@thales-dao/contracts": "^0.1.2",
 		"bytes32": "^0.0.3"
 	},
 	"husky": {

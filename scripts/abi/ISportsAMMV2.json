@@ -123,19 +123,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "stakingThales",
-    "outputs": [
-      {
-        "internalType": "contract IStakingThales",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "components": [

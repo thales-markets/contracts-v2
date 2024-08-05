@@ -29,11 +29,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
 
     IERC20 public stakingCollateral;
 
-    mapping(address => mapping(address => uint)) public balancePerUserAndCollateral;
-
     mapping(address => address) public ticketToUser;
-
-    mapping(address => uint) public paidPerTicket;
 
     mapping(bytes32 => address) public liveRequestsPerUser;
 
@@ -108,17 +104,13 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     function confirmLiveTrade(
         bytes32 requestId,
         address _createdTicket,
-        uint _buyInAmount,
-        address _collateral
+        uint _buyInAmount
     ) external notPaused nonReentrant {
         require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
 
         address _user = liveRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
 
-        if (_collateral == address(0)) {
-            _collateral = address(sportsAMM.defaultCollateral());
-        }
         // signal decrease of stakingAmount
         stakingThales.decreaseStakingBalanceFor(_user, _buyInAmount);
         // stakingCollateral.safeTransferFrom(_user, address(this), _buyInAmount);
