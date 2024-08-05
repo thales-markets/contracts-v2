@@ -25,14 +25,22 @@ async function main() {
 			'processing type:' + type.id + ' ' + type.name + ' with result type:' + type.result_type
 		);
 
-		await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(
-			[type.id],
-			[type.result_type],
-			{
-				from: owner.address,
-			}
-		);
-		console.log('type set');
+		const typeSet = await sportsAMMV2ResultManagerDeployed.resultTypePerMarketType(type.id);
+
+		console.log('result type on contract: ' + typeSet);
+
+		if (typeSet != type.result_type) {
+			await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(
+				[type.id],
+				[type.result_type],
+				{
+					from: owner.address,
+				}
+			);
+			console.log('type set');
+		} else {
+			console.log('type already set');
+		}
 	}
 }
 
