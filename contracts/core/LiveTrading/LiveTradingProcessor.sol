@@ -44,7 +44,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         address _link,
         address _oracle,
         address _sportsAMM,
-        address _stakingThalesBettinProxy,
         bytes32 _jobSpecId,
         uint _paymentAmount
     ) Ownable(msg.sender) {
@@ -53,7 +52,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         sportsAMM = ISportsAMMV2(_sportsAMM);
         jobSpecId = _jobSpecId;
         paymentAmount = _paymentAmount;
-        stakingThalesBettinProxy = _stakingThalesBettinProxy;
     }
 
     /// @notice requestLiveTrade

@@ -17,11 +17,6 @@
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "_stakingThalesBettinProxy",
-        "type": "address"
-      },
-      {
         "internalType": "bytes32",
         "name": "_jobSpecId",
         "type": "bytes32"

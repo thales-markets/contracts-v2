@@ -657,6 +657,14 @@ async function deploySportsAMMV2Fixture() {
 	const MockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
 	const mockChainlinkOracle = await MockChainlinkOracle.deploy();
 	const mockChainlinkOracleAddress = mockChainlinkOracle.getAddress();
+	
+	// const StakingThalesBettingProxy = await ethers.getContractFactory('StakingThalesBettingProxy');
+	// const stakingThalesBettingProxy = await StakingThalesBettingProxy.deploy(
+	// 	owner.address,
+	// 	sportsAMMV2Address,
+	// 	liveTradingProcessorAddress,
+	// );
+	// const stakingThalesBettingProxyAddress = stakingThalesBettingProxy.getAddress();
 
 	// deploy LiveTradingProcessor
 	const mockSpecId = '0x7370656349640000000000000000000000000000000000000000000000000000';
