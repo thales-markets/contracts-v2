@@ -173,7 +173,7 @@
 		"ChainlinkResolver": "0x4f2822D4e60af7f9F70E7e45BC1941fe3461231e",
 		"LiveTradingProcessor": "0x3b250d77b982Fd3eb67ddEa5191cE0115cC226a7",
 		"FreeBetsHolder": "0xd1F2b87a9521315337855A132e5721cfe272BBd9",
-		"FreeBetsHolderImplementation": "0xE59206b08cC96Da0818522C75eE3Fd4EBB7c0A47",
+		"FreeBetsHolderImplementation": "0xbE7149c78D77ad8e3777d5CaD5BF94B56d772Cf8",
 		"FreeBetsHolderProxyAdmin": "0x609AB342035075F360e6fFbb1c43Dc3E96B9FCF3"
 	}
 }
