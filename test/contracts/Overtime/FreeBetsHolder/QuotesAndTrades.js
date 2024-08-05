@@ -78,6 +78,18 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			).to.be.revertedWith('Unsupported collateral');
 		});
 
+		it('Set SportsAMM and LiveTradingProcessor', async () => {
+			const sportsAMMAddress = await sportsAMMV2.getAddress();
+			const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
+			await freeBetsHolder.setSportsAMM(sportsAMMAddress);
+			await freeBetsHolder.setLiveTradingProcessor(liveTradingProcessorAddress);
+
+			const SportsAMMSet = await freeBetsHolder.sportsAMM();
+			const LiveTradingSet = await freeBetsHolder.liveTradingProcessor();
+			expect(SportsAMMSet).to.equal(sportsAMMAddress);
+			expect(LiveTradingSet).to.equal(liveTradingProcessorAddress);
+		});
+
 		it('Should pass', async () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,

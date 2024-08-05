@@ -204,6 +204,22 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         return resolvedTicketsPerUser[_user].elements.length;
     }
 
+    /// @notice sets the LiveTradingProcessor contract address
+    /// @param _liveTradingProcessor the address of Sports AMM contract
+    function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
+        require(_liveTradingProcessor != address(0), "Invalid address");
+        liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
+        emit SetLiveTradingProcessor(_liveTradingProcessor);
+    }
+
+    /// @notice sets the Sports AMM contract address
+    /// @param _sportsAMM the address of Sports AMM contract
+    function setSportsAMM(address _sportsAMM) external onlyOwner {
+        require(_sportsAMM != address(0), "Invalid address");
+        sportsAMM = ISportsAMMV2(_sportsAMM);
+        emit SetSportsAMM(_sportsAMM);
+    }
+
     /* ========== MODIFIERS ========== */
     modifier canTrade(
         address _user,
@@ -216,7 +232,8 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /* ========== EVENTS ========== */
-
+    event SetSportsAMM(address sportsAMM);
+    event SetLiveTradingProcessor(address liveTradingProcessor);
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event CollateralSupportChanged(address collateral, bool supported);
