@@ -23,6 +23,7 @@ import "../../interfaces/ISportsAMMV2ResultManager.sol";
 import "../../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../../interfaces/IWeth.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
+import "../../interfaces/IStakingThalesBettingProxy.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -103,6 +104,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     // support different SB per collateral, namely THALES as a collateral will be directly burned
     mapping(address => address) public safeBoxPerCollateral;
+
+    // the contract that processes all free bets
+    address public stakingThalesBettingProxy;
 
     struct TradeDataQuoteInternal {
         uint _buyInAmount;
@@ -636,6 +640,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         if (ticketOwner == freeBetsHolder) {
             IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
+        } else if (ticketOwner == stakingThalesBettingProxy) {
+            IStakingThalesBettingProxy(stakingThalesBettingProxy).confirmTicketResolved(_ticket);
         }
 
         if (!ticket.cancelled()) {
@@ -732,6 +738,11 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
         freeBetsHolder = _freeBetsHolder;
         emit SetFreeBetsHolder(_freeBetsHolder);
+    }
+
+    function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
+        stakingThalesBettingProxy = _stakingThalesBettingProxy;
+        emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -834,6 +845,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);
     event SetFreeBetsHolder(address freeBetsHolder);
+    event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
     event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
     event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
 }

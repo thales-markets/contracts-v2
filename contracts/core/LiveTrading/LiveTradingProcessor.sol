@@ -38,7 +38,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     uint public requestCounter;
     mapping(uint => bytes32) public counterToRequestId;
 
-    address public stakingThalesBettinProxy;
+    address public stakingThalesBettingProxy;
 
     constructor(
         address _link,
@@ -142,8 +142,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 comPositions //combinedPositions[]
             );
 
-            if (requester == stakingThalesBettinProxy) {
-                IStakingThalesBettingProxy(stakingThalesBettinProxy).preConfirmLiveTrade(
+            if (requester == stakingThalesBettingProxy) {
+                IStakingThalesBettingProxy(stakingThalesBettingProxy).preConfirmLiveTrade(
                     _requestId,
                     lTradeData._buyInAmount
                 );
@@ -165,8 +165,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                     lTradeData._buyInAmount,
                     lTradeData._collateral
                 );
-            } else if (requester == stakingThalesBettinProxy) {
-                IStakingThalesBettingProxy(stakingThalesBettinProxy).confirmLiveTrade(
+            } else if (requester == stakingThalesBettingProxy) {
+                IStakingThalesBettingProxy(stakingThalesBettingProxy).confirmLiveTrade(
                     _requestId,
                     _createdTicket,
                     lTradeData._buyInAmount
@@ -228,6 +228,12 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
+    function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
+        stakingThalesBettingProxy = _stakingThalesBettingProxy;
+
+        emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);
+    }
+
     /// @notice setMaxAllowedExecutionDelay
     /// @param _maxAllowedExecutionDelay maximum allowed buffer for the CL request to be executed, defaulted at 60 seconds
     function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
@@ -277,4 +283,5 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     );
     event SetMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay);
     event SetFreeBetsHolder(address _freeBetsHolder);
+    event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
 }

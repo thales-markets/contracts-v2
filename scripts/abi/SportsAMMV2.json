@@ -467,6 +467,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "_stakingThalesBettingProxy",
+        "type": "address"
+      }
+    ],
+    "name": "SetStakingThalesBettingProxy",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "ticket",
         "type": "address"
       },
@@ -1164,6 +1177,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_stakingThalesBettingProxy",
+        "type": "address"
+      }
+    ],
+    "name": "setStakingThalesBettingProxy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_ticketMastercopy",
         "type": "address"
       }
@@ -1179,6 +1205,19 @@
     "outputs": [
       {
         "internalType": "contract IStakingThales",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stakingThalesBettingProxy",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }

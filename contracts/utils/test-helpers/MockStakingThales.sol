@@ -3,11 +3,63 @@
 pragma solidity ^0.8.20;
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract MockStakingThales {
-    mapping(address => uint) public volume;
+    using SafeERC20 for IERC20;
 
+    mapping(address => uint) public volume;
+    mapping(address => uint) public _stakedBalances;
+    uint public _totalStakedAmount;
+
+    address public stakingToken;
     address public feeToken;
+    address public stakingThalesBettingProxy;
+
+    function stake(uint amount) external {
+        _stakedBalances[msg.sender] += amount;
+        _totalStakedAmount += amount;
+        IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), amount);
+    }
+
+    function stakedBalanceOf(address account) external view returns (uint) {
+        return _stakedBalances[account];
+    }
+
+    function decreaseStakingBalanceFor(address account, uint amount) external onlyStakingProxy {
+        _modifyStakingBalance(account, amount, true, stakingThalesBettingProxy);
+    }
+
+    function increaseStakingBalanceFor(address account, uint amount) external onlyStakingProxy {
+        _modifyStakingBalance(account, amount, false, stakingThalesBettingProxy);
+    }
+
+    function _modifyStakingBalance(address _account, uint _amount, bool isDecreasing, address _proxyAccount) internal {
+        if (isDecreasing) {
+            require(_stakedBalances[_account] >= _amount, "Insufficient staked amount");
+            _totalStakedAmount -= _amount;
+            _stakedBalances[_account] -= _amount;
+            IERC20(stakingToken).safeTransfer(_proxyAccount, _amount);
+        } else {
+            _totalStakedAmount += _amount;
+            _stakedBalances[_account] += _amount;
+            IERC20(stakingToken).safeTransferFrom(_proxyAccount, address(this), _amount);
+        }
+    }
+
+    modifier onlyStakingProxy() {
+        require(msg.sender == stakingThalesBettingProxy, "Unsupported staking proxy");
+        _;
+    }
+
+    function setStakingToken(address _stakingToken) external {
+        stakingToken = _stakingToken;
+    }
+
+    function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external {
+        stakingThalesBettingProxy = _stakingThalesBettingProxy;
+    }
 
     function updateVolume(address account, uint amount) public {
         uint decimals = ISportsAMMV2Manager(feeToken).decimals();

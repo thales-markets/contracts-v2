@@ -14,6 +14,7 @@ import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
 
 import "./../AMM/Ticket.sol";
+import "hardhat/console.sol";
 
 contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -54,6 +55,9 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
         stakingThales = IStakingThales(_stakingThales);
         stakingCollateral = IERC20(_stakingToken);
+        stakingCollateral.approve(_stakingThales, MAX_APPROVAL);
+        stakingCollateral.approve(_sportsAMMV2, MAX_APPROVAL);
+        stakingCollateral.approve(_liveTradingProcessor, MAX_APPROVAL);
     }
 
     /// @notice buy a ticket for a user if he has enough free bet in given collateral
@@ -97,15 +101,13 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         require(stakingThales.stakedBalanceOf(_user) >= _buyInAmount, "Staked amount too low");
         // signal decrease of stakingAmount
         stakingThales.decreaseStakingBalanceFor(_user, _buyInAmount);
+        console.log(">>>>>", address(this));
+        // stakingThales.safeTransfer()
         // stakingCollateral.safeTransferFrom(address(stakingThales), address(this), _buyInAmount);
     }
 
     /// @notice confirm a live ticket purchase. As live betting is a 2 step approach, the LiveTradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
-    function confirmLiveTrade(
-        bytes32 requestId,
-        address _createdTicket,
-        uint _buyInAmount
-    ) external notPaused nonReentrant {
+    function confirmLiveTrade(bytes32 requestId, address _createdTicket, uint _buyInAmount) external notPaused nonReentrant {
         require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
 
         address _user = liveRequestsPerUser[requestId];
