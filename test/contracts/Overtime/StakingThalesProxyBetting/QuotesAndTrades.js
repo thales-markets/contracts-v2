@@ -184,11 +184,13 @@ describe('StakingThalesBettingProxy', () => {
 
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
-
+			const stakingBalanceBefore = await stakingThales.stakedBalanceOf(firstTrader);
+			console.log("before: ",stakingBalanceBefore.toString());
 			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
-
+			
 			const firstTraderStakedBalance = await stakingThales.stakedBalanceOf(firstTrader);
-			expect(firstTraderStakedBalance).to.be.above(ethers.parseEther('100')); // Ensure it increased after winning
+			console.log("after: ",firstTraderStakedBalance.toString());
+			expect(firstTraderStakedBalance).to.be.above(stakingBalanceBefore); // Ensure it increased after winning
 		});
 
 		// it('User tickets history getters', async () => {
