@@ -184,7 +184,7 @@ describe('StakingThalesBettingProxy', () => {
 				[tradeDataCurrentRound[0].gameId],
 				[tradeDataCurrentRound[0].typeId],
 				[tradeDataCurrentRound[0].playerId],
-				[[0]]
+				[[1]]
 			);
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
