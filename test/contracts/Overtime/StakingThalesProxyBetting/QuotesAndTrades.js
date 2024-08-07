@@ -67,7 +67,7 @@ describe('StakingThalesBettingProxy', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS,
+				collateralTHALESAddress,
 				false
 			);
 
@@ -81,7 +81,7 @@ describe('StakingThalesBettingProxy', () => {
 						BUY_IN_AMOUNT,
 						quote.totalQuote,
 						ADDITIONAL_SLIPPAGE,
-						ZERO_ADDRESS
+						collateralTHALESAddress
 					)
 			).to.be.revertedWith('Insufficient staked balance');
 		});
@@ -92,7 +92,7 @@ describe('StakingThalesBettingProxy', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS,
+				collateralTHALESAddress,
 				false
 			);
 
@@ -105,7 +105,7 @@ describe('StakingThalesBettingProxy', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS
+					collateralTHALESAddress
 				);
 
 			const activeTickets = await stakingThalesBettingProxy.getActiveTicketsPerUser(
@@ -123,7 +123,7 @@ describe('StakingThalesBettingProxy', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS,
+				collateralTHALESAddress,
 				false
 			);
 
@@ -152,7 +152,7 @@ describe('StakingThalesBettingProxy', () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				ZERO_ADDRESS,
+				collateralTHALESAddress,
 				false
 			);
 
@@ -163,7 +163,7 @@ describe('StakingThalesBettingProxy', () => {
 					BUY_IN_AMOUNT,
 					quote.totalQuote,
 					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS
+					collateralTHALESAddress
 				);
 
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
