@@ -109,11 +109,13 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address user,
         uint _startIndex,
         uint _pageSize
-    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData) {
+    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData, TicketData[] memory stakingBettingProxyData) {
         address[] memory freeBetsArray = sportsAMM.freeBetsHolder().getActiveTicketsPerUser(_startIndex, _pageSize, user);
+        address[] memory stakingBettingProxyArray = sportsAMM.stakingThalesBettingProxy().getActiveTicketsPerUser(_startIndex, _pageSize, user);
         address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(_startIndex, _pageSize, user);
         ticketsData = _getTicketsData(ticketsArray);
         freeBetsData = _getTicketsData(freeBetsArray);
+        stakingBettingProxyData = _getTicketsData(stakingBettingProxyArray);
     }
 
     /// @notice return all resolved ticket data for user with free bets
@@ -121,11 +123,13 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address user,
         uint _startIndex,
         uint _pageSize
-    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData) {
+    ) external view returns (TicketData[] memory ticketsData, TicketData[] memory freeBetsData, TicketData[] memory stakingBettingProxyData) {
         address[] memory freeBetsArray = sportsAMM.freeBetsHolder().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
+        address[] memory stakingBettingProxyArray = sportsAMM.stakingThalesBettingProxy().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
         address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
         ticketsData = _getTicketsData(ticketsArray);
         freeBetsData = _getTicketsData(freeBetsArray);
+        stakingBettingProxyData = _getTicketsData(stakingBettingProxyArray);
     }
 
     /// @notice return all ticket data for game

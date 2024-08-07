@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
+import "../../interfaces/IStakingThalesBettingProxy.sol";
 
 contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
@@ -36,6 +37,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint public requestCounter;
     mapping(uint => bytes32) public counterToRequestId;
+
+    address public stakingThalesBettingProxy;
 
     constructor(
         address _link,
@@ -139,6 +142,13 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 comPositions //combinedPositions[]
             );
 
+            if (requester == stakingThalesBettingProxy) {
+                IStakingThalesBettingProxy(stakingThalesBettingProxy).preConfirmLiveTrade(
+                    _requestId,
+                    lTradeData._buyInAmount
+                );
+            }
+
             address _createdTicket = sportsAMM.tradeLive(
                 tradeData,
                 lTradeData._buyInAmount,
@@ -154,6 +164,12 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                     _createdTicket,
                     lTradeData._buyInAmount,
                     lTradeData._collateral
+                );
+            } else if (requester == stakingThalesBettingProxy) {
+                IStakingThalesBettingProxy(stakingThalesBettingProxy).confirmLiveTrade(
+                    _requestId,
+                    _createdTicket,
+                    lTradeData._buyInAmount
                 );
             }
         }
@@ -212,6 +228,12 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
+    function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
+        stakingThalesBettingProxy = _stakingThalesBettingProxy;
+
+        emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);
+    }
+
     /// @notice setMaxAllowedExecutionDelay
     /// @param _maxAllowedExecutionDelay maximum allowed buffer for the CL request to be executed, defaulted at 60 seconds
     function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
@@ -261,4 +283,5 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     );
     event SetMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay);
     event SetFreeBetsHolder(address _freeBetsHolder);
+    event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
 }

@@ -354,6 +354,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "_stakingThalesBettingProxy",
+        "type": "address"
+      }
+    ],
+    "name": "SetStakingThalesBettingProxy",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "account",
         "type": "address"
       }
@@ -753,11 +766,37 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_stakingThalesBettingProxy",
+        "type": "address"
+      }
+    ],
+    "name": "setStakingThalesBettingProxy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "sportsAMM",
     "outputs": [
       {
         "internalType": "contract ISportsAMMV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stakingThalesBettingProxy",
+    "outputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }

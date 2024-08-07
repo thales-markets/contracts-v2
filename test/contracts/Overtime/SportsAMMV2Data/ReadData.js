@@ -190,7 +190,7 @@ describe('SportsAMMV2Data Read Data', () => {
 			await sportsAMMV2.exerciseTicket(ticketAddress);
 
 			const firstTraderAddress = await firstTrader.getAddress();
-			const [ticketsData] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
+			const [ticketsData, ,] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
 				firstTrader,
 				0,
 				100
