@@ -25,7 +25,6 @@ import "../../interfaces/IWeth.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/IStakingThalesBettingProxy.sol";
 
-import "hardhat/console.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -643,7 +642,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (ticketOwner == freeBetsHolder) {
             IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
         } else if (ticketOwner == stakingThalesBettingProxy) {
-            console.log(">>>> exercise in SportsAMM");
             IStakingThalesBettingProxy(stakingThalesBettingProxy).confirmTicketResolved(_ticket);
         }
 

@@ -15,7 +15,6 @@ import "../../interfaces/ILiveTradingProcessor.sol";
 
 import "./../AMM/Ticket.sol";
 
-import "hardhat/console.sol";
 
 
 contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
@@ -127,7 +126,6 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes back to the freebet balance
     function confirmTicketResolved(address _resolvedTicket) external {
         require(msg.sender == address(sportsAMM), "Only allowed from SportsAMM");
-        console.log(">>>> exercise in StakingThalesBettingProxy");
 
         address _user = ticketToUser[_resolvedTicket];
         require(_user != address(0), "Unknown ticket");

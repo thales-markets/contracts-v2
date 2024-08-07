@@ -6,7 +6,6 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "hardhat/console.sol";
 
 
 contract MockStakingThales {
@@ -45,7 +44,6 @@ contract MockStakingThales {
             _stakedBalances[_account] -= _amount;
             IERC20(stakingToken).safeTransfer(_proxyAccount, _amount);
         } else {
-            console.log(">>>> exercise in StakingThales");
 
             _totalStakedAmount += _amount;
             _stakedBalances[_account] += _amount;
