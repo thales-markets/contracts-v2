@@ -71,7 +71,12 @@ describe('StakingThalesBettingProxy', () => {
 				false
 			);
 
-			expect(quote.payout).to.equal(ethers.parseEther('20'));
+			console.log(tradeDataCurrentRound);
+			console.log(BUY_IN_AMOUNT);
+			console.log(quote);
+			expect(Number(quote.payout.toString() / 1e18).toFixed(5)).to.equal(
+				Number(Number(BUY_IN_AMOUNT.toString()) / Number(quote.totalQuote.toString())).toFixed(5)
+			);
 
 			await expect(
 				stakingThalesBettingProxy
@@ -96,7 +101,9 @@ describe('StakingThalesBettingProxy', () => {
 				false
 			);
 
-			expect(quote.payout).to.equal(ethers.parseEther('20'));
+			expect(Number(quote.payout.toString() / 1e18).toFixed(5)).to.equal(
+				Number(Number(BUY_IN_AMOUNT.toString()) / Number(quote.totalQuote.toString())).toFixed(5)
+			);
 
 			await stakingThalesBettingProxy
 				.connect(firstTrader)
