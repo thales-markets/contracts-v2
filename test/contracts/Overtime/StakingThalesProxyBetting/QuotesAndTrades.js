@@ -155,6 +155,8 @@ describe('StakingThalesBettingProxy', () => {
 
 		it('Should claim winnings', async () => {
 			await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
+			const stakingBalanceInit = await stakingThales.stakedBalanceOf(firstTrader);
+			console.log('at start: ', stakingBalanceInit.toString());
 
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
@@ -181,15 +183,28 @@ describe('StakingThalesBettingProxy', () => {
 				[tradeDataCurrentRound[0].playerId],
 				[[0]]
 			);
-
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
-			const stakingBalanceBefore = await stakingThales.stakedBalanceOf(firstTrader);
-			console.log("before: ",stakingBalanceBefore.toString());
+			const ticketsDataBeforeExercise = await sportsAMMV2Data.getTicketsData([ticketAddress]);
+			console.log('firstTrader: ', firstTrader.address);
+			console.log('\n TICKETS DATA before exercise: ');
+			console.log('ticketOwner: ', ticketsDataBeforeExercise[0][0]);
+			console.log('isUserTheWinner: ', ticketsDataBeforeExercise[0][15]);
+			console.log('isExercisable: ', ticketsDataBeforeExercise[0][16]);
+			console.log('resolved: ', ticketsDataBeforeExercise[0][11]);
+			const stakingBalanceBefore = await stakingThales.stakedBalanceOf(firstTrader.address);
+			console.log('before: ', stakingBalanceBefore.toString());
 			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
-			
-			const firstTraderStakedBalance = await stakingThales.stakedBalanceOf(firstTrader);
-			console.log("after: ",firstTraderStakedBalance.toString());
+			const ticketsData = await sportsAMMV2Data.getTicketsData([ticketAddress]);
+			console.log('\n TICKETS DATA after exercise: ');
+			console.log('ticketOwner: ', ticketsData[0][0]);
+			console.log('isUserTheWinner: ', ticketsData[0][15]);
+			console.log('isExercisable: ', ticketsData[0][16]);
+			console.log('resolved: ', ticketsData[0][11]);
+			console.log('\n TICKETS DATA======================== ');
+
+			const firstTraderStakedBalance = await stakingThales.stakedBalanceOf(firstTrader.address);
+			console.log('after: ', firstTraderStakedBalance.toString());
 			expect(firstTraderStakedBalance).to.be.above(stakingBalanceBefore); // Ensure it increased after winning
 		});
 
