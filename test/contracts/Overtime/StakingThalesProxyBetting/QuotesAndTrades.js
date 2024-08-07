@@ -20,10 +20,12 @@ describe('StakingThalesBettingProxy', () => {
 		sportsAMMV2THALESLiquidityPool,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
+		owner,
 		firstLiquidityProvider,
 		firstTrader,
 		stakingThalesBettingProxy,
 		collateralTHALESAddress,
+		collateralTHALES,
 		sportsAMMV2RiskManager,
 		mockChainlinkOracle,
 		liveTradingProcessor,
@@ -41,13 +43,14 @@ describe('StakingThalesBettingProxy', () => {
 			tradeDataTenMarketsCurrentRound,
 			stakingThalesBettingProxy,
 			collateralTHALESAddress,
+			collateralTHALES,
 			sportsAMMV2RiskManager,
 			mockChainlinkOracle,
 			liveTradingProcessor,
 			sportsAMMV2ResultManager,
 			stakingThales,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
+		({ owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
@@ -240,6 +243,20 @@ describe('StakingThalesBettingProxy', () => {
 				100
 			);
 			expect(resolvedStakingBettingProxy.length).to.be.equal(0);
+		});
+		it('Retrieve funds', async () => {
+			const initialBalance = await collateralTHALES.balanceOf(owner.address);
+
+			await collateralTHALES
+				.connect(firstTrader)
+				.transfer(stakingThalesBettingProxy.target, ethers.parseEther('100'));
+			await stakingThalesBettingProxy.retrieveFunds(
+				collateralTHALESAddress,
+				ethers.parseEther('100')
+			);
+
+			const afterBalance = await collateralTHALES.balanceOf(owner.address);
+			expect(afterBalance).to.be.equal(initialBalance + ethers.parseEther('100'));
 		});
 	});
 });
