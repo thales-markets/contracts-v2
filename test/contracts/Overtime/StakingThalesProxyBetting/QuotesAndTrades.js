@@ -154,6 +154,9 @@ describe('StakingThalesBettingProxy', () => {
 		});
 
 		it('Should claim winnings', async () => {
+			console.log('TRADE DATA CURRENT ROUND: ', tradeDataCurrentRound);
+			console.log('\n\n ________________________________________');
+
 			await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
 			const stakingBalanceInit = await stakingThales.stakedBalanceOf(firstTrader);
 			console.log('at start: ', stakingBalanceInit.toString());
