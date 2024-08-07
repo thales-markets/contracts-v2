@@ -7,6 +7,7 @@ import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/IFreeBetsHolder.sol";
+import "../interfaces/IStakingThalesBettingProxy.sol";
 
 interface ISportsAMMV2 {
     struct CombinedPosition {
@@ -42,6 +43,8 @@ interface ISportsAMMV2 {
     function riskManager() external view returns (ISportsAMMV2RiskManager);
 
     function freeBetsHolder() external view returns (IFreeBetsHolder);
+    
+    function stakingThalesBettingProxy() external view returns (IStakingThalesBettingProxy);
 
     function tradeLive(
         TradeData[] calldata _tradeData,

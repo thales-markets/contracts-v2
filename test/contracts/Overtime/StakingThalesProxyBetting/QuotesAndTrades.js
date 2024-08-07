@@ -71,9 +71,6 @@ describe('StakingThalesBettingProxy', () => {
 				false
 			);
 
-			console.log(tradeDataCurrentRound);
-			console.log(BUY_IN_AMOUNT);
-			console.log(quote);
 			expect(Number(quote.payout.toString() / 1e18).toFixed(5)).to.equal(
 				Number(Number(BUY_IN_AMOUNT.toString()) / Number(quote.totalQuote.toString())).toFixed(5)
 			);
@@ -148,13 +145,11 @@ describe('StakingThalesBettingProxy', () => {
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
-			console.log('requestId is ' + requestId);
 
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
 		});
 
 		it('Should claim winnings', async () => {
-
 			await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
 			const stakingBalanceInit = await stakingThales.stakedBalanceOf(firstTrader);
 
@@ -186,62 +181,65 @@ describe('StakingThalesBettingProxy', () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 			const ticketsDataBeforeExercise = await sportsAMMV2Data.getTicketsData([ticketAddress]);
-			
+
 			const stakingBalanceBefore = await stakingThales.stakedBalanceOf(firstTrader.address);
 			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
 			const ticketsData = await sportsAMMV2Data.getTicketsData([ticketAddress]);
 
 			const firstTraderStakedBalance = await stakingThales.stakedBalanceOf(firstTrader.address);
-			expect(parseInt(parseInt(firstTraderStakedBalance)/1e6)).to.be.equal(parseInt((parseInt(stakingBalanceBefore)+parseInt(ticketsData[0][17]))/1e6)); // Ensure it increased after winning
+			expect(parseInt(parseInt(firstTraderStakedBalance) / 1e6)).to.be.equal(
+				parseInt((parseInt(stakingBalanceBefore) + parseInt(ticketsData[0][17])) / 1e6)
+			); // Ensure it increased after winning
 		});
 
-		// it('User tickets history getters', async () => {
-		//     await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
+		it('User tickets history getters', async () => {
+			await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
 
-		//     const quote = await sportsAMMV2.tradeQuote(
-		//         tradeDataCurrentRound,
-		//         BUY_IN_AMOUNT,
-		//         ZERO_ADDRESS,
-		//         false
-		//     );
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateralTHALESAddress,
+				false
+			);
 
-		//     await stakingThalesBettingProxy
-		//         .connect(firstTrader)
-		//         .trade(
-		//             tradeDataCurrentRound,
-		//             BUY_IN_AMOUNT,
-		//             quote.totalQuote,
-		//             ADDITIONAL_SLIPPAGE,
-		//             ZERO_ADDRESS
-		//         );
+			await stakingThalesBettingProxy
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					collateralTHALESAddress
+				);
 
-		//     let numActive = await stakingThalesBettingProxy.numOfActiveTicketsPerUser(firstTrader);
-		//     expect(numActive).to.equal(1);
+			let numActive = await stakingThalesBettingProxy.numOfActiveTicketsPerUser(firstTrader);
+			expect(numActive).to.equal(1);
 
-		//     await stakingThalesBettingProxy.getActiveTicketsPerUser(0, 1, firstTrader);
+			await stakingThalesBettingProxy.getActiveTicketsPerUser(0, 1, firstTrader);
 
-		//     let numResolved = await stakingThalesBettingProxy.numOfResolvedTicketsPerUser(firstTrader);
-		//     expect(numResolved).to.equal(0);
+			let numResolved = await stakingThalesBettingProxy.numOfResolvedTicketsPerUser(firstTrader);
+			expect(numResolved).to.equal(0);
 
-		//     await stakingThalesBettingProxy.getResolvedTicketsPerUser(0, 1, firstTrader);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
 
-		//     const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
-		//     const ticketAddress = activeTickets[0];
+			const [, , activeStakingBettingProxy] = await sportsAMMV2Data.getActiveTicketsDataPerUser(
+				firstTrader,
+				0,
+				100
+			);
 
-		//     const [, activeStakedTokensData] = await sportsAMMV2Data.getActiveTicketsDataPerUser(
-		//         firstTrader,
-		//         0,
-		//         100
-		//     );
-		//     expect(activeStakedTokensData.length).to.be.equal(1);
-		//     expect(activeStakedTokensData[0].id).to.be.equal(ticketAddress);
+			await stakingThalesBettingProxy.getResolvedTicketsPerUser(0, 1, firstTrader);
 
-		//     const [, resolvedStakedTokens] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
-		//         firstTrader,
-		//         0,
-		//         100
-		//     );
-		//     expect(resolvedStakedTokens.length).to.be.equal(0);
-		// });
+			expect(activeStakingBettingProxy.length).to.be.equal(1);
+			expect(activeStakingBettingProxy[0].id).to.be.equal(ticketAddress);
+
+			const [, , resolvedStakingBettingProxy] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
+				firstTrader,
+				0,
+				100
+			);
+			expect(resolvedStakingBettingProxy.length).to.be.equal(0);
+		});
 	});
 });
