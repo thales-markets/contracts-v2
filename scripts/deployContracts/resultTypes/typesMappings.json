@@ -768,5 +768,10 @@
 		"id": 10020,
 		"result_type": 1,
 		"name": "CHILD_LAST_SCORE"
+	},
+	{
+		"id": 10130,
+		"result_type": 1,
+		"name": "CHILD_WHO_WILL_QUALIFY"
 	}
 ]
