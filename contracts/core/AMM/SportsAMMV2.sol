@@ -458,10 +458,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 )
             );
         } else {
-            payout =
-                _tradeDataInternal._expectedPayout +
-                ((addedPayoutPercentage * _tradeDataInternal._expectedPayout) / ONE);
-            totalQuote = (ONE * _tradeDataInternal._buyInAmount) / payout;
+            totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
+            totalQuote = (totalQuote * ONE) / ((ONE + addedPayoutPercentage) - (addedPayoutPercentage * totalQuote) / ONE);
+            payout = (ONE * _tradeDataInternal._buyInAmount) / totalQuote;
             fees = _getFees(_tradeDataInternal._buyInAmount);
         }
 
@@ -575,8 +574,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         for (uint i = 0; i < _tradeData.length; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
-            uint marketOdds = marketTradeData.odds[marketTradeData.position] -
-                ((_addedPayoutPercentage * marketTradeData.odds[marketTradeData.position]) / ONE);
+            uint marketOdds = (marketTradeData.odds[marketTradeData.position] * ONE) /
+                ((ONE + _addedPayoutPercentage) -
+                    (_addedPayoutPercentage * marketTradeData.odds[marketTradeData.position]) /
+                    ONE);
 
             markets[i] = Ticket.MarketData(
                 marketTradeData.gameId,
