@@ -366,7 +366,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
             require(marketTradeData.odds.length > marketTradeData.position, "Invalid position");
             uint marketOdds = marketTradeData.odds[marketTradeData.position];
-            marketOdds = marketOdds - ((addedPayoutPercentage * marketOdds) / ONE);
+            marketOdds = (marketOdds * ONE) / ((ONE + addedPayoutPercentage) - (addedPayoutPercentage * marketOdds) / ONE);
 
             amountsToBuy[i] = (ONE * _tradeDataQuoteInternal._buyInAmount) / marketOdds;
             totalQuote = totalQuote == 0 ? marketOdds : (totalQuote * marketOdds) / ONE;
