@@ -156,7 +156,7 @@
 		"DefaultLiquidityProviderImplementation": "0x482610a1c1f8C5057bca7ed1a5148C00d868d020",
 		"DefaultLiquidityProviderProxyAdmin": "0x0997355eFC01F43ce324C50bDb1FEa6F773C509C",
 		"SportsAMMV2LiquidityPoolData": "0xcc4ED8cD7101B512B134360ED3cCB759caB33f17",
-		"SportsAMMV2LiquidityPoolDataImplementation": "0x2073Db849e3b724f5c98823f8F2bd70B23e82B16",
+		"SportsAMMV2LiquidityPoolDataImplementation": "0xfD60c38775E4CFB5223a381D7C5f43502FFF08E2",
 		"SportsAMMV2LiquidityPoolDataProxyAdmin": "0xBb27d7302be8044E8dc0761815BEaa138341C873",
 		"SportsAMMV2LiquidityPoolWETH": "0xcB4728a1789B87E05c813B68DBc5E6A98a4856bA",
 		"SportsAMMV2LiquidityPoolImplementationWETH": "0x65a671983815DA0a61B76cCAb0740c8cDEf842E9",
@@ -173,7 +173,7 @@
 		"ChainlinkResolver": "0x4f2822D4e60af7f9F70E7e45BC1941fe3461231e",
 		"LiveTradingProcessor": "0x3b250d77b982Fd3eb67ddEa5191cE0115cC226a7",
 		"FreeBetsHolder": "0xd1F2b87a9521315337855A132e5721cfe272BBd9",
-		"FreeBetsHolderImplementation": "0xE59206b08cC96Da0818522C75eE3Fd4EBB7c0A47",
+		"FreeBetsHolderImplementation": "0xbE7149c78D77ad8e3777d5CaD5BF94B56d772Cf8",
 		"FreeBetsHolderProxyAdmin": "0x609AB342035075F360e6fFbb1c43Dc3E96B9FCF3"
 	}
 }
