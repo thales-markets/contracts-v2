@@ -669,12 +669,23 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice set roots of merkle tree
     /// @param _games game IDs
     /// @param _roots new roots
-    function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) public onlyWhitelistedAddresses {
+    function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) external onlyWhitelistedAddresses {
         require(_games.length == _roots.length, "Invalid length");
         for (uint i; i < _games.length; i++) {
-            rootPerGame[_games[i]] = _roots[i];
-            emit GameRootUpdated(_games[i], _roots[i]);
+            _setRootForGame(_games[i], _roots[i]);
         }
+    }
+
+    /// @notice set root of merkle tree
+    /// @param _game game ID
+    /// @param _root new root
+    function setRootForGame(bytes32 _game, bytes32 _root) external onlyWhitelistedAddresses {
+        _setRootForGame(_game, _root);
+    }
+
+    function _setRootForGame(bytes32 _game, bytes32 _root) internal {
+        rootPerGame[_game] = _root;
+        emit GameRootUpdated(_game, _root);
     }
 
     /// @notice sets different amounts
@@ -795,7 +806,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     modifier onlyWhitelistedAddresses() {
         require(
-            msg.sender == owner || manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.ROOT_SETTING),
+            manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.ROOT_SETTING) || msg.sender == owner,
             "Invalid sender"
         );
         _;
