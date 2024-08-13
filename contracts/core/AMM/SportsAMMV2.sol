@@ -337,6 +337,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
+        
+    /// @notice withdraw provided tickets
+    /// @param _tickets array of tickets to be withdrawn
+    function withdraw(address[] calldata _tickets) external onlyOwner {
+        for (uint i = 0; i < _tickets.length; i++) {
+            Ticket(_tickets[i]).withdrawCollateral(msg.sender);
+        }
+    }
+
+
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _tradeQuote(
