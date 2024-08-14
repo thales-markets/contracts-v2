@@ -663,5 +663,115 @@
 		"id": 10124,
 		"result_type": 4,
 		"name": "CHILD_FOURTH_PERIOD_DRAW_NO_BET"
+	},
+	{
+		"id": 10131,
+		"result_type": 1,
+		"name": "CHILD_WILL_THERE_BE_OVERTIME"
+	},
+	{
+		"id": 10132,
+		"result_type": 1,
+		"name": "CHILD_NO_RUNS_FIRST_INNING"
+	},
+	{
+		"id": 10151,
+		"result_type": 1,
+		"name": "CHILD_WINNING_ROUND"
+	},
+	{
+		"id": 10154,
+		"result_type": 1,
+		"name": "CHILD_GO_THE_DISTANCE"
+	},
+	{
+		"id": 10155,
+		"result_type": 1,
+		"name": "CHILD_WILL_FIGHT_END_IN_FIRST_MINUTE"
+	},
+	{
+		"id": 10156,
+		"result_type": 1,
+		"name": "CHILD_WILL_POINTS_BE_DEDUCTED"
+	},
+	{
+		"id": 10157,
+		"result_type": 1,
+		"name": "CHILD_ENDING_METHOD"
+	},
+	{
+		"id": 10158,
+		"result_type": 1,
+		"name": "CHILD_METHOD_OF_VICTORY"
+	},
+	{
+		"id": 11200,
+		"result_type": 2,
+		"name": "PROP_TAKEDOWNS"
+	},
+	{
+		"id": 11201,
+		"result_type": 2,
+		"name": "PROP_SIGNIFICANT_STRIKES"
+	},
+	{
+		"id": 10100,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE"
+	},
+	{
+		"id": 10200,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_FIRST_PERIOD"
+	},
+	{
+		"id": 10201,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_SECOND_PERIOD"
+	},
+	{
+		"id": 10143,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_EXACT_HOME_TEAM"
+	},
+	{
+		"id": 10144,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_EXACT_AWAY_TEAM"
+	},
+	{
+		"id": 10145,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_EXACT_HOME_TEAM"
+	},
+	{
+		"id": 10146,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_EXACT_AWAY_TEAM"
+	},
+	{
+		"id": 10147,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_EXACT_HOME_TEAM"
+	},
+	{
+		"id": 10148,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_EXACT_AWAY_TEAM"
+	},
+	{
+		"id": 10019,
+		"result_type": 1,
+		"name": "CHILD_FIRST_SCORE"
+	},
+	{
+		"id": 10020,
+		"result_type": 1,
+		"name": "CHILD_LAST_SCORE"
+	},
+	{
+		"id": 10130,
+		"result_type": 1,
+		"name": "CHILD_WHO_WILL_QUALIFY"
 	}
 ]
