@@ -450,10 +450,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 cap = sportCap;
 
                 if (_typeId > 0) {
-                    cap = capPerSportChild[_sportId];
+                    cap = capPerSportAndType[_sportId][_typeId];
                     if (cap == 0) {
-                        uint typeCap = capPerSportAndType[_sportId][_typeId];
-                        cap = typeCap > 0 ? typeCap : sportCap / 2;
+                        uint childCap = capPerSportChild[_sportId];
+                        cap = childCap > 0 ? childCap : sportCap / 2;
                     }
                 }
             }
