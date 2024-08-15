@@ -191,6 +191,28 @@ describe('SportsAMMV2RiskManager Get Risk Data', () => {
 			expect(cap).to.equal(newCapForSportAndType);
 		});
 
+		it('Should get cap for market (TOTAL) - cap per sport and type even if child market is set ', async () => {
+			await sportsAMMV2RiskManager.setCapsPerSportAndType(
+				[SPORT_ID_NBA],
+				[TYPE_ID_TOTAL],
+				[newCapForSportAndType]
+			);
+
+			await sportsAMMV2RiskManager.setCapsPerSportChild([SPORT_ID_NBA], [newCapForSportChild]);
+
+			const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+				GAME_ID_1,
+				SPORT_ID_NBA,
+				TYPE_ID_TOTAL,
+				0,
+				TOTAL_LINE,
+				maturity,
+				false
+			);
+
+			expect(cap).to.equal(newCapForSportAndType);
+		});
+
 		it('Should get cap for market (TOTAL) - cap per market', async () => {
 			await sportsAMMV2RiskManager.setCapsPerMarket(
 				[GAME_ID_1],
