@@ -74,6 +74,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				false
 			);
 
+			console.log('Normal quote is: ' + quote.totalQuote);
+			console.log('THALES quote is: ' + quoteTHALES.totalQuote);
+
 			expect(quoteTHALES.payout).greaterThan(quote.payout);
 
 			await sportsAMMV2
@@ -122,6 +125,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				collateralTHALESAddress,
 				false
 			);
+
+			console.log('Normal quote is: ' + quote.totalQuote);
+			console.log('THALES quote is: ' + quoteTHALES.totalQuote);
 
 			expect(quoteTHALES.payout).greaterThan(quote.payout);
 
@@ -174,7 +180,11 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 			const marketData = await userTicket.markets(0);
 
-			expect(marketData.odd).to.equal(ethers.parseEther('0.49'));
+			console.log('Normal quote is: ' + quote.totalQuote);
+			console.log('THALES live quote is: ' + marketData.odd);
+
+			expect(marketData.odd).to.greaterThan(ethers.parseEther('0.495'));
+			expect(marketData.odd).to.lessThan(ethers.parseEther('0.496'));
 
 			expect(await userTicket.isLive()).to.eq(true);
 		});

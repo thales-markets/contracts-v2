@@ -8234,7 +8234,7 @@
             "slot": "0",
             "type": "t_address",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
           },
           {
             "label": "nominatedOwner",
@@ -8242,7 +8242,7 @@
             "slot": "1",
             "type": "t_address",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
           },
           {
             "label": "_initialized",
@@ -8250,7 +8250,7 @@
             "slot": "1",
             "type": "t_bool",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
           },
           {
             "label": "_transferredAtInit",
@@ -8258,7 +8258,7 @@
             "slot": "1",
             "type": "t_bool",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
           },
           {
             "label": "lastPauseTime",
@@ -8266,7 +8266,7 @@
             "slot": "2",
             "type": "t_uint256",
             "contract": "ProxyPausable",
-            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
           },
           {
             "label": "paused",
@@ -8274,7 +8274,7 @@
             "slot": "3",
             "type": "t_bool",
             "contract": "ProxyPausable",
-            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
           },
           {
             "label": "_guardCounter",
@@ -8282,7 +8282,7 @@
             "slot": "4",
             "type": "t_uint256",
             "contract": "ProxyReentrancyGuard",
-            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
           },
           {
             "label": "_initialized",
@@ -8290,31 +8290,31 @@
             "slot": "5",
             "type": "t_bool",
             "contract": "ProxyReentrancyGuard",
-            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
           },
           {
             "label": "manager",
             "offset": 1,
             "slot": "5",
-            "type": "t_contract(ISportsAMMV2Manager)19034",
+            "type": "t_contract(ISportsAMMV2Manager)19270",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:28"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:28"
           },
           {
             "label": "resultManager",
             "offset": 0,
             "slot": "6",
-            "type": "t_contract(ISportsAMMV2ResultManager)19198",
+            "type": "t_contract(ISportsAMMV2ResultManager)19434",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:31"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:31"
           },
           {
             "label": "sportsAMM",
             "offset": 0,
             "slot": "7",
-            "type": "t_contract(ISportsAMMV2)18867",
+            "type": "t_contract(ISportsAMMV2)19103",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:34"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:34"
           },
           {
             "label": "defaultCap",
@@ -8322,7 +8322,7 @@
             "slot": "8",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:37"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:37"
           },
           {
             "label": "capPerSport",
@@ -8330,7 +8330,7 @@
             "slot": "9",
             "type": "t_mapping(t_uint256,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:40"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:40"
           },
           {
             "label": "capPerSportChild",
@@ -8338,7 +8338,7 @@
             "slot": "10",
             "type": "t_mapping(t_uint256,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:43"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:43"
           },
           {
             "label": "capPerSportAndType",
@@ -8346,7 +8346,7 @@
             "slot": "11",
             "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:46"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:46"
           },
           {
             "label": "capPerMarket",
@@ -8354,7 +8354,7 @@
             "slot": "12",
             "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_int256,t_uint256))))",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:49"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:49"
           },
           {
             "label": "defaultRiskMultiplier",
@@ -8362,7 +8362,7 @@
             "slot": "13",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:52"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:52"
           },
           {
             "label": "riskMultiplierPerSport",
@@ -8370,7 +8370,7 @@
             "slot": "14",
             "type": "t_mapping(t_uint256,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:55"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:55"
           },
           {
             "label": "riskMultiplierPerGame",
@@ -8378,7 +8378,7 @@
             "slot": "15",
             "type": "t_mapping(t_bytes32,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:58"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:58"
           },
           {
             "label": "maxCap",
@@ -8386,7 +8386,7 @@
             "slot": "16",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:61"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:61"
           },
           {
             "label": "maxRiskMultiplier",
@@ -8394,7 +8394,7 @@
             "slot": "17",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:64"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:64"
           },
           {
             "label": "dynamicLiquidityCutoffTimePerSport",
@@ -8402,7 +8402,7 @@
             "slot": "18",
             "type": "t_mapping(t_uint256,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:67"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:67"
           },
           {
             "label": "dynamicLiquidityCutoffDividerPerSport",
@@ -8410,7 +8410,7 @@
             "slot": "19",
             "type": "t_mapping(t_uint256,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:70"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:70"
           },
           {
             "label": "liveTradingPerSportAndTypeEnabled",
@@ -8418,7 +8418,7 @@
             "slot": "20",
             "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_bool))",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:72"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:72"
           },
           {
             "label": "combiningPerSportEnabled",
@@ -8426,7 +8426,7 @@
             "slot": "21",
             "type": "t_mapping(t_uint256,t_bool)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:74"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:74"
           },
           {
             "label": "riskPerMarketTypeAndPosition",
@@ -8434,7 +8434,7 @@
             "slot": "22",
             "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_uint256,t_int256))))",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:77"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:77"
           },
           {
             "label": "spentOnGame",
@@ -8442,7 +8442,7 @@
             "slot": "23",
             "type": "t_mapping(t_bytes32,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:80"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:80"
           },
           {
             "label": "minBuyInAmount",
@@ -8450,7 +8450,7 @@
             "slot": "24",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:83"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:83"
           },
           {
             "label": "maxTicketSize",
@@ -8458,7 +8458,7 @@
             "slot": "25",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:86"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:86"
           },
           {
             "label": "maxSupportedAmount",
@@ -8466,7 +8466,7 @@
             "slot": "26",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:89"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:89"
           },
           {
             "label": "maxSupportedOdds",
@@ -8474,7 +8474,7 @@
             "slot": "27",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:92"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:92"
           },
           {
             "label": "minimalTimeLeftToMaturity",
@@ -8482,7 +8482,7 @@
             "slot": "28",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:95"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:95"
           },
           {
             "label": "expiryDuration",
@@ -8490,7 +8490,7 @@
             "slot": "29",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:98"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:98"
           },
           {
             "label": "liveCapDividerPerSport",
@@ -8498,7 +8498,7 @@
             "slot": "30",
             "type": "t_mapping(t_uint256,t_uint256)",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:101"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:101"
           },
           {
             "label": "defaultLiveCapDivider",
@@ -8506,7 +8506,7 @@
             "slot": "31",
             "type": "t_uint256",
             "contract": "SportsAMMV2RiskManager",
-            "src": "contracts/core/AMM/SportsAMMV2RiskManager.sol:104"
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:104"
           }
         ],
         "types": {
@@ -8544,15 +8544,15 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(ISportsAMMV2)18867": {
+          "t_contract(ISportsAMMV2)19103": {
             "label": "contract ISportsAMMV2",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2Manager)19034": {
+          "t_contract(ISportsAMMV2Manager)19270": {
             "label": "contract ISportsAMMV2Manager",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2ResultManager)19198": {
+          "t_contract(ISportsAMMV2ResultManager)19434": {
             "label": "contract ISportsAMMV2ResultManager",
             "numberOfBytes": "20"
           },
@@ -8623,7 +8623,7 @@
               "contract": "Initializable",
               "label": "_initialized",
               "type": "t_uint64",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
               "offset": 0,
               "slot": "0"
             },
@@ -8631,7 +8631,7 @@
               "contract": "Initializable",
               "label": "_initializing",
               "type": "t_bool",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }
@@ -10125,6 +10125,740 @@
             "numberOfBytes": "20"
           },
           "t_contract(ISportsAMMV2RiskManager)5144": {
+            "label": "contract ISportsAMMV2RiskManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IStakingThales)1252": {
+            "label": "contract IStakingThales",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bytes32)": {
+            "label": "mapping(bytes32 => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "f3ccc8b960ed5bd0208c6ea88ae85aff4e6b32ace1f02ef6d52fcde5956fa699": {
+      "address": "0xCB34C58BD66256bEd2d0f6d39629fBBeB6180e38",
+      "txHash": "0xb1e1be7973e3475a387ca32cf2cca47a737a0fd6192b9d427aabc0151b045629",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "manager",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Manager)3640",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:28"
+          },
+          {
+            "label": "resultManager",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ISportsAMMV2ResultManager)3804",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:31"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(ISportsAMMV2)3507",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:34"
+          },
+          {
+            "label": "defaultCap",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:37"
+          },
+          {
+            "label": "capPerSport",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:40"
+          },
+          {
+            "label": "capPerSportChild",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:43"
+          },
+          {
+            "label": "capPerSportAndType",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:46"
+          },
+          {
+            "label": "capPerMarket",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_int256,t_uint256))))",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:49"
+          },
+          {
+            "label": "defaultRiskMultiplier",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:52"
+          },
+          {
+            "label": "riskMultiplierPerSport",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:55"
+          },
+          {
+            "label": "riskMultiplierPerGame",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:58"
+          },
+          {
+            "label": "maxCap",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:61"
+          },
+          {
+            "label": "maxRiskMultiplier",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:64"
+          },
+          {
+            "label": "dynamicLiquidityCutoffTimePerSport",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:67"
+          },
+          {
+            "label": "dynamicLiquidityCutoffDividerPerSport",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:70"
+          },
+          {
+            "label": "liveTradingPerSportAndTypeEnabled",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_bool))",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:72"
+          },
+          {
+            "label": "combiningPerSportEnabled",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:74"
+          },
+          {
+            "label": "riskPerMarketTypeAndPosition",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_uint256,t_int256))))",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:77"
+          },
+          {
+            "label": "spentOnGame",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:80"
+          },
+          {
+            "label": "minBuyInAmount",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:83"
+          },
+          {
+            "label": "maxTicketSize",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:86"
+          },
+          {
+            "label": "maxSupportedAmount",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:89"
+          },
+          {
+            "label": "maxSupportedOdds",
+            "offset": 0,
+            "slot": "27",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:92"
+          },
+          {
+            "label": "minimalTimeLeftToMaturity",
+            "offset": 0,
+            "slot": "28",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:95"
+          },
+          {
+            "label": "expiryDuration",
+            "offset": 0,
+            "slot": "29",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:98"
+          },
+          {
+            "label": "liveCapDividerPerSport",
+            "offset": 0,
+            "slot": "30",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:101"
+          },
+          {
+            "label": "defaultLiveCapDivider",
+            "offset": 0,
+            "slot": "31",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2RiskManager",
+            "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:104"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(ISportsAMMV2)3507": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)3640": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2ResultManager)3804": {
+            "label": "contract ISportsAMMV2ResultManager",
+            "numberOfBytes": "20"
+          },
+          "t_int256": {
+            "label": "int256",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_int256,t_uint256))))": {
+            "label": "mapping(bytes32 => mapping(uint256 => mapping(uint256 => mapping(int256 => uint256))))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_uint256,t_int256))))": {
+            "label": "mapping(bytes32 => mapping(uint256 => mapping(uint256 => mapping(uint256 => int256))))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_int256,t_uint256)": {
+            "label": "mapping(int256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_int256)": {
+            "label": "mapping(uint256 => int256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_int256,t_uint256))": {
+            "label": "mapping(uint256 => mapping(int256 => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_bool))": {
+            "label": "mapping(uint256 => mapping(uint256 => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_int256))": {
+            "label": "mapping(uint256 => mapping(uint256 => int256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_int256,t_uint256)))": {
+            "label": "mapping(uint256 => mapping(uint256 => mapping(int256 => uint256)))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_uint256,t_int256)))": {
+            "label": "mapping(uint256 => mapping(uint256 => mapping(uint256 => int256)))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(uint256 => mapping(uint256 => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "fc66ab897a7368498560b9bcbdee879d1845a151ff92aada8f0d4b9c72e1b570": {
+      "address": "0xe4218e8C72241698Cc2CBCe4e883CD7FBE47F092",
+      "txHash": "0x9d5f24f1bf8a0b1f56bb87fb821b0e497143de1346c32cd3982f493b1e46334f",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "rootPerGame",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_bytes32,t_bytes32)",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:54"
+          },
+          {
+            "label": "defaultCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(IERC20)416",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:57"
+          },
+          {
+            "label": "liquidityPoolForCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:60"
+          },
+          {
+            "label": "defaultCollateralDecimals",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:63"
+          },
+          {
+            "label": "manager",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_contract(ISportsAMMV2Manager)4871",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:66"
+          },
+          {
+            "label": "riskManager",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_contract(ISportsAMMV2RiskManager)5177",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:69"
+          },
+          {
+            "label": "resultManager",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_contract(ISportsAMMV2ResultManager)5035",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:72"
+          },
+          {
+            "label": "referrals",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_contract(IReferrals)1157",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:75"
+          },
+          {
+            "label": "ticketMastercopy",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_address",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:78"
+          },
+          {
+            "label": "safeBox",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_address",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:81"
+          },
+          {
+            "label": "safeBoxFee",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:84"
+          },
+          {
+            "label": "multiCollateralOnOffRamp",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_contract(IMultiCollateralOnOffRamp)1078",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:87"
+          },
+          {
+            "label": "multicollateralEnabled",
+            "offset": 20,
+            "slot": "17",
+            "type": "t_bool",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:90"
+          },
+          {
+            "label": "stakingThales",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_contract(IStakingThales)1252",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:93"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_address",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:96"
+          },
+          {
+            "label": "freeBetsHolder",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_address",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:99"
+          },
+          {
+            "label": "addedPayoutPercentagePerCollateral",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:102"
+          },
+          {
+            "label": "safeBoxPerCollateral",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "SportsAMMV2",
+            "src": "contracts\\core\\AMM\\SportsAMMV2.sol:105"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IERC20)416": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IMultiCollateralOnOffRamp)1078": {
+            "label": "contract IMultiCollateralOnOffRamp",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IReferrals)1157": {
+            "label": "contract IReferrals",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)4871": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2ResultManager)5035": {
+            "label": "contract ISportsAMMV2ResultManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2RiskManager)5177": {
             "label": "contract ISportsAMMV2RiskManager",
             "numberOfBytes": "20"
           },
