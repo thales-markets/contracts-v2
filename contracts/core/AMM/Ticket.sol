@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 // internal
+import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 
 contract Ticket {
@@ -220,6 +221,29 @@ contract Ticket {
     /// @notice withdraw collateral from the ticket
     function withdrawCollateral(address recipient) external onlyAMM {
         collateral.safeTransfer(recipient, collateral.balanceOf(address(this)));
+    }
+
+    function cancelTicketByAdmin() external returns (uint) {
+        require(
+            ISportsAMMV2Manager(sportsAMM.manager()).isWhitelistedAddress(
+                msg.sender,
+                ISportsAMMV2Manager.Role.MARKET_RESOLVING
+            ),
+            "Unsupported sender"
+        );
+        require(!paused, "Market paused");
+
+        finalPayout = buyInAmount;
+        collateral.safeTransfer(address(ticketOwner), finalPayout);
+
+        // if user is lost or if the user payout was less than anticipated due to cancelled games, send the remainder to AMM
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
+        }
+
+        _resolve(false, true);
+        return finalPayout;
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
