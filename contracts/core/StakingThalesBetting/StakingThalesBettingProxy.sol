@@ -171,6 +171,64 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         return resolvedTicketsPerUser[_user].elements.length;
     }
 
+    /* ========== SETTERS ========== */
+
+    /// @notice sets new StakingThales address
+    /// @param _stakingThales new staking thales address
+    function setStakingThales(address _stakingThales) external onlyOwner {
+        if (address(stakingThales) != address(0) && address(stakingCollateral) != address(0)) {
+            stakingCollateral.approve(address(stakingThales), 0);
+        }
+        stakingThales = IStakingThales(_stakingThales);
+        if (_stakingThales != address(0) && address(stakingCollateral) != address(0)) {
+            stakingCollateral.approve(_stakingThales, MAX_APPROVAL);
+        }
+        emit SetStakingThales(_stakingThales);
+    }
+
+    /// @notice sets new SportsAMM
+    /// @param _sportsAMM new sportsAMM address
+    function setSportsAMM(address _sportsAMM) external onlyOwner {
+        if (address(sportsAMM) != address(0) && address(stakingCollateral) != address(0)) {
+            stakingCollateral.approve(address(sportsAMM), 0);
+        }
+        sportsAMM = ISportsAMMV2(_sportsAMM);
+        if (_sportsAMM != address(0) && address(stakingCollateral) != address(0)) {
+            stakingCollateral.approve(_sportsAMM, MAX_APPROVAL);
+        }
+        emit SetSportsAMM(_sportsAMM);
+    }
+
+    /// @notice sets new LiveTradingProcessor
+    /// @param _liveTradingProcessor new liveTradingProcessor address
+    function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
+        if (address(liveTradingProcessor) != address(0) && address(stakingCollateral) != address(0)) {
+            stakingCollateral.approve(address(liveTradingProcessor), 0);
+        }
+        liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
+        if (_liveTradingProcessor != address(0) && address(stakingCollateral) != address(0)) {
+            stakingCollateral.approve(_liveTradingProcessor, MAX_APPROVAL);
+        }
+        emit SetLiveTradingProcessor(_liveTradingProcessor);
+    }
+
+    /// @notice sets new Staking collateral
+    /// @param _stakingCollateral new stakingCollateral address
+    function setStakingCollateral(address _stakingCollateral) external onlyOwner {
+        if (address(stakingCollateral) != address(0)) {
+            stakingCollateral.approve(address(stakingThales), 0);
+            stakingCollateral.approve(address(sportsAMM), 0);
+            stakingCollateral.approve(address(liveTradingProcessor), 0);
+        }
+        stakingCollateral = IERC20(_stakingCollateral);
+        if (_stakingCollateral != address(0)) {
+            stakingCollateral.approve(address(stakingThales), MAX_APPROVAL);
+            stakingCollateral.approve(address(sportsAMM), MAX_APPROVAL);
+            stakingCollateral.approve(address(liveTradingProcessor), MAX_APPROVAL);
+        }
+        emit SetStakingCollateral(_stakingCollateral);
+    }
+
     /* ========== MODIFIERS ========== */
     modifier canTrade(address _user, uint _amount) {
         require(stakingThales.stakedBalanceOf(_user) >= _amount, "Insufficient staked balance");
@@ -185,4 +243,8 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     event CollateralSupportChanged(address collateral, bool supported);
     event StakingTokensTicketResolved(address ticket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
+    event SetStakingThales(address stakingThales);
+    event SetSportsAMM(address sportsAMM);
+    event SetLiveTradingProcessor(address liveTradingProcessor);
+    event SetStakingCollateral(address stakingCollateral);
 }

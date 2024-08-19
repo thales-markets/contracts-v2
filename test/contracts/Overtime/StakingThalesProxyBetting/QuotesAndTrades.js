@@ -11,6 +11,8 @@ const {
 	RESULT_TYPE,
 } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
+const MAX_APPROVAL =
+	'115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
 describe('StakingThalesBettingProxy', () => {
 	let sportsAMMV2,
@@ -26,6 +28,7 @@ describe('StakingThalesBettingProxy', () => {
 		stakingThalesBettingProxy,
 		collateralTHALESAddress,
 		collateralTHALES,
+		collateral18,
 		sportsAMMV2RiskManager,
 		mockChainlinkOracle,
 		liveTradingProcessor,
@@ -44,6 +47,7 @@ describe('StakingThalesBettingProxy', () => {
 			stakingThalesBettingProxy,
 			collateralTHALESAddress,
 			collateralTHALES,
+			collateral18,
 			sportsAMMV2RiskManager,
 			mockChainlinkOracle,
 			liveTradingProcessor,
@@ -257,6 +261,104 @@ describe('StakingThalesBettingProxy', () => {
 
 			const afterBalance = await collateralTHALES.balanceOf(owner.address);
 			expect(afterBalance).to.be.equal(initialBalance + ethers.parseEther('100'));
+		});
+	});
+	describe('Setter functions', () => {
+		it('Should set new StakingThales address and emit event', async () => {
+			const newStakingThales = ethers.Wallet.createRandom().address;
+
+			await expect(stakingThalesBettingProxy.connect(owner).setStakingThales(newStakingThales))
+				.to.emit(stakingThalesBettingProxy, 'SetStakingThales')
+				.withArgs(newStakingThales);
+
+			expect(await stakingThalesBettingProxy.stakingThales()).to.equal(newStakingThales);
+
+			const approvedAmount = await collateralTHALES.allowance(
+				stakingThalesBettingProxy.target,
+				newStakingThales
+			);
+			expect(approvedAmount).to.equal(MAX_APPROVAL);
+		});
+
+		it('Should set new SportsAMM address and emit event', async () => {
+			const newSportsAMM = ethers.Wallet.createRandom().address;
+
+			await expect(stakingThalesBettingProxy.connect(owner).setSportsAMM(newSportsAMM))
+				.to.emit(stakingThalesBettingProxy, 'SetSportsAMM')
+				.withArgs(newSportsAMM);
+
+			expect(await stakingThalesBettingProxy.sportsAMM()).to.equal(newSportsAMM);
+
+			const approvedAmount = await collateralTHALES.allowance(
+				stakingThalesBettingProxy.target,
+				newSportsAMM
+			);
+			expect(approvedAmount).to.equal(MAX_APPROVAL);
+		});
+
+		it('Should set new LiveTradingProcessor address and emit event', async () => {
+			const newLiveTradingProcessor = ethers.Wallet.createRandom().address;
+
+			await expect(
+				stakingThalesBettingProxy.connect(owner).setLiveTradingProcessor(newLiveTradingProcessor)
+			)
+				.to.emit(stakingThalesBettingProxy, 'SetLiveTradingProcessor')
+				.withArgs(newLiveTradingProcessor);
+
+			expect(await stakingThalesBettingProxy.liveTradingProcessor()).to.equal(
+				newLiveTradingProcessor
+			);
+
+			const approvedAmount = await collateralTHALES.allowance(
+				stakingThalesBettingProxy.target,
+				newLiveTradingProcessor
+			);
+			expect(approvedAmount).to.equal(MAX_APPROVAL);
+		});
+
+		it('Should set new StakingCollateral address and emit event', async () => {
+			const newStakingCollateral = collateral18.target;
+
+			await expect(
+				stakingThalesBettingProxy.connect(owner).setStakingCollateral(newStakingCollateral)
+			)
+				.to.emit(stakingThalesBettingProxy, 'SetStakingCollateral')
+				.withArgs(newStakingCollateral);
+
+			expect(await stakingThalesBettingProxy.stakingCollateral()).to.equal(newStakingCollateral);
+
+			const approvedForStakingThales = await collateralTHALES.allowance(
+				stakingThalesBettingProxy.target,
+				await stakingThalesBettingProxy.stakingThales()
+			);
+			const approvedForSportsAMM = await collateralTHALES.allowance(
+				stakingThalesBettingProxy.target,
+				await stakingThalesBettingProxy.sportsAMM()
+			);
+			const approvedForLiveTradingProcessor = await collateralTHALES.allowance(
+				stakingThalesBettingProxy.target,
+				await stakingThalesBettingProxy.liveTradingProcessor()
+			);
+
+			const approvedForStakingThalesNewCollateral = await collateral18.allowance(
+				stakingThalesBettingProxy.target,
+				await stakingThalesBettingProxy.stakingThales()
+			);
+			const approvedForSportsAMMNewCollateral = await collateral18.allowance(
+				stakingThalesBettingProxy.target,
+				await stakingThalesBettingProxy.sportsAMM()
+			);
+			const approvedForLiveTradingProcessorNewCollateral = await collateral18.allowance(
+				stakingThalesBettingProxy.target,
+				await stakingThalesBettingProxy.liveTradingProcessor()
+			);
+
+			expect(approvedForStakingThales).to.equal(0);
+			expect(approvedForSportsAMM).to.equal(0);
+			expect(approvedForLiveTradingProcessor).to.equal(0);
+			expect(approvedForStakingThalesNewCollateral).to.equal(MAX_APPROVAL);
+			expect(approvedForSportsAMMNewCollateral).to.equal(MAX_APPROVAL);
+			expect(approvedForLiveTradingProcessorNewCollateral).to.equal(MAX_APPROVAL);
 		});
 	});
 });

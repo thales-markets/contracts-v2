@@ -155,6 +155,58 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "liveTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "SetLiveTradingProcessor",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "SetSportsAMM",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "stakingCollateral",
+        "type": "address"
+      }
+    ],
+    "name": "SetStakingCollateral",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "stakingThales",
+        "type": "address"
+      }
+    ],
+    "name": "SetStakingThales",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "user",
         "type": "address"
       },
@@ -571,6 +623,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_liveTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "setLiveTradingProcessor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_owner",
         "type": "address"
       }
@@ -589,6 +654,45 @@
       }
     ],
     "name": "setPaused",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "setSportsAMM",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_stakingCollateral",
+        "type": "address"
+      }
+    ],
+    "name": "setStakingCollateral",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_stakingThales",
+        "type": "address"
+      }
+    ],
+    "name": "setStakingThales",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
