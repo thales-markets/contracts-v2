@@ -66,7 +66,7 @@
 		"PackingSwapPaths": "0x1aFE3fF5d7528794a2cF44972811736a6971fDC1",
 		"SportsAMMV2LiquidityPoolImplementationWETH": "0xd62b005E8d51fA26F14A0431d5AC0c80F0cCAA1f",
 		"StakingThalesBettingProxy": "0xBa6dd31C0A7550F39ae83B7995a6fcdDA5875ef9",
-		"StakingThalesBettingProxyImplementation": "0xF51F3255F32077eAF6e3bb222eBb903D77e7f1CB",
+		"StakingThalesBettingProxyImplementation": "0x07D1965EeB95C619D806aB454a0772Bf11A9D655",
 		"StakingThalesBettingProxyProxyAdmin": "0xBAf2779e85Ed7EA1357016EF8d2e05B1a8401381"
 	},
 	"optimisticEthereum": {
