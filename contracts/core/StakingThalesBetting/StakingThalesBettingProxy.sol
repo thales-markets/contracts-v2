@@ -15,8 +15,6 @@ import "../../interfaces/ILiveTradingProcessor.sol";
 
 import "./../AMM/Ticket.sol";
 
-
-
 contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
     using AddressSetLib for AddressSetLib.AddressSet;
@@ -69,10 +67,8 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         uint _additionalSlippage,
         address _referrer
     ) external notPaused nonReentrant canTrade(msg.sender, _buyInAmount) {
-        require(stakingThales.stakedBalanceOf(msg.sender) >= _buyInAmount, "Staked amount too low");
-        stakingThales.decreaseStakingBalanceFor(msg.sender, _buyInAmount);
         // signal decrease of stakingAmount
-        // stakingCollateral.safeTransferFrom(msg.sender, address(this), _buyInAmount);
+        stakingThales.decreaseStakingBalanceFor(msg.sender, _buyInAmount);
         address _createdTicket = sportsAMM.trade(
             _tradeData,
             _buyInAmount,
@@ -97,13 +93,11 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     }
 
     function preConfirmLiveTrade(bytes32 requestId, uint _buyInAmount) external notPaused nonReentrant {
+        require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
         address _user = liveRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
-        require(stakingThales.stakedBalanceOf(_user) >= _buyInAmount, "Staked amount too low");
         // signal decrease of stakingAmount
         stakingThales.decreaseStakingBalanceFor(_user, _buyInAmount);
-        // stakingThales.safeTransfer()
-        // stakingCollateral.safeTransferFrom(address(stakingThales), address(this), _buyInAmount);
     }
 
     /// @notice confirm a live ticket purchase. As live betting is a 2 step approach, the LiveTradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
@@ -111,10 +105,6 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
         address _user = liveRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
-
-        // signal decrease of stakingAmount
-        stakingThales.decreaseStakingBalanceFor(_user, _buyInAmount);
-        // stakingCollateral.safeTransferFrom(_user, address(this), _buyInAmount);
 
         ticketToUser[_createdTicket] = _user;
 
@@ -132,8 +122,9 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         require(activeTicketsPerUser[_user].contains(_resolvedTicket), "Unknown active ticket");
 
         uint _exercized = Ticket(_resolvedTicket).finalPayout();
-        stakingThales.increaseStakingBalanceFor(_user, _exercized);
-        // stakingCollateral.safeTransfer(address(stakingThales), _exercized);
+        if (_exercized > 0) {
+            stakingThales.increaseStakingBalanceFor(_user, _exercized);
+        }
         emit StakingTokensTicketResolved(_resolvedTicket, _user, _exercized);
 
         activeTicketsPerUser[_user].remove(_resolvedTicket);
