@@ -68,7 +68,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         address _referrer
     ) external notPaused nonReentrant canTrade(msg.sender, _buyInAmount) {
         // signal decrease of stakingAmount
-        stakingThales.decreaseStakingBalanceFor(msg.sender, _buyInAmount);
+        stakingThales.decreaseAndTransferStakedThales(msg.sender, _buyInAmount);
         address _createdTicket = sportsAMM.trade(
             _tradeData,
             _buyInAmount,
@@ -89,7 +89,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     ) external notPaused canTrade(msg.sender, _liveTradeData._buyInAmount) {
         bytes32 _requestId = liveTradingProcessor.requestLiveTrade(_liveTradeData);
         liveRequestsPerUser[_requestId] = msg.sender;
-        emit FreeBetLiveTradeRequested(msg.sender, _liveTradeData._buyInAmount, _requestId);
+        emit StakingTokensLiveTradeRequested(msg.sender, _liveTradeData._buyInAmount, _requestId);
     }
 
     function preConfirmLiveTrade(bytes32 requestId, uint _buyInAmount) external notPaused nonReentrant {
@@ -97,7 +97,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         address _user = liveRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
         // signal decrease of stakingAmount
-        stakingThales.decreaseStakingBalanceFor(_user, _buyInAmount);
+        stakingThales.decreaseAndTransferStakedThales(_user, _buyInAmount);
     }
 
     /// @notice confirm a live ticket purchase. As live betting is a 2 step approach, the LiveTradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
@@ -123,7 +123,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
 
         uint _exercized = Ticket(_resolvedTicket).finalPayout();
         if (_exercized > 0) {
-            stakingThales.increaseStakingBalanceFor(_user, _exercized);
+            stakingThales.increaseAndTransferStakedThales(_user, _exercized);
         }
         emit StakingTokensTicketResolved(_resolvedTicket, _user, _exercized);
 
@@ -240,9 +240,8 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     event StakingAmountApprovedForTrading(address user, uint amount);
     event UserFunded(address user, address collateral, uint amount, address funder);
     event StakingTokensTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
-    event CollateralSupportChanged(address collateral, bool supported);
     event StakingTokensTicketResolved(address ticket, address user, uint earned);
-    event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
+    event StakingTokensLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event SetStakingThales(address stakingThales);
     event SetSportsAMM(address sportsAMM);
     event SetLiveTradingProcessor(address liveTradingProcessor);

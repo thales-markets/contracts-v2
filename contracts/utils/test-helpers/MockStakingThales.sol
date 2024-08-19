@@ -6,8 +6,6 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-
-
 contract MockStakingThales {
     using SafeERC20 for IERC20;
 
@@ -29,11 +27,11 @@ contract MockStakingThales {
         return _stakedBalances[account];
     }
 
-    function decreaseStakingBalanceFor(address account, uint amount) external onlyStakingProxy {
+    function decreaseAndTransferStakedThales(address account, uint amount) external onlyStakingProxy {
         _modifyStakingBalance(account, amount, true, stakingThalesBettingProxy);
     }
 
-    function increaseStakingBalanceFor(address account, uint amount) external onlyStakingProxy {
+    function increaseAndTransferStakedThales(address account, uint amount) external onlyStakingProxy {
         _modifyStakingBalance(account, amount, false, stakingThalesBettingProxy);
     }
 
@@ -44,7 +42,6 @@ contract MockStakingThales {
             _stakedBalances[_account] -= _amount;
             IERC20(stakingToken).safeTransfer(_proxyAccount, _amount);
         } else {
-
             _totalStakedAmount += _amount;
             _stakedBalances[_account] += _amount;
             IERC20(stakingToken).safeTransferFrom(_proxyAccount, address(this), _amount);
