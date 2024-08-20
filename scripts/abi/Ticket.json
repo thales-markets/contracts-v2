@@ -109,7 +109,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_beneficiary",
+        "type": "address"
+      }
+    ],
     "name": "cancelTicketByAdmin",
     "outputs": [
       {

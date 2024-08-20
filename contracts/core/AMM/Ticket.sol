@@ -223,7 +223,7 @@ contract Ticket {
         collateral.safeTransfer(recipient, collateral.balanceOf(address(this)));
     }
 
-    function cancelTicketByAdmin() external returns (uint) {
+    function cancelTicketByAdmin(address _beneficiary) external returns (uint) {
         require(
             ISportsAMMV2Manager(sportsAMM.manager()).isWhitelistedAddress(
                 msg.sender,
@@ -233,17 +233,17 @@ contract Ticket {
         );
         require(!paused, "Market paused");
 
-        finalPayout = buyInAmount;
-        collateral.safeTransfer(address(ticketOwner), finalPayout);
+        collateral.safeTransfer(address(ticketOwner), buyInAmount);
 
-        // if user is lost or if the user payout was less than anticipated due to cancelled games, send the remainder to AMM
+        // send the remaining funds to beneficiary
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
-            collateral.safeTransfer(address(sportsAMM), balance);
+            require(_beneficiary != address(0), "Invalid beneficiary");
+            collateral.safeTransfer(_beneficiary, balance);
         }
 
         _resolve(false, true);
-        return finalPayout;
+        return buyInAmount;
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */

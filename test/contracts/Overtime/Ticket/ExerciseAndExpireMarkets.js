@@ -43,6 +43,7 @@ describe('Ticket Exercise and Expire', () => {
 		priceFeed,
 		firstLiquidityProvider,
 		firstTrader,
+		secondAccount,
 		tradeDataCurrentRound,
 		tradeDataNextRound,
 		tradeDataCrossRounds,
@@ -273,6 +274,81 @@ describe('Ticket Exercise and Expire', () => {
 			expect(await sportsAMMV2.expireTickets([ticketAddress]))
 				.to.emit(userTicket, 'Expired')
 				.withArgs(safeBox.target);
+		});
+	});
+	describe('Ticket Cancellation by Admin', () => {
+		it('admin cancel the ticket and refund collateral', async () => {
+			tradeDataCurrentRound.position = 0;
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_1, 0, 0)).to.equal(
+				false
+			);
+			await expect(
+				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_1, 0, 0, 0)
+			).to.be.revertedWithoutReason();
+			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_2, 0, 0)).to.equal(
+				false
+			);
+			await expect(
+				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_2, 0, 0, 0)
+			).to.be.revertedWithoutReason();
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			expect(quote.payout).to.equal(ethers.parseEther('20'));
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// Attach the ticket contract and verify collateral balances
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+			const ticketBalance = await collateral.balanceOf(ticketAddress);
+			expect(Number(ethers.formatEther(ticketBalance))).to.be.gt(0);
+
+			const payoutAfterCancellation =
+				parseInt(ticketBalance.toString()) - parseInt(BUY_IN_AMOUNT.toString());
+			const initialTicketOwnerBalance = await collateral.balanceOf(firstTrader);
+
+			const initialAdminBalance = await collateral.balanceOf(safeBox.address);
+			const calculatedAdminBalance =
+				payoutAfterCancellation + parseInt(initialAdminBalance.toString());
+			// Simulate admin canceling the ticket
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 2, true);
+			await expect(userTicket.connect(secondAccount).cancelTicketByAdmin(safeBox.address))
+				.to.emit(userTicket, 'Resolved')
+				.withArgs(false, true); // Verify that the ticket is resolved and canceled
+
+			// Check the final state of the ticket
+			expect(await userTicket.cancelled()).to.be.equal(true);
+			expect(await userTicket.resolved()).to.be.equal(true);
+
+			// Verify that collateral is refunded to the ticket owner and the remainder to the beneficiary
+			const finalTicketOwnerBalance = await collateral.balanceOf(firstTrader);
+			const calculatedBalance =
+				parseInt(initialTicketOwnerBalance.toString()) + parseInt(BUY_IN_AMOUNT.toString());
+			expect(parseInt(finalTicketOwnerBalance.toString())).to.be.equal(calculatedBalance);
+
+			const finalBeneficiaryBalance = await collateral.balanceOf(safeBox.address);
+			expect(parseInt(finalBeneficiaryBalance.toString())).to.be.equal(calculatedAdminBalance);
 		});
 	});
 });
