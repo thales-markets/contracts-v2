@@ -92,7 +92,7 @@ describe('StakingThalesBettingProxy', () => {
 						ADDITIONAL_SLIPPAGE,
 						collateralTHALESAddress
 					)
-			).to.be.revertedWith('Insufficient staked balance');
+			).to.be.revertedWith('Insufficient staked amount');
 		});
 
 		it('Should pass', async () => {
