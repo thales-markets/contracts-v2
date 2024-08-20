@@ -11,7 +11,7 @@ async function main() {
 	console.log('Network:', network);
 
 	const defaultCollateralAddress = getTargetAddress('OvertimePaymentToken', network);
-	const mockChainlinkOracleAddress = getTargetAddress('MockChainlinkOracle', network);
+	const mockChainlinkOracleAddress = getTargetAddress('ChainlinkOracle', network);
 	// const mockChainlinkOracleAddress = '0xaC69Dcaf76f0EE3aC7e2035825d7765Ebbb654B9';
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 
