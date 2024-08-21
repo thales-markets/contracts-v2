@@ -27,7 +27,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		sportsAMMV2Manager,
 		mockChainlinkOracle,
 		sportsAMMV2RiskManager,
-		liveTradingProcessor;
+		liveTradingProcessor,
+		referrer,
+		referrals;
 
 	beforeEach(async () => {
 		({
@@ -44,8 +46,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			mockChainlinkOracle,
 			sportsAMMV2RiskManager,
 			liveTradingProcessor,
+			referrals,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
+		({ firstLiquidityProvider, firstTrader, referrer } = await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2THALESLiquidityPool
 			.connect(firstLiquidityProvider)
@@ -107,6 +110,114 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
 			expect(safeBoxTHALESBalance).greaterThan(0);
+		});
+
+		it('Should buy a ticket (1 market) in THALES with Referrer', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			const quoteTHALES = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateralTHALESAddress,
+				false
+			);
+
+			console.log('Normal quote is: ' + quote.totalQuote);
+			console.log('THALES quote is: ' + quoteTHALES.totalQuote);
+
+			expect(quoteTHALES.payout).greaterThan(quote.payout);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					referrer.address,
+					collateralTHALESAddress,
+					false
+				);
+
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataCurrentRound[0].gameId],
+				[tradeDataCurrentRound[0].typeId],
+				[tradeDataCurrentRound[0].playerId],
+				[[0]]
+			);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+
+			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
+			expect(safeBoxTHALESBalance).greaterThan(0);
+
+			const refererTHALESBalance = await collateralTHALES.balanceOf(referrer.address);
+			expect(refererTHALESBalance).greaterThan(0);
+		});
+
+		it('Should buy a ticket (1 market) in THALES with Referrer fee 0', async () => {
+			await referrals.setReferrerFees(0, 0, 0);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			const quoteTHALES = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateralTHALESAddress,
+				false
+			);
+
+			console.log('Normal quote is: ' + quote.totalQuote);
+			console.log('THALES quote is: ' + quoteTHALES.totalQuote);
+
+			expect(quoteTHALES.payout).greaterThan(quote.payout);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					referrer.address,
+					collateralTHALESAddress,
+					false
+				);
+
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataCurrentRound[0].gameId],
+				[tradeDataCurrentRound[0].typeId],
+				[tradeDataCurrentRound[0].playerId],
+				[[0]]
+			);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+
+			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
+			expect(safeBoxTHALESBalance).greaterThan(0);
+
+			const refererTHALESBalance = await collateralTHALES.balanceOf(referrer.address);
+			expect(refererTHALESBalance).equal(0);
 		});
 
 		it('Should buy a ticket (10 markets) with THALES', async () => {
