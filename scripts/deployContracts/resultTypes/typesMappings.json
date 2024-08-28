@@ -773,5 +773,25 @@
 		"id": 10130,
 		"result_type": 1,
 		"name": "CHILD_WHO_WILL_QUALIFY"
+	},
+	{
+		"id": 10118,
+		"result_type": 2,
+		"name": "CHILD_HOME_TEAM_TO_SCORE_FIRST_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10119,
+		"result_type": 2,
+		"name": "CHILD_AWAY_TEAM_TO_SCORE_FIRST_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10218,
+		"result_type": 2,
+		"name": "CHILD_HOME_TEAM_TO_SCORE_SECOND_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10219,
+		"result_type": 2,
+		"name": "CHILD_AWAY_TEAM_TO_SCORE_SECOND_PERIOD_SECONDARY"
 	}
 ]
