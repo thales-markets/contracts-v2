@@ -36,6 +36,7 @@ async function deployAccountsFixture() {
 		secondTrader,
 		collateralAddress,
 		safeBoxTHALES,
+		referrer,
 	] = await ethers.getSigners();
 
 	return {
@@ -52,6 +53,7 @@ async function deployAccountsFixture() {
 		secondTrader,
 		collateralAddress,
 		safeBoxTHALES,
+		referrer,
 	};
 }
 
@@ -131,6 +133,12 @@ async function deploySportsAMMV2Fixture() {
 	// deploy mock Referrals
 	const Referrals = await ethers.getContractFactory('MockReferrals');
 	const referrals = await upgrades.deployProxy(Referrals);
+
+	await referrals.setReferrerFees(
+		ethers.parseEther('0.005'),
+		ethers.parseEther('0.0075'),
+		ethers.parseEther('0.01')
+	);
 
 	// deploy WETH collateral
 	const WETH = await ethers.getContractFactory('MockWETH');

@@ -97,6 +97,29 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_referrerFeeDefault",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_referrerFeeSilver",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_referrerFeeGold",
+        "type": "uint256"
+      }
+    ],
+    "name": "setReferrerFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
