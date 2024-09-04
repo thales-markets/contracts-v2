@@ -793,5 +793,60 @@
 		"id": 10219,
 		"result_type": 2,
 		"name": "CHILD_AWAY_TEAM_TO_SCORE_SECOND_PERIOD_SECONDARY"
+	},
+	{
+		"id": 11202,
+		"result_type": 2,
+		"name": "PROP_INTERCEPTIONS"
+	},
+	{
+		"id": 11203,
+		"result_type": 2,
+		"name": "PROP_KICKING_POINTS"
+	},
+	{
+		"id": 11204,
+		"result_type": 2,
+		"name": "PROP_PASSING_ATTEMPS"
+	},
+	{
+		"id": 11205,
+		"result_type": 2,
+		"name": "PROP_PASSING_COMPLETIONS"
+	},
+	{
+		"id": 11206,
+		"result_type": 2,
+		"name": "PROP_TOUCHDOWNS"
+	},
+	{
+		"id": 11207,
+		"result_type": 2,
+		"name": "PROP_SACKS"
+	},
+	{
+		"id": 11208,
+		"result_type": 2,
+		"name": "PROP_PASSING_PLUS_RUSHING_YARDS"
+	},
+	{
+		"id": 11209,
+		"result_type": 2,
+		"name": "PROP_RUSHING_PLUS_RECEIVING_YARDS"
+	},
+	{
+		"id": 11210,
+		"result_type": 2,
+		"name": "PROP_LONGEST_RECEPTION"
+	},
+	{
+		"id": 11211,
+		"result_type": 2,
+		"name": "PROP_EXTRA_POINTS_MADE"
+	},
+	{
+		"id": 11212,
+		"result_type": 2,
+		"name": "PROP_TACKLES"
 	}
 ]
