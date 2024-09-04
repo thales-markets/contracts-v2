@@ -345,6 +345,35 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         }
     }
 
+    /// @notice cancel specific markets
+    /// @param _gameIds game IDs to reopen
+    /// @param _typeIds type IDs to reopen
+    /// @param _playerIds player IDs to reopen
+    function reopenMarkets(
+        bytes32[] memory _gameIds,
+        uint16[] memory _typeIds,
+        uint24[] memory _playerIds
+    ) external onlyWhitelistedAddresses(msg.sender) {
+        require(_gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length, "Incorrect params");
+        for (uint i; i < _gameIds.length; i++) {
+            bytes32 gameId = _gameIds[i];
+            uint16 typeId = _typeIds[i];
+            uint24 playerId = _playerIds[i];
+            areResultsPerMarketSet[gameId][typeId][playerId] = false;
+            delete resultsPerMarket[gameId][typeId][playerId];
+            isMarketExplicitlyCancelled[gameId][typeId][playerId][0] = false;
+            emit ReopenedMarket(gameId, typeId, playerId);
+        }
+    }
+
+    /// @notice cancel specific markets
+    /// @param _gameId game ID to reopen
+    function reopenGame(bytes32 _gameId) external onlyWhitelistedAddresses(msg.sender) {
+        require(isGameCancelled[_gameId], "Game wasn't cancelled");
+        isGameCancelled[_gameId] = false;
+        emit ReopenedGame(_gameId);
+    }
+
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _isMarketResolved(bytes32 _gameId, uint16 _typeId, uint24 _playerId, int24 _line) internal view returns (bool) {
@@ -489,4 +518,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     event SetSportsManager(address manager);
     event SetChainlinkResolver(address resolver);
+
+    event ReopenedGame(bytes32 _gameId);
+    event ReopenedMarket(bytes32 gameId, uint16 typeId, uint24 playerId);
 }
