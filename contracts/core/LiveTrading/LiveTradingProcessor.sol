@@ -218,19 +218,18 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         sportsAMM = ISportsAMMV2(_sportsAMM);
         jobSpecId = _jobSpecId;
         paymentAmount = _paymentAmount;
-
         emit ContextReset(_link, _oracle, _sportsAMM, _jobSpecId, _paymentAmount);
     }
 
+    /// @notice sets the FreeBetsHolder address, required for handling ticket claiming via FreeBetsHolder
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
         freeBetsHolder = _freeBetsHolder;
-
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
+    /// @notice sets the stakingThalesBettingProxy address, required for handling ticket claiming via StakingThalesBettingProxy
     function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
         stakingThalesBettingProxy = _stakingThalesBettingProxy;
-
         emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);
     }
 

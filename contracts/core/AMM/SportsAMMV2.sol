@@ -25,7 +25,6 @@ import "../../interfaces/IWeth.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/IStakingThalesBettingProxy.sol";
 
-
 /// @title Sports AMM V2 contract
 /// @author vladan
 contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
@@ -106,7 +105,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // support different SB per collateral, namely THALES as a collateral will be directly burned
     mapping(address => address) public safeBoxPerCollateral;
 
-    // the contract that processes all free bets
+    // the contract that processes betting with StakedTHALES
     address public stakingThalesBettingProxy;
 
     struct TradeDataQuoteInternal {
@@ -753,6 +752,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
+    /// @notice sets the stakingThalesBettingProxy address, required for handling ticket claiming via StakingThalesBettingProxy
     function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
         stakingThalesBettingProxy = _stakingThalesBettingProxy;
         emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);

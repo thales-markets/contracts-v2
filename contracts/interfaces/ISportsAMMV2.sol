@@ -43,7 +43,7 @@ interface ISportsAMMV2 {
     function riskManager() external view returns (ISportsAMMV2RiskManager);
 
     function freeBetsHolder() external view returns (IFreeBetsHolder);
-    
+
     function stakingThalesBettingProxy() external view returns (IStakingThalesBettingProxy);
 
     function tradeLive(
