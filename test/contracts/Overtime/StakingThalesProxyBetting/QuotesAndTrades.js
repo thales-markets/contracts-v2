@@ -156,6 +156,45 @@ describe('StakingThalesBettingProxy', () => {
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
 		});
 
+		it('Should revert live for unsupported collateral', async () => {
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+			await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateralTHALESAddress,
+				false
+			);
+
+			await stakingThalesBettingProxy.connect(firstTrader).tradeLive({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: collateralTHALESAddress,
+			});
+			await expect(
+				stakingThalesBettingProxy.connect(firstTrader).tradeLive({
+					_gameId: tradeDataCurrentRound[0].gameId,
+					_sportId: tradeDataCurrentRound[0].sportId,
+					_typeId: tradeDataCurrentRound[0].typeId,
+					_line: tradeDataCurrentRound[0].line,
+					_position: tradeDataCurrentRound[0].position,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: quote.totalQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: collateral18.target,
+				})
+			).to.be.revertedWith('Use Staking collateral for live trade');
+		});
+
 		it('Should claim winnings', async () => {
 			await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
 			const stakingBalanceInit = await stakingThales.stakedBalanceOf(firstTrader);

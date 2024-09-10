@@ -85,6 +85,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
 
     /// @notice request a live ticket for a user if he has enough staked tokens
     function tradeLive(ILiveTradingProcessor.LiveTradeData calldata _liveTradeData) external notPaused {
+        require(_liveTradeData._collateral == address(stakingCollateral), "Use Staking collateral for live trade");
         bytes32 _requestId = liveTradingProcessor.requestLiveTrade(_liveTradeData);
         liveRequestsPerUser[_requestId] = msg.sender;
         emit StakingTokensLiveTradeRequested(msg.sender, _liveTradeData._buyInAmount, _requestId);
