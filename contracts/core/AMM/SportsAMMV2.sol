@@ -22,8 +22,7 @@ import "../../interfaces/ISportsAMMV2RiskManager.sol";
 import "../../interfaces/ISportsAMMV2ResultManager.sol";
 import "../../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../../interfaces/IWeth.sol";
-import "../../interfaces/IFreeBetsHolder.sol";
-import "../../interfaces/IStakingThalesBettingProxy.sol";
+import "../../interfaces/IProxyBetting.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -639,12 +638,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 
-        if (ticketOwner == freeBetsHolder) {
-            IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
-        } else if (ticketOwner == stakingThalesBettingProxy) {
-            IStakingThalesBettingProxy(stakingThalesBettingProxy).confirmTicketResolved(_ticket);
-        }
-
+        if (ticketOwner == freeBetsHolder || ticketOwner == stakingThalesBettingProxy) {
+            IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
+        } 
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
