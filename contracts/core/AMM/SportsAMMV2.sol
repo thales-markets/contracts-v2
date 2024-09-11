@@ -22,7 +22,7 @@ import "../../interfaces/ISportsAMMV2RiskManager.sol";
 import "../../interfaces/ISportsAMMV2ResultManager.sol";
 import "../../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "../../interfaces/IWeth.sol";
-import "../../interfaces/IFreeBetsHolder.sol";
+import "../../interfaces/IProxyBetting.sol";
 
 /// @title Sports AMM V2 contract
 /// @author vladan
@@ -103,6 +103,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     // support different SB per collateral, namely THALES as a collateral will be directly burned
     mapping(address => address) public safeBoxPerCollateral;
+
+    // the contract that processes betting with StakedTHALES
+    address public stakingThalesBettingProxy;
 
     struct TradeDataQuoteInternal {
         uint _buyInAmount;
@@ -635,10 +638,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 
-        if (ticketOwner == freeBetsHolder) {
-            IFreeBetsHolder(freeBetsHolder).confirmTicketResolved(_ticket);
-        }
-
+        if (ticketOwner == freeBetsHolder || ticketOwner == stakingThalesBettingProxy) {
+            IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
+        } 
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
@@ -746,6 +748,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
+    /// @notice sets the stakingThalesBettingProxy address, required for handling ticket claiming via StakingThalesBettingProxy
+    function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
+        stakingThalesBettingProxy = _stakingThalesBettingProxy;
+        emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);
+    }
+
     /// @notice sets new Ticket Mastercopy address
     /// @param _ticketMastercopy new Ticket Mastercopy address
     function setTicketMastercopy(address _ticketMastercopy) external onlyOwner {
@@ -846,6 +854,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);
     event SetFreeBetsHolder(address freeBetsHolder);
+    event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
     event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
     event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
 }
