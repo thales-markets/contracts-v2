@@ -848,5 +848,10 @@
 		"id": 11212,
 		"result_type": 2,
 		"name": "PROP_TACKLES"
+	},
+	{
+		"id": 11100,
+		"result_type": 2,
+		"name": "PROP_PLAYER_GOALS"
 	}
 ]
