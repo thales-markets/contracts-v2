@@ -720,6 +720,14 @@ async function deploySportsAMMV2Fixture() {
 
 	const safeBoxTHALESAddress = safeBoxTHALES.address;
 
+	const ResolveBlocker = await ethers.getContractFactory('ResolveBlocker');
+	const resolveBlocker = await upgrades.deployProxy(ResolveBlocker, [
+		owner.address,
+		SportsAMMV2DataAddress,
+		sportsAMMV2ManagerAddress,
+	]);
+	const resolveBlockerAddress = await resolveBlocker.getAddress();
+
 	return {
 		owner,
 		sportsAMMV2Manager,
@@ -772,6 +780,8 @@ async function deploySportsAMMV2Fixture() {
 		collateralTHALES,
 		collateralTHALESAddress,
 		sportsAMMV2THALESLiquidityPool,
+		resolveBlocker,
+		resolveBlockerAddress,
 	};
 }
 
