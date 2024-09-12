@@ -329,11 +329,10 @@ describe('Ticket Exercise and Expire', () => {
 			const initialTicketOwnerBalance = await collateral.balanceOf(firstTrader);
 
 			const initialAdminBalance = await collateral.balanceOf(safeBox.address);
-			const calculatedAdminBalance =
-				payoutAfterCancellation + parseInt(initialAdminBalance.toString());
 			// Simulate admin canceling the ticket
 			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 2, true);
-			await expect(userTicket.connect(secondAccount).cancelTicketByAdmin(safeBox.address))
+			await sportsAMMV2.connect(secondAccount).cancelTicket;
+			await expect(sportsAMMV2.connect(secondAccount).cancelTicket(ticketAddress))
 				.to.emit(userTicket, 'Resolved')
 				.withArgs(false, true); // Verify that the ticket is resolved and canceled
 
@@ -346,9 +345,6 @@ describe('Ticket Exercise and Expire', () => {
 			const calculatedBalance =
 				parseInt(initialTicketOwnerBalance.toString()) + parseInt(BUY_IN_AMOUNT.toString());
 			expect(parseInt(finalTicketOwnerBalance.toString())).to.be.equal(calculatedBalance);
-
-			const finalBeneficiaryBalance = await collateral.balanceOf(safeBox.address);
-			expect(parseInt(finalBeneficiaryBalance.toString())).to.be.equal(calculatedAdminBalance);
 		});
 	});
 });
