@@ -293,6 +293,9 @@ describe('Ticket Exercise and Expire', () => {
 			await expect(
 				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_2, 0, 0, 0)
 			).to.be.revertedWithoutReason();
+			let currentRound = Number(await sportsAMMV2LiquidityPool.round());
+			let currentRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(currentRound);
+			let currentRoundPoolBalanceBeforeTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
@@ -314,6 +317,7 @@ describe('Ticket Exercise and Expire', () => {
 					ZERO_ADDRESS,
 					false
 				);
+			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
@@ -336,6 +340,8 @@ describe('Ticket Exercise and Expire', () => {
 				.to.emit(userTicket, 'Resolved')
 				.withArgs(false, true); // Verify that the ticket is resolved and canceled
 
+			let currentRoundPoolBalanceAfterCancellation =
+				await collateral.balanceOf(currentRoundPoolAddress);
 			// Check the final state of the ticket
 			expect(await userTicket.cancelled()).to.be.equal(true);
 			expect(await userTicket.resolved()).to.be.equal(true);
@@ -345,6 +351,12 @@ describe('Ticket Exercise and Expire', () => {
 			const calculatedBalance =
 				parseInt(initialTicketOwnerBalance.toString()) + parseInt(BUY_IN_AMOUNT.toString());
 			expect(parseInt(finalTicketOwnerBalance.toString())).to.be.equal(calculatedBalance);
+			expect(parseInt(currentRoundPoolBalanceAfterCancellation)).to.be.above(
+				parseInt(currentRoundPoolBalanceAfterTrade)
+			);
+			expect(parseInt(currentRoundPoolBalanceAfterCancellation)).to.be.equal(
+				parseInt(currentRoundPoolBalanceBeforeTrade)
+			);
 		});
 	});
 });
