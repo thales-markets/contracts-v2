@@ -21,6 +21,7 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     ISportsAMMV2Manager public manager;
 
     mapping(bytes32 => bool) public gameIdBlockedForResolution;
+    mapping(bytes32 => bool) public gameIdUnblockedByAdmin;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -31,10 +32,14 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         manager = ISportsAMMV2Manager(_manager);
     }
 
-    function getGamesBlockedForResolution(bytes32[] memory gameIds) external view returns (bool[] memory blockedGames) {
+    function getGamesBlockedForResolution(
+        bytes32[] memory gameIds
+    ) external view returns (bool[] memory blockedGames, bool[] memory unblockedByAdmin) {
         blockedGames = new bool[](gameIds.length);
+        unblockedByAdmin = new bool[](gameIds.length);
         for (uint i = 0; i < gameIds.length; i++) {
             blockedGames[i] = gameIdBlockedForResolution[gameIds[i]];
+            unblockedByAdmin[i] = gameIdUnblockedByAdmin[gameIds[i]];
         }
     }
 
@@ -46,9 +51,14 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         _blockGames(_gameIds, false);
     }
 
-    function _blockGames(bytes32[] memory _gameIds, bool _blockGames) internal {
+    function _blockGames(bytes32[] memory _gameIds, bool _blockGame) internal {
         for (uint i = 0; i < _gameIds.length; i++) {
-            gameIdBlockedForResolution[_gameIds[i]] = _blockGames;
+            if (!_blockGame && gameIdBlockedForResolution[_gameIds[i]]) {
+                gameIdUnblockedByAdmin[_gameIds[i]] = true;
+            } else if (_blockGame && gameIdUnblockedByAdmin[_gameIds[i]]) {
+                gameIdUnblockedByAdmin[_gameIds[i]] = false;
+            }
+            gameIdBlockedForResolution[_gameIds[i]] = _blockGame;
         }
     }
 

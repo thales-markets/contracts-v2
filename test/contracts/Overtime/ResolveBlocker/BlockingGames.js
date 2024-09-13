@@ -73,6 +73,8 @@ describe('ResolveBlocker Blocking games', () => {
 			await resolveBlocker.connect(owner).unblockGames([tradeDataCurrentRound[0].gameId]);
 			expect(await resolveBlocker.gameIdBlockedForResolution(tradeDataCurrentRound[0].gameId)).to.be
 				.false;
+			expect(await resolveBlocker.gameIdUnblockedByAdmin(tradeDataCurrentRound[0].gameId)).to.be
+				.true;
 		});
 
 		it('should revert blocking games when called by a non-whitelisted address', async () => {
@@ -90,12 +92,37 @@ describe('ResolveBlocker Blocking games', () => {
 
 		it('should return correct blocking status with getGamesBlockedForResolution', async () => {
 			await resolveBlocker.connect(owner).blockGames([tradeDataCurrentRound[0].gameId, secondGame]);
-			const blockedGames = await resolveBlocker.getGamesBlockedForResolution([
+			const [blockedGames, unblockGames] = await resolveBlocker.getGamesBlockedForResolution([
 				tradeDataCurrentRound[0].gameId,
 				secondGame,
 				thirdGame,
 			]);
 			expect(blockedGames).to.deep.equal([true, true, false]);
+			expect(unblockGames).to.deep.equal([false, false, false]);
+		});
+		it('should return correct blocking and unblocked status with getGamesBlockedForResolution after blocking and unblocking', async () => {
+			await resolveBlocker.connect(owner).blockGames([tradeDataCurrentRound[0].gameId, secondGame]);
+			let response = await resolveBlocker.getGamesBlockedForResolution([
+				tradeDataCurrentRound[0].gameId,
+				secondGame,
+				thirdGame,
+			]);
+			let blockedGames = response[0];
+			let unblockedGames = response[1];
+			expect(blockedGames).to.deep.equal([true, true, false]);
+			expect(unblockedGames).to.deep.equal([false, false, false]);
+			await resolveBlocker
+				.connect(owner)
+				.unblockGames([tradeDataCurrentRound[0].gameId, secondGame]);
+			response = await resolveBlocker.getGamesBlockedForResolution([
+				tradeDataCurrentRound[0].gameId,
+				secondGame,
+				thirdGame,
+			]);
+			blockedGames = response[0];
+			unblockedGames = response[1];
+			expect(blockedGames).to.deep.equal([false, false, false]);
+			expect(unblockedGames).to.deep.equal([true, true, false]);
 		});
 	});
 

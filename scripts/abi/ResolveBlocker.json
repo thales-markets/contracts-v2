@@ -135,6 +135,25 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "gameIdUnblockedByAdmin",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32[]",
         "name": "gameIds",
         "type": "bytes32[]"
@@ -145,6 +164,11 @@
       {
         "internalType": "bool[]",
         "name": "blockedGames",
+        "type": "bool[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "unblockedByAdmin",
         "type": "bool[]"
       }
     ],
