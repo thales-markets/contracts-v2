@@ -40,7 +40,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader, secondAccount } =
+		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
@@ -321,6 +321,35 @@ describe('SportsAMMV2Live Live Trades', () => {
 			);
 
 			expect(capRegular / capLive).to.equal(10);
+		});
+		it('Should withdraw collateral successfully by the owner', async () => {
+			// Transfer some tokens to the contract (mocking collateral)
+			const amountToDeposit = ethers.parseEther('0.1');
+			const amountBefore = await weth.balanceOf(firstTrader.address);
+			await weth.connect(firstTrader).transfer(liveTradingProcessor.target, amountToDeposit);
+
+			// Verify the contract balance
+			expect(await weth.balanceOf(liveTradingProcessor.target)).to.equal(amountToDeposit);
+
+			// Withdraw the collateral as the owner
+			await liveTradingProcessor
+				.connect(owner)
+				.withdrawCollateral(weth.target, firstTrader.address);
+
+			// Verify the recipient received the tokens
+			expect(await weth.balanceOf(firstTrader.address)).to.equal(amountBefore);
+
+			// Verify the contract balance is now zero
+			expect(await weth.balanceOf(liveTradingProcessor.target)).to.equal(0);
+		});
+
+		it('Should fail to withdraw collateral if not the owner', async () => {
+			// Attempt to withdraw collateral as a non-owner
+			await expect(
+				liveTradingProcessor
+					.connect(secondAccount)
+					.withdrawCollateral(weth.target, secondAccount.address)
+			).to.be.reverted;
 		});
 	});
 });
