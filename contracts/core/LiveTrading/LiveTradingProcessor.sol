@@ -192,6 +192,13 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         );
     }
 
+    /// @notice withdraw collateral in the contract
+    /// @param collateral the collateral address
+    /// @param recipient the recipient of the collateral
+    function withdrawCollateral(address collateral, address recipient) external onlyOwner {
+        IERC20(collateral).safeTransfer(recipient, IERC20(collateral).balanceOf(address(this)));
+    }
+
     //////////// SETTERS
 
     /// @notice pause live trading
