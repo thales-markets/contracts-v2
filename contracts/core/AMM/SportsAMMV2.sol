@@ -639,9 +639,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         fees = (_buyInAmount * safeBoxFee) / ONE;
     }
 
-    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth, bool canceledByAdmin) internal {
+    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth, bool _canceledByAdmin) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWonAmount = canceledByAdmin ? ticket.cancelTicketByAdmin() : ticket.exercise(_exerciseCollateral);
+        uint userWonAmount = _canceledByAdmin ? ticket.cancelTicketByAdmin() : ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 

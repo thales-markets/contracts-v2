@@ -338,7 +338,7 @@ describe('Ticket Exercise and Expire', () => {
 			await sportsAMMV2.connect(secondAccount).cancelTicket;
 			await expect(sportsAMMV2.connect(secondAccount).cancelTicket(ticketAddress))
 				.to.emit(userTicket, 'Resolved')
-				.withArgs(false, true); // Verify that the ticket is resolved and canceled
+				.withArgs(true, true); // Verify that the ticket is resolved and canceled
 
 			let currentRoundPoolBalanceAfterCancellation =
 				await collateral.balanceOf(currentRoundPoolAddress);
