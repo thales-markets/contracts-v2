@@ -110,7 +110,7 @@
   },
   {
     "inputs": [],
-    "name": "cancelTicketByAdmin",
+    "name": "cancel",
     "outputs": [
       {
         "internalType": "uint256",

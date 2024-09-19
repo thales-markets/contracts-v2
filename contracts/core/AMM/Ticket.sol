@@ -223,7 +223,7 @@ contract Ticket {
         collateral.safeTransfer(recipient, collateral.balanceOf(address(this)));
     }
 
-    function cancelTicketByAdmin() external returns (uint) {
+    function cancel() external onlyAMM returns (uint) {
         require(!paused, "Market paused");
 
         finalPayout = buyInAmount;

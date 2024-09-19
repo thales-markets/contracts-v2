@@ -639,15 +639,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         fees = (_buyInAmount * safeBoxFee) / ONE;
     }
 
-    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth, bool _canceledByAdmin) internal {
+    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth, bool _cancelTicket) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWonAmount = _canceledByAdmin ? ticket.cancelTicketByAdmin() : ticket.exercise(_exerciseCollateral);
+        uint userWonAmount = _cancelTicket ? ticket.cancel() : ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 
         if (ticketOwner == freeBetsHolder || ticketOwner == stakingThalesBettingProxy) {
             IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
-        } 
+        }
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
