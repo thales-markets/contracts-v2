@@ -36,6 +36,7 @@ async function deployAccountsFixture() {
 		secondTrader,
 		collateralAddress,
 		safeBoxTHALES,
+		referrer,
 	] = await ethers.getSigners();
 
 	return {
@@ -52,6 +53,7 @@ async function deployAccountsFixture() {
 		secondTrader,
 		collateralAddress,
 		safeBoxTHALES,
+		referrer,
 	};
 }
 
@@ -131,6 +133,12 @@ async function deploySportsAMMV2Fixture() {
 	// deploy mock Referrals
 	const Referrals = await ethers.getContractFactory('MockReferrals');
 	const referrals = await upgrades.deployProxy(Referrals);
+
+	await referrals.setReferrerFees(
+		ethers.parseEther('0.005'),
+		ethers.parseEther('0.0075'),
+		ethers.parseEther('0.01')
+	);
 
 	// deploy WETH collateral
 	const WETH = await ethers.getContractFactory('MockWETH');
@@ -546,6 +554,7 @@ async function deploySportsAMMV2Fixture() {
 	await collateralTHALES.mintForUser(firstTrader);
 	await collateralTHALES.mintForUser(secondTrader);
 	await collateralTHALES.connect(firstTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
+	await collateralTHALES.connect(firstTrader).approve(stakingThalesAddress, DEFAULT_AMOUNT);
 	await collateralTHALES.connect(secondTrader).approve(sportsAMMV2, DEFAULT_AMOUNT);
 
 	await collateral18.mintForUser(firstTrader);
@@ -670,6 +679,25 @@ async function deploySportsAMMV2Fixture() {
 	);
 	const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
 
+	await stakingThales.setStakingToken(collateralTHALESAddress);
+
+	const StakingThalesBettingProxy = await ethers.getContractFactory('StakingThalesBettingProxy');
+	const stakingThalesBettingProxy = await upgrades.deployProxy(StakingThalesBettingProxy, [
+		owner.address,
+		sportsAMMV2Address,
+		liveTradingProcessorAddress,
+		stakingThalesAddress,
+		collateralTHALESAddress,
+	]);
+
+	const stakingThalesBettingProxyAddress = stakingThalesBettingProxy.getAddress();
+
+	await collateralTHALES
+		.connect(firstTrader)
+		.approve(stakingThalesBettingProxyAddress, DEFAULT_AMOUNT);
+	await stakingThales.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
+	await liveTradingProcessor.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
+	await sportsAMMV2.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
 
@@ -772,6 +800,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralTHALES,
 		collateralTHALESAddress,
 		sportsAMMV2THALESLiquidityPool,
+		stakingThalesBettingProxy,
 	};
 }
 

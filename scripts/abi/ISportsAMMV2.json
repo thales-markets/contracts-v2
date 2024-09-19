@@ -123,6 +123,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "stakingThalesBettingProxy",
+    "outputs": [
+      {
+        "internalType": "contract IStakingThalesBettingProxy",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [

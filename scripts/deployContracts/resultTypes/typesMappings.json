@@ -773,5 +773,140 @@
 		"id": 10130,
 		"result_type": 1,
 		"name": "CHILD_WHO_WILL_QUALIFY"
+	},
+	{
+		"id": 10118,
+		"result_type": 2,
+		"name": "CHILD_HOME_TEAM_TO_SCORE_FIRST_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10119,
+		"result_type": 2,
+		"name": "CHILD_AWAY_TEAM_TO_SCORE_FIRST_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10218,
+		"result_type": 2,
+		"name": "CHILD_HOME_TEAM_TO_SCORE_SECOND_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10219,
+		"result_type": 2,
+		"name": "CHILD_AWAY_TEAM_TO_SCORE_SECOND_PERIOD_SECONDARY"
+	},
+	{
+		"id": 11202,
+		"result_type": 2,
+		"name": "PROP_INTERCEPTIONS"
+	},
+	{
+		"id": 11203,
+		"result_type": 2,
+		"name": "PROP_KICKING_POINTS"
+	},
+	{
+		"id": 11204,
+		"result_type": 2,
+		"name": "PROP_PASSING_ATTEMPS"
+	},
+	{
+		"id": 11205,
+		"result_type": 2,
+		"name": "PROP_PASSING_COMPLETIONS"
+	},
+	{
+		"id": 11206,
+		"result_type": 2,
+		"name": "PROP_TOUCHDOWNS"
+	},
+	{
+		"id": 11207,
+		"result_type": 2,
+		"name": "PROP_SACKS"
+	},
+	{
+		"id": 11208,
+		"result_type": 2,
+		"name": "PROP_PASSING_PLUS_RUSHING_YARDS"
+	},
+	{
+		"id": 11209,
+		"result_type": 2,
+		"name": "PROP_RUSHING_PLUS_RECEIVING_YARDS"
+	},
+	{
+		"id": 11210,
+		"result_type": 2,
+		"name": "PROP_LONGEST_RECEPTION"
+	},
+	{
+		"id": 11211,
+		"result_type": 2,
+		"name": "PROP_EXTRA_POINTS_MADE"
+	},
+	{
+		"id": 11212,
+		"result_type": 2,
+		"name": "PROP_TACKLES"
+	},
+	{
+		"id": 11100,
+		"result_type": 2,
+		"name": "PROP_PLAYER_GOALS"
+	},
+	{
+		"id": 11213,
+		"result_type": 2,
+		"name": "PROP_OUTS_RECORDED"
+	},
+	{
+		"id": 11214,
+		"result_type": 2,
+		"name": "PROP_RBIS"
+	},
+	{
+		"id": 11215,
+		"result_type": 2,
+		"name": "PROP_HITS_PLUS_RUNS_PLUS_RBIS"
+	},
+	{
+		"id": 11216,
+		"result_type": 2,
+		"name": "PROP_EARNED_RUNS_ALLOWED"
+	},
+	{
+		"id": 11217,
+		"result_type": 2,
+		"name": "PROP_DOUBLES"
+	},
+	{
+		"id": 11218,
+		"result_type": 2,
+		"name": "PROP_BATTING_WALKS"
+	},
+	{
+		"id": 11219,
+		"result_type": 2,
+		"name": "PROP_BATTING_STRIKEOUTS"
+	},
+	{
+		"id": 11220,
+		"result_type": 2,
+		"name": "PROP_SINGLES"
+	},
+	{
+		"id": 11221,
+		"result_type": 2,
+		"name": "PROP_STOLEN_BASES"
+	},
+	{
+		"id": 11222,
+		"result_type": 2,
+		"name": "PROP_RUNS_SCORED"
+	},
+	{
+		"id": 11223,
+		"result_type": 2,
+		"name": "PROP_WALKS_ALLOWED"
 	}
 ]
