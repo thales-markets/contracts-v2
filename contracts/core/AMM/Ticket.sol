@@ -218,11 +218,7 @@ contract Ticket {
         _selfDestruct(_beneficiary);
     }
 
-    /// @notice withdraw collateral from the ticket
-    function withdrawCollateral(address recipient) external onlyAMM {
-        collateral.safeTransfer(recipient, collateral.balanceOf(address(this)));
-    }
-
+    /// @notice cancel the ticket
     function cancel() external onlyAMM returns (uint) {
         require(!paused, "Market paused");
 
@@ -236,6 +232,11 @@ contract Ticket {
 
         _resolve(true, true);
         return finalPayout;
+    }
+
+    /// @notice withdraw collateral from the ticket
+    function withdrawCollateral(address recipient) external onlyAMM {
+        collateral.safeTransfer(recipient, collateral.balanceOf(address(this)));
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
