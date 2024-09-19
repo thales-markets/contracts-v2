@@ -234,7 +234,7 @@ contract Ticket {
             collateral.safeTransfer(address(sportsAMM), balance);
         }
 
-        _resolve(false, true);
+        _resolve(true, true);
         return finalPayout;
     }
 
