@@ -68,7 +68,10 @@
 		"SportsAMMV2LiquidityPoolImplementationWETH": "0xd62b005E8d51fA26F14A0431d5AC0c80F0cCAA1f",
 		"StakingThalesBettingProxy": "0xBa6dd31C0A7550F39ae83B7995a6fcdDA5875ef9",
 		"StakingThalesBettingProxyImplementation": "0x53c264c4478875E322065828EbC8f3074f47aB9D",
-		"StakingThalesBettingProxyProxyAdmin": "0xBAf2779e85Ed7EA1357016EF8d2e05B1a8401381"
+		"StakingThalesBettingProxyProxyAdmin": "0xBAf2779e85Ed7EA1357016EF8d2e05B1a8401381",
+		"ResolveBlocker": "0x1bC014caE0E1A992636555c0B587cbD6F9d6521D",
+		"ResolveBlockerImplementation": "0xaE3d323Bc29e7B32451972d750f2Bd6931abc01B",
+		"ResolveBlockerProxyAdmin": "0x6C8f286281DCC868CD73381aB809F44B0b559205"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
