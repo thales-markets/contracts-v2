@@ -76,8 +76,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     ) external notPaused nonReentrant onlyOwner {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
+        uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
         balancePerUserAndCollateral[_user][_collateral] = 0;
-        emit UserFundingRemoved(_user, _collateral, _receiver);
+        emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
     }
 
     /// @notice admin method to unallocate free bets that aren't used in a while
@@ -90,8 +91,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         for (uint256 index = 0; index < _users.length; index++) {
             address _user = _users[index];
             IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
+            uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
             balancePerUserAndCollateral[_user][_collateral] = 0;
-            emit UserFundingRemoved(_user, _collateral, _receiver);
+            emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
         }
     }
 
@@ -266,5 +268,5 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event CollateralSupportChanged(address collateral, bool supported);
     event FreeBetTicketResolved(address ticket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
-    event UserFundingRemoved(address _user, address _collateral, address _receiver);
+    event UserFundingRemoved(address _user, address _collateral, address _receiver, uint _amount);
 }
