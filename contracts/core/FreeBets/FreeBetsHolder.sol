@@ -74,11 +74,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _collateral,
         address _receiver
     ) external notPaused nonReentrant onlyOwner {
-        require(supportedCollateral[_collateral], "Unsupported collateral");
-        IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
-        uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
-        balancePerUserAndCollateral[_user][_collateral] = 0;
-        emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
+        _removeUserFunding(_user, _collateral, _receiver);
     }
 
     /// @notice admin method to unallocate free bets that aren't used in a while
@@ -90,11 +86,16 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         require(supportedCollateral[_collateral], "Unsupported collateral");
         for (uint256 index = 0; index < _users.length; index++) {
             address _user = _users[index];
-            IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
-            uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
-            balancePerUserAndCollateral[_user][_collateral] = 0;
-            emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
+            _removeUserFunding(_user, _collateral, _receiver);
         }
+    }
+
+    function _removeUserFunding(address _user, address _collateral, address _receiver) internal {
+        require(supportedCollateral[_collateral], "Unsupported collateral");
+        IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
+        uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
+        balancePerUserAndCollateral[_user][_collateral] = 0;
+        emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
     }
 
     /// @notice buy a ticket for a user if he has enough free bet in given collateral
