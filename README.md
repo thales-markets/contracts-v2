@@ -34,6 +34,7 @@ List off all deployed contracts are listed [here](https://contracts.thalesmarket
 ### Audits
 
 [iosiro](https://iosiro.com/audits/thales-sports-ammv2-smart-contract-audit)
+[sTHALES as collateral](https://iosiro.com/audits/staked-thales-betting-proxy-smart-contract-audit)
 
 ### Testing
 
