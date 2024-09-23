@@ -50,7 +50,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /// @notice fund a batch of users with free bets in chosen collateral
-    function fundBatch(address[] calldata _users, address _collateral, uint _amountPerUser) external notPaused {
+    function fundBatch(address[] calldata _users, address _collateral, uint _amountPerUser) external notPaused nonReentrant {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amountPerUser * _users.length);
         for (uint256 index = 0; index < _users.length; index++) {
@@ -61,11 +61,41 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /// @notice fund a single user with free bets in chosen collateral
-    function fund(address _user, address _collateral, uint _amount) external notPaused {
+    function fund(address _user, address _collateral, uint _amount) external notPaused nonReentrant {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amount);
         balancePerUserAndCollateral[_user][_collateral] += _amount;
         emit UserFunded(_user, _collateral, _amount, msg.sender);
+    }
+
+    /// @notice admin method to unallocate free bet that hasn't been used in a while
+    function removeUserFunding(
+        address _user,
+        address _collateral,
+        address _receiver
+    ) external notPaused nonReentrant onlyOwner {
+        _removeUserFunding(_user, _collateral, _receiver);
+    }
+
+    /// @notice admin method to unallocate free bets that aren't used in a while
+    function removeUserFundingBatch(
+        address[] calldata _users,
+        address _collateral,
+        address _receiver
+    ) external notPaused nonReentrant onlyOwner {
+        require(supportedCollateral[_collateral], "Unsupported collateral");
+        for (uint256 index = 0; index < _users.length; index++) {
+            address _user = _users[index];
+            _removeUserFunding(_user, _collateral, _receiver);
+        }
+    }
+
+    function _removeUserFunding(address _user, address _collateral, address _receiver) internal {
+        require(supportedCollateral[_collateral], "Unsupported collateral");
+        IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
+        uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
+        balancePerUserAndCollateral[_user][_collateral] = 0;
+        emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
     }
 
     /// @notice buy a ticket for a user if he has enough free bet in given collateral
@@ -239,4 +269,5 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event CollateralSupportChanged(address collateral, bool supported);
     event FreeBetTicketResolved(address ticket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
+    event UserFundingRemoved(address _user, address _collateral, address _receiver, uint _amount);
 }
