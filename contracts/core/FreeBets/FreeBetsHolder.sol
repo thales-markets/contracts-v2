@@ -201,6 +201,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit CollateralSupportChanged(_collateral, _supported);
     }
 
+    function resetTickets(address _user, address[] memory _tickets) external onlyOwner {
+        for (uint i = 0; i < _tickets.length; i++) {
+            ticketToUser[_tickets[i]] = _user;
+            activeTicketsPerUser[_user].add(_tickets[i]);
+        }
+    }
+
     /* ========== GETTERS ========== */
     /// @notice gets batch of active tickets per user
     /// @param _index start index
