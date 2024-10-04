@@ -14,6 +14,38 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "bytes32[]",
+        "name": "gameIds",
+        "type": "bytes32[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "GamesBlockedForResolution",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32[]",
+        "name": "gameIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "GamesUnblockedForResolution",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -106,6 +138,11 @@
         "internalType": "bytes32[]",
         "name": "_gameIds",
         "type": "bytes32[]"
+      },
+      {
+        "internalType": "string",
+        "name": "_reason",
+        "type": "string"
       }
     ],
     "name": "blockGames",

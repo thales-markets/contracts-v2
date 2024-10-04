@@ -33,6 +33,7 @@ describe('ResolveBlocker Blocking games', () => {
 		sportsAMMV2ResultManager;
 	const secondGame = '0x3361313961063935343164563637633634613865623623039435363366336666';
 	const thirdGame = '0x6106393361313935343336346138336633665623623031645636376943536666';
+	const blockReason = 'Spent on markets exceed market cap';
 
 	beforeEach(async () => {
 		({
@@ -60,17 +61,27 @@ describe('ResolveBlocker Blocking games', () => {
 	});
 
 	describe('Game blocking', () => {
-		it('should block games when called by a whitelisted address', async () => {
-			console.log(tradeDataCurrentRound[0].gameId);
-			await resolveBlocker.connect(owner).blockGames([tradeDataCurrentRound[0].gameId, secondGame]);
+		it('should block games when called by a whitelisted address and emit event', async () => {
+			const gameIds = [tradeDataCurrentRound[0].gameId, secondGame];
+
+			await expect(resolveBlocker.connect(owner).blockGames(gameIds, blockReason))
+				.to.emit(resolveBlocker, 'GamesBlockedForResolution')
+				.withArgs(gameIds, blockReason);
+
 			expect(await resolveBlocker.gameIdBlockedForResolution(tradeDataCurrentRound[0].gameId)).to.be
 				.true;
 			expect(await resolveBlocker.gameIdBlockedForResolution(secondGame)).to.be.true;
 		});
 
-		it('should unblock games when called by a whitelisted address', async () => {
-			await resolveBlocker.connect(owner).blockGames([tradeDataCurrentRound[0].gameId]);
-			await resolveBlocker.connect(owner).unblockGames([tradeDataCurrentRound[0].gameId]);
+		it('should unblock games when called by a whitelisted address and emit event', async () => {
+			const gameIds = [tradeDataCurrentRound[0].gameId];
+
+			await resolveBlocker.connect(owner).blockGames(gameIds, blockReason);
+
+			await expect(resolveBlocker.connect(owner).unblockGames(gameIds))
+				.to.emit(resolveBlocker, 'GamesUnblockedForResolution')
+				.withArgs(gameIds);
+
 			expect(await resolveBlocker.gameIdBlockedForResolution(tradeDataCurrentRound[0].gameId)).to.be
 				.false;
 			expect(await resolveBlocker.gameIdUnblockedByAdmin(tradeDataCurrentRound[0].gameId)).to.be
@@ -79,19 +90,25 @@ describe('ResolveBlocker Blocking games', () => {
 
 		it('should revert blocking games when called by a non-whitelisted address', async () => {
 			await expect(
-				resolveBlocker.connect(thirdAccount).blockGames([tradeDataCurrentRound[0].gameId])
+				resolveBlocker
+					.connect(thirdAccount)
+					.blockGames([tradeDataCurrentRound[0].gameId], blockReason)
 			).to.be.revertedWith('Invalid sender');
 		});
 
 		it('should revert unblocking games when called by a non-whitelisted address', async () => {
-			await resolveBlocker.connect(owner).blockGames([tradeDataCurrentRound[0].gameId]);
+			await resolveBlocker
+				.connect(owner)
+				.blockGames([tradeDataCurrentRound[0].gameId], blockReason);
 			await expect(
 				resolveBlocker.connect(thirdAccount).unblockGames([tradeDataCurrentRound[0].gameId])
 			).to.be.revertedWith('Invalid sender');
 		});
 
 		it('should return correct blocking status with getGamesBlockedForResolution', async () => {
-			await resolveBlocker.connect(owner).blockGames([tradeDataCurrentRound[0].gameId, secondGame]);
+			await resolveBlocker
+				.connect(owner)
+				.blockGames([tradeDataCurrentRound[0].gameId, secondGame], blockReason);
 			const [blockedGames, unblockGames] = await resolveBlocker.getGamesBlockedForResolution([
 				tradeDataCurrentRound[0].gameId,
 				secondGame,
@@ -100,29 +117,45 @@ describe('ResolveBlocker Blocking games', () => {
 			expect(blockedGames).to.deep.equal([true, true, false]);
 			expect(unblockGames).to.deep.equal([false, false, false]);
 		});
-		it('should return correct blocking and unblocked status with getGamesBlockedForResolution after blocking and unblocking', async () => {
-			await resolveBlocker.connect(owner).blockGames([tradeDataCurrentRound[0].gameId, secondGame]);
-			let response = await resolveBlocker.getGamesBlockedForResolution([
+
+		it('should return correct blocking and unblocked status after blocking and unblocking', async () => {
+			const gameIds = [tradeDataCurrentRound[0].gameId, secondGame];
+
+			await resolveBlocker.connect(owner).blockGames(gameIds, blockReason);
+			let [blockedGames, unblockedGames] = await resolveBlocker.getGamesBlockedForResolution([
 				tradeDataCurrentRound[0].gameId,
 				secondGame,
 				thirdGame,
 			]);
-			let blockedGames = response[0];
-			let unblockedGames = response[1];
 			expect(blockedGames).to.deep.equal([true, true, false]);
 			expect(unblockedGames).to.deep.equal([false, false, false]);
-			await resolveBlocker
-				.connect(owner)
-				.unblockGames([tradeDataCurrentRound[0].gameId, secondGame]);
-			response = await resolveBlocker.getGamesBlockedForResolution([
+
+			await resolveBlocker.connect(owner).unblockGames(gameIds);
+			[blockedGames, unblockedGames] = await resolveBlocker.getGamesBlockedForResolution([
 				tradeDataCurrentRound[0].gameId,
 				secondGame,
 				thirdGame,
 			]);
-			blockedGames = response[0];
-			unblockedGames = response[1];
 			expect(blockedGames).to.deep.equal([false, false, false]);
 			expect(unblockedGames).to.deep.equal([true, true, false]);
+		});
+
+		it('should emit correct events when blocking multiple games', async () => {
+			const gameIds = [tradeDataCurrentRound[0].gameId, secondGame, thirdGame];
+
+			await expect(resolveBlocker.connect(owner).blockGames(gameIds, blockReason))
+				.to.emit(resolveBlocker, 'GamesBlockedForResolution')
+				.withArgs(gameIds, blockReason);
+		});
+
+		it('should emit correct events when unblocking multiple games', async () => {
+			const gameIds = [tradeDataCurrentRound[0].gameId, secondGame, thirdGame];
+
+			await resolveBlocker.connect(owner).blockGames(gameIds, blockReason);
+
+			await expect(resolveBlocker.connect(owner).unblockGames(gameIds))
+				.to.emit(resolveBlocker, 'GamesUnblockedForResolution')
+				.withArgs(gameIds);
 		});
 	});
 
