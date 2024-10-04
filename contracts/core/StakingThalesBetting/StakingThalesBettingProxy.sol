@@ -229,8 +229,6 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
 
     /* ========== EVENTS ========== */
 
-    event StakingAmountApprovedForTrading(address user, uint amount);
-    event UserFunded(address user, address collateral, uint amount, address funder);
     event StakingTokensTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event StakingTokensTicketResolved(address ticket, address user, uint earned);
     event StakingTokensLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
