@@ -908,5 +908,20 @@
 		"id": 11223,
 		"result_type": 2,
 		"name": "PROP_WALKS_ALLOWED"
+	},
+	{
+		"id": 11225,
+		"result_type": 2,
+		"name": "PROP_POINTS_PLUS_ASSISTS"
+	},
+	{
+		"id": 11226,
+		"result_type": 2,
+		"name": "PROP_POINTS_PLUS_REBOUNDS"
+	},
+	{
+		"id": 11227,
+		"result_type": 2,
+		"name": "PROP_POINTS_PLUS_REBOUNDS_PLUS_ASSISTS"
 	}
 ]
