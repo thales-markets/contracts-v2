@@ -588,6 +588,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      }
+    ],
+    "name": "cancelTicket",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "defaultCollateral",
     "outputs": [

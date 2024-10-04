@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 // internal
+import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 
 contract Ticket {
@@ -215,6 +216,22 @@ contract Ticket {
         require(!resolved, "Can't expire resolved ticket");
         emit Expired(_beneficiary);
         _selfDestruct(_beneficiary);
+    }
+
+    /// @notice cancel the ticket
+    function cancel() external onlyAMM returns (uint) {
+        require(!paused, "Market paused");
+
+        finalPayout = buyInAmount;
+        collateral.safeTransfer(address(ticketOwner), finalPayout);
+
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
+        }
+
+        _resolve(true, true);
+        return finalPayout;
     }
 
     /// @notice withdraw collateral from the ticket

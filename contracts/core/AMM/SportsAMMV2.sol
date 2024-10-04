@@ -316,7 +316,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice exercise specific ticket
     /// @param _ticket ticket address
     function exerciseTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        _exerciseTicket(_ticket, address(0), false);
+        _exerciseTicket(_ticket, address(0), false, false);
+    }
+
+    /// @notice cancel specific ticket by admin
+    /// @param _ticket ticket address
+    function cancelTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
+        require(manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING), "Unsupported sender");
+        _exerciseTicket(_ticket, address(0), false, true);
     }
 
     /// @notice exercise specific ticket to an off ramp collateral
@@ -329,7 +336,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _inEth
     ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
         require(msg.sender == Ticket(_ticket).ticketOwner(), "Caller not the ticket owner");
-        _exerciseTicket(_ticket, _exerciseCollateral, _inEth);
+        _exerciseTicket(_ticket, _exerciseCollateral, _inEth, false);
     }
 
     /// @notice expire provided tickets
@@ -632,9 +639,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         fees = (_buyInAmount * safeBoxFee) / ONE;
     }
 
-    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth) internal {
+    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth, bool _cancelTicket) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWonAmount = ticket.exercise(_exerciseCollateral);
+        uint userWonAmount = _cancelTicket ? ticket.cancel() : ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 
