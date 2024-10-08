@@ -1421,6 +1421,29 @@
         "type": "uint256[]"
       },
       {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "setBatchLiveTradingPerSportAndTypeEnabled",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "_sportIds",
+        "type": "uint256[]"
+      },
+      {
         "internalType": "uint256[]",
         "name": "_capsPerSport",
         "type": "uint256[]"
