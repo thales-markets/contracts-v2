@@ -121,7 +121,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		it('Should pass live', async () => {
 			await sportsAMMV2RiskManager.setBatchLiveTradingPerSportAndTypeEnabled(
 				[SPORT_ID_NBA],
-				0,
+				[0],
 				true
 			);
 
