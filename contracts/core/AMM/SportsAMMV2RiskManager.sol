@@ -688,6 +688,29 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _typeId to set live trading for
     /// @param _enabled self explanatory
     function setLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled) external onlyOwner {
+        _setLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
+    }
+
+    /// @notice Setting whether live trading per sports is enabled
+    /// @param _sportIds to set live trading for
+    /// @param _typeIds to set live trading for
+    /// @param _enabled self explanatory
+    function setBatchLiveTradingPerSportAndTypeEnabled(
+        uint[] calldata _sportIds,
+        uint[] calldata _typeIds,
+        bool _enabled
+    ) external onlyOwner {
+        require(_sportIds.length > 0 && _typeIds.length > 0, "Can't process empty arrays");
+        for (uint index = 0; index < _sportIds.length; index++) {
+            uint _sportId = _sportIds[index];
+            for (uint indexType = 0; indexType < _typeIds.length; indexType++) {
+                uint _typeId = _typeIds[indexType];
+                _setLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
+            }
+        }
+    }
+
+    function _setLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled) internal {
         liveTradingPerSportAndTypeEnabled[_sportId][_typeId] = _enabled;
         emit SetLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
     }
