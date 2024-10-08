@@ -701,7 +701,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint _typeId,
         bool _enabled
     ) external onlyOwner {
-        for (uint256 index = 0; index < _sportIds.length; index++) {
+        for (uint index = 0; index < _sportIds.length; index++) {
             uint _sportId = _sportIds[index];
             liveTradingPerSportAndTypeEnabled[_sportId][_typeId] = _enabled;
             emit SetLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
