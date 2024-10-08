@@ -692,6 +692,22 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
     }
 
+    /// @notice Setting whether live trading per sports is enabled
+    /// @param _sportIds to set live trading for
+    /// @param _typeId to set live trading for
+    /// @param _enabled self explanatory
+    function setBatchLiveTradingPerSportAndTypeEnabled(
+        uint[] calldata _sportIds,
+        uint _typeId,
+        bool _enabled
+    ) external onlyOwner {
+        for (uint256 index = 0; index < _sportIds.length; index++) {
+            uint _sportId = _sportIds[index];
+            liveTradingPerSportAndTypeEnabled[_sportId][_typeId] = _enabled;
+            emit SetLiveTradingPerSportAndTypeEnabled(_sportId, _typeId, _enabled);
+        }
+    }
+
     /// @notice sets different ticket parameters
     /// @param _minBuyInAmount minimum ticket buy-in amount
     /// @param _maxTicketSize maximum ticket size

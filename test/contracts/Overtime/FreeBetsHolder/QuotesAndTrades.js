@@ -119,7 +119,11 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		});
 
 		it('Should pass live', async () => {
-			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+			await sportsAMMV2RiskManager.setBatchLiveTradingPerSportAndTypeEnabled(
+				[SPORT_ID_NBA],
+				0,
+				true
+			);
 
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,
