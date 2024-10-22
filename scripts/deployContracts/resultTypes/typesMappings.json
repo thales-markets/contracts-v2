@@ -2,7 +2,7 @@
 	{
 		"id": 10004,
 		"result_type": 3,
-		"name": "WINNER_TOTAL"
+		"name": "CHILD_COMBINED"
 	},
 	{
 		"id": 10006,
@@ -40,19 +40,9 @@
 		"name": "CHILD_DOUBLE_CHANCE"
 	},
 	{
-		"id": 10004,
-		"result_type": 2,
-		"name": "CHILD_COMBINED"
-	},
-	{
 		"id": 10005,
 		"result_type": 1,
 		"name": "CHILD_ODD_EVEN"
-	},
-	{
-		"id": 10007,
-		"result_type": 2,
-		"name": "CHILD_GOALS"
 	},
 	{
 		"id": 10009,
@@ -923,5 +913,20 @@
 		"id": 11227,
 		"result_type": 2,
 		"name": "PROP_POINTS_PLUS_REBOUNDS_PLUS_ASSISTS"
+	},
+	{
+		"id": 11228,
+		"result_type": 2,
+		"name": "PROP_REBOUNDS_PLUS_ASSISTS"
+	},
+	{
+		"id": 11229,
+		"result_type": 2,
+		"name": "PROP_STEALS"
+	},
+	{
+		"id": 11230,
+		"result_type": 2,
+		"name": "PROP_STEALS_PLUS_BLOCKS"
 	}
 ]
