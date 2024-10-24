@@ -48,6 +48,8 @@ const BUY_IN_AMOUNT = ethers.parseEther('10');
 const BUY_IN_AMOUNT_SIX_DECIMALS = Number(10000000);
 const ETH_BUY_IN_AMOUNT = ethers.parseEther('0.0028571428571429');
 const ADDITIONAL_SLIPPAGE = ethers.parseEther('0.02');
+const BONUS_PAYOUT = ethers.parseEther('0.03');
+const BONUS_PAYOUT_OUT_OF_RANGE = ethers.parseEther('0.04');
 
 const DEFAULT_AMOUNT = ethers.parseEther('10000');
 const DEFAULT_AMOUNT_SIX_DECIMALS = Number('10000000000');
@@ -92,6 +94,8 @@ module.exports = {
 	BUY_IN_AMOUNT_SIX_DECIMALS,
 	ETH_BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
+	BONUS_PAYOUT,
+	BONUS_PAYOUT_OUT_OF_RANGE,
 	DEFAULT_AMOUNT,
 	DEFAULT_AMOUNT_SIX_DECIMALS,
 	ETH_DEFAULT_AMOUNT,
