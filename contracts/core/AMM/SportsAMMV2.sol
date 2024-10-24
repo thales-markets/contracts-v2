@@ -101,14 +101,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // support bonus payouts for some collaterals (e.g. THALES)
     mapping(address => uint) public addedPayoutPercentagePerCollateral;
 
-    // support bonus payouts for some users/contracts (e.g. stakingThalesBettingProxy)
-    mapping(address => uint) public addedPayoutPercentagePerUser;
-
     // support different SB per collateral, namely THALES as a collateral will be directly burned
     mapping(address => address) public safeBoxPerCollateral;
 
     // the contract that processes betting with StakedTHALES
     address public stakingThalesBettingProxy;
+
+    // support bonus payouts for some users/contracts (e.g. stakingThalesBettingProxy)
+    mapping(address => uint) public addedPayoutPercentagePerUser;
 
     struct TradeDataQuoteInternal {
         uint _buyInAmount;
@@ -370,9 +370,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         amountsToBuy = new uint[](numOfMarkets);
         uint maxSupportedOdds = riskManager.maxSupportedOdds();
 
-        uint addedPayoutPercentage = addedPayoutPercentagePerUser[msg.sender] > 0
-            ? addedPayoutPercentagePerUser[msg.sender]
-            : addedPayoutPercentagePerCollateral[_tradeDataQuoteInternal._collateral];
+        uint addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataQuoteInternal._collateral];
 
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
@@ -460,8 +458,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint totalQuote;
         uint payout;
         uint fees;
-        uint addedPayoutPercentage = addedPayoutPercentagePerUser[msg.sender] > 0
-            ? addedPayoutPercentagePerUser[msg.sender]
+        uint addedPayoutPercentage = addedPayoutPercentagePerUser[_tradeDataInternal.recipient] > 0
+            ? addedPayoutPercentagePerUser[_tradeDataInternal.recipient]
             : addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
         if (!_tradeDataInternal._isLive) {
             (totalQuote, payout, fees, , ) = _tradeQuote(
