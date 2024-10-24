@@ -7,6 +7,8 @@ const {
 const {
 	BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
+	BONUS_PAYOUT,
+	BONUS_PAYOUT_OUT_OF_RANGE,
 	RESULT_TYPE,
 	SPORT_ID_NBA,
 } = require('../../../constants/overtime');
@@ -110,6 +112,71 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
 			expect(safeBoxTHALESBalance).greaterThan(0);
+		});
+
+		it('Should revert if bonus is set too high', async () => {
+			const firstTraderAddress = await firstTrader.getAddress();
+			expect(
+				sportsAMMV2.setAddedPayoutPercentagePerUser(firstTraderAddress, BONUS_PAYOUT_OUT_OF_RANGE)
+			).to.be.revertedWith("Bonus payout can't exceed 3%");
+		});
+
+		it('Should buy a ticket (1 market) in THALES with extra payout for user', async () => {
+			const firstTraderAddress = await firstTrader.getAddress();
+			await sportsAMMV2.setAddedPayoutPercentagePerUser(firstTraderAddress, BONUS_PAYOUT);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			const quoteTHALES = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				collateralTHALESAddress,
+				false
+			);
+
+			console.log('Normal quote is: ' + quote.totalQuote);
+			console.log('THALES quote is: ' + quoteTHALES.totalQuote);
+
+			expect(quoteTHALES.payout).greaterThan(quote.payout);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					collateralTHALESAddress,
+					false
+				);
+
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataCurrentRound[0].gameId],
+				[tradeDataCurrentRound[0].typeId],
+				[tradeDataCurrentRound[0].playerId],
+				[[0]]
+			);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			const marketData = await userTicket.markets(0);
+
+			console.log('Normal quote is: ' + quote.totalQuote);
+			console.log('Bonus payour for this user is: ' + marketData.odd);
+
+			expect(quoteTHALES.totalQuote).greaterThan(marketData.odd);
 		});
 
 		it('Should buy a ticket (1 market) in THALES with Referrer', async () => {

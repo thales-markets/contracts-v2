@@ -806,6 +806,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _collateral to add extra payout for
     /// @param _addedPayout percentage amount for extra payout
     function setAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout) external onlyOwner {
+        require(_addedPayout <= 3e16, "Bonus payout can't exceed 3%");
         addedPayoutPercentagePerCollateral[_collateral] = _addedPayout;
         emit SetAddedPayoutPercentagePerCollateral(_collateral, _addedPayout);
     }
@@ -814,6 +815,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _user to add extra payout for
     /// @param _addedPayout percentage amount for extra payout
     function setAddedPayoutPercentagePerUser(address _user, uint _addedPayout) external onlyOwner {
+        require(_addedPayout <= 3e16, "Bonus payout can't exceed 3%");
         addedPayoutPercentagePerUser[_user] = _addedPayout;
         emit SetAddedPayoutPercentagePerUser(_user, _addedPayout);
     }
