@@ -458,8 +458,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint totalQuote;
         uint payout;
         uint fees;
-        uint addedPayoutPercentage = addedPayoutPercentagePerUser[_tradeDataInternal.recipient] > 0
-            ? addedPayoutPercentagePerUser[_tradeDataInternal.recipient]
+        uint addedPayoutPercentage = addedPayoutPercentagePerUser[_tradeDataInternal._recipient] > 0
+            ? addedPayoutPercentagePerUser[_tradeDataInternal._recipient]
             : addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
         if (!_tradeDataInternal._isLive) {
             (totalQuote, payout, fees, , ) = _tradeQuote(
