@@ -82,6 +82,25 @@
         "type": "address"
       }
     ],
+    "name": "getCurrentRoundTickets",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "tickets",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract SportsAMMV2LiquidityPool",
+        "name": "liquidityPool",
+        "type": "address"
+      }
+    ],
     "name": "getCurrentRoundTicketsData",
     "outputs": [
       {
@@ -201,6 +220,30 @@
         "internalType": "struct SportsAMMV2LiquidityPoolData.LiquidityPoolData",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract SportsAMMV2LiquidityPool",
+        "name": "liquidityPool",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "round",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRoundTickets",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "tickets",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
