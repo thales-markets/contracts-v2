@@ -19,6 +19,7 @@ import "./SportsAMMV2LiquidityPoolRound.sol";
 import "../AMM/Ticket.sol";
 import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ISportsAMMV2RiskManager.sol";
 
 contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradeable, ProxyReentrancyGuard {
     /* ========== LIBRARIES ========== */
@@ -504,9 +505,14 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (ticketRound == 0) {
             Ticket ticket = Ticket(_ticket);
             uint maturity;
+            uint16 sportId;
+
             for (uint i = 0; i < ticket.numOfMarkets(); i++) {
-                (, , , maturity, , , , , ) = ticket.markets(i);
-                if (maturity > firstRoundStartTime) {
+                (, sportId, , maturity, , , , , ) = ticket.markets(i);
+                bool isFuture = ISportsAMMV2RiskManager(addressManager.getAddress("SportsAMMV2RiskManager")).sportIdIsFuture(
+                    sportId
+                );
+                if (maturity > firstRoundStartTime && !isFuture) {
                     if (i == 0) {
                         ticketRound = (maturity - firstRoundStartTime) / roundLength + 2;
                     } else {
