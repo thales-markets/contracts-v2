@@ -13,6 +13,7 @@ const {
 	TYPE_ID_SPREAD,
 	TYPE_ID_WINNER_TOTAL,
 	RESULT_TYPE,
+	SPORT_ID_NBA,
 } = require('../../../constants/overtime');
 
 describe('SportsAMMV2LiquidityPool Trades', () => {
@@ -20,6 +21,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2Manager,
+		sportsAMMV2RiskManager,
 		collateral,
 		safeBox,
 		firstLiquidityProvider,
@@ -33,6 +35,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			sportsAMMV2,
 			sportsAMMV2ResultManager,
 			sportsAMMV2LiquidityPool,
+			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
 			collateral,
 			safeBox,
@@ -1339,6 +1342,42 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				ethers.formatEther(defaultLpBalanceBeforeTrade);
 			let buyInAmountAfterFees = ethers.formatEther(BUY_IN_AMOUNT) - ethers.formatEther(quote.fees);
 			expect(defaultLpProfit.toFixed(8)).to.equal(Number(buyInAmountAfterFees).toFixed(8));
+		});
+
+		it('Futures are always in round 1', async () => {
+			const initialDeposit = ethers.parseEther('1000');
+
+			// deposit and start pool
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
+			await sportsAMMV2LiquidityPool.start();
+
+			await sportsAMMV2RiskManager.setIsSportIdFuture(SPORT_ID_NBA, true);
+
+			// create a ticket
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// check ticket data on LP
+			expect(await sportsAMMV2LiquidityPool.roundPerTicket(ticketAddress)).to.equal(1);
+			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(1);
+			expect(await sportsAMMV2LiquidityPool.tradingTicketsPerRound(1, 0)).to.equal(ticketAddress);
 		});
 	});
 });

@@ -104,7 +104,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     uint public defaultLiveCapDivider;
 
     // store whether a sportId is a futures market type
-    mapping(uint16 => bool) public sportIdIsFuture;
+    mapping(uint16 => bool) public isSportIdFuture;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -174,13 +174,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity) {
         uint numOfMarkets = _tradeData.length;
         isMarketOutOfLiquidity = new bool[](numOfMarkets);
-        uint futuresCount;
+        bool isFutureOnParlay;
 
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
-            if (sportIdIsFuture[marketTradeData.sportId]) {
-                futuresCount++;
-            }
+            isFutureOnParlay = isSportIdFuture[marketTradeData.sportId] && numOfMarkets > 1;
 
             require(
                 marketTradeData.odds[marketTradeData.position] > 0 && marketTradeData.odds[marketTradeData.position] < ONE,
@@ -189,7 +187,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
             uint marketRiskAmount = amountToBuy - _buyInAmount;
 
-            if (futuresCount > 1 || _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
+            if (isFutureOnParlay || _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
                 riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
             } else if (
                 _isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive) ||
@@ -790,9 +788,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice sets whether a sportsId is future
     /// @param _sportId to set whether is a future
     /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
-    function setSportIdIsFuture(uint16 _sportId, bool _isFuture) external onlyWhitelistedAddresses(msg.sender) {
-        sportIdIsFuture[_sportId] = _isFuture;
-        emit SetSportIdIsFuture(_sportId, _isFuture);
+    function setIsSportIdFuture(uint16 _sportId, bool _isFuture) external onlyWhitelistedAddresses(msg.sender) {
+        isSportIdFuture[_sportId] = _isFuture;
+        emit SetIsSportIdFuture(_sportId, _isFuture);
     }
 
     /* ========== MODIFIERS ========== */
@@ -835,5 +833,5 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetLiveCapDivider(uint _sportId, uint _divider);
     event SetDefaultLiveCapDivider(uint _divider);
 
-    event SetSportIdIsFuture(uint16 _sportId, bool _isFuture);
+    event SetIsSportIdFuture(uint16 _sportId, bool _isFuture);
 }

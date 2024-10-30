@@ -509,7 +509,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
             for (uint i = 0; i < ticket.numOfMarkets(); i++) {
                 (, sportId, , maturity, , , , , ) = ticket.markets(i);
-                bool isFuture = ISportsAMMV2RiskManager(addressManager.getAddress("SportsAMMV2RiskManager")).sportIdIsFuture(
+                bool isFuture = ISportsAMMV2RiskManager(addressManager.getAddress("SportsAMMV2RiskManager")).isSportIdFuture(
                     sportId
                 );
                 if (maturity > firstRoundStartTime && !isFuture) {
@@ -524,6 +524,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     }
                 } else {
                     ticketRound = 1;
+                    break;
                 }
             }
         }

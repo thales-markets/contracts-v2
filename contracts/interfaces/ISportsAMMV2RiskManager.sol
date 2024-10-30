@@ -74,5 +74,5 @@ interface ISportsAMMV2RiskManager {
 
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure;
 
-    function sportIdIsFuture(uint16 _sportsId) external view returns (bool);
+    function isSportIdFuture(uint16 _sportsId) external view returns (bool);
 }
