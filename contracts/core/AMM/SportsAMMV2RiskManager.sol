@@ -278,6 +278,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) external onlySportsAMM(msg.sender) {
         for (uint i = 0; i < _tradeData.length; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+
+            require(!isSportIdFuture[marketTradeData.sportId] || _tradeData.length == 1, "Can't combine futures on parlays");
+
             uint[] memory odds = marketTradeData.odds;
             uint8 position = marketTradeData.position;
 
