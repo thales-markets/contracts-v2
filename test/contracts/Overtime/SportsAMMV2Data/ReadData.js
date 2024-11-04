@@ -219,4 +219,27 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(ticketsData[0].marketsData[0].gameId).to.be.equal(firstGameId);
 		});
 	});
+
+	describe('getAllActiveGamesAndTickets', () => {
+		it('Should return all active games and tickets', async () => {
+			const [activeGameIds, activeTickets] = await sportsAMMV2Data.getAllActiveGamesAndOpenTickets(
+				0,
+				100
+			);
+
+			// Check the number of active games
+			expect(activeGameIds.length).to.be.equal(numberOfGamesOnTicket);
+
+			// Check if all game IDs from the ticket are present in activeGameIds
+			for (let i = 0; i < tradeDataTenMarketsCurrentRound.length; i++) {
+				expect(activeGameIds).to.include(tradeDataTenMarketsCurrentRound[i].gameId);
+			}
+
+			// Check the number of active tickets
+			expect(activeTickets.length).to.be.equal(1);
+
+			// Check if the active ticket matches the expected ticket address
+			expect(activeTickets[0]).to.be.equal(ticketAddress);
+		});
+	});
 });
