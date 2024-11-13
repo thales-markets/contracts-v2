@@ -438,8 +438,12 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             if (combinedPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Losing) {
                 return ISportsAMMV2ResultManager.MarketPositionStatus.Losing;
             }
-            hasCancelledPosition = combinedPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
-            hasOpenPosition = combinedPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Open;
+            if (!hasCancelledPosition) {
+                hasCancelledPosition = combinedPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
+            }
+            if (!hasOpenPosition) {
+                hasOpenPosition = combinedPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Open;
+            }
         }
 
         return
