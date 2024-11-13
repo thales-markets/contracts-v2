@@ -157,6 +157,27 @@ describe('ResolveBlocker Blocking games', () => {
 				.to.emit(resolveBlocker, 'GamesUnblockedForResolution')
 				.withArgs(gameIds);
 		});
+
+		it('should allow blocking games by addresses with TICKET_PAUSER or MARKET_RESOLVING roles', async () => {
+			const gameIds = [tradeDataCurrentRound[0].gameId];
+
+			// Remove owner and add specific roles using setWhitelistedAddresses
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount.address], 2, true);
+			await sportsAMMV2Manager.setWhitelistedAddresses([thirdAccount.address], 3, true);
+
+			// Test TICKET_PAUSER role
+			await expect(resolveBlocker.connect(secondAccount).blockGames(gameIds, blockReason))
+				.to.emit(resolveBlocker, 'GamesBlockedForResolution')
+				.withArgs(gameIds, blockReason);
+
+			// Unblock for next test
+			await resolveBlocker.connect(secondAccount).unblockGames(gameIds);
+
+			// Test MARKET_RESOLVING role
+			await expect(resolveBlocker.connect(thirdAccount).blockGames(gameIds, blockReason))
+				.to.emit(resolveBlocker, 'GamesBlockedForResolution')
+				.withArgs(gameIds, blockReason);
+		});
 	});
 
 	describe('Set Manager and SportsAMMData', () => {
