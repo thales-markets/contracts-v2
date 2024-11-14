@@ -20,7 +20,8 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @notice Mapping to track if a game is blocked for resolution
     /// @dev Maps gameId to a boolean indicating if the game is blocked
     mapping(bytes32 => bool) public gameIdBlockedForResolution;
-
+    /// @dev Maps gameId to the reason for blocking the game
+    mapping(bytes32 => string) public gameIdBlockReason;
     /// @notice Mapping to track if a game has been unblocked by an admin
     /// @dev Maps gameId to a boolean indicating if the game was unblocked by an admin
     mapping(bytes32 => bool) public gameIdUnblockedByAdmin;
@@ -56,22 +57,22 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @notice Blocks a list of games for resolution
     /// @param _gameIds An array of game IDs to block
     /// @param _reason The reason for blocking the games
-    function blockGames(bytes32[] memory _gameIds, string memory _reason) external onlyWhitelistedForBlock(msg.sender) {
-        _blockGames(_gameIds, true);
+    function blockGames(bytes32[] memory _gameIds, string memory _reason) external onlyWhitelistedForBlock {
+        _blockGames(_gameIds, _reason, true);
         emit GamesBlockedForResolution(_gameIds, _reason);
     }
 
     /// @notice Unblocks a list of games for resolution
     /// @param _gameIds An array of game IDs to unblock
-    function unblockGames(bytes32[] memory _gameIds) external onlyWhitelistedForUnblock(msg.sender) {
-        _blockGames(_gameIds, false);
+    function unblockGames(bytes32[] memory _gameIds) external onlyWhitelistedForUnblock {
+        _blockGames(_gameIds, "", false);
         emit GamesUnblockedForResolution(_gameIds);
     }
 
     /// @notice Internal function to block or unblock games
     /// @param _gameIds An array of game IDs to block or unblock
     /// @param _blockGame A boolean indicating whether to block (true) or unblock (false) the games
-    function _blockGames(bytes32[] memory _gameIds, bool _blockGame) internal {
+    function _blockGames(bytes32[] memory _gameIds, string memory _reason, bool _blockGame) internal {
         for (uint i = 0; i < _gameIds.length; i++) {
             if (!_blockGame && gameIdBlockedForResolution[_gameIds[i]]) {
                 gameIdUnblockedByAdmin[_gameIds[i]] = true;
@@ -79,6 +80,7 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
                 gameIdUnblockedByAdmin[_gameIds[i]] = false;
             }
             gameIdBlockedForResolution[_gameIds[i]] = _blockGame;
+            gameIdBlockReason[_gameIds[i]] = _reason;
         }
     }
 
@@ -100,22 +102,20 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     /* ========== MODIFIERS ========== */
     /// @notice Modifier to ensure only whitelisted addresses can unblock games
-    /// @param sender The address attempting to unblock games
-    modifier onlyWhitelistedForUnblock(address sender) {
+    modifier onlyWhitelistedForUnblock() {
         require(
-            sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
+            msg.sender == owner || manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
             "Invalid sender"
         );
         _;
     }
 
     /// @notice Modifier to ensure only whitelisted addresses can block games
-    /// @param sender The address attempting to block games
-    modifier onlyWhitelistedForBlock(address sender) {
+    modifier onlyWhitelistedForBlock() {
         require(
-            sender == owner ||
-                manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.TICKET_PAUSER) ||
-                manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
+            msg.sender == owner ||
+                manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.TICKET_PAUSER) ||
+                manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
             "Invalid sender"
         );
         _;

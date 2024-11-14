@@ -158,6 +158,25 @@
         "type": "bytes32"
       }
     ],
+    "name": "gameIdBlockReason",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "name": "gameIdBlockedForResolution",
     "outputs": [
       {
