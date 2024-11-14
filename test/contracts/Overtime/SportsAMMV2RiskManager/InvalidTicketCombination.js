@@ -4,7 +4,12 @@ const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
-const { SPORT_ID_NBA, BUY_IN_AMOUNT, RISK_STATUS } = require('../../../constants/overtime');
+const {
+	SPORT_ID_NBA,
+	BUY_IN_AMOUNT,
+	RISK_STATUS,
+	SPORT_ID_SPAIN,
+} = require('../../../constants/overtime');
 
 describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 	let sportsAMMV2RiskManager,
@@ -123,6 +128,26 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 					.connect(secondAccount)
 					.setCombiningPerSportEnabled(SPORT_ID_NBA, true)
 			).to.be.revertedWith('Only the contract owner may perform this action');
+		});
+
+		it('Should fail with futures on a parlay', async () => {
+			const checkRisksDataRegular = await sportsAMMV2RiskManager.checkRisks(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				false
+			);
+
+			expect(checkRisksDataRegular.riskStatus).to.equal(RISK_STATUS.NoRisk);
+
+			await sportsAMMV2RiskManager.setIsSportIdFuture(SPORT_ID_SPAIN, true);
+
+			const checkRisksDataInvalid = await sportsAMMV2RiskManager.checkRisks(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				false
+			);
+
+			expect(checkRisksDataInvalid.riskStatus).to.equal(RISK_STATUS.InvalidCombination);
 		});
 	});
 });
