@@ -556,7 +556,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         vars._payoutWithFees = vars._payout + vars._fees;
 
-        _checkRisksLimitsAndUpdateStakingVolume(_tradeData, vars._totalQuote, vars._payout, _tradeDataInternal);
+        checkRisksLimits(_tradeData, vars._totalQuote, vars._payout, _tradeDataInternal);
 
         // Clone a ticket
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData, vars._addedPayoutPercentage);
@@ -615,7 +615,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     // Checks risk and updates Staking Volume
-    function _checkRisksLimitsAndUpdateStakingVolume(
+    function checkRisksLimits(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _totalQuote,
         uint _payout,
@@ -649,13 +649,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeDataInternal._additionalSlippage,
             _tradeData.length
         );
-        if (address(stakingThales) != address(0)) {
-            stakingThales.updateVolumeAtAmountDecimals(
-                _tradeDataInternal._recipient,
-                _buyInAmount,
-                defaultCollateralDecimals
-            );
-        }
     }
 
     function _getTicketMarkets(
