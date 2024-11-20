@@ -266,6 +266,112 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
+    /**
+     * @notice Calculates the maximum system bet payout based on trade data, system bet denominator, and buy-in amount.
+     * @dev This function computes the payout for a system bet based on the provided data and conditions.
+     * @param _tradeData The array of trade data for the markets involved in the bet.
+     * @param _systemBetDenominator The system bet denominator to adjust the payout calculation.
+     * @param _buyInAmount The amount of collateral staked by the user in the system bet.
+     * @return systemBetPayout The calculated payout amount based on the input parameters.
+     */
+    function getMaxSystemBetPayout(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _systemBetDenominator,
+        uint _buyInAmount
+    ) external pure returns (uint systemBetPayout) {
+        uint[][] memory systemCombinations = generateCombinations(_tradeData.length, _systemBetDenominator);
+        uint totalCombinations = systemCombinations.length;
+        uint buyinPerCombination = ((_buyInAmount * ONE) / totalCombinations) / ONE;
+
+        // Loop through each stored combination
+        for (uint i = 0; i < totalCombinations; i++) {
+            uint[] memory currentCombination = systemCombinations[i];
+
+            uint combinationQuote;
+
+            for (uint j = 0; j < currentCombination.length; j++) {
+                uint marketIndex = currentCombination[j];
+                uint odds = _tradeData[marketIndex].odds[_tradeData[marketIndex].position];
+                combinationQuote = combinationQuote == 0 ? odds : (combinationQuote * odds) / ONE;
+            }
+
+            if (combinationQuote > 0) {
+                uint combinationPayout = (buyinPerCombination * ONE) / combinationQuote;
+                systemBetPayout += combinationPayout;
+            }
+        }
+    }
+
+    /* ========== SYSTEM BET UTILS ========== */
+
+    function generateCombinations(uint n, uint k) public pure returns (uint[][] memory) {
+        require(k <= n, "k cannot be greater than n");
+
+        // Dynamically create the elements array [1, 2, ..., n]
+        uint[] memory elements = new uint[](n);
+        for (uint i = 0; i < n; i++) {
+            elements[i] = i + 1; // 1-based indexing
+        }
+
+        uint combinationsCount = factorial(n) / (factorial(k) * factorial(n - k)); // Calculate the number of combinations
+        uint[][] memory combinations = new uint[][](combinationsCount); // Initialize combinations array
+        uint[] memory combination = new uint[](k);
+        uint[] memory indices = new uint[](k);
+
+        // Initialize indices
+        for (uint i = 0; i < k; i++) {
+            indices[i] = i;
+        }
+
+        uint index = 0;
+
+        while (true) {
+            // Build the current combination using indices
+            for (uint i = 0; i < k; i++) {
+                combination[i] = elements[indices[i]];
+            }
+
+            // Store the current combination
+            uint[] memory currentCombination = new uint[](k);
+            for (uint i = 0; i < k; i++) {
+                currentCombination[i] = combination[i];
+            }
+            combinations[index] = currentCombination;
+            index++;
+
+            // Generate the next combination
+            bool done = true;
+            for (uint i = k; i > 0; i--) {
+                if (indices[i - 1] < n - (k - (i - 1))) {
+                    indices[i - 1]++;
+                    for (uint j = i; j < k; j++) {
+                        indices[j] = indices[j - 1] + 1;
+                    }
+                    done = false;
+                    break;
+                }
+            }
+
+            if (done) {
+                break;
+            }
+        }
+
+        return combinations;
+    }
+
+    // Helper function to calculate factorial
+    function factorial(uint n) internal pure returns (uint) {
+        if (n == 0 || n == 1) {
+            return 1;
+        }
+        uint result = 1;
+        for (uint i = 2; i <= n; i++) {
+            result *= i;
+        }
+        return result;
+    }
+
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice check and update risks for ticket

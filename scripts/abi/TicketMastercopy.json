@@ -389,6 +389,11 @@
             "internalType": "bool",
             "name": "_isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_systemBetDenominator",
+            "type": "uint256"
           }
         ],
         "internalType": "struct Ticket.TicketInit",
@@ -417,6 +422,19 @@
   {
     "inputs": [],
     "name": "isLive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isSystem",
     "outputs": [
       {
         "internalType": "bool",
@@ -598,6 +616,30 @@
         "internalType": "contract ISportsAMMV2",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "systemCombinations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

@@ -75,4 +75,12 @@ interface ISportsAMMV2RiskManager {
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure;
 
     function isSportIdFuture(uint16 _sportsId) external view returns (bool);
+
+    function getMaxSystemBetPayout(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _systemBetDenominator,
+        uint _buyInAmount
+    ) external pure returns (uint systemBetPayout);
+
+    function generateCombinations(uint n, uint k) external pure returns (uint[][] memory);
 }
