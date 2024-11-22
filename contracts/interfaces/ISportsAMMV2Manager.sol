@@ -37,6 +37,8 @@ interface ISportsAMMV2Manager {
 
     function isKnownTicket(address _ticket) external view returns (bool);
 
+    function sportsAMM() external view returns (address);
+
     function addNewKnownTicket(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) external;
 
     function resolveKnownTicket(address ticket, address ticketOwner) external;

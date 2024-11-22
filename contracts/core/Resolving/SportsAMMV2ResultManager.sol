@@ -70,6 +70,9 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
     // the address that can resolve markets
     address public chainlinkResolver;
 
+    // number of tickets to exercise on game resolution
+    uint public numOfTicketsToExerciseOnGameResolution;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @param _manager the address of manager
@@ -257,6 +260,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 }
             }
         }
+        _exerciseTicketsForGameIds(_gameIds);
     }
 
     /// @notice cancel specific games
@@ -343,6 +347,10 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             resultTypePerMarketType[marketTypeId] = ResultType(resultType);
             emit ResultTypePerMarketTypeSet(marketTypeId, resultType);
         }
+    }
+
+    function setNumOfTicketsToExerciseOnGameResolution(uint _numOfTicketsToExercise) external onlyOwner {
+        numOfTicketsToExerciseOnGameResolution = _numOfTicketsToExercise;
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -454,6 +462,53 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                         ? ISportsAMMV2ResultManager.MarketPositionStatus.Open
                         : ISportsAMMV2ResultManager.MarketPositionStatus.Winning
                 );
+    }
+
+    function _exerciseTicketsForGameIds(bytes32[] memory _gameIds) internal {
+        uint numOfTicketsToExercise = numOfTicketsToExerciseOnGameResolution;
+        if (numOfTicketsToExercise == 0) {
+            return;
+        }
+        bytes32[] memory uniqueGameIds = _getUniqueGameIds(_gameIds);
+        uint[] memory numOfTicketsPerGame = new uint[](uniqueGameIds.length);
+        ISportsAMMV2 sportsAMM = ISportsAMMV2(manager.sportsAMM());
+        for (uint i; i < uniqueGameIds.length; i++) {
+            bytes32 gameId = uniqueGameIds[i];
+            numOfTicketsPerGame[i] = manager.numOfTicketsPerGame(gameId);
+            for (uint j; j < numOfTicketsPerGame[i]; j++) {
+                Ticket ticket = Ticket(manager.getTicketsPerGame(j, 1, gameId)[0]);
+                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
+                    sportsAMM.exerciseTicket(address(ticket));
+                    numOfTicketsToExercise--;
+                }
+                if (numOfTicketsToExercise == 0) {
+                    break;
+                }
+            }
+        }
+    }
+
+    function _getUniqueGameIds(bytes32[] memory _gameIds) internal pure returns (bytes32[] memory finalGameIds) {
+        bytes32[] memory uniqueGameIds = new bytes32[](_gameIds.length);
+        uint uniqueCount = 0;
+
+        for (uint i = 0; i < _gameIds.length; i++) {
+            bool isDuplicate = false;
+            for (uint j = 0; j < uniqueCount; j++) {
+                if (uniqueGameIds[j] == _gameIds[i]) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
+                uniqueGameIds[uniqueCount] = _gameIds[i];
+                uniqueCount++;
+            }
+        }
+        finalGameIds = new bytes32[](uniqueCount);
+        for (uint i = 0; i < uniqueCount; i++) {
+            finalGameIds[i] = uniqueGameIds[i];
+        }
     }
 
     modifier onlyWhitelistedAddresses(address sender) {
