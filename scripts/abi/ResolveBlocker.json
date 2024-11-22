@@ -226,6 +226,11 @@
         "internalType": "bool[]",
         "name": "unblockedByAdmin",
         "type": "bool[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "blockReason",
+        "type": "string[]"
       }
     ],
     "stateMutability": "view",

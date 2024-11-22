@@ -45,12 +45,14 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @return unblockedByAdmin An array of booleans indicating if each game is unblocked by admin
     function getGamesBlockedForResolution(
         bytes32[] memory gameIds
-    ) external view returns (bool[] memory blockedGames, bool[] memory unblockedByAdmin) {
+    ) external view returns (bool[] memory blockedGames, bool[] memory unblockedByAdmin, string[] memory blockReason) {
         blockedGames = new bool[](gameIds.length);
         unblockedByAdmin = new bool[](gameIds.length);
+        blockReason = new string[](gameIds.length);
         for (uint i = 0; i < gameIds.length; i++) {
             blockedGames[i] = gameIdBlockedForResolution[gameIds[i]];
             unblockedByAdmin[i] = gameIdUnblockedByAdmin[gameIds[i]];
+            blockReason[i] = gameIdBlockReason[gameIds[i]];
         }
     }
 
@@ -80,7 +82,9 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
                 gameIdUnblockedByAdmin[_gameIds[i]] = false;
             }
             gameIdBlockedForResolution[_gameIds[i]] = _blockGame;
-            gameIdBlockReason[_gameIds[i]] = _reason;
+            if (bytes(_reason).length > 0) {
+                gameIdBlockReason[_gameIds[i]] = _reason;
+            }
         }
     }
 
@@ -104,7 +108,9 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @notice Modifier to ensure only whitelisted addresses can unblock games
     modifier onlyWhitelistedForUnblock() {
         require(
-            msg.sender == owner || manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
+            msg.sender == owner ||
+                manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.TICKET_PAUSER) ||
+                manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
             "Invalid sender"
         );
         _;

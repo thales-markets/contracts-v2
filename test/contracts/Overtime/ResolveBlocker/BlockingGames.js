@@ -109,13 +109,15 @@ describe('ResolveBlocker Blocking games', () => {
 			await resolveBlocker
 				.connect(owner)
 				.blockGames([tradeDataCurrentRound[0].gameId, secondGame], blockReason);
-			const [blockedGames, unblockGames] = await resolveBlocker.getGamesBlockedForResolution([
-				tradeDataCurrentRound[0].gameId,
-				secondGame,
-				thirdGame,
-			]);
+			const [blockedGames, unblockGames, blockReasons] =
+				await resolveBlocker.getGamesBlockedForResolution([
+					tradeDataCurrentRound[0].gameId,
+					secondGame,
+					thirdGame,
+				]);
 			expect(blockedGames).to.deep.equal([true, true, false]);
 			expect(unblockGames).to.deep.equal([false, false, false]);
+			expect(blockReasons).to.deep.equal([blockReason, blockReason, '']);
 		});
 
 		it('should return correct blocking and unblocked status after blocking and unblocking', async () => {
