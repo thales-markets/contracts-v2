@@ -221,7 +221,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
-    /// @notice set result for specific markets
+    /// @notice set result for specific markets and exercise losing tickets (up to numOfTicketsToExerciseOnGameResolution)
     /// @param _gameIds game IDs to set results for
     /// @param _typeIds type IDs to set results for
     /// @param _playerIds player IDs to set results for
@@ -238,7 +238,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 _playerIds.length == _results.length,
             "Incorrect params"
         );
-        bytes32[] memory gamesToBeExercised = new bytes32[](_gameIds.length);
+        uint numOfTicketsToExercise = numOfTicketsToExerciseOnGameResolution;
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
             //skip cancelled games
@@ -250,7 +250,10 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint24 playerId = _playerIds[i];
             int24[] memory results = _results[i];
             if (results[0] == CANCEL_ID) {
-                gamesToBeExercised[i] = gameId;
+                if (numOfTicketsToExercise > 0) {
+                    address[] memory activeTickets = manager.getActiveTicketsPerMarket(0, 100, gameId, typeId, playerId);
+                    numOfTicketsToExercise = _exerciseLosingTickets(activeTickets, numOfTicketsToExercise);
+                }
                 _cancelMarket(gameId, typeId, playerId, 0);
             } else {
                 ResultType resultType = resultTypePerMarketType[typeId];
@@ -258,12 +261,14 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 if (!areResultsPerMarketSet[gameId][typeId][playerId]) {
                     resultsPerMarket[gameId][typeId][playerId] = results;
                     areResultsPerMarketSet[gameId][typeId][playerId] = true;
-                    gamesToBeExercised[i] = gameId;
+                    if (numOfTicketsToExercise > 0) {
+                        address[] memory activeTickets = manager.getActiveTicketsPerMarket(0, 100, gameId, typeId, playerId);
+                        numOfTicketsToExercise = _exerciseLosingTickets(activeTickets, numOfTicketsToExercise);
+                    }
                     emit ResultsPerMarketSet(gameId, typeId, playerId, results);
                 }
             }
         }
-        _exerciseTicketsForGameIds(gamesToBeExercised);
     }
 
     /// @notice cancel specific games
@@ -350,10 +355,6 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             resultTypePerMarketType[marketTypeId] = ResultType(resultType);
             emit ResultTypePerMarketTypeSet(marketTypeId, resultType);
         }
-    }
-
-    function setNumOfTicketsToExerciseOnGameResolution(uint _numOfTicketsToExercise) external onlyOwner {
-        numOfTicketsToExerciseOnGameResolution = _numOfTicketsToExercise;
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -467,51 +468,19 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 );
     }
 
-    function _exerciseTicketsForGameIds(bytes32[] memory _gameIds) internal {
-        uint numOfTicketsToExercise = numOfTicketsToExerciseOnGameResolution;
-        if (numOfTicketsToExercise == 0) {
-            return;
-        }
-        bytes32[] memory uniqueGameIds = _getUniqueGameIds(_gameIds);
-        uint[] memory numOfTicketsPerGame = new uint[](uniqueGameIds.length);
+    function _exerciseLosingTickets(address[] memory _tickets, uint _numOfTicketsToExercise) internal returns (uint) {
         ISportsAMMV2 sportsAMM = ISportsAMMV2(manager.sportsAMM());
-        for (uint i; i < uniqueGameIds.length; i++) {
-            bytes32 gameId = uniqueGameIds[i];
-            numOfTicketsPerGame[i] = manager.numOfTicketsPerGame(gameId);
-            for (uint j; j < numOfTicketsPerGame[i]; j++) {
-                Ticket ticket = Ticket(manager.getTicketsPerGame(j, 1, gameId)[0]);
-                if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
-                    sportsAMM.exerciseTicket(address(ticket));
-                    numOfTicketsToExercise--;
-                }
-                if (numOfTicketsToExercise == 0) {
-                    break;
-                }
+        for (uint i; i < _tickets.length; i++) {
+            Ticket ticket = Ticket(_tickets[i]);
+            if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
+                sportsAMM.exerciseTicket(address(ticket));
+                _numOfTicketsToExercise--;
+            }
+            if (_numOfTicketsToExercise == 0) {
+                return _numOfTicketsToExercise;
             }
         }
-    }
-
-    function _getUniqueGameIds(bytes32[] memory _gameIds) internal pure returns (bytes32[] memory finalGameIds) {
-        bytes32[] memory uniqueGameIds = new bytes32[](_gameIds.length);
-        uint uniqueCount = 0;
-
-        for (uint i = 0; i < _gameIds.length; i++) {
-            bool isDuplicate = false;
-            for (uint j = 0; j < uniqueCount; j++) {
-                if (uniqueGameIds[j] == _gameIds[i]) {
-                    isDuplicate = true;
-                    break;
-                }
-            }
-            if (!isDuplicate) {
-                uniqueGameIds[uniqueCount] = _gameIds[i];
-                uniqueCount++;
-            }
-        }
-        finalGameIds = new bytes32[](uniqueCount);
-        for (uint i = 0; i < uniqueCount; i++) {
-            finalGameIds[i] = uniqueGameIds[i];
-        }
+        return _numOfTicketsToExercise;
     }
 
     modifier onlyWhitelistedAddresses(address sender) {
@@ -542,6 +511,13 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         emit SetChainlinkResolver(_chainlinkResolver);
     }
 
+    /// @notice sets the number of tickets to automatically exercise when resolving games
+    /// @param _numOfTicketsToExercise the maximum number of tickets to exercise per game resolution
+    function setNumOfTicketsToExerciseOnGameResolution(uint _numOfTicketsToExercise) external onlyOwner {
+        numOfTicketsToExerciseOnGameResolution = _numOfTicketsToExercise;
+        emit SetNumOfTicketsToExerciseOnGameResolution(_numOfTicketsToExercise);
+    }
+
     /* ========== EVENTS ========== */
 
     event ResultsPerMarketSet(bytes32 gameId, uint16 typeId, uint24 playerId, int24[] result);
@@ -551,4 +527,5 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     event SetSportsManager(address manager);
     event SetChainlinkResolver(address resolver);
+    event SetNumOfTicketsToExerciseOnGameResolution(uint numOfTicketsToExercise);
 }

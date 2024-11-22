@@ -159,6 +159,45 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_playerId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getActiveTicketsPerMarket",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "_user",
         "type": "address"
