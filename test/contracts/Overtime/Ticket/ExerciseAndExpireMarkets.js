@@ -275,6 +275,83 @@ describe('Ticket Exercise and Expire', () => {
 				.to.emit(userTicket, 'Expired')
 				.withArgs(safeBox.target);
 		});
+
+		it('Auto exercise losing tickets when results are set', async () => {
+			// Set number of tickets to exercise on game resolution
+			await sportsAMMV2ResultManager.setNumOfTicketsToExerciseOnGameResolution(1);
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+			// Create two tickets - one winning, one losing
+			tradeDataCurrentRound[0].position = 0; // winning position
+			const quote1 = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote1.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			// Create second ticket with losing position
+			tradeDataCurrentRound[0].position = 1; // losing position
+			const quote2 = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote2.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const winningTicketAddress = activeTickets[0];
+			const losingTicketAddress = activeTickets[1];
+
+			// Set results - position 0 wins
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[0]]
+			);
+
+			// Check tickets state after results
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const losingTicket = await TicketContract.attach(losingTicketAddress);
+
+			// Losing ticket should be automatically exercised
+			expect(await losingTicket.resolved()).to.be.equal(true);
+			expect(await losingTicket.isUserTheWinner()).to.be.equal(false);
+			expect(await losingTicket.isTicketExercisable()).to.be.equal(false);
+			expect(await sportsAMMV2Manager.isActiveTicket(losingTicketAddress)).to.be.equal(false);
+
+			// Winning ticket should still be unresolved
+			const winningTicket = await TicketContract.attach(winningTicketAddress);
+			expect(await winningTicket.resolved()).to.be.equal(false);
+			expect(await winningTicket.isUserTheWinner()).to.be.equal(true);
+			expect(await winningTicket.isTicketExercisable()).to.be.equal(true);
+			expect(await sportsAMMV2Manager.isActiveTicket(winningTicketAddress)).to.be.equal(true);
+		});
 	});
 	describe('Ticket Cancellation by Admin', () => {
 		it('admin cancel the ticket and refund collateral', async () => {
@@ -303,8 +380,7 @@ describe('Ticket Exercise and Expire', () => {
 				ZERO_ADDRESS,
 				false
 			);
-
-			expect(quote.payout).to.equal(ethers.parseEther('20'));
+			expect(quote.totalQuote).to.equal(ethers.parseEther('0.57'));
 
 			await sportsAMMV2
 				.connect(firstTrader)

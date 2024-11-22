@@ -238,6 +238,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 _playerIds.length == _results.length,
             "Incorrect params"
         );
+        bytes32[] memory gamesToBeExercised = new bytes32[](_gameIds.length);
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
             //skip cancelled games
@@ -249,6 +250,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint24 playerId = _playerIds[i];
             int24[] memory results = _results[i];
             if (results[0] == CANCEL_ID) {
+                gamesToBeExercised[i] = gameId;
                 _cancelMarket(gameId, typeId, playerId, 0);
             } else {
                 ResultType resultType = resultTypePerMarketType[typeId];
@@ -256,11 +258,12 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 if (!areResultsPerMarketSet[gameId][typeId][playerId]) {
                     resultsPerMarket[gameId][typeId][playerId] = results;
                     areResultsPerMarketSet[gameId][typeId][playerId] = true;
+                    gamesToBeExercised[i] = gameId;
                     emit ResultsPerMarketSet(gameId, typeId, playerId, results);
                 }
             }
         }
-        _exerciseTicketsForGameIds(_gameIds);
+        _exerciseTicketsForGameIds(gamesToBeExercised);
     }
 
     /// @notice cancel specific games
