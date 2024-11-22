@@ -273,12 +273,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
      * @param _systemBetDenominator The system bet denominator to adjust the payout calculation.
      * @param _buyInAmount The amount of collateral staked by the user in the system bet.
      * @return systemBetPayout The calculated payout amount based on the input parameters.
+     * @return systemBetQuote The calculated quote odds based on the input parameters.
      */
     function getMaxSystemBetPayout(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _systemBetDenominator,
         uint _buyInAmount
-    ) external pure returns (uint systemBetPayout) {
+    ) external pure returns (uint systemBetPayout, uint systemBetQuote) {
         uint[][] memory systemCombinations = generateCombinations(_tradeData.length, _systemBetDenominator);
         uint totalCombinations = systemCombinations.length;
         uint buyinPerCombination = ((_buyInAmount * ONE) / totalCombinations) / ONE;
@@ -300,17 +301,18 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 systemBetPayout += combinationPayout;
             }
         }
+        systemBetQuote = (ONE * _buyInAmount) / systemBetPayout;
     }
 
     /* ========== SYSTEM BET UTILS ========== */
 
     function generateCombinations(uint n, uint k) public pure returns (uint[][] memory) {
-        require(k <= n, "k cannot be greater than n");
+        require(k > 1 && k < n, "k has to be greater than 1 and less than n");
 
         // Dynamically create the elements array [1, 2, ..., n]
         uint[] memory elements = new uint[](n);
         for (uint i = 0; i < n; i++) {
-            elements[i] = i + 1; // 1-based indexing
+            elements[i] = i; // 0-based indexing
         }
 
         uint combinationsCount = factorial(n) / (factorial(k) * factorial(n - k)); // Calculate the number of combinations

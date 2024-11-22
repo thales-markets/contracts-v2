@@ -456,6 +456,7 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataThreeMarketsCurrentRound,
 		tradeDataSameGames,
 		sameGameWithFirstPlayerProps,
 		sameGameWithSecondPlayerProps,
@@ -472,6 +473,7 @@ async function deploySportsAMMV2Fixture() {
 		...tradeDataNextRound,
 		...tradeDataCrossRounds,
 		...tradeDataTenMarketsCurrentRound,
+		...tradeDataThreeMarketsCurrentRound,
 	];
 
 	for (let index = 0; index < allTradeData.length; index++) {
@@ -787,6 +789,7 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataThreeMarketsCurrentRound,
 		liveTradingProcessor,
 		mockChainlinkOracle,
 		sportsAMMV2Data,

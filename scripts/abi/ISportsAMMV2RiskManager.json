@@ -426,6 +426,11 @@
         "internalType": "uint256",
         "name": "systemBetPayout",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "systemBetQuote",
+        "type": "uint256"
       }
     ],
     "stateMutability": "pure",

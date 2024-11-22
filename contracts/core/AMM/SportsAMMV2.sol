@@ -279,7 +279,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _systemBetDenominator
     ) external payable nonReentrant notPaused returns (address _createdTicket) {
         require(
-            _systemBetDenominator > 1 && _systemBetDenominator < _tradeData.length - 1,
+            _systemBetDenominator > 1 && _systemBetDenominator < _tradeData.length,
             "_systemBetDenominator value out of range"
         );
         _createdTicket = _tradeInternal(
@@ -536,21 +536,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _tradeDataInternal._isLive
                 )
             );
-        } else {
             if (_systemBetDenominator > 1) {
-                vars._payout = riskManager.getMaxSystemBetPayout(
+                (vars._payout, vars._totalQuote) = riskManager.getMaxSystemBetPayout(
                     _tradeData,
-                    _tradeDataInternal._buyInAmount,
-                    _systemBetDenominator
+                    _systemBetDenominator,
+                    _tradeDataInternal._buyInAmount
                 );
-                vars._totalQuote = (ONE * _tradeDataInternal._buyInAmount) / vars._payout;
-            } else {
-                vars._totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
-                vars._totalQuote =
-                    (vars._totalQuote * ONE) /
-                    ((ONE + vars._addedPayoutPercentage) - (vars._addedPayoutPercentage * vars._totalQuote) / ONE);
-                vars._payout = (ONE * _tradeDataInternal._buyInAmount) / vars._totalQuote;
             }
+        } else {
+            vars._totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
+            vars._totalQuote =
+                (vars._totalQuote * ONE) /
+                ((ONE + vars._addedPayoutPercentage) - (vars._addedPayoutPercentage * vars._totalQuote) / ONE);
+            vars._payout = (ONE * _tradeDataInternal._buyInAmount) / vars._totalQuote;
             vars._fees = _getFees(_tradeDataInternal._buyInAmount);
         }
 

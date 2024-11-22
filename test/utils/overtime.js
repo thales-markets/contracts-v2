@@ -47,6 +47,11 @@ const getTicketTradeData = () => {
 	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[10], 0));
 	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[11], 0));
 
+	const tradeDataThreeMarketsCurrentRound = [];
+	tradeDataThreeMarketsCurrentRound.push(getTradeDataItem(marketsTree[0].childMarkets[3], 0));
+	tradeDataThreeMarketsCurrentRound.push(getTradeDataItem(marketsTree[1], 0));
+	tradeDataThreeMarketsCurrentRound.push(getTradeDataItem(marketsTree[2], 0));
+
 	const tradeDataSameGames = [];
 	tradeDataSameGames.push(getTradeDataItem(marketsTree[0], 0));
 	tradeDataSameGames.push(getTradeDataItem(marketsTree[0], 0));
@@ -75,6 +80,7 @@ const getTicketTradeData = () => {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataThreeMarketsCurrentRound,
 		tradeDataSameGames,
 		sameGameWithFirstPlayerProps,
 		sameGameWithSecondPlayerProps,

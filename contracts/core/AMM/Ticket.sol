@@ -92,6 +92,7 @@ contract Ticket {
         createdAt = block.timestamp;
         systemBetDenominator = params._systemBetDenominator;
         if (systemBetDenominator > 0) {
+            isSystem = true;
             systemCombinations = sportsAMM.riskManager().generateCombinations(numOfMarkets, systemBetDenominator);
         }
     }
@@ -176,6 +177,12 @@ contract Ticket {
         uint _marketIndex
     ) public view returns (ISportsAMMV2.CombinedPosition[] memory combinedPositions) {
         return markets[_marketIndex].combinedPositions;
+    }
+
+    /// @notice return the payout for this ticket
+    /// @return systemBetPayout the payout for this ticket
+    function getSystemBetPayout() external view returns (uint systemBetPayout) {
+        systemBetPayout = _getSystemBetPayout();
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
@@ -297,63 +304,73 @@ contract Ticket {
     /* ========== SYSTEM BET UTILS ========== */
 
     function _getSystemBetPayout() internal view returns (uint systemBetPayout) {
-        uint totalCombinations = systemCombinations.length;
-        uint buyinPerCombination = ((buyInAmount * ONE) / totalCombinations) / ONE;
+        if (isSystem) {
+            uint totalCombinations = systemCombinations.length;
+            uint buyinPerCombination = ((buyInAmount * ONE) / totalCombinations) / ONE;
 
-        bool[] memory winningMarkets = new bool[](numOfMarkets);
-        bool[] memory cancelledMarkets = new bool[](numOfMarkets);
-        bool[] memory resolvedMarkets = new bool[](numOfMarkets);
+            bool[] memory winningMarkets = new bool[](numOfMarkets);
+            bool[] memory cancelledMarkets = new bool[](numOfMarkets);
+            bool[] memory resolvedMarkets = new bool[](numOfMarkets);
 
-        for (uint i = 0; i < numOfMarkets; i++) {
-            resolvedMarkets[i] = sportsAMM.resultManager().isMarketResolved(
-                markets[i].gameId,
-                markets[i].typeId,
-                markets[i].playerId,
-                markets[i].line,
-                markets[i].combinedPositions
-            );
-            winningMarkets[i] = sportsAMM.resultManager().isWinningMarketPosition(
-                markets[i].gameId,
-                markets[i].typeId,
-                markets[i].playerId,
-                markets[i].line,
-                markets[i].position,
-                markets[i].combinedPositions
-            );
+            bool hasUnresolvedMarkets;
 
-            cancelledMarkets[i] = sportsAMM.resultManager().isCancelledMarketPosition(
-                markets[i].gameId,
-                markets[i].typeId,
-                markets[i].playerId,
-                markets[i].line,
-                markets[i].position,
-                markets[i].combinedPositions
-            );
-        }
-
-        // Loop through each stored combination
-        for (uint i = 0; i < totalCombinations; i++) {
-            uint[] memory currentCombination = systemCombinations[i];
-
-            uint combinationQuote;
-
-            for (uint j = 0; j < currentCombination.length; j++) {
-                uint marketIndex = currentCombination[j];
-                if (winningMarkets[marketIndex]) {
-                    if (!cancelledMarkets[marketIndex]) {
-                        combinationQuote = combinationQuote == 0
-                            ? markets[marketIndex].odd
-                            : (combinationQuote * markets[marketIndex].odd) / ONE;
-                    }
-                } else {
-                    combinationQuote = 0;
+            for (uint i = 0; i < numOfMarkets; i++) {
+                resolvedMarkets[i] = sportsAMM.resultManager().isMarketResolved(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].combinedPositions
+                );
+                if (!resolvedMarkets[i]) {
+                    hasUnresolvedMarkets = true;
                     break;
                 }
+                winningMarkets[i] = sportsAMM.resultManager().isWinningMarketPosition(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].position,
+                    markets[i].combinedPositions
+                );
+
+                cancelledMarkets[i] = sportsAMM.resultManager().isCancelledMarketPosition(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].position,
+                    markets[i].combinedPositions
+                );
             }
 
-            if (combinationQuote > 0) {
-                uint combinationPayout = (buyinPerCombination * ONE) / combinationQuote;
-                systemBetPayout += combinationPayout;
+            if (!hasUnresolvedMarkets) {
+                // Loop through each stored combination
+                for (uint i = 0; i < totalCombinations; i++) {
+                    uint[] memory currentCombination = systemCombinations[i];
+
+                    uint combinationQuote = ONE;
+
+                    for (uint j = 0; j < currentCombination.length; j++) {
+                        uint marketIndex = currentCombination[j];
+                        if (winningMarkets[marketIndex]) {
+                            if (!cancelledMarkets[marketIndex]) {
+                                combinationQuote = combinationQuote == ONE
+                                    ? markets[marketIndex].odd
+                                    : (combinationQuote * markets[marketIndex].odd) / ONE;
+                            }
+                        } else {
+                            combinationQuote = 0;
+                            break;
+                        }
+                    }
+
+                    if (combinationQuote > 0) {
+                        uint combinationPayout = (buyinPerCombination * ONE) / combinationQuote;
+                        systemBetPayout += combinationPayout;
+                    }
+                }
             }
         }
     }

@@ -80,7 +80,7 @@ interface ISportsAMMV2RiskManager {
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _systemBetDenominator,
         uint _buyInAmount
-    ) external pure returns (uint systemBetPayout);
+    ) external pure returns (uint systemBetPayout, uint systemBetQuote);
 
     function generateCombinations(uint n, uint k) external pure returns (uint[][] memory);
 }
