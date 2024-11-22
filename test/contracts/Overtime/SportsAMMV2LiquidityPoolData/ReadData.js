@@ -92,7 +92,7 @@ describe('SportsAMMV2LiquidityPoolData Read Data', () => {
 		it('Should return round tickets', async () => {
 			const roundTickets = await sportsAMMV2LiquidityPoolData.getRoundTickets(
 				sportsAMMV2LiquidityPool,
-				1
+				2
 			);
 
 			expect(roundTickets.length).to.be.equal(1);
