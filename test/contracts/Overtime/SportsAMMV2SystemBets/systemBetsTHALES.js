@@ -18,6 +18,7 @@ describe('SportsAMMV2 system bets', () => {
 	let sportsAMMV2,
 		sportsAMMV2RiskManager,
 		sportsAMMV2LiquidityPool,
+		sportsAMMV2THALESLiquidityPool,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
 		tradeDataThreeMarketsCurrentRound,
@@ -27,7 +28,9 @@ describe('SportsAMMV2 system bets', () => {
 		sportsAMMV2Manager,
 		sportsAMMV2ResultManager,
 		defaultLiquidityProviderAddress,
-		defaultLiquidityProvider;
+		defaultLiquidityProviderTHALES,
+		collateralTHALES,
+		collateralTHALESAddress;
 
 	beforeEach(async () => {
 		({
@@ -35,46 +38,45 @@ describe('SportsAMMV2 system bets', () => {
 			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
 			sportsAMMV2LiquidityPool,
+			sportsAMMV2THALESLiquidityPool,
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
 			tradeDataThreeMarketsCurrentRound,
 			collateral,
+			collateralTHALES,
+			collateralTHALESAddress,
 			sportsAMMV2ResultManager,
-			defaultLiquidityProvider,
+			defaultLiquidityProviderTHALES,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
-		defaultLiquidityProviderAddress = await defaultLiquidityProvider.getAddress();
+		defaultLiquidityProviderAddress = await defaultLiquidityProviderTHALES.getAddress();
 
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
 			.deposit(ethers.parseEther('1000'));
 		await sportsAMMV2LiquidityPool.start();
+
+		await sportsAMMV2THALESLiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2THALESLiquidityPool.start();
 	});
 
 	describe('Trade', () => {
 		it('Should buy a system ticket (2/3 markets)', async () => {
-			const quote = await sportsAMMV2.tradeQuote(
-				tradeDataThreeMarketsCurrentRound,
-				BUY_IN_AMOUNT,
-				ZERO_ADDRESS,
-				false
-			);
-
-			expect(quote.payout).to.equal('42735042735042735042');
-
 			const maxSystemBetPayoutAndQuote = await sportsAMMV2RiskManager.getMaxSystemBetPayout(
 				tradeDataThreeMarketsCurrentRound,
 				2,
 				BUY_IN_AMOUNT,
-				0
+				ADDITIONAL_SLIPPAGE
 			);
 
 			// console.log('odds0: ' + tradeDataThreeMarketsCurrentRound[0].odds[0] / 1e18); // 0.52 or 1.923 decimal
 			// console.log('odds1: ' + tradeDataThreeMarketsCurrentRound[1].odds[0] / 1e18); // 0.5 or 2 decimal
 			// console.log('odds2: ' + tradeDataThreeMarketsCurrentRound[2].odds[0] / 1e18); // 0.9 or 1.111 decimal
 
-			expect(maxSystemBetPayoutAndQuote.systemBetPayout).to.equal('27350427350427350423');
+			expect(maxSystemBetPayoutAndQuote.systemBetPayout).to.equal('27774735042735042804');
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -84,7 +86,7 @@ describe('SportsAMMV2 system bets', () => {
 					maxSystemBetPayoutAndQuote.systemBetQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
-					ZERO_ADDRESS,
+					collateralTHALESAddress,
 					false,
 					2
 				);
@@ -96,8 +98,8 @@ describe('SportsAMMV2 system bets', () => {
 			const userTicket = await TicketContract.attach(ticketAddress);
 			expect(await userTicket.isSystem()).to.be.equal(true);
 
-			const ticketBalance = await collateral.balanceOf(ticketAddress);
-			expect(ticketBalance).to.equal(ethers.parseEther('27.550427350427350423'));
+			const ticketBalance = await collateralTHALES.balanceOf(ticketAddress);
+			expect(ticketBalance).to.equal(ethers.parseEther('27.974735042735042804'));
 
 			expect(await userTicket.isTicketExercisable()).to.be.equal(false);
 
@@ -143,31 +145,32 @@ describe('SportsAMMV2 system bets', () => {
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 
 			systemBetPayout = await userTicket.getSystemBetPayout();
-			expect(systemBetPayout).to.be.equal('7407407407407407406');
+			expect(systemBetPayout).to.be.equal('7496444444444444469');
 
-			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			const defaultLiquidityProviderAddressBefore = await collateral.balanceOf(
+			const userBalanceBefore = await collateralTHALES.balanceOf(firstTrader);
+			const defaultLiquidityProviderAddressBefore = await collateralTHALES.balanceOf(
 				defaultLiquidityProviderAddress
 			);
 
 			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
-			const userBalanceAfter = await collateral.balanceOf(firstTrader);
+			const userBalanceAfter = await collateralTHALES.balanceOf(firstTrader);
 
-			const defaultLiquidityProviderAddressAfter = await collateral.balanceOf(
+			const defaultLiquidityProviderAddressAfter = await collateralTHALES.balanceOf(
 				defaultLiquidityProviderAddress
 			);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
-			expect(userBalanceAfter).to.be.equal(ethers.parseEther('9997.407407407407407406'));
+			expect(userBalanceAfter).to.be.equal(ethers.parseEther('9997.496444444444444469'));
 
 			expect(defaultLiquidityProviderAddressBefore).to.be.equal(
-				ethers.parseEther('9982.449572649572649577')
-			);
-			expect(defaultLiquidityProviderAddressAfter).to.be.equal(
-				ethers.parseEther('10002.392592592592592594')
+				ethers.parseEther('9982.025264957264957196')
 			);
 
-			const ticketBalanceAfter = await collateral.balanceOf(ticketAddress);
+			expect(defaultLiquidityProviderAddressAfter).to.be.equal(
+				ethers.parseEther('10002.303555555555555531')
+			);
+
+			const ticketBalanceAfter = await collateralTHALES.balanceOf(ticketAddress);
 			expect(ticketBalanceAfter).to.be.equal(0);
 		});
 	});

@@ -307,22 +307,22 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "n",
-        "type": "uint256"
+        "type": "uint8"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "k",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "name": "generateCombinations",
     "outputs": [
       {
-        "internalType": "uint256[][]",
+        "internalType": "uint8[][]",
         "name": "",
-        "type": "uint256[][]"
+        "type": "uint8[][]"
       }
     ],
     "stateMutability": "pure",
@@ -410,13 +410,18 @@
         "type": "tuple[]"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "_systemBetDenominator",
-        "type": "uint256"
+        "type": "uint8"
       },
       {
         "internalType": "uint256",
         "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_addedPayoutPercentage",
         "type": "uint256"
       }
     ],

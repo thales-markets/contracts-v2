@@ -78,9 +78,10 @@ interface ISportsAMMV2RiskManager {
 
     function getMaxSystemBetPayout(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        uint _systemBetDenominator,
-        uint _buyInAmount
+        uint8 _systemBetDenominator,
+        uint _buyInAmount,
+        uint _addedPayoutPercentage
     ) external pure returns (uint systemBetPayout, uint systemBetQuote);
 
-    function generateCombinations(uint n, uint k) external pure returns (uint[][] memory);
+    function generateCombinations(uint8 n, uint8 k) external pure returns (uint8[][] memory);
 }

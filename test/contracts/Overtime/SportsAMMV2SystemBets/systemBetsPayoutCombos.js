@@ -51,7 +51,8 @@ describe('SportsAMMV2 system bets', () => {
 		const maxSystemBetPayoutAndQuote = await sportsAMMV2RiskManager.getMaxSystemBetPayout(
 			tradeDataThreeMarketsCurrentRound,
 			2,
-			BUY_IN_AMOUNT
+			BUY_IN_AMOUNT,
+			0
 		);
 
 		// console.log('odds0: ' + tradeDataThreeMarketsCurrentRound[0].odds[0] / 1e18); // 0.52 or 1.923 decimal

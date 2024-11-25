@@ -1755,9 +1755,9 @@
         "type": "bool"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "_systemBetDenominator",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "name": "tradeSystemBet",

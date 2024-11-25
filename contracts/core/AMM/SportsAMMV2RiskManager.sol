@@ -272,27 +272,30 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
      * @param _tradeData The array of trade data for the markets involved in the bet.
      * @param _systemBetDenominator The system bet denominator to adjust the payout calculation.
      * @param _buyInAmount The amount of collateral staked by the user in the system bet.
+     * @param _addedPayoutPercentage The bonus payout in case THALES is used
      * @return systemBetPayout The calculated payout amount based on the input parameters.
      * @return systemBetQuote The calculated quote odds based on the input parameters.
      */
     function getMaxSystemBetPayout(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        uint _systemBetDenominator,
-        uint _buyInAmount
+        uint8 _systemBetDenominator,
+        uint _buyInAmount,
+        uint _addedPayoutPercentage
     ) external pure returns (uint systemBetPayout, uint systemBetQuote) {
-        uint[][] memory systemCombinations = generateCombinations(_tradeData.length, _systemBetDenominator);
+        uint8[][] memory systemCombinations = generateCombinations(uint8(_tradeData.length), _systemBetDenominator);
         uint totalCombinations = systemCombinations.length;
         uint buyinPerCombination = ((_buyInAmount * ONE) / totalCombinations) / ONE;
 
         // Loop through each stored combination
         for (uint i = 0; i < totalCombinations; i++) {
-            uint[] memory currentCombination = systemCombinations[i];
+            uint8[] memory currentCombination = systemCombinations[i];
 
             uint combinationQuote;
 
-            for (uint j = 0; j < currentCombination.length; j++) {
-                uint marketIndex = currentCombination[j];
+            for (uint8 j = 0; j < currentCombination.length; j++) {
+                uint8 marketIndex = currentCombination[j];
                 uint odds = _tradeData[marketIndex].odds[_tradeData[marketIndex].position];
+                odds = (odds * ONE) / ((ONE + _addedPayoutPercentage) - (_addedPayoutPercentage * odds) / ONE);
                 combinationQuote = combinationQuote == 0 ? odds : (combinationQuote * odds) / ONE;
             }
 
@@ -306,47 +309,48 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     /* ========== SYSTEM BET UTILS ========== */
 
-    function generateCombinations(uint n, uint k) public pure returns (uint[][] memory) {
+    /**
+     * @notice Generates all unique combinations of size `k` from a set of integers {0, 1, ..., n-1}.
+     * @dev Uses `uint8` to reduce gas costs since `n` is guaranteed to be <= 15.
+     * @param n The size of the set (must be greater than `k`).
+     * @param k The size of each combination (must be greater than 1 and less than `n`).
+     * @return combinations A 2D array where each sub-array is a unique combination of `k` integers.
+     */
+    function generateCombinations(uint8 n, uint8 k) public pure returns (uint8[][] memory) {
         require(k > 1 && k < n, "k has to be greater than 1 and less than n");
 
-        // Dynamically create the elements array [1, 2, ..., n]
-        uint[] memory elements = new uint[](n);
-        for (uint i = 0; i < n; i++) {
-            elements[i] = i; // 0-based indexing
+        // Calculate the number of combinations: n! / (k! * (n-k)!)
+        uint combinationsCount = 1;
+        for (uint8 i = 0; i < k; i++) {
+            combinationsCount = (combinationsCount * (n - i)) / (i + 1);
         }
 
-        uint combinationsCount = factorial(n) / (factorial(k) * factorial(n - k)); // Calculate the number of combinations
-        uint[][] memory combinations = new uint[][](combinationsCount); // Initialize combinations array
-        uint[] memory combination = new uint[](k);
-        uint[] memory indices = new uint[](k);
+        // Initialize combinations array
+        uint8[][] memory combinations = new uint8[][](combinationsCount);
 
-        // Initialize indices
-        for (uint i = 0; i < k; i++) {
+        // Generate combinations
+        uint8[] memory indices = new uint8[](k);
+        for (uint8 i = 0; i < k; i++) {
             indices[i] = i;
         }
 
         uint index = 0;
 
         while (true) {
-            // Build the current combination using indices
-            for (uint i = 0; i < k; i++) {
-                combination[i] = elements[indices[i]];
+            // Add the current combination
+            uint8[] memory combination = new uint8[](k);
+            for (uint8 i = 0; i < k; i++) {
+                combination[i] = indices[i];
             }
-
-            // Store the current combination
-            uint[] memory currentCombination = new uint[](k);
-            for (uint i = 0; i < k; i++) {
-                currentCombination[i] = combination[i];
-            }
-            combinations[index] = currentCombination;
+            combinations[index] = combination;
             index++;
 
             // Generate the next combination
             bool done = true;
-            for (uint i = k; i > 0; i--) {
+            for (uint8 i = k; i > 0; i--) {
                 if (indices[i - 1] < n - (k - (i - 1))) {
                     indices[i - 1]++;
-                    for (uint j = i; j < k; j++) {
+                    for (uint8 j = i; j < k; j++) {
                         indices[j] = indices[j - 1] + 1;
                     }
                     done = false;
@@ -360,18 +364,6 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
 
         return combinations;
-    }
-
-    // Helper function to calculate factorial
-    function factorial(uint n) internal pure returns (uint) {
-        if (n == 0 || n == 1) {
-            return 1;
-        }
-        uint result = 1;
-        for (uint i = 2; i <= n; i++) {
-            result *= i;
-        }
-        return result;
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */

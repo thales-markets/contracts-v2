@@ -276,7 +276,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrer,
         address _collateral,
         bool _isEth,
-        uint _systemBetDenominator
+        uint8 _systemBetDenominator
     ) external payable nonReentrant notPaused returns (address _createdTicket) {
         require(
             _systemBetDenominator > 1 && _systemBetDenominator < _tradeData.length,
@@ -302,7 +302,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrer,
         address _collateral,
         bool _isEth,
-        uint _systemBetDenominator
+        uint8 _systemBetDenominator
     ) internal returns (address _createdTicket) {
         require(_expectedQuote > 0 && _buyInAmount > 0, "Illegal input amounts");
 
@@ -520,7 +520,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _trade(
         ISportsAMMV2.TradeData[] memory _tradeData,
         TradeDataInternal memory _tradeDataInternal,
-        uint _systemBetDenominator
+        uint8 _systemBetDenominator
     ) internal returns (address) {
         TradeVars memory vars;
         vars._addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
@@ -540,7 +540,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 (vars._payout, vars._totalQuote) = riskManager.getMaxSystemBetPayout(
                     _tradeData,
                     _systemBetDenominator,
-                    _tradeDataInternal._buyInAmount
+                    _tradeDataInternal._buyInAmount,
+                    vars._addedPayoutPercentage
                 );
             }
         } else {

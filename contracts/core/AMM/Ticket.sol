@@ -39,7 +39,7 @@ contract Ticket {
         IERC20 _collateral;
         uint _expiry;
         bool _isLive;
-        uint _systemBetDenominator;
+        uint8 _systemBetDenominator;
     }
 
     ISportsAMMV2 public sportsAMM;
@@ -66,9 +66,9 @@ contract Ticket {
 
     bool public isSystem;
 
-    uint systemBetDenominator;
+    uint8 systemBetDenominator;
 
-    uint[][] public systemCombinations;
+    uint8[][] public systemCombinations;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -93,7 +93,7 @@ contract Ticket {
         systemBetDenominator = params._systemBetDenominator;
         if (systemBetDenominator > 0) {
             isSystem = true;
-            systemCombinations = sportsAMM.riskManager().generateCombinations(numOfMarkets, systemBetDenominator);
+            systemCombinations = sportsAMM.riskManager().generateCombinations(uint8(numOfMarkets), systemBetDenominator);
         }
     }
 
@@ -348,12 +348,12 @@ contract Ticket {
             if (!hasUnresolvedMarkets) {
                 // Loop through each stored combination
                 for (uint i = 0; i < totalCombinations; i++) {
-                    uint[] memory currentCombination = systemCombinations[i];
+                    uint8[] memory currentCombination = systemCombinations[i];
 
                     uint combinationQuote = ONE;
 
                     for (uint j = 0; j < currentCombination.length; j++) {
-                        uint marketIndex = currentCombination[j];
+                        uint8 marketIndex = currentCombination[j];
                         if (winningMarkets[marketIndex]) {
                             if (!cancelledMarkets[marketIndex]) {
                                 combinationQuote = combinationQuote == ONE

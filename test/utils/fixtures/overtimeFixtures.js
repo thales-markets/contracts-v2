@@ -424,7 +424,9 @@ async function deploySportsAMMV2Fixture() {
 		collateralTHALESAddress,
 	]);
 	const defaultLiquidityProviderTHALESAddress = defaultLiquidityProviderTHALES.getAddress();
-	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderTHALESAddress);
+	await sportsAMMV2THALESLiquidityPool.setDefaultLiquidityProvider(
+		defaultLiquidityProviderTHALESAddress
+	);
 
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 
@@ -769,6 +771,7 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2LiquidityPoolSixDecimals2,
 		sportsAMMV2LiquidityPoolRoundMastercopy,
 		defaultLiquidityProvider,
+		defaultLiquidityProviderTHALES,
 		defaultLiquidityProviderSixDecimals,
 		defaultLiquidityProviderSixDecimals2,
 		sportsAMMV2LiquidityPoolETH,

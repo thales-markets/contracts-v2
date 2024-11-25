@@ -20,7 +20,6 @@ describe('SportsAMMV2 system bets', () => {
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
-		tradeDataThreeMarketsCurrentRound,
 		firstLiquidityProvider,
 		firstTrader,
 		collateral,
@@ -37,7 +36,6 @@ describe('SportsAMMV2 system bets', () => {
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
-			tradeDataThreeMarketsCurrentRound,
 			collateral,
 			sportsAMMV2ResultManager,
 			defaultLiquidityProvider,
@@ -54,39 +52,24 @@ describe('SportsAMMV2 system bets', () => {
 
 	describe('Trade', () => {
 		it('Should buy a system ticket (2/3 markets)', async () => {
-			const quote = await sportsAMMV2.tradeQuote(
-				tradeDataThreeMarketsCurrentRound,
-				BUY_IN_AMOUNT,
-				ZERO_ADDRESS,
-				false
-			);
-
-			expect(quote.payout).to.equal('42735042735042735042');
-
 			const maxSystemBetPayoutAndQuote = await sportsAMMV2RiskManager.getMaxSystemBetPayout(
-				tradeDataThreeMarketsCurrentRound,
+				tradeDataTenMarketsCurrentRound,
 				2,
 				BUY_IN_AMOUNT,
 				0
 			);
 
-			// console.log('odds0: ' + tradeDataThreeMarketsCurrentRound[0].odds[0] / 1e18); // 0.52 or 1.923 decimal
-			// console.log('odds1: ' + tradeDataThreeMarketsCurrentRound[1].odds[0] / 1e18); // 0.5 or 2 decimal
-			// console.log('odds2: ' + tradeDataThreeMarketsCurrentRound[2].odds[0] / 1e18); // 0.9 or 1.111 decimal
-
-			expect(maxSystemBetPayoutAndQuote.systemBetPayout).to.equal('27350427350427350423');
-
 			await sportsAMMV2
 				.connect(firstTrader)
 				.tradeSystemBet(
-					tradeDataThreeMarketsCurrentRound,
+					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
 					maxSystemBetPayoutAndQuote.systemBetQuote,
 					ADDITIONAL_SLIPPAGE,
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false,
-					2
+					4
 				);
 
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
@@ -95,9 +78,6 @@ describe('SportsAMMV2 system bets', () => {
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const userTicket = await TicketContract.attach(ticketAddress);
 			expect(await userTicket.isSystem()).to.be.equal(true);
-
-			const ticketBalance = await collateral.balanceOf(ticketAddress);
-			expect(ticketBalance).to.equal(ethers.parseEther('27.550427350427350423'));
 
 			expect(await userTicket.isTicketExercisable()).to.be.equal(false);
 
@@ -112,29 +92,86 @@ describe('SportsAMMV2 system bets', () => {
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataThreeMarketsCurrentRound[0].gameId],
-				[tradeDataThreeMarketsCurrentRound[0].typeId],
-				[tradeDataThreeMarketsCurrentRound[0].playerId],
+				[tradeDataTenMarketsCurrentRound[0].gameId],
+				[tradeDataTenMarketsCurrentRound[0].typeId],
+				[tradeDataTenMarketsCurrentRound[0].playerId],
 				[[0]]
 			);
 
-			expect(await userTicket.isTicketExercisable()).to.be.equal(false);
-
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataThreeMarketsCurrentRound[1].gameId],
-				[tradeDataThreeMarketsCurrentRound[1].typeId],
-				[tradeDataThreeMarketsCurrentRound[1].playerId],
+				[tradeDataTenMarketsCurrentRound[1].gameId],
+				[tradeDataTenMarketsCurrentRound[1].typeId],
+				[tradeDataTenMarketsCurrentRound[1].playerId],
 				[[0]]
 			);
 
-			expect(await userTicket.isTicketExercisable()).to.be.equal(false);
-			let systemBetPayout = await userTicket.getSystemBetPayout();
-			expect(systemBetPayout).to.be.equal(0);
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[2].gameId],
+				[tradeDataTenMarketsCurrentRound[2].typeId],
+				[tradeDataTenMarketsCurrentRound[2].playerId],
+				[[0]]
+			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataThreeMarketsCurrentRound[2].gameId],
-				[tradeDataThreeMarketsCurrentRound[2].typeId],
-				[tradeDataThreeMarketsCurrentRound[2].playerId],
+				[tradeDataTenMarketsCurrentRound[2].gameId],
+				[tradeDataTenMarketsCurrentRound[2].typeId],
+				[tradeDataTenMarketsCurrentRound[2].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[3].gameId],
+				[tradeDataTenMarketsCurrentRound[3].typeId],
+				[tradeDataTenMarketsCurrentRound[3].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[2].gameId],
+				[tradeDataTenMarketsCurrentRound[2].typeId],
+				[tradeDataTenMarketsCurrentRound[2].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[4].gameId],
+				[tradeDataTenMarketsCurrentRound[4].typeId],
+				[tradeDataTenMarketsCurrentRound[4].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[5].gameId],
+				[tradeDataTenMarketsCurrentRound[5].typeId],
+				[tradeDataTenMarketsCurrentRound[5].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[6].gameId],
+				[tradeDataTenMarketsCurrentRound[6].typeId],
+				[tradeDataTenMarketsCurrentRound[6].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[7].gameId],
+				[tradeDataTenMarketsCurrentRound[7].typeId],
+				[tradeDataTenMarketsCurrentRound[8].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[8].gameId],
+				[tradeDataTenMarketsCurrentRound[8].typeId],
+				[tradeDataTenMarketsCurrentRound[8].playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[tradeDataTenMarketsCurrentRound[9].gameId],
+				[tradeDataTenMarketsCurrentRound[9].typeId],
+				[tradeDataTenMarketsCurrentRound[9].playerId],
 				[[0]]
 			);
 
@@ -142,30 +179,7 @@ describe('SportsAMMV2 system bets', () => {
 
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 
-			systemBetPayout = await userTicket.getSystemBetPayout();
-			expect(systemBetPayout).to.be.equal('7407407407407407406');
-
-			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			const defaultLiquidityProviderAddressBefore = await collateral.balanceOf(
-				defaultLiquidityProviderAddress
-			);
-
 			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
-			const userBalanceAfter = await collateral.balanceOf(firstTrader);
-
-			const defaultLiquidityProviderAddressAfter = await collateral.balanceOf(
-				defaultLiquidityProviderAddress
-			);
-
-			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
-			expect(userBalanceAfter).to.be.equal(ethers.parseEther('9997.407407407407407406'));
-
-			expect(defaultLiquidityProviderAddressBefore).to.be.equal(
-				ethers.parseEther('9982.449572649572649577')
-			);
-			expect(defaultLiquidityProviderAddressAfter).to.be.equal(
-				ethers.parseEther('10002.392592592592592594')
-			);
 
 			const ticketBalanceAfter = await collateral.balanceOf(ticketAddress);
 			expect(ticketBalanceAfter).to.be.equal(0);
