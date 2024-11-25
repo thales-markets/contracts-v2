@@ -412,6 +412,13 @@ describe('Ticket Exercise and Expire', () => {
 			const firstTicketAddress = activeTickets[0];
 			const secondTicketAddress = activeTickets[1];
 
+			const numOfActiveTicketsPerMarket = await sportsAMMV2Manager.numOfActiveTicketsPerMarket(
+				secondTicketData[0].gameId,
+				secondTicketData[0].typeId,
+				secondTicketData[0].playerId
+			);
+			expect(numOfActiveTicketsPerMarket).to.be.equal(activeTickets.length);
+
 			// Set first market as cancelled (-9999)
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
 				[secondTicketData[0].gameId],
