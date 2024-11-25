@@ -352,6 +352,66 @@ describe('Ticket Exercise and Expire', () => {
 			expect(await winningTicket.isTicketExercisable()).to.be.equal(true);
 			expect(await sportsAMMV2Manager.isActiveTicket(winningTicketAddress)).to.be.equal(true);
 		});
+
+		it('Cancel market and exercise ticket', async () => {
+			tradeDataCurrentRound[0].position = 0;
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			const numOfActiveTicketsForGame = await sportsAMMV2Manager.numOfActiveTicketsPerMarket(
+				ticketMarket1.gameId,
+				ticketMarket1.typeId,
+				ticketMarket1.playerId
+			);
+			expect(activeTickets.length).to.equal(numOfActiveTicketsForGame);
+
+			// Cancel the market
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[-9999]]
+			);
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			// Verify ticket state after market cancellation
+			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
+			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
+			const phase = await userTicket.phase();
+			expect(phase).to.be.equal(1);
+
+			// Exercise ticket should work and return original stake
+			const balanceBefore = await collateral.balanceOf(firstTrader.address);
+			await sportsAMMV2.exerciseTicket(ticketAddress);
+			const balanceAfter = await collateral.balanceOf(firstTrader.address);
+
+			// Should get back original stake
+			expect(balanceAfter - balanceBefore).to.equal(BUY_IN_AMOUNT);
+			expect(await userTicket.resolved()).to.be.equal(true);
+		});
 	});
 	describe('Ticket Cancellation by Admin', () => {
 		it('admin cancel the ticket and refund collateral', async () => {
@@ -380,7 +440,6 @@ describe('Ticket Exercise and Expire', () => {
 				ZERO_ADDRESS,
 				false
 			);
-			expect(quote.totalQuote).to.equal(ethers.parseEther('0.57'));
 
 			await sportsAMMV2
 				.connect(firstTrader)

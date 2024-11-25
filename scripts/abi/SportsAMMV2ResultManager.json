@@ -179,6 +179,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "numOfTicketsToExercise",
+        "type": "uint256"
+      }
+    ],
+    "name": "SetNumOfTicketsToExerciseOnGameResolution",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "manager",
         "type": "address"
