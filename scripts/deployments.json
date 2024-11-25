@@ -69,9 +69,9 @@
 		"StakingThalesBettingProxy": "0xBa6dd31C0A7550F39ae83B7995a6fcdDA5875ef9",
 		"StakingThalesBettingProxyImplementation": "0x53c264c4478875E322065828EbC8f3074f47aB9D",
 		"StakingThalesBettingProxyProxyAdmin": "0xBAf2779e85Ed7EA1357016EF8d2e05B1a8401381",
-		"ResolveBlocker": "0x1bC014caE0E1A992636555c0B587cbD6F9d6521D",
-		"ResolveBlockerImplementation": "0xaE3d323Bc29e7B32451972d750f2Bd6931abc01B",
-		"ResolveBlockerProxyAdmin": "0x6C8f286281DCC868CD73381aB809F44B0b559205"
+		"ResolveBlocker": "0x13488544345346d6a61b4408eF5f936ec5C8c027",
+		"ResolveBlockerImplementation": "0x3fABA3560055c07A0c86e06e3AEF473B34765958",
+		"ResolveBlockerProxyAdmin": "0x74e781ADdfC588aFf25c1A724b963E8A75f9a631"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
