@@ -250,10 +250,6 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             uint24 playerId = _playerIds[i];
             int24[] memory results = _results[i];
             if (results[0] == CANCEL_ID) {
-                if (numOfTicketsToExercise > 0) {
-                    address[] memory activeTickets = manager.getActiveTicketsPerMarket(0, 100, gameId, typeId, playerId);
-                    numOfTicketsToExercise = _exerciseLosingTickets(activeTickets, numOfTicketsToExercise);
-                }
                 _cancelMarket(gameId, typeId, playerId, 0);
             } else {
                 ResultType resultType = resultTypePerMarketType[typeId];

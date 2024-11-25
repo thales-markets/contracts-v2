@@ -356,6 +356,7 @@ describe('Ticket Exercise and Expire', () => {
 		});
 
 		it('Cancel market and exercise ticket with multiple markets', async () => {
+			await sportsAMMV2ResultManager.setNumOfTicketsToExerciseOnGameResolution(3);
 			// Set result type for markets
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 
@@ -419,33 +420,26 @@ describe('Ticket Exercise and Expire', () => {
 				[[-9999]]
 			);
 
-			// Set remaining markets as winning (0)
-			for (let i = 1; i < secondTicketData.length; i++) {
-				await sportsAMMV2ResultManager.setResultsPerMarkets(
-					[secondTicketData[i].gameId],
-					[secondTicketData[i].typeId],
-					[secondTicketData[i].playerId],
-					[[0]]
-				);
-			}
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[secondTicketData[1].gameId],
+				[secondTicketData[1].typeId],
+				[secondTicketData[1].playerId],
+				[[0]]
+			);
 
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const firstTicket = await TicketContract.attach(firstTicketAddress);
 			const secondTicket = await TicketContract.attach(secondTicketAddress);
 
 			// First ticket should be winning (position 0)
-			expect(await firstTicket.isTicketExercisable()).to.be.equal(true);
-			expect(await firstTicket.isUserTheWinner()).to.be.equal(true);
+			expect(await firstTicket.isTicketExercisable()).to.be.equal(false);
+			expect(await firstTicket.isUserTheWinner()).to.be.equal(false);
 
 			// Second ticket should be losing (position 1)
-			expect(await secondTicket.isTicketExercisable()).to.be.equal(true);
+			expect(await secondTicket.isTicketExercisable()).to.be.equal(false);
 			expect(await secondTicket.isUserTheWinner()).to.be.equal(false);
 
-			// Exercise both tickets
-			await sportsAMMV2.exerciseTicket(firstTicketAddress);
-			await sportsAMMV2.exerciseTicket(secondTicketAddress);
-
-			expect(await firstTicket.resolved()).to.be.equal(true);
+			expect(await firstTicket.resolved()).to.be.equal(false);
 			expect(await secondTicket.resolved()).to.be.equal(true);
 		});
 	});
