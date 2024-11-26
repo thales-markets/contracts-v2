@@ -248,6 +248,13 @@ async function deploySportsAMMV2Fixture() {
 	await addressManager.setAddressInAddressBook('PriceFeed', priceFeedAddress, {
 		from: owner.address,
 	});
+	await addressManager.setAddressInAddressBook(
+		'SportsAMMV2RiskManager',
+		sportsAMMV2RiskManagerAddress,
+		{
+			from: owner.address,
+		}
+	);
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
