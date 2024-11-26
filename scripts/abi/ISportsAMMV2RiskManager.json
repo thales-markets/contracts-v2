@@ -292,44 +292,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint8[][]",
-        "name": "input",
-        "type": "uint8[][]"
-      }
-    ],
-    "name": "compress",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "compressedData",
-        "type": "bytes"
-      }
-    ],
-    "name": "decompress",
-    "outputs": [
-      {
-        "internalType": "uint8[][]",
-        "name": "",
-        "type": "uint8[][]"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "expiryDuration",
     "outputs": [
@@ -364,30 +326,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "n",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint8",
-        "name": "k",
-        "type": "uint8"
-      }
-    ],
-    "name": "generateCombinationsAndCompress",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

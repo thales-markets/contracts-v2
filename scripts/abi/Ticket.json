@@ -644,19 +644,6 @@
   },
   {
     "inputs": [],
-    "name": "systemCombinations",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "ticketOwner",
     "outputs": [
       {

@@ -69,7 +69,7 @@ describe('SportsAMMV2 system bets', () => {
 					ZERO_ADDRESS,
 					ZERO_ADDRESS,
 					false,
-					4
+					5
 				);
 
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);

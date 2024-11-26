@@ -366,57 +366,6 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         return combinations;
     }
 
-    function generateCombinationsAndCompress(uint8 n, uint8 k) public returns (bytes memory) {
-        return compress(generateCombinations(n, k));
-    }
-
-    // Compress a uint8[][] array into a single bytes array
-    function compress(uint8[][] memory input) public pure returns (bytes memory) {
-        bytes memory compressedData;
-
-        for (uint256 i = 0; i < input.length; i++) {
-            for (uint256 j = 0; j < input[i].length; j++) {
-                compressedData = abi.encodePacked(compressedData, input[i][j]);
-            }
-            compressedData = abi.encodePacked(compressedData, uint8(255)); // Row separator (special value)
-        }
-
-        return compressedData;
-    }
-
-    // Decompress a bytes array back into uint8[][]
-    function decompress(bytes memory compressedData) public pure returns (uint8[][] memory) {
-        uint256 rowCount = 0;
-        uint256 rowStart = 0;
-
-        // Calculate the number of rows by counting separators (255)
-        for (uint256 i = 0; i < compressedData.length; i++) {
-            if (uint8(compressedData[i]) == 255) {
-                rowCount++;
-            }
-        }
-
-        uint8[][] memory decompressed = new uint8[][](rowCount);
-
-        // Decompress rows
-        uint256 currentRow = 0;
-        for (uint256 i = 0; i < compressedData.length; i++) {
-            if (uint8(compressedData[i]) == 255) {
-                uint256 rowLength = i - rowStart;
-                uint8[] memory row = new uint8[](rowLength);
-
-                for (uint256 j = 0; j < rowLength; j++) {
-                    row[j] = uint8(compressedData[rowStart + j]);
-                }
-
-                decompressed[currentRow++] = row;
-                rowStart = i + 1; // Move to the start of the next row
-            }
-        }
-
-        return decompressed;
-    }
-
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice check and update risks for ticket

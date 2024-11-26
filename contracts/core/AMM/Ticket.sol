@@ -68,9 +68,6 @@ contract Ticket {
 
     uint8 public systemBetDenominator;
 
-    // TODO: try to handle this without storing the combinations onchain
-    bytes public systemCombinations;
-
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the ticket contract
@@ -94,10 +91,6 @@ contract Ticket {
         systemBetDenominator = params._systemBetDenominator;
         if (systemBetDenominator > 0) {
             isSystem = true;
-            systemCombinations = sportsAMM.riskManager().generateCombinationsAndCompress(
-                uint8(numOfMarkets),
-                systemBetDenominator
-            );
         }
     }
 
@@ -309,8 +302,11 @@ contract Ticket {
 
     function _getSystemBetPayout() internal view returns (uint systemBetPayout) {
         if (isSystem) {
-            uint8[][] memory systemCombinationsDecompressed = sportsAMM.riskManager().decompress(systemCombinations);
-            uint totalCombinations = systemCombinationsDecompressed.length;
+            uint8[][] memory systemCombinations = sportsAMM.riskManager().generateCombinations(
+                uint8(numOfMarkets),
+                systemBetDenominator
+            );
+            uint totalCombinations = systemCombinations.length;
             uint buyinPerCombination = ((buyInAmount * ONE) / totalCombinations) / ONE;
 
             bool[] memory winningMarkets = new bool[](numOfMarkets);
@@ -353,7 +349,7 @@ contract Ticket {
             if (!hasUnresolvedMarkets) {
                 // Loop through each stored combination
                 for (uint i = 0; i < totalCombinations; i++) {
-                    uint8[] memory currentCombination = systemCombinationsDecompressed[i];
+                    uint8[] memory currentCombination = systemCombinations[i];
 
                     uint combinationQuote = ONE;
 
