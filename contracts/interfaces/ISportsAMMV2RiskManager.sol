@@ -84,4 +84,10 @@ interface ISportsAMMV2RiskManager {
     ) external pure returns (uint systemBetPayout, uint systemBetQuote);
 
     function generateCombinations(uint8 n, uint8 k) external pure returns (uint8[][] memory);
+
+    function compress(uint8[][] memory input) external pure returns (bytes memory);
+
+    function decompress(bytes memory compressedData) external pure returns (uint8[][] memory);
+
+    function generateCombinationsAndCompress(uint8 n, uint8 k) external returns (bytes memory);
 }

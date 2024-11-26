@@ -66,9 +66,9 @@ contract Ticket {
 
     bool public isSystem;
 
-    uint8 systemBetDenominator;
+    uint8 public systemBetDenominator;
 
-    uint8[][] public systemCombinations;
+    bytes public systemCombinations;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -93,7 +93,10 @@ contract Ticket {
         systemBetDenominator = params._systemBetDenominator;
         if (systemBetDenominator > 0) {
             isSystem = true;
-            systemCombinations = sportsAMM.riskManager().generateCombinations(uint8(numOfMarkets), systemBetDenominator);
+            systemCombinations = sportsAMM.riskManager().generateCombinationsAndCompress(
+                uint8(numOfMarkets),
+                systemBetDenominator
+            );
         }
     }
 
@@ -305,7 +308,8 @@ contract Ticket {
 
     function _getSystemBetPayout() internal view returns (uint systemBetPayout) {
         if (isSystem) {
-            uint totalCombinations = systemCombinations.length;
+            uint8[][] memory systemCombinationsDecompressed = sportsAMM.riskManager().decompress(systemCombinations);
+            uint totalCombinations = systemCombinationsDecompressed.length;
             uint buyinPerCombination = ((buyInAmount * ONE) / totalCombinations) / ONE;
 
             bool[] memory winningMarkets = new bool[](numOfMarkets);
@@ -348,7 +352,7 @@ contract Ticket {
             if (!hasUnresolvedMarkets) {
                 // Loop through each stored combination
                 for (uint i = 0; i < totalCombinations; i++) {
-                    uint8[] memory currentCombination = systemCombinations[i];
+                    uint8[] memory currentCombination = systemCombinationsDecompressed[i];
 
                     uint combinationQuote = ONE;
 
