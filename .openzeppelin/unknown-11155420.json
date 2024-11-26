@@ -31669,7 +31669,7 @@
             "slot": "0",
             "type": "t_address",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
           },
           {
             "label": "nominatedOwner",
@@ -31677,7 +31677,7 @@
             "slot": "1",
             "type": "t_address",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
           },
           {
             "label": "_initialized",
@@ -31685,7 +31685,7 @@
             "slot": "1",
             "type": "t_bool",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
           },
           {
             "label": "_transferredAtInit",
@@ -31693,7 +31693,7 @@
             "slot": "1",
             "type": "t_bool",
             "contract": "ProxyOwned",
-            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
           },
           {
             "label": "lastPauseTime",
@@ -31701,7 +31701,7 @@
             "slot": "2",
             "type": "t_uint256",
             "contract": "ProxyPausable",
-            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
           },
           {
             "label": "paused",
@@ -31709,7 +31709,7 @@
             "slot": "3",
             "type": "t_bool",
             "contract": "ProxyPausable",
-            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
           }
         ],
         "types": {
@@ -31754,7 +31754,7 @@
               "contract": "Initializable",
               "label": "_initialized",
               "type": "t_uint64",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
               "offset": 0,
               "slot": "0"
             },
@@ -31762,7 +31762,7 @@
               "contract": "Initializable",
               "label": "_initializing",
               "type": "t_bool",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }
@@ -36199,6 +36199,7 @@
         }
       }
     },
+
     "fbeeea90725d5d2ce4cba0d4d2a5361f27be56cc6e4c878a64f219391b544bc6": {
       "address": "0xF5afa862b06bCf4b3AFE58e5CE430bd166Fc2C83",
       "txHash": "0x44b93cb29c03b1b8f64d9e4f74b768eb669924a2ffa5c6dafd0e30b61bf92684",
@@ -36701,6 +36702,119 @@
               "label": "_initializing",
               "type": "t_bool",
               "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "50fd77b5762a5b308fdeb62474f213c8db8dd2c894ddc21aef14f88126d73701": {
+      "address": "0x8Dd6A779c0CAaF74F2f2A97FB7d51bB9c3f24Caa",
+      "txHash": "0xbda4c2910b47f9f6ff4ddea8f56461b636f52877339111da44aac1a09f62a888",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }
