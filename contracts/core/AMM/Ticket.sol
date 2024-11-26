@@ -68,6 +68,7 @@ contract Ticket {
 
     uint8 public systemBetDenominator;
 
+    // TODO: try to handle this without storing the combinations onchain
     bytes public systemCombinations;
 
     /* ========== CONSTRUCTOR ========== */

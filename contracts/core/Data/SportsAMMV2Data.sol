@@ -59,6 +59,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isExercisable;
         uint finalPayout;
         bool isLive;
+        //TODO: add flag for isSistem
     }
 
     struct TicketMarketInfo {

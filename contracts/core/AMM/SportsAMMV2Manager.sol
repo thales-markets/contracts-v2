@@ -32,6 +32,9 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
+    //    // TODO: store whether a ticket isSystem
+    //    mapping(address => bool) public isSystemTicket;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner) external initializer {
