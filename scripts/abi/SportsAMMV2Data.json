@@ -326,6 +326,11 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -504,6 +509,11 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -681,6 +691,11 @@
           {
             "internalType": "bool",
             "name": "isLive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
             "type": "bool"
           }
         ],
@@ -974,6 +989,11 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1152,6 +1172,11 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1329,6 +1354,11 @@
           {
             "internalType": "bool",
             "name": "isLive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
             "type": "bool"
           }
         ],
@@ -1596,6 +1626,11 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1797,6 +1832,11 @@
           {
             "internalType": "bool",
             "name": "isLive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
             "type": "bool"
           }
         ],

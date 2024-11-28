@@ -32,8 +32,8 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
-    //    // TODO: store whether a ticket isSystem
-    //    mapping(address => bool) public isSystemTicket;
+    // stores whether a given ticket address is a system bet
+    mapping(address => bool) public isSystemTicket;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -58,6 +58,8 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         for (uint i = 0; i < _tradeData.length; i++) {
             ticketsPerGame[_tradeData[i].gameId].add(_ticket);
         }
+
+        isSystemTicket[_ticket] = ITicket(_ticket).isSystem();
     }
 
     /// @notice remove known ticket from active and add as resolved
