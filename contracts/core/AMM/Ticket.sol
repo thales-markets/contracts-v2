@@ -213,12 +213,12 @@ contract Ticket {
                 }
             }
 
-            if (isSystem && !isCancelled) {
-                finalPayout = _getSystemBetPayout();
-            }
-
             if (isCancelled) {
                 finalPayout = buyInAmount;
+            } else {
+                if (isSystem) {
+                    finalPayout = _getSystemBetPayout();
+                }
             }
 
             collateral.safeTransfer(
@@ -311,21 +311,18 @@ contract Ticket {
 
             bool[] memory winningMarkets = new bool[](numOfMarkets);
             bool[] memory cancelledMarkets = new bool[](numOfMarkets);
-            bool[] memory resolvedMarkets = new bool[](numOfMarkets);
-
-            bool hasUnresolvedMarkets;
 
             for (uint i = 0; i < numOfMarkets; i++) {
-                resolvedMarkets[i] = sportsAMM.resultManager().isMarketResolved(
-                    markets[i].gameId,
-                    markets[i].typeId,
-                    markets[i].playerId,
-                    markets[i].line,
-                    markets[i].combinedPositions
-                );
-                if (!resolvedMarkets[i]) {
-                    hasUnresolvedMarkets = true;
-                    break;
+                if (
+                    !sportsAMM.resultManager().isMarketResolved(
+                        markets[i].gameId,
+                        markets[i].typeId,
+                        markets[i].playerId,
+                        markets[i].line,
+                        markets[i].combinedPositions
+                    )
+                ) {
+                    return 0;
                 }
                 winningMarkets[i] = sportsAMM.resultManager().isWinningMarketPosition(
                     markets[i].gameId,
@@ -346,31 +343,27 @@ contract Ticket {
                 );
             }
 
-            if (!hasUnresolvedMarkets) {
-                // Loop through each stored combination
-                for (uint i = 0; i < totalCombinations; i++) {
-                    uint8[] memory currentCombination = systemCombinations[i];
+            // Loop through each stored combination
+            for (uint i = 0; i < totalCombinations; i++) {
+                uint8[] memory currentCombination = systemCombinations[i];
 
-                    uint combinationQuote = ONE;
+                uint combinationQuote = ONE;
 
-                    for (uint j = 0; j < currentCombination.length; j++) {
-                        uint8 marketIndex = currentCombination[j];
-                        if (winningMarkets[marketIndex]) {
-                            if (!cancelledMarkets[marketIndex]) {
-                                combinationQuote = combinationQuote == ONE
-                                    ? markets[marketIndex].odd
-                                    : (combinationQuote * markets[marketIndex].odd) / ONE;
-                            }
-                        } else {
-                            combinationQuote = 0;
-                            break;
+                for (uint j = 0; j < currentCombination.length; j++) {
+                    uint8 marketIndex = currentCombination[j];
+                    if (winningMarkets[marketIndex]) {
+                        if (!cancelledMarkets[marketIndex]) {
+                            combinationQuote = (combinationQuote * markets[marketIndex].odd) / ONE;
                         }
+                    } else {
+                        combinationQuote = 0;
+                        break;
                     }
+                }
 
-                    if (combinationQuote > 0) {
-                        uint combinationPayout = (buyinPerCombination * ONE) / combinationQuote;
-                        systemBetPayout += combinationPayout;
-                    }
+                if (combinationQuote > 0) {
+                    uint combinationPayout = (buyinPerCombination * ONE) / combinationQuote;
+                    systemBetPayout += combinationPayout;
                 }
             }
         }
