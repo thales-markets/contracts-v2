@@ -56,6 +56,16 @@ contract ResolveBlocker is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         }
     }
 
+    /// @notice Checks if an address is whitelisted for unblocking games
+    /// @param _address The address to check
+    /// @return True if the address is whitelisted, false otherwise
+    function isWhitelistedForUnblock(address _address) external view returns (bool) {
+        return
+            owner == _address ||
+            manager.isWhitelistedAddress(_address, ISportsAMMV2Manager.Role.TICKET_PAUSER) ||
+            manager.isWhitelistedAddress(_address, ISportsAMMV2Manager.Role.MARKET_RESOLVING);
+    }
+
     /// @notice Blocks a list of games for resolution
     /// @param _gameIds An array of game IDs to block
     /// @param _reason The reason for blocking the games

@@ -180,6 +180,21 @@ describe('ResolveBlocker Blocking games', () => {
 				.to.emit(resolveBlocker, 'GamesBlockedForResolution')
 				.withArgs(gameIds, blockReason);
 		});
+
+		it('should correctly check whitelist status for unblocking', async () => {
+			// Test owner (should be whitelisted)
+			expect(await resolveBlocker.isWhitelistedForUnblock(owner.address)).to.be.true;
+
+			// Test non-whitelisted address
+			expect(await resolveBlocker.isWhitelistedForUnblock(thirdAccount.address)).to.be.false;
+
+			// Test addresses with specific roles
+			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount.address], 2, true); // TICKET_PAUSER role
+			expect(await resolveBlocker.isWhitelistedForUnblock(secondAccount.address)).to.be.true;
+
+			await sportsAMMV2Manager.setWhitelistedAddresses([thirdAccount.address], 3, true); // MARKET_RESOLVING role
+			expect(await resolveBlocker.isWhitelistedForUnblock(thirdAccount.address)).to.be.true;
+		});
 	});
 
 	describe('Set Manager and SportsAMMData', () => {
