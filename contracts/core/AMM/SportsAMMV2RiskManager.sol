@@ -339,13 +339,31 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     function _isMarketInAMMTrading(ISportsAMMV2.TradeData memory _marketTradeData) internal view returns (bool isTrading) {
         uint maturity = _marketTradeData.maturity;
 
-        bool isResolved = resultManager.isMarketResolved(
-            _marketTradeData.gameId,
-            _marketTradeData.typeId,
-            _marketTradeData.playerId,
-            _marketTradeData.line,
-            _marketTradeData.combinedPositions[_marketTradeData.position]
-        );
+        bool isResolved;
+        if (_marketTradeData.combinedPositions[_marketTradeData.position].length > 0) {
+            // a trade should not be allowed if any of combined positions is resolved
+            for (uint i = 0; i < _marketTradeData.combinedPositions[_marketTradeData.position].length; i++) {
+                ISportsAMMV2.CombinedPosition memory combinedPosition = _marketTradeData.combinedPositions[
+                    _marketTradeData.position
+                ][i];
+                isResolved = resultManager.isMarketResolved(
+                    _marketTradeData.gameId,
+                    combinedPosition.typeId,
+                    0,
+                    combinedPosition.line,
+                    _marketTradeData.combinedPositions[_marketTradeData.position] // redundant, sent for compability
+                );
+                if (isResolved) break;
+            }
+        } else {
+            isResolved = resultManager.isMarketResolved(
+                _marketTradeData.gameId,
+                _marketTradeData.typeId,
+                _marketTradeData.playerId,
+                _marketTradeData.line,
+                _marketTradeData.combinedPositions[_marketTradeData.position] // redundant, sent for compability
+            );
+        }
         if (_marketTradeData.status == 0 && !isResolved) {
             if (maturity >= block.timestamp) {
                 isTrading = (maturity - block.timestamp) > minimalTimeLeftToMaturity;

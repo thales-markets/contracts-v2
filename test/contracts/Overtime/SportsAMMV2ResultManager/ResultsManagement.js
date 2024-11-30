@@ -377,4 +377,73 @@ describe('SportsAMMV2ResultManager Results Management', () => {
 			await sportsAMMV2ResultManager.cancelMarket(GAME_ID_1, 0, 0, 0);
 		});
 	});
+
+	describe('Reopening', () => {
+		it('Reopen cancelled game"', async () => {
+			await sportsAMMV2ResultManager.cancelGame(GAME_ID_1);
+
+			expect(await sportsAMMV2ResultManager.isGameCancelled(GAME_ID_1)).to.equal(true);
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				true
+			);
+			expect(await sportsAMMV2ResultManager.isMarketResolved(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				true
+			);
+
+			await sportsAMMV2ResultManager.reopenGame(GAME_ID_1);
+			expect(await sportsAMMV2ResultManager.isGameCancelled(GAME_ID_1)).to.equal(false);
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+			expect(await sportsAMMV2ResultManager.isMarketResolved(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+		});
+
+		it('Reopen cancelled market"', async () => {
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+			await sportsAMMV2ResultManager.cancelMarket(GAME_ID_1, 0, 0, 0);
+
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				true
+			);
+			expect(await sportsAMMV2ResultManager.isMarketResolved(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				true
+			);
+
+			await sportsAMMV2ResultManager.reopenMarkets([GAME_ID_1], [0], [0]);
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+			expect(await sportsAMMV2ResultManager.isMarketResolved(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+		});
+
+		it('Reopen resolved market"', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			await sportsAMMV2ResultManager.setResultsPerMarkets([GAME_ID_1], [0], [0], [[1]]);
+			await expect(
+				sportsAMMV2ResultManager.setResultsPerMarkets([GAME_ID_1], [0], [0], [[1]])
+			).to.not.emit(sportsAMMV2ResultManager, 'ResultsPerMarketSet');
+
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+			expect(await sportsAMMV2ResultManager.isMarketResolved(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				true
+			);
+
+			await sportsAMMV2ResultManager.reopenMarkets([GAME_ID_1], [0], [0]);
+			expect(await sportsAMMV2ResultManager.isMarketCancelled(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+			expect(await sportsAMMV2ResultManager.isMarketResolved(GAME_ID_1, 0, 0, 0, [])).to.equal(
+				false
+			);
+		});
+	});
 });
