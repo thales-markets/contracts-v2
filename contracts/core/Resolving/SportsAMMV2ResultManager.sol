@@ -97,29 +97,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isResolved) {
-        if (isGameCancelled[_gameId]) {
-            isResolved = true;
-        } else {
-            ResultType resultType = resultTypePerMarketType[_typeId];
-            if (resultType == ResultType.CombinedPositions) {
-                isResolved = true;
-                for (uint i = 0; i < combinedPositions.length; i++) {
-                    ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
-                    bool isCombinedPositionMarketResolved = _isMarketResolved(
-                        _gameId,
-                        combinedPosition.typeId,
-                        0,
-                        combinedPosition.line
-                    );
-                    if (!isCombinedPositionMarketResolved) {
-                        isResolved = false;
-                        break;
-                    }
-                }
-            } else {
-                isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line);
-            }
-        }
+        isResolved = _isMarketFullyResolved(_gameId, _typeId, _playerId, _line, combinedPositions);
     }
 
     /// @notice is specific market cancelled
@@ -217,6 +195,24 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         uint24 _playerId
     ) external view returns (int24[] memory results) {
         return resultsPerMarket[_gameId][_typeId][_playerId];
+    }
+
+    function isMarketResolvedAndPositionWinning(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        uint _position,
+        ISportsAMMV2.CombinedPosition[] memory _combinedPositions
+    ) external view returns (bool isResolved, bool isWinning) {
+        (isResolved, isWinning) = _isMarketResolvedAndPositionWinning(
+            _gameId,
+            _typeId,
+            _playerId,
+            _line,
+            _position,
+            _combinedPositions
+        );
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
@@ -486,6 +482,60 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 numOfTicketsToExercise--;
             }
         }
+    }
+
+    function _isMarketFullyResolved(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        ISportsAMMV2.CombinedPosition[] memory combinedPositions
+    ) internal view returns (bool isResolved) {
+        if (isGameCancelled[_gameId]) {
+            isResolved = true;
+        } else {
+            ResultType resultType = resultTypePerMarketType[_typeId];
+            if (resultType == ResultType.CombinedPositions) {
+                isResolved = true;
+                for (uint i = 0; i < combinedPositions.length; i++) {
+                    ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
+                    bool isCombinedPositionMarketResolved = _isMarketResolved(
+                        _gameId,
+                        combinedPosition.typeId,
+                        0,
+                        combinedPosition.line
+                    );
+                    if (!isCombinedPositionMarketResolved) {
+                        isResolved = false;
+                        break;
+                    }
+                }
+            } else {
+                isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line);
+            }
+        }
+    }
+
+    function _isMarketResolvedAndPositionWinning(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        uint _position,
+        ISportsAMMV2.CombinedPosition[] memory _combinedPositions
+    ) internal view returns (bool isResolved, bool isWinning) {
+        isResolved = _isMarketFullyResolved(_gameId, _typeId, _playerId, _line, _combinedPositions);
+        ISportsAMMV2ResultManager.MarketPositionStatus marketPositionStatus = _getMarketPositionStatus(
+            _gameId,
+            _typeId,
+            _playerId,
+            _line,
+            _position,
+            _combinedPositions
+        );
+        isWinning =
+            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Winning ||
+            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
     }
 
     modifier onlyWhitelistedAddresses(address sender) {

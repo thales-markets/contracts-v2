@@ -55,6 +55,15 @@ interface ISportsAMMV2ResultManager {
 
     function resultTypePerMarketType(uint _typeId) external view returns (uint8 marketType);
 
+    function isMarketResolvedAndPositionWinning(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        uint _position,
+        ISportsAMMV2.CombinedPosition[] memory _combinedPositions
+    ) external view returns (bool isResolved, bool isWinning);
+
     function setResultsPerMarkets(
         bytes32[] memory _gameIds,
         uint16[] memory _typeIds,
