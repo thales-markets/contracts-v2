@@ -477,13 +477,13 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         ISportsAMMV2 sportsAMM = ISportsAMMV2(manager.sportsAMM());
         numOfTicketsToExercise = _numOfTicketsToExercise;
         for (uint i; i < _tickets.length; i++) {
-            Ticket ticket = Ticket(_tickets[i]);
-            if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
-                sportsAMM.exerciseTicket(address(ticket));
-                numOfTicketsToExercise--;
-            }
             if (numOfTicketsToExercise == 0) {
                 break;
+            }
+            Ticket ticket = Ticket(_tickets[i]);
+            if (!ticket.isUserTheWinner() && ticket.isTicketExercisable()) {
+                sportsAMM.exerciseTicket(address(ticket));
+                numOfTicketsToExercise--;
             }
         }
     }
