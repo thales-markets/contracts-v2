@@ -470,9 +470,12 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 );
     }
 
-    function _exerciseLosingTickets(address[] memory _tickets, uint _numOfTicketsToExercise) internal returns (uint) {
+    function _exerciseLosingTickets(
+        address[] memory _tickets,
+        uint _numOfTicketsToExercise
+    ) internal returns (uint numOfTicketsToExercise) {
         ISportsAMMV2 sportsAMM = ISportsAMMV2(manager.sportsAMM());
-        uint numOfTicketsToExercise = _numOfTicketsToExercise;
+        numOfTicketsToExercise = _numOfTicketsToExercise;
         for (uint i; i < _tickets.length; i++) {
             Ticket ticket = Ticket(_tickets[i]);
             if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
@@ -480,10 +483,9 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 numOfTicketsToExercise--;
             }
             if (numOfTicketsToExercise == 0) {
-                return numOfTicketsToExercise;
+                break;
             }
         }
-        return numOfTicketsToExercise;
     }
 
     modifier onlyWhitelistedAddresses(address sender) {
