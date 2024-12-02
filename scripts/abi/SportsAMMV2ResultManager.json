@@ -805,7 +805,7 @@
     "outputs": [
       {
         "internalType": "bool",
-        "name": "isWinning",
+        "name": "",
         "type": "bool"
       }
     ],
