@@ -735,11 +735,77 @@
         "type": "tuple[]"
       }
     ],
+    "name": "isMarketResolvedAndPositionWinning",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isResolved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isWinning",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_typeId",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint24",
+        "name": "_playerId",
+        "type": "uint24"
+      },
+      {
+        "internalType": "int24",
+        "name": "_line",
+        "type": "int24"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_position",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+        "name": "_combinedPositions",
+        "type": "tuple[]"
+      }
+    ],
     "name": "isWinningMarketPosition",
     "outputs": [
       {
         "internalType": "bool",
-        "name": "isWinning",
+        "name": "",
         "type": "bool"
       }
     ],

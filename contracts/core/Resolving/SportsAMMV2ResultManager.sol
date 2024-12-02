@@ -97,29 +97,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         int24 _line,
         ISportsAMMV2.CombinedPosition[] memory combinedPositions
     ) external view returns (bool isResolved) {
-        if (isGameCancelled[_gameId]) {
-            isResolved = true;
-        } else {
-            ResultType resultType = resultTypePerMarketType[_typeId];
-            if (resultType == ResultType.CombinedPositions) {
-                isResolved = true;
-                for (uint i = 0; i < combinedPositions.length; i++) {
-                    ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
-                    bool isCombinedPositionMarketResolved = _isMarketResolved(
-                        _gameId,
-                        combinedPosition.typeId,
-                        0,
-                        combinedPosition.line
-                    );
-                    if (!isCombinedPositionMarketResolved) {
-                        isResolved = false;
-                        break;
-                    }
-                }
-            } else {
-                isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line);
-            }
-        }
+        isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line, combinedPositions);
     }
 
     /// @notice is specific market cancelled
@@ -160,6 +138,16 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         }
     }
 
+    /**
+     * @notice Retrieves the status of a specific market position for a given game and player.
+     * @param _gameId The identifier of the game.
+     * @param _typeId The type of the market.
+     * @param _playerId The identifier of the player.
+     * @param _line The line associated with the market position.
+     * @param _position The position index within the market.
+     * @param _combinedPositions An array of combined positions related to the market.
+     * @return status The status of the market position (e.g., Active, Cancelled, Resolved).
+     */
     function getMarketPositionStatus(
         bytes32 _gameId,
         uint16 _typeId,
@@ -171,6 +159,16 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         return _getMarketPositionStatus(_gameId, _typeId, _playerId, _line, _position, _combinedPositions);
     }
 
+    /**
+     * @notice Checks if a specific market position is a winning position.
+     * @param _gameId The identifier of the game.
+     * @param _typeId The type of the market.
+     * @param _playerId The identifier of the player.
+     * @param _line The line associated with the market position.
+     * @param _position The position index within the market.
+     * @param _combinedPositions An array of combined positions related to the market.
+     * @return bool True if the position is winning, otherwise false.
+     */
     function isWinningMarketPosition(
         bytes32 _gameId,
         uint16 _typeId,
@@ -178,20 +176,20 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         int24 _line,
         uint _position,
         ISportsAMMV2.CombinedPosition[] memory _combinedPositions
-    ) external view returns (bool isWinning) {
-        ISportsAMMV2ResultManager.MarketPositionStatus marketPositionStatus = _getMarketPositionStatus(
-            _gameId,
-            _typeId,
-            _playerId,
-            _line,
-            _position,
-            _combinedPositions
-        );
-        return
-            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Winning ||
-            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
+    ) external view returns (bool) {
+        return _isWinningMarketPosition(_gameId, _typeId, _playerId, _line, _position, _combinedPositions);
     }
 
+    /**
+     * @notice Checks if a specific market position has been cancelled.
+     * @param _gameId The identifier of the game.
+     * @param _typeId The type of the market.
+     * @param _playerId The identifier of the player.
+     * @param _line The line associated with the market position.
+     * @param _position The position index within the market.
+     * @param _combinedPositions An array of combined positions related to the market.
+     * @return isCancelled True if the position is cancelled, otherwise false.
+     */
     function isCancelledMarketPosition(
         bytes32 _gameId,
         uint16 _typeId,
@@ -211,12 +209,48 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
         return marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
     }
 
+    /**
+     * @notice Retrieves the results for a specific market.
+     * @param _gameId The identifier of the game.
+     * @param _typeId The type of the market.
+     * @param _playerId The identifier of the player.
+     * @return results An array of integers representing the results of the market.
+     */
     function getResultsPerMarket(
         bytes32 _gameId,
         uint16 _typeId,
         uint24 _playerId
     ) external view returns (int24[] memory results) {
         return resultsPerMarket[_gameId][_typeId][_playerId];
+    }
+
+    /**
+     * @notice Checks if the market is resolved and if a specific position is a winning one.
+     * @param _gameId The identifier of the game.
+     * @param _typeId The type of the market.
+     * @param _playerId The identifier of the player.
+     * @param _line The line associated with the market position.
+     * @param _position The position index within the market.
+     * @param _combinedPositions An array of combined positions related to the market.
+     * @return isResolved True if the market is resolved, otherwise false.
+     * @return isWinning True if the position is winning, otherwise false.
+     */
+    function isMarketResolvedAndPositionWinning(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        uint _position,
+        ISportsAMMV2.CombinedPosition[] memory _combinedPositions
+    ) external view returns (bool isResolved, bool isWinning) {
+        (isResolved, isWinning) = _isMarketResolvedAndPositionWinning(
+            _gameId,
+            _typeId,
+            _playerId,
+            _line,
+            _position,
+            _combinedPositions
+        );
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
@@ -361,7 +395,12 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     /* ========== INTERNAL FUNCTIONS ========== */
 
-    function _isMarketResolved(bytes32 _gameId, uint16 _typeId, uint24 _playerId, int24 _line) internal view returns (bool) {
+    function _isMarketResolvedInternal(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line
+    ) internal view returns (bool) {
         return areResultsPerMarketSet[_gameId][_typeId][_playerId] || _isMarketCancelled(_gameId, _typeId, _playerId, _line);
     }
 
@@ -486,6 +525,81 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 numOfTicketsToExercise--;
             }
         }
+    }
+
+    function _isMarketResolved(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        ISportsAMMV2.CombinedPosition[] memory combinedPositions
+    ) internal view returns (bool isResolved) {
+        if (isGameCancelled[_gameId]) {
+            isResolved = true;
+        } else {
+            ResultType resultType = resultTypePerMarketType[_typeId];
+            if (resultType == ResultType.CombinedPositions) {
+                isResolved = true;
+                for (uint i = 0; i < combinedPositions.length; i++) {
+                    ISportsAMMV2.CombinedPosition memory combinedPosition = combinedPositions[i];
+                    bool isCombinedPositionMarketResolved = _isMarketResolvedInternal(
+                        _gameId,
+                        combinedPosition.typeId,
+                        0,
+                        combinedPosition.line
+                    );
+                    if (!isCombinedPositionMarketResolved) {
+                        isResolved = false;
+                        break;
+                    }
+                }
+            } else {
+                isResolved = _isMarketResolvedInternal(_gameId, _typeId, _playerId, _line);
+            }
+        }
+    }
+
+    function _isMarketResolvedAndPositionWinning(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        uint _position,
+        ISportsAMMV2.CombinedPosition[] memory _combinedPositions
+    ) internal view returns (bool isResolved, bool isWinning) {
+        isResolved = _isMarketResolved(_gameId, _typeId, _playerId, _line, _combinedPositions);
+        ISportsAMMV2ResultManager.MarketPositionStatus marketPositionStatus = _getMarketPositionStatus(
+            _gameId,
+            _typeId,
+            _playerId,
+            _line,
+            _position,
+            _combinedPositions
+        );
+        isWinning =
+            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Winning ||
+            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
+    }
+
+    function _isWinningMarketPosition(
+        bytes32 _gameId,
+        uint16 _typeId,
+        uint24 _playerId,
+        int24 _line,
+        uint _position,
+        ISportsAMMV2.CombinedPosition[] memory _combinedPositions
+    ) internal view returns (bool) {
+        ISportsAMMV2ResultManager.MarketPositionStatus marketPositionStatus = _getMarketPositionStatus(
+            _gameId,
+            _typeId,
+            _playerId,
+            _line,
+            _position,
+            _combinedPositions
+        );
+        return
+            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Winning ||
+            marketPositionStatus == ISportsAMMV2ResultManager.MarketPositionStatus.Cancelled;
     }
 
     modifier onlyWhitelistedAddresses(address sender) {
