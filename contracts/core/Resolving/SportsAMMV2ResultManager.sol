@@ -272,6 +272,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                 _playerIds.length == _results.length,
             "Incorrect params"
         );
+        ISportsAMMV2 sportsAMM = ISportsAMMV2(manager.sportsAMM());
         uint numOfTicketsToExercise = numOfTicketsToExerciseOnGameResolution;
         for (uint i; i < _gameIds.length; i++) {
             bytes32 gameId = _gameIds[i];
@@ -292,14 +293,14 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                     resultsPerMarket[gameId][typeId][playerId] = results;
                     areResultsPerMarketSet[gameId][typeId][playerId] = true;
                     if (numOfTicketsToExercise > 0) {
-                        address[] memory activeTickets = manager.getTicketsPerMarket(
+                        address[] memory marketTickets = manager.getTicketsPerMarket(
                             0,
                             numOfTicketsToExerciseOnGameResolution,
                             gameId,
                             typeId,
                             playerId
                         );
-                        numOfTicketsToExercise = _exerciseLosingTickets(activeTickets, numOfTicketsToExercise);
+                        numOfTicketsToExercise = _exerciseLosingTickets(marketTickets, numOfTicketsToExercise, sportsAMM);
                     }
                     emit ResultsPerMarketSet(gameId, typeId, playerId, results);
                 }
@@ -511,16 +512,16 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     function _exerciseLosingTickets(
         address[] memory _tickets,
-        uint _numOfTicketsToExercise
+        uint _numOfTicketsToExercise,
+        ISportsAMMV2 sportsAMM
     ) internal returns (uint numOfTicketsToExercise) {
-        ISportsAMMV2 sportsAMM = ISportsAMMV2(manager.sportsAMM());
         numOfTicketsToExercise = _numOfTicketsToExercise;
         for (uint i; i < _tickets.length; i++) {
             if (numOfTicketsToExercise == 0) {
                 break;
             }
             Ticket ticket = Ticket(_tickets[i]);
-            if (!ticket.isUserTheWinner() && ticket.isTicketExercisable()) {
+            if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
                 sportsAMM.exerciseTicket(address(ticket));
                 numOfTicketsToExercise--;
             }
