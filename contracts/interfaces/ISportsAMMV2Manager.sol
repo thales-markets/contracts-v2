@@ -39,13 +39,15 @@ interface ISportsAMMV2Manager {
 
     function sportsAMM() external view returns (address);
 
-    function getActiveTicketsPerMarket(
+    function getTicketsPerMarket(
         uint _index,
         uint _pageSize,
         bytes32 _gameId,
         uint _typeId,
         uint _playerId
     ) external view returns (address[] memory);
+
+    function numOfTicketsPerMarket(bytes32 _gameId, uint _typeId, uint _playerId) external view returns (uint);
 
     function addNewKnownTicket(ISportsAMMV2.TradeData[] memory _tradeData, address ticket, address user) external;
 

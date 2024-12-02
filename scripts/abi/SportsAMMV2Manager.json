@@ -246,45 +246,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_typeId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_playerId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getActiveTicketsPerMarket",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_index",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pageSize",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "_user",
         "type": "address"
@@ -349,6 +310,45 @@
       }
     ],
     "name": "getTicketsPerGame",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_playerId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTicketsPerMarket",
     "outputs": [
       {
         "internalType": "address[]",
@@ -489,35 +489,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "_gameId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_typeId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_playerId",
-        "type": "uint256"
-      }
-    ],
-    "name": "numOfActiveTicketsPerMarket",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_user",
         "type": "address"
@@ -562,6 +533,35 @@
       }
     ],
     "name": "numOfTicketsPerGame",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_gameId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_typeId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_playerId",
+        "type": "uint256"
+      }
+    ],
+    "name": "numOfTicketsPerMarket",
     "outputs": [
       {
         "internalType": "uint256",

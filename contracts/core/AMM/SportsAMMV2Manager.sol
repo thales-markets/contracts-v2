@@ -99,14 +99,14 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         return knownTickets.elements.length;
     }
 
-    /// @notice gets batch of active tickets per market
+    /// @notice gets batch of tickets per market
     /// @param _index start index
     /// @param _pageSize batch size
     /// @param _gameId to get tickets for
     /// @param _typeId to get tickets for
     /// @param _playerId to get tickets for
-    /// @return activeTickets
-    function getActiveTicketsPerMarket(
+    /// @return tickets
+    function getTicketsPerMarket(
         uint _index,
         uint _pageSize,
         bytes32 _gameId,
@@ -116,12 +116,12 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         return ticketsPerMarket[_gameId][_typeId][_playerId].getPage(_index, _pageSize);
     }
 
-    /// @notice gets number of active tickets per market
+    /// @notice gets number of tickets per market
     /// @param _gameId to get number of tickets for
     /// @param _typeId to get number of tickets for
     /// @param _playerId to get number of tickets for
-    /// @return numOfActiveTickets
-    function numOfActiveTicketsPerMarket(bytes32 _gameId, uint _typeId, uint _playerId) external view returns (uint) {
+    /// @return numOfTickets
+    function numOfTicketsPerMarket(bytes32 _gameId, uint _typeId, uint _playerId) external view returns (uint) {
         return ticketsPerMarket[_gameId][_typeId][_playerId].elements.length;
     }
 

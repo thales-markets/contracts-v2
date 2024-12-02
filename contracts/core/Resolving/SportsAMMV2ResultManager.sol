@@ -258,7 +258,13 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
                     resultsPerMarket[gameId][typeId][playerId] = results;
                     areResultsPerMarketSet[gameId][typeId][playerId] = true;
                     if (numOfTicketsToExercise > 0) {
-                        address[] memory activeTickets = manager.getActiveTicketsPerMarket(0, 20, gameId, typeId, playerId);
+                        address[] memory activeTickets = manager.getTicketsPerMarket(
+                            0,
+                            numOfTicketsToExerciseOnGameResolution,
+                            gameId,
+                            typeId,
+                            playerId
+                        );
                         numOfTicketsToExercise = _exerciseLosingTickets(activeTickets, numOfTicketsToExercise);
                     }
                     emit ResultsPerMarketSet(gameId, typeId, playerId, results);
@@ -466,17 +472,18 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
 
     function _exerciseLosingTickets(address[] memory _tickets, uint _numOfTicketsToExercise) internal returns (uint) {
         ISportsAMMV2 sportsAMM = ISportsAMMV2(manager.sportsAMM());
+        uint numOfTicketsToExercise = _numOfTicketsToExercise;
         for (uint i; i < _tickets.length; i++) {
             Ticket ticket = Ticket(_tickets[i]);
             if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
                 sportsAMM.exerciseTicket(address(ticket));
-                _numOfTicketsToExercise--;
+                numOfTicketsToExercise--;
             }
-            if (_numOfTicketsToExercise == 0) {
-                return _numOfTicketsToExercise;
+            if (numOfTicketsToExercise == 0) {
+                return numOfTicketsToExercise;
             }
         }
-        return _numOfTicketsToExercise;
+        return numOfTicketsToExercise;
     }
 
     modifier onlyWhitelistedAddresses(address sender) {
