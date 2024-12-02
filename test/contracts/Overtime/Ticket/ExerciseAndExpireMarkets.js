@@ -280,7 +280,7 @@ describe('Ticket Exercise and Expire', () => {
 
 		it('Auto exercise losing tickets when results are set', async () => {
 			// Set number of tickets to exercise on game resolution
-			await sportsAMMV2ResultManager.setNumOfTicketsToExerciseOnGameResolution(1);
+			await sportsAMMV2ResultManager.setNumOfTicketsToExerciseOnGameResolution(5);
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 			// Create two tickets - one winning, one losing
 			tradeDataCurrentRound[0].position = 0; // winning position
@@ -412,7 +412,7 @@ describe('Ticket Exercise and Expire', () => {
 			const firstTicketAddress = activeTickets[0];
 			const secondTicketAddress = activeTickets[1];
 
-			const numOfActiveTicketsPerMarket = await sportsAMMV2Manager.numOfActiveTicketsPerMarket(
+			const numOfActiveTicketsPerMarket = await sportsAMMV2Manager.numOfTicketsPerMarket(
 				secondTicketData[0].gameId,
 				secondTicketData[0].typeId,
 				secondTicketData[0].playerId
