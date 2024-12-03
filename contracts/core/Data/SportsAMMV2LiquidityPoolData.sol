@@ -121,4 +121,36 @@ contract SportsAMMV2LiquidityPoolData is Initializable, ProxyOwned, ProxyPausabl
                 pendingTickets
             );
     }
+
+    /// @notice getCurrentRoundTickets returns current round tickets
+    /// @param liquidityPool SportsAMMV2LiquidityPool
+    /// @return tickets
+    function getCurrentRoundTickets(
+        SportsAMMV2LiquidityPool liquidityPool
+    ) external view returns (address[] memory tickets) {
+        uint round = liquidityPool.round();
+        return _getRoundTickets(liquidityPool, round);
+    }
+
+    /// @notice getRoundTickets returns round tickets
+    /// @param liquidityPool SportsAMMV2LiquidityPool
+    /// @param round round to get tickets for
+    /// @return tickets
+    function getRoundTickets(
+        SportsAMMV2LiquidityPool liquidityPool,
+        uint round
+    ) external view returns (address[] memory tickets) {
+        return _getRoundTickets(liquidityPool, round);
+    }
+
+    function _getRoundTickets(
+        SportsAMMV2LiquidityPool liquidityPool,
+        uint round
+    ) internal view returns (address[] memory tickets) {
+        uint numberOfTradingTickets = liquidityPool.getNumberOfTradingTicketsPerRound(round);
+        tickets = new address[](numberOfTradingTickets);
+        for (uint i = 0; i < numberOfTradingTickets; i++) {
+            tickets[i] = liquidityPool.tradingTicketsPerRound(round, i);
+        }
+    }
 }

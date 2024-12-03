@@ -52,6 +52,36 @@ const getTicketTradeData = () => {
 	tradeDataThreeMarketsCurrentRound.push(getTradeDataItem(marketsTree[1], 0));
 	tradeDataThreeMarketsCurrentRound.push(getTradeDataItem(marketsTree[2], 0));
 
+	const tradeDataTenMarketsCurrentRoundFirst = [];
+	tradeDataTenMarketsCurrentRoundFirst.push(getTradeDataItem(marketsTree[2], 0));
+
+	const tradeDataTenMarketsCurrentRoundSecond = [];
+	tradeDataTenMarketsCurrentRoundSecond.push(getTradeDataItem(marketsTree[3], 0));
+
+	const tradeDataTenMarketsCurrentRoundThird = [];
+	tradeDataTenMarketsCurrentRoundThird.push(getTradeDataItem(marketsTree[4], 0));
+
+	const tradeDataTenMarketsCurrentRoundFourth = [];
+	tradeDataTenMarketsCurrentRoundFourth.push(getTradeDataItem(marketsTree[5], 0));
+
+	const tradeDataTenMarketsCurrentRoundFifth = [];
+	tradeDataTenMarketsCurrentRoundFifth.push(getTradeDataItem(marketsTree[6], 0));
+
+	const tradeDataTenMarketsCurrentRoundSixth = [];
+	tradeDataTenMarketsCurrentRoundSixth.push(getTradeDataItem(marketsTree[7], 0));
+
+	const tradeDataTenMarketsCurrentRoundSeventh = [];
+	tradeDataTenMarketsCurrentRoundSeventh.push(getTradeDataItem(marketsTree[8], 0));
+
+	const tradeDataTenMarketsCurrentRoundEighth = [];
+	tradeDataTenMarketsCurrentRoundEighth.push(getTradeDataItem(marketsTree[9], 0));
+
+	const tradeDataTenMarketsCurrentRoundNineth = [];
+	tradeDataTenMarketsCurrentRoundNineth.push(getTradeDataItem(marketsTree[10], 0));
+
+	const tradeDataTenMarketsCurrentRoundTenth = [];
+	tradeDataTenMarketsCurrentRoundTenth.push(getTradeDataItem(marketsTree[11], 0));
+
 	const tradeDataSameGames = [];
 	tradeDataSameGames.push(getTradeDataItem(marketsTree[0], 0));
 	tradeDataSameGames.push(getTradeDataItem(marketsTree[0], 0));
@@ -81,6 +111,16 @@ const getTicketTradeData = () => {
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
 		tradeDataThreeMarketsCurrentRound,
+		tradeDataTenMarketsCurrentRoundFirst,
+		tradeDataTenMarketsCurrentRoundSecond,
+		tradeDataTenMarketsCurrentRoundThird,
+		tradeDataTenMarketsCurrentRoundFourth,
+		tradeDataTenMarketsCurrentRoundFifth,
+		tradeDataTenMarketsCurrentRoundSixth,
+		tradeDataTenMarketsCurrentRoundSeventh,
+		tradeDataTenMarketsCurrentRoundEighth,
+		tradeDataTenMarketsCurrentRoundNineth,
+		tradeDataTenMarketsCurrentRoundTenth,
 		tradeDataSameGames,
 		sameGameWithFirstPlayerProps,
 		sameGameWithSecondPlayerProps,

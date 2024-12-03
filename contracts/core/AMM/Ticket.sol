@@ -101,21 +101,16 @@ contract Ticket {
     function isTicketLost() public view returns (bool) {
         uint lostMarketsCount = 0;
         for (uint i = 0; i < numOfMarkets; i++) {
-            bool isMarketResolved = sportsAMM.resultManager().isMarketResolved(
-                markets[i].gameId,
-                markets[i].typeId,
-                markets[i].playerId,
-                markets[i].line,
-                markets[i].combinedPositions
-            );
-            bool isWinningMarketPosition = sportsAMM.resultManager().isWinningMarketPosition(
-                markets[i].gameId,
-                markets[i].typeId,
-                markets[i].playerId,
-                markets[i].line,
-                markets[i].position,
-                markets[i].combinedPositions
-            );
+            (bool isMarketResolved, bool isWinningMarketPosition) = sportsAMM
+                .resultManager()
+                .isMarketResolvedAndPositionWinning(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].position,
+                    markets[i].combinedPositions
+                );
             if (isMarketResolved && !isWinningMarketPosition) {
                 if (!isSystem) {
                     return true;
