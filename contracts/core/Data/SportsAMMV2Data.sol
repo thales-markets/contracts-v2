@@ -273,6 +273,13 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         }
     }
 
+    function getSpentOnGames(bytes32[] calldata _gameIds) external view returns (uint[] memory spentAmounts) {
+        spentAmounts = new uint[](_gameIds.length);
+        for (uint i = 0; i < _gameIds.length; i++) {
+            spentAmounts[i] = riskManager.spentOnGame(_gameIds[i]);
+        }
+    }
+
     function _getTicketsData(address[] memory ticketsArray) internal view returns (TicketData[] memory) {
         TicketData[] memory tickets = new TicketData[](ticketsArray.length);
         for (uint i = 0; i < ticketsArray.length; i++) {

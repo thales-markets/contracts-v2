@@ -219,4 +219,21 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(ticketsData[0].marketsData[0].gameId).to.be.equal(firstGameId);
 		});
 	});
+
+	describe('Risk Manager data', () => {
+		it('Should return spent amounts for multiple games', async () => {
+			// Get first two gameIds from the trade data
+			const gameIds = [
+				tradeDataTenMarketsCurrentRound[0].gameId,
+				tradeDataTenMarketsCurrentRound[1].gameId,
+			];
+
+			const spentAmounts = await sportsAMMV2Data.getSpentOnGames(gameIds);
+
+			// Since we made trades on these games, spent amounts should be non-zero
+			expect(spentAmounts.length).to.equal(2);
+			expect(spentAmounts[0]).to.be.gt(0);
+			expect(spentAmounts[1]).to.be.gt(0);
+		});
+	});
 });

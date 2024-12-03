@@ -70,6 +70,8 @@ interface ISportsAMMV2RiskManager {
         uint _ticketSize
     ) external view;
 
+    function spentOnGame(bytes32 _gameId) external view returns (uint);
+
     function checkAndUpdateRisks(ISportsAMMV2.TradeData[] memory _tradeData, uint _buyInAmount, bool _isLive) external;
 
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure;

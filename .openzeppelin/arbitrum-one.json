@@ -115,6 +115,16 @@
       "address": "0x109e966A4d856B82f158BF528395de6fF36214A8",
       "txHash": "0x49c9d2ba81dd27e3c679234ba89c7acffe5f9b38550020c98ffb3865643ca42d",
       "kind": "transparent"
+    },
+    {
+      "address": "0x521deE9087C5C0E5672D24a7a34F3176B5Cdb56a",
+      "txHash": "0xb8bcdbea5b4ac51e120decb9e38eac2d3f7a83dfe005dd48d1590a6570200997",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x758c0fb1F629d0597b195B1653e2D656c5A55f53",
+      "txHash": "0x792a06b335886269967d62f6c9b298be655a82a7621e50138463e200b5a8d9e7",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -7316,6 +7326,183 @@
         }
       }
     },
+    "785c539b8c0f1e618a7e793a3012f4137e741d9f7809633ddb383c5afd0b4c3a": {
+      "address": "0x6e1a4fBF86813F68f58d52C0AA2aab61A612cf3F",
+      "txHash": "0xb56997b4dee4bdcccb07a6139a4c5af5e5e641ebd85c115dd33bd1d75c0526ae",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMMData",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Data)13902",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:20"
+          },
+          {
+            "label": "manager",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ISportsAMMV2Manager)14069",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:21"
+          },
+          {
+            "label": "gameIdBlockedForResolution",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:23"
+          },
+          {
+            "label": "gameIdUnblockedByAdmin",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:24"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(ISportsAMMV2Data)13902": {
+            "label": "contract ISportsAMMV2Data",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)14069": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
     "d05593085a8b6c9611bc93569ff107c6b11d50df3541cd44df5f810efbde40f6": {
       "address": "0xBECeE49D013eAE5A56E7A7D57536bB1719824b06",
       "txHash": "0x4eb79da3f98679290dac3abe5a8cdc66703c3b6242bdc260b40f7a850bf7c3a6",
@@ -9984,6 +10171,199 @@
               "label": "_initializing",
               "type": "t_bool",
               "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "abad9d9424755e092795da912989c80c0f498cd31944158e7e49c117875d7592": {
+      "address": "0x619ba1500F922577e56a30178D93A93e4Ee13dC3",
+      "txHash": "0xdb2962d70bcb57626fb32c45c160c0eded36f87777bb270a236ac84897ff6a83",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMMData",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Data)2503",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:15"
+          },
+          {
+            "label": "manager",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ISportsAMMV2Manager)2636",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:18"
+          },
+          {
+            "label": "gameIdBlockedForResolution",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:22"
+          },
+          {
+            "label": "gameIdBlockReason",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_bytes32,t_string_storage)",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:24"
+          },
+          {
+            "label": "gameIdUnblockedByAdmin",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "ResolveBlocker",
+            "src": "contracts/core/Resolving/ResolveBlocker.sol:27"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(ISportsAMMV2Data)2503": {
+            "label": "contract ISportsAMMV2Data",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)2636": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_string_storage)": {
+            "label": "mapping(bytes32 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }
