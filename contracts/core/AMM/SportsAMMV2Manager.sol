@@ -32,6 +32,8 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     // stores tickets per game
     mapping(bytes32 => AddressSetLib.AddressSet) internal ticketsPerGame;
 
+    mapping(bytes32 => mapping(uint => mapping(uint => AddressSetLib.AddressSet))) internal ticketsPerMarket;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner) external initializer {
@@ -40,7 +42,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
     /* ========== EXTERNAL FUNCTIONS ========== */
 
-    /// @notice add new ticket to known and active per user and add tickets per game
+    /// @notice add new ticket to known and active per user, add tickets per game and add tickets per market
     /// @param _tradeData list of games
     /// @param _ticket ticket address
     /// @param _user to update the ticket for
@@ -54,6 +56,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
         for (uint i = 0; i < _tradeData.length; i++) {
             ticketsPerGame[_tradeData[i].gameId].add(_ticket);
+            ticketsPerMarket[_tradeData[i].gameId][_tradeData[i].typeId][_tradeData[i].playerId].add(_ticket);
         }
     }
 
@@ -94,6 +97,32 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     /// @return numOfActiveTickets
     function numOfActiveTickets() external view returns (uint) {
         return knownTickets.elements.length;
+    }
+
+    /// @notice gets batch of tickets per market
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _gameId to get tickets for
+    /// @param _typeId to get tickets for
+    /// @param _playerId to get tickets for
+    /// @return tickets
+    function getTicketsPerMarket(
+        uint _index,
+        uint _pageSize,
+        bytes32 _gameId,
+        uint _typeId,
+        uint _playerId
+    ) external view returns (address[] memory) {
+        return ticketsPerMarket[_gameId][_typeId][_playerId].getPage(_index, _pageSize);
+    }
+
+    /// @notice gets number of tickets per market
+    /// @param _gameId to get number of tickets for
+    /// @param _typeId to get number of tickets for
+    /// @param _playerId to get number of tickets for
+    /// @return numOfTickets
+    function numOfTicketsPerMarket(bytes32 _gameId, uint _typeId, uint _playerId) external view returns (uint) {
+        return ticketsPerMarket[_gameId][_typeId][_playerId].elements.length;
     }
 
     /// @notice gets batch of active tickets per user
