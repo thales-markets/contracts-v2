@@ -29,7 +29,7 @@
 		"DefaultLiquidityProviderProxyAdmin": "0xBc2e93D3b7b0EE87Dc4D57e1cD53097Fb682E2C4",
 		"ExoticUSD": "0xaeB5De0E09218233542906BF94C26841d186FffB",
 		"SportsAMMV2Data": "0xe4d8d605874443f952fBdc03Dd1C69761230A7f0",
-		"SportsAMMV2DataImplementation": "0xd042b84262C28E2853bA5776Ae092838520752cE",
+		"SportsAMMV2DataImplementation": "0x7BB2B756Ff624e361CCf4ced25C650124ef14099",
 		"SportsAMMV2DataProxyAdmin": "0x8fdeC98adEda8F6Cb46BFadEb41CEDD87B13e274",
 		"MockChainlinkOracle": "0x13De488552594aAbC5dE42f77A3Ed61f745411BA",
 		"ChainlinkOracle": "0x41C1AFac7C03D7eEC6532EdFbb55d9F637Eefc14",
@@ -69,6 +69,9 @@
 		"StakingThalesBettingProxy": "0xBa6dd31C0A7550F39ae83B7995a6fcdDA5875ef9",
 		"StakingThalesBettingProxyImplementation": "0x53c264c4478875E322065828EbC8f3074f47aB9D",
 		"StakingThalesBettingProxyProxyAdmin": "0xBAf2779e85Ed7EA1357016EF8d2e05B1a8401381",
+		"ResolveBlocker": "0x13488544345346d6a61b4408eF5f936ec5C8c027",
+		"ResolveBlockerImplementation": "0xd62f3Cc9a9414Fe1303386a511307b94cB57F124",
+		"ResolveBlockerProxyAdmin": "0x74e781ADdfC588aFf25c1A724b963E8A75f9a631",
 		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x9750d5D6E339aCbE9d6585E9AFe1b12d2773E6a9"
 	},
 	"optimisticEthereum": {
@@ -128,7 +131,10 @@
 		"FreeBetsHolderProxyAdmin": "0x275D006bB022Cb23268AA759feCBDc63470a41A7",
 		"StakingThalesBettingProxy": "0x5e6D44B17bc989652920197790eF626b8a84e219",
 		"StakingThalesBettingProxyImplementation": "0x7C1b9bBd2711DD4aED4c83733A67600c1eD62906",
-		"StakingThalesBettingProxyProxyAdmin": "0xEdfc224ec83882c7D0F095326dfae2ea89c0C10e"
+		"StakingThalesBettingProxyProxyAdmin": "0xEdfc224ec83882c7D0F095326dfae2ea89c0C10e",
+		"ResolveBlocker": "0xA5232A7AFE810bf453e2d13DdAf0689bbED31f60",
+		"ResolveBlockerImplementation": "0x937F15D6fFA608f3f1AC0088b5995fd5720B3452",
+		"ResolveBlockerProxyAdmin": "0xBdAd20A32A781513222c2542d61B82874f68B520"
 	},
 	"arbitrumOne": {
 		"ProtocolDAO": "0x0089282AC624BbBDA7eC472d63ee99643d7eDf4a",
@@ -188,6 +194,9 @@
 		"FreeBetsHolderProxyAdmin": "0x609AB342035075F360e6fFbb1c43Dc3E96B9FCF3",
 		"StakingThalesBettingProxy": "0x109e966A4d856B82f158BF528395de6fF36214A8",
 		"StakingThalesBettingProxyImplementation": "0xb0Ba12f6899B86c869b683C09a8cA7D1A7A88B84",
-		"StakingThalesBettingProxyProxyAdmin": "0x62a9A8955FAC64d80509e55B6748cfEDCD3F43BD"
+		"StakingThalesBettingProxyProxyAdmin": "0x62a9A8955FAC64d80509e55B6748cfEDCD3F43BD",
+		"ResolveBlocker": "0x758c0fb1F629d0597b195B1653e2D656c5A55f53",
+		"ResolveBlockerImplementation": "0x619ba1500F922577e56a30178D93A93e4Ee13dC3",
+		"ResolveBlockerProxyAdmin": "0x59e28e3789ae8227596482857F7c8b5144607794"
 	}
 }
