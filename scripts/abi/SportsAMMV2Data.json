@@ -1370,6 +1370,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getSpentOnGames",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "spentAmounts",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getSportsAMMParameters",
     "outputs": [

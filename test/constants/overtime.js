@@ -5,6 +5,7 @@ const marketsTree = require(
 const INVALID_SPORT_ID = 8999;
 const SPORT_ID_NBA = 9004;
 const SPORT_ID_EPL = 9011;
+const SPORT_ID_SPAIN = 9014;
 
 const INVALID_TYPE_ID = 9999;
 const TYPE_ID_SPREAD = 10001;
@@ -111,4 +112,5 @@ module.exports = {
 	OVER_SPREAD_LINE,
 	UNDER_SPREAD_LINE,
 	RISK_STATUS,
+	SPORT_ID_SPAIN,
 };

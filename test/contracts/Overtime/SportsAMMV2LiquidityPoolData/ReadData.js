@@ -81,5 +81,21 @@ describe('SportsAMMV2LiquidityPoolData Read Data', () => {
 			expect(currentRoundTicketsData.numOfPendingTickets).to.be.equal(1);
 			expect(currentRoundTicketsData.pendingTickets.length).to.be.equal(1);
 		});
+
+		it('Should return current round tickets', async () => {
+			const currentRoundTickets =
+				await sportsAMMV2LiquidityPoolData.getCurrentRoundTickets(sportsAMMV2LiquidityPool);
+
+			expect(currentRoundTickets.length).to.be.equal(1);
+		});
+
+		it('Should return round tickets', async () => {
+			const roundTickets = await sportsAMMV2LiquidityPoolData.getRoundTickets(
+				sportsAMMV2LiquidityPool,
+				2
+			);
+
+			expect(roundTickets.length).to.be.equal(1);
+		});
 	});
 });

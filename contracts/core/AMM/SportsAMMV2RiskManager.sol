@@ -103,6 +103,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // default live cap divider
     uint public defaultLiveCapDivider;
 
+    // store whether a sportId is a futures market type
+    mapping(uint16 => bool) public isSportIdFuture;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -171,9 +174,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity) {
         uint numOfMarkets = _tradeData.length;
         isMarketOutOfLiquidity = new bool[](numOfMarkets);
+        bool isFutureOnParlay;
 
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+            isFutureOnParlay = isSportIdFuture[marketTradeData.sportId] && numOfMarkets > 1;
 
             require(
                 marketTradeData.odds[marketTradeData.position] > 0 && marketTradeData.odds[marketTradeData.position] < ONE,
@@ -182,7 +187,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
             uint marketRiskAmount = amountToBuy - _buyInAmount;
 
-            if (_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
+            if (isFutureOnParlay || _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
                 riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
             } else if (
                 _isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive) ||
@@ -273,6 +278,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) external onlySportsAMM(msg.sender) {
         for (uint i = 0; i < _tradeData.length; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+
+            require(!isSportIdFuture[marketTradeData.sportId] || _tradeData.length == 1, "Can't combine futures on parlays");
+
             uint[] memory odds = marketTradeData.odds;
             uint8 position = marketTradeData.position;
 
@@ -780,6 +788,14 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetCapPerSportAndType(_sportId, _typeId, _capPerType);
     }
 
+    /// @notice sets whether a sportsId is future
+    /// @param _sportId to set whether is a future
+    /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
+    function setIsSportIdFuture(uint16 _sportId, bool _isFuture) external onlyWhitelistedAddresses(msg.sender) {
+        isSportIdFuture[_sportId] = _isFuture;
+        emit SetIsSportIdFuture(_sportId, _isFuture);
+    }
+
     /* ========== MODIFIERS ========== */
 
     modifier onlyWhitelistedAddresses(address sender) {
@@ -819,4 +835,6 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     event SetLiveCapDivider(uint _sportId, uint _divider);
     event SetDefaultLiveCapDivider(uint _divider);
+
+    event SetIsSportIdFuture(uint16 _sportId, bool _isFuture);
 }

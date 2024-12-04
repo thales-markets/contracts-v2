@@ -407,6 +407,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 }
                 if (riskStatus != ISportsAMMV2RiskManager.RiskStatus.NoRisk) {
                     totalQuote = 0;
+                    payout = 0;
                 }
             }
         }

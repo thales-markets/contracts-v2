@@ -248,6 +248,13 @@ async function deploySportsAMMV2Fixture() {
 	await addressManager.setAddressInAddressBook('PriceFeed', priceFeedAddress, {
 		from: owner.address,
 	});
+	await addressManager.setAddressInAddressBook(
+		'SportsAMMV2RiskManager',
+		sportsAMMV2RiskManagerAddress,
+		{
+			from: owner.address,
+		}
+	);
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
@@ -449,6 +456,16 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataTenMarketsCurrentRoundFirst,
+		tradeDataTenMarketsCurrentRoundSecond,
+		tradeDataTenMarketsCurrentRoundThird,
+		tradeDataTenMarketsCurrentRoundFourth,
+		tradeDataTenMarketsCurrentRoundFifth,
+		tradeDataTenMarketsCurrentRoundSixth,
+		tradeDataTenMarketsCurrentRoundSeventh,
+		tradeDataTenMarketsCurrentRoundEighth,
+		tradeDataTenMarketsCurrentRoundNineth,
+		tradeDataTenMarketsCurrentRoundTenth,
 		tradeDataSameGames,
 		sameGameWithFirstPlayerProps,
 		sameGameWithSecondPlayerProps,
@@ -465,6 +482,16 @@ async function deploySportsAMMV2Fixture() {
 		...tradeDataNextRound,
 		...tradeDataCrossRounds,
 		...tradeDataTenMarketsCurrentRound,
+		...tradeDataTenMarketsCurrentRoundFirst,
+		...tradeDataTenMarketsCurrentRoundSecond,
+		...tradeDataTenMarketsCurrentRoundThird,
+		...tradeDataTenMarketsCurrentRoundFourth,
+		...tradeDataTenMarketsCurrentRoundFifth,
+		...tradeDataTenMarketsCurrentRoundSixth,
+		...tradeDataTenMarketsCurrentRoundSeventh,
+		...tradeDataTenMarketsCurrentRoundEighth,
+		...tradeDataTenMarketsCurrentRoundNineth,
+		...tradeDataTenMarketsCurrentRoundTenth,
 	];
 
 	for (let index = 0; index < allTradeData.length; index++) {
@@ -748,6 +775,14 @@ async function deploySportsAMMV2Fixture() {
 
 	const safeBoxTHALESAddress = safeBoxTHALES.address;
 
+	const ResolveBlocker = await ethers.getContractFactory('ResolveBlocker');
+	const resolveBlocker = await upgrades.deployProxy(ResolveBlocker, [
+		owner.address,
+		SportsAMMV2DataAddress,
+		sportsAMMV2ManagerAddress,
+	]);
+	const resolveBlockerAddress = await resolveBlocker.getAddress();
+
 	return {
 		owner,
 		sportsAMMV2Manager,
@@ -780,6 +815,16 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataTenMarketsCurrentRoundFirst,
+		tradeDataTenMarketsCurrentRoundSecond,
+		tradeDataTenMarketsCurrentRoundThird,
+		tradeDataTenMarketsCurrentRoundFourth,
+		tradeDataTenMarketsCurrentRoundFifth,
+		tradeDataTenMarketsCurrentRoundSixth,
+		tradeDataTenMarketsCurrentRoundSeventh,
+		tradeDataTenMarketsCurrentRoundEighth,
+		tradeDataTenMarketsCurrentRoundNineth,
+		tradeDataTenMarketsCurrentRoundTenth,
 		liveTradingProcessor,
 		mockChainlinkOracle,
 		sportsAMMV2Data,
@@ -801,6 +846,8 @@ async function deploySportsAMMV2Fixture() {
 		collateralTHALESAddress,
 		sportsAMMV2THALESLiquidityPool,
 		stakingThalesBettingProxy,
+		resolveBlocker,
+		resolveBlockerAddress,
 	};
 }
 
