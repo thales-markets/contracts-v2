@@ -107,6 +107,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // the contract that processes betting with StakedTHALES
     address public stakingThalesBettingProxy;
 
+    // support bonus payouts for some users/contracts (e.g. stakingThalesBettingProxy)
+    mapping(address => uint) public addedPayoutPercentagePerUser;
+
     struct TradeDataQuoteInternal {
         uint _buyInAmount;
         bool _shouldCheckRisks;
@@ -456,7 +459,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint totalQuote;
         uint payout;
         uint fees;
-        uint addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
+        uint addedPayoutPercentage = addedPayoutPercentagePerUser[_tradeDataInternal._recipient] > 0
+            ? addedPayoutPercentagePerUser[_tradeDataInternal._recipient]
+            : addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
         if (!_tradeDataInternal._isLive) {
             (totalQuote, payout, fees, , ) = _tradeQuote(
                 _tradeData,
@@ -802,8 +807,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _collateral to add extra payout for
     /// @param _addedPayout percentage amount for extra payout
     function setAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout) external onlyOwner {
+        require(_addedPayout <= 3e16, "Bonus payout can't exceed 3%");
         addedPayoutPercentagePerCollateral[_collateral] = _addedPayout;
         emit SetAddedPayoutPercentagePerCollateral(_collateral, _addedPayout);
+    }
+
+    /// @notice sets additional payout percentage for certain _users
+    /// @param _user to add extra payout for
+    /// @param _addedPayout percentage amount for extra payout
+    function setAddedPayoutPercentagePerUser(address _user, uint _addedPayout) external onlyOwner {
+        require(_addedPayout <= 3e16, "Bonus payout can't exceed 3%");
+        addedPayoutPercentagePerUser[_user] = _addedPayout;
+        emit SetAddedPayoutPercentagePerUser(_user, _addedPayout);
     }
 
     /// @notice sets dedicated SafeBox per collateral
@@ -864,5 +879,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event SetFreeBetsHolder(address freeBetsHolder);
     event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
     event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
+    event SetAddedPayoutPercentagePerUser(address _user, uint _addedPayout);
     event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
 }
