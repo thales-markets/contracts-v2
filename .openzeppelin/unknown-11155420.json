@@ -40011,7 +40011,7 @@
             "label": "whitelistedAddresses",
             "offset": 0,
             "slot": "4",
-            "type": "t_mapping(t_address,t_mapping(t_enum(Role)22088,t_bool))",
+            "type": "t_mapping(t_address,t_mapping(t_enum(Role)22680,t_bool))",
             "contract": "SportsAMMV2Manager",
             "src": "contracts\\core\\AMM\\SportsAMMV2Manager.sol:21"
           },
@@ -40019,7 +40019,7 @@
             "label": "knownTickets",
             "offset": 0,
             "slot": "5",
-            "type": "t_struct(AddressSet)22670_storage",
+            "type": "t_struct(AddressSet)23269_storage",
             "contract": "SportsAMMV2Manager",
             "src": "contracts\\core\\AMM\\SportsAMMV2Manager.sol:24"
           },
@@ -40027,7 +40027,7 @@
             "label": "activeTicketsPerUser",
             "offset": 0,
             "slot": "7",
-            "type": "t_mapping(t_address,t_struct(AddressSet)22670_storage)",
+            "type": "t_mapping(t_address,t_struct(AddressSet)23269_storage)",
             "contract": "SportsAMMV2Manager",
             "src": "contracts\\core\\AMM\\SportsAMMV2Manager.sol:27"
           },
@@ -40035,7 +40035,7 @@
             "label": "resolvedTicketsPerUser",
             "offset": 0,
             "slot": "8",
-            "type": "t_mapping(t_address,t_struct(AddressSet)22670_storage)",
+            "type": "t_mapping(t_address,t_struct(AddressSet)23269_storage)",
             "contract": "SportsAMMV2Manager",
             "src": "contracts\\core\\AMM\\SportsAMMV2Manager.sol:30"
           },
@@ -40043,7 +40043,7 @@
             "label": "ticketsPerGame",
             "offset": 0,
             "slot": "9",
-            "type": "t_mapping(t_bytes32,t_struct(AddressSet)22670_storage)",
+            "type": "t_mapping(t_bytes32,t_struct(AddressSet)23269_storage)",
             "contract": "SportsAMMV2Manager",
             "src": "contracts\\core\\AMM\\SportsAMMV2Manager.sol:33"
           },
@@ -40051,7 +40051,7 @@
             "label": "ticketsPerMarket",
             "offset": 0,
             "slot": "10",
-            "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_struct(AddressSet)22670_storage)))",
+            "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_struct(AddressSet)23269_storage)))",
             "contract": "SportsAMMV2Manager",
             "src": "contracts\\core\\AMM\\SportsAMMV2Manager.sol:35"
           },
@@ -40103,7 +40103,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_enum(Role)22088": {
+          "t_enum(Role)22680": {
             "label": "enum ISportsAMMV2Manager.Role",
             "members": [
               "ROOT_SETTING",
@@ -40117,11 +40117,11 @@
             "label": "mapping(address => bool)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_mapping(t_enum(Role)22088,t_bool))": {
+          "t_mapping(t_address,t_mapping(t_enum(Role)22680,t_bool))": {
             "label": "mapping(address => mapping(enum ISportsAMMV2Manager.Role => bool))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_struct(AddressSet)22670_storage)": {
+          "t_mapping(t_address,t_struct(AddressSet)23269_storage)": {
             "label": "mapping(address => struct AddressSetLib.AddressSet)",
             "numberOfBytes": "32"
           },
@@ -40129,27 +40129,27 @@
             "label": "mapping(address => uint256)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_struct(AddressSet)22670_storage)))": {
+          "t_mapping(t_bytes32,t_mapping(t_uint256,t_mapping(t_uint256,t_struct(AddressSet)23269_storage)))": {
             "label": "mapping(bytes32 => mapping(uint256 => mapping(uint256 => struct AddressSetLib.AddressSet)))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_bytes32,t_struct(AddressSet)22670_storage)": {
+          "t_mapping(t_bytes32,t_struct(AddressSet)23269_storage)": {
             "label": "mapping(bytes32 => struct AddressSetLib.AddressSet)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_enum(Role)22088,t_bool)": {
+          "t_mapping(t_enum(Role)22680,t_bool)": {
             "label": "mapping(enum ISportsAMMV2Manager.Role => bool)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(AddressSet)22670_storage))": {
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(AddressSet)23269_storage))": {
             "label": "mapping(uint256 => mapping(uint256 => struct AddressSetLib.AddressSet))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_struct(AddressSet)22670_storage)": {
+          "t_mapping(t_uint256,t_struct(AddressSet)23269_storage)": {
             "label": "mapping(uint256 => struct AddressSetLib.AddressSet)",
             "numberOfBytes": "32"
           },
-          "t_struct(AddressSet)22670_storage": {
+          "t_struct(AddressSet)23269_storage": {
             "label": "struct AddressSetLib.AddressSet",
             "members": [
               {
