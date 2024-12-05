@@ -198,6 +198,72 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             ISportsAMMV2RiskManager.RiskStatus riskStatus
         )
     {
+        (totalQuote, payout, fees, amountsToBuy, buyInAmountInDefaultCollateral, riskStatus) = _tradeQuoteCommon(
+            _tradeData,
+            _buyInAmount,
+            _collateral,
+            _isLive,
+            0
+        );
+    }
+
+    /// @notice gets trade quote
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _collateral different collateral used for payment
+    /// @param _isLive whether this is a live bet
+    /// @param _systemBetDenominator the denominator for system bets
+    /// @return totalQuote total ticket quote
+    /// @return payout expected payout
+    /// @return fees ticket fees
+    /// @return amountsToBuy amounts per market
+    /// @return buyInAmountInDefaultCollateral buy-in amount in default collateral
+    /// @return riskStatus risk status
+    function tradeQuoteSystem(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        address _collateral,
+        bool _isLive,
+        uint8 _systemBetDenominator
+    )
+        external
+        view
+        returns (
+            uint totalQuote,
+            uint payout,
+            uint fees,
+            uint[] memory amountsToBuy,
+            uint buyInAmountInDefaultCollateral,
+            ISportsAMMV2RiskManager.RiskStatus riskStatus
+        )
+    {
+        (totalQuote, payout, fees, amountsToBuy, buyInAmountInDefaultCollateral, riskStatus) = _tradeQuoteCommon(
+            _tradeData,
+            _buyInAmount,
+            _collateral,
+            _isLive,
+            _systemBetDenominator
+        );
+    }
+
+    function _tradeQuoteCommon(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        address _collateral,
+        bool _isLive,
+        uint8 _systemBetDenominator
+    )
+        internal
+        view
+        returns (
+            uint totalQuote,
+            uint payout,
+            uint fees,
+            uint[] memory amountsToBuy,
+            uint buyInAmountInDefaultCollateral,
+            ISportsAMMV2RiskManager.RiskStatus riskStatus
+        )
+    {
         uint useAmount = _buyInAmount;
         buyInAmountInDefaultCollateral = _buyInAmount;
 
@@ -222,7 +288,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(
             _tradeData,
-            TradeDataQuoteInternal(useAmount, true, buyInAmountInDefaultCollateral, _collateral, _isLive)
+            TradeDataQuoteInternal(useAmount, true, buyInAmountInDefaultCollateral, _collateral, _isLive),
+            _systemBetDenominator
         );
     }
 
@@ -419,7 +486,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _tradeQuote(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        TradeDataQuoteInternal memory _tradeDataQuoteInternal
+        TradeDataQuoteInternal memory _tradeDataQuoteInternal,
+        uint8 _systemBetDenominator
     )
         internal
         view
@@ -450,11 +518,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             totalQuote = totalQuote == 0 ? marketOdds : (totalQuote * marketOdds) / ONE;
         }
         if (totalQuote != 0) {
-            if (totalQuote < maxSupportedOdds) {
-                totalQuote = maxSupportedOdds;
+            if (_systemBetDenominator > 1) {
+                (payout, totalQuote) = riskManager.getMaxSystemBetPayout(
+                    _tradeData,
+                    _systemBetDenominator,
+                    _tradeDataQuoteInternal._buyInAmount,
+                    addedPayoutPercentage
+                );
+            } else {
+                if (totalQuote < maxSupportedOdds) {
+                    totalQuote = maxSupportedOdds;
+                }
+                payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
             }
 
-            payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
             fees = _getFees(_tradeDataQuoteInternal._buyInAmount);
 
             if (_tradeDataQuoteInternal._shouldCheckRisks) {
@@ -534,16 +611,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     0,
                     _tradeDataInternal._collateral,
                     _tradeDataInternal._isLive
-                )
+                ),
+                _systemBetDenominator
             );
-            if (_systemBetDenominator > 1) {
-                (processingParams._payout, processingParams._totalQuote) = riskManager.getMaxSystemBetPayout(
-                    _tradeData,
-                    _systemBetDenominator,
-                    _tradeDataInternal._buyInAmount,
-                    processingParams._addedPayoutPercentage
-                );
-            }
         } else {
             processingParams._totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
             processingParams._totalQuote =
