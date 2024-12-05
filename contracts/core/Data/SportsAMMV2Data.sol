@@ -59,6 +59,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isExercisable;
         uint finalPayout;
         bool isLive;
+        bool isSystem;
     }
 
     struct TicketMarketInfo {
@@ -309,7 +310,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 ticket.isUserTheWinner(),
                 ticket.isTicketExercisable(),
                 ticket.finalPayout(),
-                ticket.isLive()
+                ticket.isLive(),
+                sportsAMM.manager().isSystemTicket(address(ticket))
             );
         }
         return tickets;
