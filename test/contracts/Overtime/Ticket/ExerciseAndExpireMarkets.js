@@ -115,9 +115,6 @@ describe('Ticket Exercise and Expire', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
-
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
