@@ -526,9 +526,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     addedPayoutPercentage
                 );
             } else {
-                if (totalQuote < maxSupportedOdds) {
-                    totalQuote = maxSupportedOdds;
-                }
+                payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
+            }
+            if (totalQuote < maxSupportedOdds) {
+                totalQuote = maxSupportedOdds;
                 payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
             }
 

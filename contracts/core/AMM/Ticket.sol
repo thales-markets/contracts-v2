@@ -361,6 +361,11 @@ contract Ticket {
                     systemBetPayout += combinationPayout;
                 }
             }
+
+            uint maxPayout = (buyInAmount * ONE) / totalQuote;
+            if (systemBetPayout > maxPayout) {
+                systemBetPayout = maxPayout;
+            }
         }
     }
 
