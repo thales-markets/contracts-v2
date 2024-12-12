@@ -428,6 +428,12 @@
         "internalType": "uint256",
         "name": "maxSupportedOdds",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxAllowedSystemCombinations",
+        "type": "uint256"
       }
     ],
     "name": "TicketParamsUpdated",
@@ -1132,7 +1138,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1355,6 +1361,19 @@
         "internalType": "contract ISportsAMMV2Manager",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxAllowedSystemCombinations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -2016,6 +2035,11 @@
       {
         "internalType": "uint256",
         "name": "_maxSupportedOdds",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxAllowedSystemCombinations",
         "type": "uint256"
       }
     ],

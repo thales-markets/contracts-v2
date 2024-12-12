@@ -170,5 +170,24 @@ describe('SportsAMMV2 system bets', () => {
 			const ticketBalanceAfter = await collateral.balanceOf(ticketAddress);
 			expect(ticketBalanceAfter).to.be.equal(0);
 		});
+
+		it('Should fail to buy a ticket with over max number of combinations', async () => {
+			await sportsAMMV2RiskManager.setTicketParams(
+				3 * 1e6,
+				15,
+				20000 * 1e6,
+				ethers.parseEther('0.01'),
+				100 // max combinations
+			);
+
+			await expect(
+				sportsAMMV2RiskManager.getMaxSystemBetPayout(
+					tradeDataTenMarketsCurrentRound,
+					5,
+					BUY_IN_AMOUNT,
+					0
+				)
+			).to.be.revertedWith('maxAllowedSystemCombinations exceeded');
+		});
 	});
 });

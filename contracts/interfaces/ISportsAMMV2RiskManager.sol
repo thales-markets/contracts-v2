@@ -83,7 +83,7 @@ interface ISportsAMMV2RiskManager {
         uint8 _systemBetDenominator,
         uint _buyInAmount,
         uint _addedPayoutPercentage
-    ) external pure returns (uint systemBetPayout, uint systemBetQuote);
+    ) external view returns (uint systemBetPayout, uint systemBetQuote);
 
     function generateCombinations(uint8 n, uint8 k) external pure returns (uint8[][] memory);
 }

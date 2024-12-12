@@ -106,6 +106,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // store whether a sportId is a futures market type
     mapping(uint16 => bool) public isSportIdFuture;
 
+    // the maximum number of combinations on a system ticket
+    uint public maxAllowedSystemCombinations;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -281,9 +284,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint8 _systemBetDenominator,
         uint _buyInAmount,
         uint _addedPayoutPercentage
-    ) external pure returns (uint systemBetPayout, uint systemBetQuote) {
+    ) external view returns (uint systemBetPayout, uint systemBetQuote) {
         uint8[][] memory systemCombinations = generateCombinations(uint8(_tradeData.length), _systemBetDenominator);
         uint totalCombinations = systemCombinations.length;
+
+        require(totalCombinations <= maxAllowedSystemCombinations, "maxAllowedSystemCombinations exceeded");
+
         uint buyinPerCombination = ((_buyInAmount * ONE) / totalCombinations) / ONE;
 
         // Loop through each stored combination
@@ -832,13 +838,21 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint _minBuyInAmount,
         uint _maxTicketSize,
         uint _maxSupportedAmount,
-        uint _maxSupportedOdds
+        uint _maxSupportedOdds,
+        uint _maxAllowedSystemCombinations
     ) external onlyOwner {
         minBuyInAmount = _minBuyInAmount;
         maxTicketSize = _maxTicketSize;
         maxSupportedAmount = _maxSupportedAmount;
         maxSupportedOdds = _maxSupportedOdds;
-        emit TicketParamsUpdated(_minBuyInAmount, _maxTicketSize, _maxSupportedAmount, _maxSupportedOdds);
+        maxAllowedSystemCombinations = _maxAllowedSystemCombinations;
+        emit TicketParamsUpdated(
+            _minBuyInAmount,
+            _maxTicketSize,
+            _maxSupportedAmount,
+            _maxSupportedOdds,
+            _maxAllowedSystemCombinations
+        );
     }
 
     /// @notice sets different times/periods
@@ -930,7 +944,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetSportsAMM(address sportsAMM);
     event SetLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled);
     event SetCombiningPerSportEnabled(uint _sportID, bool _enabled);
-    event TicketParamsUpdated(uint minBuyInAmount, uint maxTicketSize, uint maxSupportedAmount, uint maxSupportedOdds);
+    event TicketParamsUpdated(
+        uint minBuyInAmount,
+        uint maxTicketSize,
+        uint maxSupportedAmount,
+        uint maxSupportedOdds,
+        uint maxAllowedSystemCombinations
+    );
     event TimesUpdated(uint minimalTimeLeftToMaturity, uint expiryDuration);
 
     event SetLiveCapDivider(uint _sportId, uint _divider);

@@ -225,7 +225,8 @@ async function deploySportsAMMV2Fixture() {
 		RISK_MANAGER_INITAL_PARAMS.minBuyInAmount,
 		RISK_MANAGER_INITAL_PARAMS.maxTicketSize,
 		RISK_MANAGER_INITAL_PARAMS.maxSupportedAmount,
-		RISK_MANAGER_INITAL_PARAMS.maxSupportedOdds
+		RISK_MANAGER_INITAL_PARAMS.maxSupportedOdds,
+		RISK_MANAGER_INITAL_PARAMS.maxAllowedSystemCombinations
 	);
 	await sportsAMMV2RiskManager.setTimes(
 		RISK_MANAGER_INITAL_PARAMS.minimalTimeLeftToMaturity,

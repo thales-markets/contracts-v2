@@ -287,7 +287,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
@@ -699,7 +700,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -899,7 +901,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -1113,7 +1116,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -1353,7 +1357,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -2323,7 +2328,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			// // deposit and start pool
@@ -2538,7 +2544,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
@@ -2755,7 +2762,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
@@ -2975,7 +2983,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
