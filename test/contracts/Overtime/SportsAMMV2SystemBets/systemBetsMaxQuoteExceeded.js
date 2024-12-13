@@ -19,7 +19,7 @@ describe('SportsAMMV2 system bets', () => {
 		sportsAMMV2RiskManager,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
-		tradeDataTenMarketsCurrentRound,
+		tradeDataTenMarketsCurrentRoundImmutable,
 		firstLiquidityProvider,
 		firstTrader,
 		collateral,
@@ -35,7 +35,7 @@ describe('SportsAMMV2 system bets', () => {
 			sportsAMMV2Manager,
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
-			tradeDataTenMarketsCurrentRound,
+			tradeDataTenMarketsCurrentRoundImmutable,
 			collateral,
 			sportsAMMV2ResultManager,
 			defaultLiquidityProvider,
@@ -61,14 +61,14 @@ describe('SportsAMMV2 system bets', () => {
 			);
 
 			const maxSystemBetPayoutAndQuote = await sportsAMMV2RiskManager.getMaxSystemBetPayout(
-				tradeDataTenMarketsCurrentRound,
+				tradeDataTenMarketsCurrentRoundImmutable,
 				8,
 				BUY_IN_AMOUNT,
 				0
 			);
 
 			await sportsAMMV2.connect(firstTrader).tradeSystemBet(
-				tradeDataTenMarketsCurrentRound,
+				tradeDataTenMarketsCurrentRoundImmutable,
 				BUY_IN_AMOUNT,
 				maxSystemBetPayoutAndQuote.systemBetQuote,
 				ethers.parseEther('0.5'), // 50% additional slippage
@@ -102,86 +102,86 @@ describe('SportsAMMV2 system bets', () => {
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[0].gameId],
-				[tradeDataTenMarketsCurrentRound[0].typeId],
-				[tradeDataTenMarketsCurrentRound[0].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[0].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[0].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[0].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[1].gameId],
-				[tradeDataTenMarketsCurrentRound[1].typeId],
-				[tradeDataTenMarketsCurrentRound[1].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[1].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[1].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[1].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[2].gameId],
-				[tradeDataTenMarketsCurrentRound[2].typeId],
-				[tradeDataTenMarketsCurrentRound[2].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[2].gameId],
-				[tradeDataTenMarketsCurrentRound[2].typeId],
-				[tradeDataTenMarketsCurrentRound[2].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[3].gameId],
-				[tradeDataTenMarketsCurrentRound[3].typeId],
-				[tradeDataTenMarketsCurrentRound[3].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[3].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[3].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[3].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[2].gameId],
-				[tradeDataTenMarketsCurrentRound[2].typeId],
-				[tradeDataTenMarketsCurrentRound[2].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[2].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[4].gameId],
-				[tradeDataTenMarketsCurrentRound[4].typeId],
-				[tradeDataTenMarketsCurrentRound[4].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[4].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[4].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[4].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[5].gameId],
-				[tradeDataTenMarketsCurrentRound[5].typeId],
-				[tradeDataTenMarketsCurrentRound[5].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[5].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[5].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[5].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[6].gameId],
-				[tradeDataTenMarketsCurrentRound[6].typeId],
-				[tradeDataTenMarketsCurrentRound[6].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[6].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[6].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[6].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[7].gameId],
-				[tradeDataTenMarketsCurrentRound[7].typeId],
-				[tradeDataTenMarketsCurrentRound[8].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[7].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[7].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[8].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[8].gameId],
-				[tradeDataTenMarketsCurrentRound[8].typeId],
-				[tradeDataTenMarketsCurrentRound[8].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[8].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[8].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[8].playerId],
 				[[0]]
 			);
 
 			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[tradeDataTenMarketsCurrentRound[9].gameId],
-				[tradeDataTenMarketsCurrentRound[9].typeId],
-				[tradeDataTenMarketsCurrentRound[9].playerId],
+				[tradeDataTenMarketsCurrentRoundImmutable[9].gameId],
+				[tradeDataTenMarketsCurrentRoundImmutable[9].typeId],
+				[tradeDataTenMarketsCurrentRoundImmutable[9].playerId],
 				[[0]]
 			);
 

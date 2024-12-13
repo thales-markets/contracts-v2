@@ -47,6 +47,18 @@ const getTicketTradeData = () => {
 	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[10], 0));
 	tradeDataTenMarketsCurrentRound.push(getTradeDataItem(marketsTree[11], 0));
 
+	const tradeDataTenMarketsCurrentRoundImmutable = [];
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[2], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[3], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[4], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[5], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[6], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[7], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[8], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[9], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[10], 0));
+	tradeDataTenMarketsCurrentRoundImmutable.push(getTradeDataItem(marketsTree[11], 0));
+
 	const tradeDataThreeMarketsCurrentRound = [];
 	tradeDataThreeMarketsCurrentRound.push(getTradeDataItem(marketsTree[0].childMarkets[3], 0));
 	tradeDataThreeMarketsCurrentRound.push(getTradeDataItem(marketsTree[1], 0));
@@ -110,6 +122,7 @@ const getTicketTradeData = () => {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataTenMarketsCurrentRoundImmutable,
 		tradeDataThreeMarketsCurrentRound,
 		tradeDataTenMarketsCurrentRoundFirst,
 		tradeDataTenMarketsCurrentRoundSecond,
