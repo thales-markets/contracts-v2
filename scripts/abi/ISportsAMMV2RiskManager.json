@@ -486,6 +486,19 @@
   },
   {
     "inputs": [],
+    "name": "maxAllowedSystemCombinations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "maxSupportedAmount",
     "outputs": [
       {

@@ -41,6 +41,8 @@ interface ISportsAMMV2RiskManager {
 
     function maxSupportedOdds() external view returns (uint);
 
+    function maxAllowedSystemCombinations() external view returns (uint);
+
     function expiryDuration() external view returns (uint);
 
     function liveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId) external view returns (bool _enabled);

@@ -20,6 +20,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint maxSupportedOdds;
         uint safeBoxFee;
         bool paused;
+        uint maxAllowedSystemCombinations;
     }
 
     struct MarketData {
@@ -97,7 +98,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 riskManager.maxSupportedAmount(),
                 riskManager.maxSupportedOdds(),
                 sportsAMM.safeBoxFee(),
-                sportsAMM.paused()
+                sportsAMM.paused(),
+                riskManager.maxAllowedSystemCombinations()
             );
     }
 
