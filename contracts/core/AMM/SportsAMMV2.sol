@@ -35,6 +35,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
+    uint private constant NON_SYSTEM_BET = 1e18;
 
     /* ========== STRUCT VARIABLES ========== */
     struct TradeDataInternal {
@@ -203,7 +204,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _buyInAmount,
             _collateral,
             _isLive,
-            0
+            NON_SYSTEM_BET
         );
     }
 
@@ -321,7 +322,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _referrer,
             _collateral,
             _isEth,
-            0
+            NON_SYSTEM_BET
         );
     }
 

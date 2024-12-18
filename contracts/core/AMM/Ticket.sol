@@ -89,9 +89,7 @@ contract Ticket {
         isLive = params._isLive;
         createdAt = block.timestamp;
         systemBetDenominator = params._systemBetDenominator;
-        if (systemBetDenominator > 0) {
-            isSystem = true;
-        }
+        isSystem = systemBetDenominator > 0;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -208,13 +206,7 @@ contract Ticket {
                 }
             }
 
-            if (isCancelled) {
-                finalPayout = buyInAmount;
-            } else {
-                if (isSystem) {
-                    finalPayout = _getSystemBetPayout();
-                }
-            }
+            finalPayout = isCancelled ? buyInAmount : (isSystem ? _getSystemBetPayout() : finalPayout);
 
             collateral.safeTransfer(
                 _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
