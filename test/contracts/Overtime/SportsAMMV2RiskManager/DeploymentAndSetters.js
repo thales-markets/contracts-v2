@@ -223,34 +223,52 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 			const maxTicketSize = 15;
 			const maxSupportedAmount = ethers.parseEther('30000');
 			const maxSupportedOdds = ethers.parseEther('0.001');
+			const maxAllowedSystemCombinations = 500;
 
 			await expect(
 				sportsAMMV2RiskManager
 					.connect(secondAccount)
-					.setTicketParams(minBuyInAmount, maxTicketSize, maxSupportedAmount, maxSupportedOdds)
+					.setTicketParams(
+						minBuyInAmount,
+						maxTicketSize,
+						maxSupportedAmount,
+						maxSupportedOdds,
+						maxAllowedSystemCombinations
+					)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
 			await sportsAMMV2RiskManager.setTicketParams(
 				minBuyInAmount,
 				maxTicketSize,
 				maxSupportedAmount,
-				maxSupportedOdds
+				maxSupportedOdds,
+				maxAllowedSystemCombinations
 			);
 			expect(await sportsAMMV2RiskManager.minBuyInAmount()).to.equal(minBuyInAmount);
 			expect(await sportsAMMV2RiskManager.maxTicketSize()).to.equal(maxTicketSize);
 			expect(await sportsAMMV2RiskManager.maxSupportedAmount()).to.equal(maxSupportedAmount);
 			expect(await sportsAMMV2RiskManager.maxSupportedOdds()).to.equal(maxSupportedOdds);
+			expect(await sportsAMMV2RiskManager.maxAllowedSystemCombinations()).to.equal(
+				maxAllowedSystemCombinations
+			);
 
 			await expect(
 				sportsAMMV2RiskManager.setTicketParams(
 					minBuyInAmount,
 					maxTicketSize,
 					maxSupportedAmount,
-					maxSupportedOdds
+					maxSupportedOdds,
+					maxAllowedSystemCombinations
 				)
 			)
 				.to.emit(sportsAMMV2RiskManager, 'TicketParamsUpdated')
-				.withArgs(minBuyInAmount, maxTicketSize, maxSupportedAmount, maxSupportedOdds);
+				.withArgs(
+					minBuyInAmount,
+					maxTicketSize,
+					maxSupportedAmount,
+					maxSupportedOdds,
+					maxAllowedSystemCombinations
+				);
 		});
 
 		it('Should set the new times', async () => {

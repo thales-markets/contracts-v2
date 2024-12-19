@@ -225,7 +225,8 @@ async function deploySportsAMMV2Fixture() {
 		RISK_MANAGER_INITAL_PARAMS.minBuyInAmount,
 		RISK_MANAGER_INITAL_PARAMS.maxTicketSize,
 		RISK_MANAGER_INITAL_PARAMS.maxSupportedAmount,
-		RISK_MANAGER_INITAL_PARAMS.maxSupportedOdds
+		RISK_MANAGER_INITAL_PARAMS.maxSupportedOdds,
+		RISK_MANAGER_INITAL_PARAMS.maxAllowedSystemCombinations
 	);
 	await sportsAMMV2RiskManager.setTimes(
 		RISK_MANAGER_INITAL_PARAMS.minimalTimeLeftToMaturity,
@@ -424,7 +425,9 @@ async function deploySportsAMMV2Fixture() {
 		collateralTHALESAddress,
 	]);
 	const defaultLiquidityProviderTHALESAddress = defaultLiquidityProviderTHALES.getAddress();
-	await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(defaultLiquidityProviderTHALESAddress);
+	await sportsAMMV2THALESLiquidityPool.setDefaultLiquidityProvider(
+		defaultLiquidityProviderTHALESAddress
+	);
 
 	const defaultLiquidityProviderAddress = defaultLiquidityProvider.getAddress();
 
@@ -456,6 +459,8 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataTenMarketsCurrentRoundImmutable,
+		tradeDataThreeMarketsCurrentRound,
 		tradeDataTenMarketsCurrentRoundFirst,
 		tradeDataTenMarketsCurrentRoundSecond,
 		tradeDataTenMarketsCurrentRoundThird,
@@ -482,6 +487,8 @@ async function deploySportsAMMV2Fixture() {
 		...tradeDataNextRound,
 		...tradeDataCrossRounds,
 		...tradeDataTenMarketsCurrentRound,
+		...tradeDataTenMarketsCurrentRoundImmutable,
+		...tradeDataThreeMarketsCurrentRound,
 		...tradeDataTenMarketsCurrentRoundFirst,
 		...tradeDataTenMarketsCurrentRoundSecond,
 		...tradeDataTenMarketsCurrentRoundThird,
@@ -795,6 +802,7 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2LiquidityPoolSixDecimals2,
 		sportsAMMV2LiquidityPoolRoundMastercopy,
 		defaultLiquidityProvider,
+		defaultLiquidityProviderTHALES,
 		defaultLiquidityProviderSixDecimals,
 		defaultLiquidityProviderSixDecimals2,
 		sportsAMMV2LiquidityPoolETH,
@@ -815,6 +823,8 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataNextRound,
 		tradeDataCrossRounds,
 		tradeDataTenMarketsCurrentRound,
+		tradeDataTenMarketsCurrentRoundImmutable,
+		tradeDataThreeMarketsCurrentRound,
 		tradeDataTenMarketsCurrentRoundFirst,
 		tradeDataTenMarketsCurrentRoundSecond,
 		tradeDataTenMarketsCurrentRoundThird,

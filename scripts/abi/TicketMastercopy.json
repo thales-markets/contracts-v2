@@ -273,6 +273,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getSystemBetPayout",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "systemBetPayout",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
@@ -389,6 +402,11 @@
             "internalType": "bool",
             "name": "_isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "_systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct Ticket.TicketInit",
@@ -417,6 +435,19 @@
   {
     "inputs": [],
     "name": "isLive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isSystem",
     "outputs": [
       {
         "internalType": "bool",
@@ -598,6 +629,19 @@
         "internalType": "contract ISportsAMMV2",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "systemBetDenominator",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",

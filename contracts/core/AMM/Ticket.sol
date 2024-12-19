@@ -39,6 +39,7 @@ contract Ticket {
         IERC20 _collateral;
         uint _expiry;
         bool _isLive;
+        uint8 _systemBetDenominator;
     }
 
     ISportsAMMV2 public sportsAMM;
@@ -63,6 +64,10 @@ contract Ticket {
 
     uint public finalPayout;
 
+    bool public isSystem;
+
+    uint8 public systemBetDenominator;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the ticket contract
@@ -83,6 +88,8 @@ contract Ticket {
         expiry = params._expiry;
         isLive = params._isLive;
         createdAt = block.timestamp;
+        systemBetDenominator = params._systemBetDenominator;
+        isSystem = systemBetDenominator > 0;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -90,6 +97,7 @@ contract Ticket {
     /// @notice checks if the user lost the ticket
     /// @return isTicketLost true/false
     function isTicketLost() public view returns (bool) {
+        uint lostMarketsCount = 0;
         for (uint i = 0; i < numOfMarkets; i++) {
             (bool isMarketResolved, bool isWinningMarketPosition) = sportsAMM
                 .resultManager()
@@ -102,7 +110,14 @@ contract Ticket {
                     markets[i].combinedPositions
                 );
             if (isMarketResolved && !isWinningMarketPosition) {
-                return true;
+                if (!isSystem) {
+                    return true;
+                } else {
+                    lostMarketsCount++;
+                    if (lostMarketsCount > (numOfMarkets - systemBetDenominator)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -154,6 +169,12 @@ contract Ticket {
         return markets[_marketIndex].combinedPositions;
     }
 
+    /// @notice return the payout for this ticket
+    /// @return systemBetPayout the payout for this ticket
+    function getSystemBetPayout() external view returns (uint systemBetPayout) {
+        systemBetPayout = _getSystemBetPayout();
+    }
+
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice exercise ticket
@@ -184,9 +205,9 @@ contract Ticket {
                     isCancelled = false;
                 }
             }
-            if (isCancelled) {
-                finalPayout = buyInAmount;
-            }
+
+            finalPayout = isCancelled ? buyInAmount : (isSystem ? _getSystemBetPayout() : finalPayout);
+
             collateral.safeTransfer(
                 _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
                     ? address(ticketOwner)
@@ -262,6 +283,82 @@ contract Ticket {
         if (paused == _paused) return;
         paused = _paused;
         emit PauseUpdated(_paused);
+    }
+
+    /* ========== SYSTEM BET UTILS ========== */
+
+    function _getSystemBetPayout() internal view returns (uint systemBetPayout) {
+        if (isSystem) {
+            uint8[][] memory systemCombinations = sportsAMM.riskManager().generateCombinations(
+                uint8(numOfMarkets),
+                systemBetDenominator
+            );
+            uint totalCombinations = systemCombinations.length;
+            uint buyinPerCombination = ((buyInAmount * ONE) / totalCombinations) / ONE;
+
+            bool[] memory winningMarkets = new bool[](numOfMarkets);
+            bool[] memory cancelledMarkets = new bool[](numOfMarkets);
+
+            for (uint i = 0; i < numOfMarkets; i++) {
+                if (
+                    !sportsAMM.resultManager().isMarketResolved(
+                        markets[i].gameId,
+                        markets[i].typeId,
+                        markets[i].playerId,
+                        markets[i].line,
+                        markets[i].combinedPositions
+                    )
+                ) {
+                    return 0;
+                }
+                winningMarkets[i] = sportsAMM.resultManager().isWinningMarketPosition(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].position,
+                    markets[i].combinedPositions
+                );
+
+                cancelledMarkets[i] = sportsAMM.resultManager().isCancelledMarketPosition(
+                    markets[i].gameId,
+                    markets[i].typeId,
+                    markets[i].playerId,
+                    markets[i].line,
+                    markets[i].position,
+                    markets[i].combinedPositions
+                );
+            }
+
+            // Loop through each stored combination
+            for (uint i = 0; i < totalCombinations; i++) {
+                uint8[] memory currentCombination = systemCombinations[i];
+
+                uint combinationQuote = ONE;
+
+                for (uint j = 0; j < currentCombination.length; j++) {
+                    uint8 marketIndex = currentCombination[j];
+                    if (winningMarkets[marketIndex]) {
+                        if (!cancelledMarkets[marketIndex]) {
+                            combinationQuote = (combinationQuote * markets[marketIndex].odd) / ONE;
+                        }
+                    } else {
+                        combinationQuote = 0;
+                        break;
+                    }
+                }
+
+                if (combinationQuote > 0) {
+                    uint combinationPayout = (buyinPerCombination * ONE) / combinationQuote;
+                    systemBetPayout += combinationPayout;
+                }
+            }
+
+            uint maxPayout = (buyInAmount * ONE) / totalQuote;
+            if (systemBetPayout > maxPayout) {
+                systemBetPayout = maxPayout;
+            }
+        }
     }
 
     /* ========== MODIFIERS ========== */
