@@ -60,6 +60,18 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     }
 
     /// @notice buy a ticket for a user if he has enough staked tokens
+    function tradeSystemBet(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedQuote,
+        uint _additionalSlippage,
+        address _referrer,
+        uint8 _systemBetDenominator
+    ) external notPaused nonReentrant {
+        _trade(_tradeData, _buyInAmount, _expectedQuote, _additionalSlippage, _referrer, _systemBetDenominator);
+    }
+
+    /// @notice buy a ticket for a user if he has enough staked tokens
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
@@ -67,17 +79,42 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         uint _additionalSlippage,
         address _referrer
     ) external notPaused nonReentrant {
+        _trade(_tradeData, _buyInAmount, _expectedQuote, _additionalSlippage, _referrer, 0);
+    }
+
+    function _trade(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedQuote,
+        uint _additionalSlippage,
+        address _referrer,
+        uint8 _systemBetDenominator
+    ) internal {
         // signal decrease of stakingAmount
         stakingThales.decreaseAndTransferStakedThales(msg.sender, _buyInAmount);
-        address _createdTicket = sportsAMM.trade(
-            _tradeData,
-            _buyInAmount,
-            _expectedQuote,
-            _additionalSlippage,
-            _referrer,
-            address(stakingCollateral),
-            false
-        );
+        address _createdTicket;
+        if (_systemBetDenominator > 0) {
+            _createdTicket = sportsAMM.tradeSystemBet(
+                _tradeData,
+                _buyInAmount,
+                _expectedQuote,
+                _additionalSlippage,
+                _referrer,
+                address(stakingCollateral),
+                false,
+                _systemBetDenominator
+            );
+        } else {
+            _createdTicket = sportsAMM.trade(
+                _tradeData,
+                _buyInAmount,
+                _expectedQuote,
+                _additionalSlippage,
+                _referrer,
+                address(stakingCollateral),
+                false
+            );
+        }
         ticketToUser[_createdTicket] = msg.sender;
         activeTicketsPerUser[msg.sender].add(_createdTicket);
         emit StakingTokensTrade(_createdTicket, _buyInAmount, msg.sender, false);

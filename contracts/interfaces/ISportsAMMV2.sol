@@ -65,6 +65,17 @@ interface ISportsAMMV2 {
         bool _isEth
     ) external returns (address _createdTicket);
 
+    function tradeSystemBet(
+        TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedQuote,
+        uint _additionalSlippage,
+        address _referrer,
+        address _collateral,
+        bool _isEth,
+        uint8 _systemBetDenominator
+    ) external returns (address _createdTicket);
+
     function rootPerGame(bytes32 game) external view returns (bytes32);
 
     function paused() external view returns (bool);
