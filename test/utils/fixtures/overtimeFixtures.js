@@ -116,6 +116,9 @@ async function deploySportsAMMV2Fixture() {
 		collateralSixDecimals,
 		collateralSixDecimals2,
 		collateralTHALES,
+		overToken,
+		thalesToken,
+		exchangeThalesForOver,
 	} = await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
 	const collateralTHALESAddress = await collateralTHALES.getAddress();
@@ -867,6 +870,9 @@ async function deploySportsAMMV2Fixture() {
 		stakingThalesBettingProxy,
 		resolveBlocker,
 		resolveBlockerAddress,
+		exchangeThalesForOver,
+		overToken,
+		thalesToken,
 	};
 }
 

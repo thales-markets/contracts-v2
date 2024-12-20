@@ -3,7 +3,6 @@ const { expect } = require('chai');
 const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
-	deployTokenFixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
 
 const { ZERO_ADDRESS } = require('../../../constants/general');
@@ -13,7 +12,8 @@ describe('Exchange Thales for Over', () => {
 	let overToken, exchangeThalesForOver, firstLiquidityProvider, owner, secondAccount, firstTrader;
 
 	beforeEach(async () => {
-		({ overToken, thalesToken, exchangeThalesForOver } = await loadFixture(deployTokenFixture));
+		({ overToken, thalesToken, exchangeThalesForOver } =
+			await loadFixture(deploySportsAMMV2Fixture));
 		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
 	});
