@@ -125,6 +125,11 @@ describe('StakingThalesBettingProxy', () => {
 				firstTrader
 			);
 			expect(activeTickets.length).to.equal(1);
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+			expect(await userTicket.isSystem()).to.be.equal(false);
 		});
 
 		it('Should pass system', async () => {
