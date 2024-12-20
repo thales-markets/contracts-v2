@@ -59,7 +59,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         stakingCollateral.approve(_liveTradingProcessor, MAX_APPROVAL);
     }
 
-    /// @notice buy a ticket for a user if he has enough staked tokens
+    /// @notice buy a system bet ticket for a user if he has enough staked tokens
     function tradeSystemBet(
         ISportsAMMV2.TradeData[] calldata _tradeData,
         uint _buyInAmount,
