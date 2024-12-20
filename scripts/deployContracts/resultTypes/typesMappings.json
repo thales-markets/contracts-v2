@@ -931,7 +931,7 @@
 	},
 	{
 		"id": 10221,
-		"result_type": 2,
+		"result_type": 4,
 		"name": "CHILD_SPREAD_CORNERS"
 	},
 	{
@@ -991,7 +991,7 @@
 	},
 	{
 		"id": 10233,
-		"result_type": 2,
+		"result_type": 4,
 		"name": "CHILD_SPREAD_CORNERS_SECOND_PERIOD"
 	},
 	{
@@ -1011,7 +1011,7 @@
 	},
 	{
 		"id": 10241,
-		"result_type": 2,
+		"result_type": 4,
 		"name": "CHILD_SPREAD_CARDS_POINTS"
 	},
 	{
