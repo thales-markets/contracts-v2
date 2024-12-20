@@ -34,6 +34,9 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
     mapping(bytes32 => mapping(uint => mapping(uint => AddressSetLib.AddressSet))) internal ticketsPerMarket;
 
+    // stores whether a given ticket address is a system bet
+    mapping(address => bool) public isSystemTicket;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner) external initializer {
@@ -58,6 +61,8 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
             ticketsPerGame[_tradeData[i].gameId].add(_ticket);
             ticketsPerMarket[_tradeData[i].gameId][_tradeData[i].typeId][_tradeData[i].playerId].add(_ticket);
         }
+
+        isSystemTicket[_ticket] = ITicket(_ticket).isSystem();
     }
 
     /// @notice remove known ticket from active and add as resolved

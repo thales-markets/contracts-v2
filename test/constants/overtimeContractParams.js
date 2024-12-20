@@ -5,6 +5,7 @@ const RISK_MANAGER_INITAL_PARAMS = {
 	defaultRiskMultiplier: 3,
 	maxCap: ethers.parseEther('20000'),
 	maxRiskMultiplier: 5,
+	maxAllowedSystemCombinations: 500,
 
 	minBuyInAmount: ethers.parseEther('3'),
 	maxTicketSize: 10,
@@ -46,6 +47,7 @@ const SPORTS_AMM_SIX_DEC_INITAL_PARAMS = {
 	maxTicketSize: 10,
 	maxSupportedAmount: 20000 * 1e6,
 	maxSupportedOdds: ethers.parseEther('0.01'),
+	maxAllowedSystemCombinations: 500,
 
 	minimalTimeLeftToMaturity: 10,
 	expiryDuration: 7776000,
