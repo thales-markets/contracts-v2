@@ -191,10 +191,6 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 "Invalid odds"
             );
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
-            if (isSystemBet) {
-                amountToBuy = (amountToBuy * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
-                amountToBuy = amountToBuy < _buyInAmount ? _buyInAmount : amountToBuy;
-            }
             uint marketRiskAmount = amountToBuy - _buyInAmount;
             if (isSystemBet) {
                 marketRiskAmount = (marketRiskAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
