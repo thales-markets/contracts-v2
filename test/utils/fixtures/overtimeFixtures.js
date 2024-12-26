@@ -58,17 +58,33 @@ async function deployAccountsFixture() {
 }
 
 async function deployTokenFixture() {
+	const { owner } = await deployAccountsFixture();
 	const ExoticUSD = await ethers.getContractFactory('ExoticUSD');
 	const collateral = await ExoticUSD.deploy();
 
 	const collateral18 = await ExoticUSD.deploy();
 
 	const collateralTHALES = await ExoticUSD.deploy();
-
+	const collateralTHALESAddress = await collateralTHALES.getAddress();
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
 	const collateralSixDecimals = await ExoticUSDC.deploy();
 
 	const collateralSixDecimals2 = await ExoticUSDC.deploy();
+
+	const OverToken = await ethers.getContractFactory('Over');
+	const overToken = await OverToken.deploy(owner.address);
+	const overTokenAddress = await overToken.getAddress();
+
+	const ThalesToken = await ethers.getContractFactory('ThalesToken');
+	const thalesToken = await ThalesToken.deploy(owner.address);
+	const thalesTokenAddress = await thalesToken.getAddress();
+
+	const ExchangeThalesForOver = await ethers.getContractFactory('ExchangeThalesForOver');
+	const exchangeThalesForOver = await ExchangeThalesForOver.deploy();
+	await exchangeThalesForOver
+		.connect(owner)
+		.initialize(owner.address, thalesTokenAddress, overTokenAddress);
+	const exchangeThalesForOverAddress = await exchangeThalesForOver.getAddress();
 
 	return {
 		collateral,
@@ -76,6 +92,9 @@ async function deployTokenFixture() {
 		collateralSixDecimals,
 		collateralSixDecimals2,
 		collateralTHALES,
+		overToken,
+		thalesToken,
+		exchangeThalesForOver,
 	};
 }
 
@@ -97,6 +116,9 @@ async function deploySportsAMMV2Fixture() {
 		collateralSixDecimals,
 		collateralSixDecimals2,
 		collateralTHALES,
+		overToken,
+		thalesToken,
+		exchangeThalesForOver,
 	} = await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
 	const collateralTHALESAddress = await collateralTHALES.getAddress();
@@ -858,6 +880,9 @@ async function deploySportsAMMV2Fixture() {
 		stakingThalesBettingProxy,
 		resolveBlocker,
 		resolveBlockerAddress,
+		exchangeThalesForOver,
+		overToken,
+		thalesToken,
 	};
 }
 
