@@ -27,23 +27,43 @@ contract ExchangeThalesForOver is Initializable, ProxyOwned, ProxyPausable, Prox
         Over = IERC20(_overAddress);
     }
 
+    /// @notice Exchanges Thales tokens for Over tokens at a 1:1 ratio
+    /// @param _amount The amount of Thales tokens to exchange for Over tokens
+    /// @dev Burns the Thales tokens and transfers an equal amount of Over tokens to the sender
     function exchangeThalesForOver(uint _amount) external nonReentrant notPaused {
         if (_amount == 0) revert AmountIsZero();
         // burn Thales
         Thales.safeTransferFrom(msg.sender, BURN_ADDRESS, _amount);
         // send Over
         Over.safeTransfer(msg.sender, _amount);
+
+        emit ThalesToOverExchanged(msg.sender, _amount);
     }
 
+    /// @notice Allows the owner to withdraw any ERC20 tokens from the contract
+    /// @param _collateral The address of the ERC20 token to withdraw
+    /// @param _amount The amount of tokens to withdraw
     function withdrawCollateral(address _collateral, uint _amount) external onlyOwner {
         IERC20(_collateral).safeTransfer(msg.sender, _amount);
+        emit WithdrawnCollateral(_collateral, _amount);
     }
 
+    /// @notice Updates the Thales token contract address
+    /// @param _thalesAddress The new Thales token contract address
     function setThales(address _thalesAddress) external onlyOwner {
         Thales = IERC20(_thalesAddress);
+        emit SetThales(_thalesAddress);
     }
 
+    /// @notice Updates the Over token contract address
+    /// @param _overAddress The new Over token contract address
     function setOver(address _overAddress) external onlyOwner {
         Over = IERC20(_overAddress);
+        emit SetOver(_overAddress);
     }
+
+    event ThalesToOverExchanged(address indexed user, uint amount);
+    event SetThales(address indexed thalesAddress);
+    event SetOver(address indexed overAddress);
+    event WithdrawnCollateral(address indexed collateral, uint amount);
 }
