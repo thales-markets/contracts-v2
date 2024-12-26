@@ -1068,5 +1068,15 @@
 		"id": 11237,
 		"result_type": 2,
 		"name": "LAST_GOAL_SCORER"
+	},
+	{
+		"id": 11238,
+		"result_type": 2,
+		"name": "PROP_SHOTS_ON_TARGET"
+	},
+	{
+		"id": 11239,
+		"result_type": 2,
+		"name": "PROP_PLAYER_SHOTS"
 	}
 ]
