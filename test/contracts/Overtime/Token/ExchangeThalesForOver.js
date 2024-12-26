@@ -85,4 +85,77 @@ describe('Exchange Thales for Over', () => {
 			).to.be.revertedWith('This action cannot be performed while the contract is paused');
 		});
 	});
+
+	describe('Admin functions', () => {
+		it('Should allow owner to withdraw collateral', async () => {
+			const amount = ethers.parseEther('100');
+			// Transfer some tokens to the contract first
+			await overToken.connect(owner).transfer(exchangeThalesForOver.target, amount);
+
+			const initialBalance = await overToken.balanceOf(owner.address);
+
+			await exchangeThalesForOver.connect(owner).withdrawCollateral(overToken.target, amount);
+
+			const finalBalance = await overToken.balanceOf(owner.address);
+			expect(finalBalance).to.equal(initialBalance + amount);
+		});
+
+		it('Should revert withdrawCollateral if called by non-owner', async () => {
+			const amount = ethers.parseEther('100');
+			await expect(
+				exchangeThalesForOver.connect(firstTrader).withdrawCollateral(overToken.target, amount)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+		});
+
+		it('Should allow owner to set new Thales address', async () => {
+			const newAddress = secondAccount.address;
+			await exchangeThalesForOver.connect(owner).setThales(newAddress);
+
+			expect(await exchangeThalesForOver.Thales()).to.equal(newAddress);
+		});
+
+		it('Should revert setThales if called by non-owner', async () => {
+			const newAddress = secondAccount.address;
+			await expect(
+				exchangeThalesForOver.connect(firstTrader).setThales(newAddress)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+		});
+
+		it('Should allow owner to set new Over address', async () => {
+			const newAddress = secondAccount.address;
+			await exchangeThalesForOver.connect(owner).setOver(newAddress);
+
+			expect(await exchangeThalesForOver.Over()).to.equal(newAddress);
+		});
+
+		it('Should revert setOver if called by non-owner', async () => {
+			const newAddress = secondAccount.address;
+			await expect(
+				exchangeThalesForOver.connect(firstTrader).setOver(newAddress)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+		});
+
+		it('Should emit events when admin functions are called', async () => {
+			const amount = ethers.parseEther('100');
+			const newAddress = secondAccount.address;
+
+			// Test SetThales event
+			await expect(exchangeThalesForOver.connect(owner).setThales(newAddress))
+				.to.emit(exchangeThalesForOver, 'SetThales')
+				.withArgs(newAddress);
+
+			// Test SetOver event
+			await expect(exchangeThalesForOver.connect(owner).setOver(newAddress))
+				.to.emit(exchangeThalesForOver, 'SetOver')
+				.withArgs(newAddress);
+
+			// Transfer some tokens to test WithdrawnCollateral event
+			await overToken.connect(owner).transfer(exchangeThalesForOver.target, amount);
+			await expect(
+				exchangeThalesForOver.connect(owner).withdrawCollateral(overToken.target, amount)
+			)
+				.to.emit(exchangeThalesForOver, 'WithdrawnCollateral')
+				.withArgs(overToken.target, amount);
+		});
+	});
 });
