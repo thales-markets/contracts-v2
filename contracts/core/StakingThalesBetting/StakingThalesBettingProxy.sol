@@ -12,6 +12,7 @@ import "../../utils/libraries/AddressSetLib.sol";
 
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
+import "../../interfaces/ISGPTradingProcessor.sol";
 
 import "./../AMM/Ticket.sol";
 
@@ -38,6 +39,10 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
 
     // stores resolved tickets per user
     mapping(address => AddressSetLib.AddressSet) internal resolvedTicketsPerUser;
+
+    ISGPTradingProcessor public sgpTradingProcessor;
+
+    mapping(bytes32 => address) public sgpRequestsPerUser;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -142,6 +147,36 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
         require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
         address _user = liveRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
+
+        ticketToUser[_createdTicket] = _user;
+
+        activeTicketsPerUser[_user].add(_createdTicket);
+
+        emit StakingTokensTrade(_createdTicket, _buyInAmount, _user, true);
+    }
+
+    /// @notice request a SGP ticket for a user if he has enough staked tokens
+    function tradeSGP(ISGPTradingProcessor.SGPTradeData calldata _sgpTradeData) external notPaused {
+        require(_sgpTradeData._collateral == address(stakingCollateral), "Use Staking collateral for live trade");
+        bytes32 _requestId = sgpTradingProcessor.requestSGPTrade(_sgpTradeData);
+        sgpRequestsPerUser[_requestId] = msg.sender;
+        emit StakingTokensSGPTradeRequested(msg.sender, _sgpTradeData._buyInAmount, _requestId);
+    }
+
+    /// @notice pre-confirm a SGP ticket purchase by transfering funds from the staking contract to this contract
+    function preConfirmSGPTrade(bytes32 requestId, uint _buyInAmount) external notPaused nonReentrant {
+        require(msg.sender == address(sgpTradingProcessor), "Only callable from sgpTradingProcessor");
+        address _user = sgpRequestsPerUser[requestId];
+        require(_user != address(0), "Unknown SGP ticket");
+        // signal decrease of stakingAmount
+        stakingThales.decreaseAndTransferStakedThales(_user, _buyInAmount);
+    }
+
+    /// @notice confirm a sgp ticket purchase. As SGP betting is a 2 step approach, the SGPTradingProcessor needs this method as callback so that the correct amount is deducted from the this contract balance
+    function confirmSGPTrade(bytes32 requestId, address _createdTicket, uint _buyInAmount) external notPaused nonReentrant {
+        require(msg.sender == address(liveTradingProcessor), "Only callable from LiveTradingProcessor");
+        address _user = sgpRequestsPerUser[requestId];
+        require(_user != address(0), "Unknown SGP ticket");
 
         ticketToUser[_createdTicket] = _user;
 
@@ -269,6 +304,7 @@ contract StakingThalesBettingProxy is Initializable, ProxyOwned, ProxyPausable, 
     event StakingTokensTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event StakingTokensTicketResolved(address ticket, address user, uint earned);
     event StakingTokensLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
+    event StakingTokensSGPTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event SetStakingThales(address stakingThales);
     event SetSportsAMM(address sportsAMM);
     event SetLiveTradingProcessor(address liveTradingProcessor);

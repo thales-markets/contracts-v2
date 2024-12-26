@@ -47,6 +47,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _collateral;
         address _collateralPool;
         uint _collateralPriceInUSD;
+        bool _isSGP;
     }
 
     /* ========== STATE VARIABLES ========== */
@@ -114,6 +115,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _buyInAmountInDefaultCollateral;
         address _collateral;
         bool _isLive;
+        bool _isSGP;
+        uint _approvedQuote;
     }
 
     struct TradeProcessingParams {
@@ -123,6 +126,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _addedPayoutPercentage;
         uint _payoutWithFees;
     }
+
+    // CL client that processes SGP requests
+    address public sgpTradingProcessor;
 
     // declare that it can receive eth
     receive() external payable {}
@@ -289,7 +295,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(
             _tradeData,
-            TradeDataQuoteInternal(useAmount, true, buyInAmountInDefaultCollateral, _collateral, _isLive),
+            TradeDataQuoteInternal(useAmount, true, buyInAmountInDefaultCollateral, _collateral, _isLive, false, 0),
             _systemBetDenominator
         );
     }
@@ -323,6 +329,52 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _collateral,
             _isEth,
             NON_SYSTEM_BET
+        );
+    }
+
+    /// @notice make a SGP trade and create a ticket
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _approvedQuote quote approved by sgpTradingProcessor
+    /// @param _referrer referrer to get referral fee
+    /// @param _collateral different collateral used for payment
+    /// @return _createdTicket the address of the created ticket
+    function tradeSGP(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _approvedQuote,
+        address _recipient,
+        address _referrer,
+        address _collateral
+    ) external payable nonReentrant notPaused returns (address _createdTicket) {
+        require(msg.sender == sgpTradingProcessor, "OnlySGPTradingProcessor");
+        if (_referrer != address(0)) {
+            referrals.setReferrer(_referrer, _recipient);
+        }
+
+        require(_recipient != address(0), "UndefinedRecipient");
+        address useLPpool;
+        uint collateralPriceInUSD;
+        (useLPpool, collateralPriceInUSD, _buyInAmount, _collateral) = _handleCollateral(
+            _buyInAmount,
+            _collateral,
+            _recipient,
+            false
+        );
+        _createdTicket = _trade(
+            _tradeData,
+            TradeDataInternal(
+                _buyInAmount,
+                (ONE * _buyInAmount) / _approvedQuote, // quote to expected payout,
+                0, // no additional slippage allowed as the amount comes from the LiveTradingProcessor
+                _recipient,
+                false,
+                _collateral,
+                useLPpool,
+                collateralPriceInUSD,
+                true
+            ),
+            0
         );
     }
 
@@ -396,7 +448,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 false,
                 _collateral,
                 useLPpool,
-                collateralPriceInUSD
+                collateralPriceInUSD,
+                false
             ),
             _systemBetDenominator
         );
@@ -443,7 +496,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 true,
                 _collateral,
                 useLPpool,
-                collateralPriceInUSD
+                collateralPriceInUSD,
+                false
             ),
             0
         );
@@ -527,6 +581,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     addedPayoutPercentage
                 );
             } else {
+                if (_tradeDataQuoteInternal._isSGP) {
+                    totalQuote = _tradeDataQuoteInternal._approvedQuote;
+                }
                 payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
             }
             if (totalQuote < maxSupportedOdds) {
@@ -612,7 +669,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     false,
                     0,
                     _tradeDataInternal._collateral,
-                    _tradeDataInternal._isLive
+                    _tradeDataInternal._isLive,
+                    _tradeDataInternal._isSGP,
+                    (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout
                 ),
                 _systemBetDenominator
             );
@@ -904,6 +963,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit SetLiveTradingProcessor(_liveTradingProcessor);
     }
 
+    /// @notice sets the SGPTradingProcessor, required for any sgp trading
+    function setSGPTradingProcessor(address _sgpTradingProcessor) external onlyOwner {
+        sgpTradingProcessor = _sgpTradingProcessor;
+        emit SetSGPTradingProcessor(_sgpTradingProcessor);
+    }
+
     /// @notice sets the FreeBetsHolder address, required for handling ticket claiming via FreeBetsHolder
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
         freeBetsHolder = _freeBetsHolder;
@@ -1015,6 +1080,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
     event SetLiveTradingProcessor(address liveTradingProcessor);
+    event SetSGPTradingProcessor(address sgpTradingProcessor);
     event SetFreeBetsHolder(address freeBetsHolder);
     event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
     event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);

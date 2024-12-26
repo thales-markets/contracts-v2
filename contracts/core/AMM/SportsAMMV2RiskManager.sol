@@ -174,7 +174,15 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
         bool _isLive
-    ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity) {
+    )
+        external
+        view
+        returns (
+            //TODO, if SGP ignore invalid combo checks
+            ISportsAMMV2RiskManager.RiskStatus riskStatus,
+            bool[] memory isMarketOutOfLiquidity
+        )
+    {
         uint numOfMarkets = _tradeData.length;
         isMarketOutOfLiquidity = new bool[](numOfMarkets);
         bool isFutureOnParlay;
