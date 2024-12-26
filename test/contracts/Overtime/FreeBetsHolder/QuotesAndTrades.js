@@ -118,6 +118,35 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				);
 		});
 
+		it('Should pass system', async () => {
+			const quote = await sportsAMMV2.tradeQuoteSystem(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				collateralAddress,
+				false,
+				3
+			);
+
+			await freeBetsHolder
+				.connect(firstTrader)
+				.tradeSystemBet(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					collateralAddress,
+					3
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+			expect(await userTicket.isSystem()).to.be.equal(true);
+		});
+
 		it('Should pass live', async () => {
 			await sportsAMMV2RiskManager.setBatchLiveTradingPerSportAndTypeEnabled(
 				[SPORT_ID_NBA],

@@ -326,6 +326,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -504,6 +514,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -682,6 +702,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -974,6 +1004,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1152,6 +1192,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1330,6 +1380,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1423,6 +1483,11 @@
             "internalType": "bool",
             "name": "paused",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxAllowedSystemCombinations",
+            "type": "uint256"
           }
         ],
         "internalType": "struct SportsAMMV2Data.SportsAMMParameters",
@@ -1615,6 +1680,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1817,6 +1892,16 @@
             "internalType": "bool",
             "name": "isLive",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",

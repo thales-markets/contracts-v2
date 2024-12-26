@@ -35,6 +35,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     uint private constant ONE = 1e18;
     uint private constant MAX_APPROVAL = type(uint256).max;
+    uint8 private constant NON_SYSTEM_BET = 0;
 
     /* ========== STRUCT VARIABLES ========== */
     struct TradeDataInternal {
@@ -115,6 +116,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _isLive;
     }
 
+    struct TradeProcessingParams {
+        uint _totalQuote;
+        uint _payout;
+        uint _fees;
+        uint _addedPayoutPercentage;
+        uint _payoutWithFees;
+    }
+
     // declare that it can receive eth
     receive() external payable {}
 
@@ -190,6 +199,72 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             ISportsAMMV2RiskManager.RiskStatus riskStatus
         )
     {
+        (totalQuote, payout, fees, amountsToBuy, buyInAmountInDefaultCollateral, riskStatus) = _tradeQuoteCommon(
+            _tradeData,
+            _buyInAmount,
+            _collateral,
+            _isLive,
+            NON_SYSTEM_BET
+        );
+    }
+
+    /// @notice gets trade quote
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _collateral different collateral used for payment
+    /// @param _isLive whether this is a live bet
+    /// @param _systemBetDenominator the denominator for system bets
+    /// @return totalQuote total ticket quote
+    /// @return payout expected payout
+    /// @return fees ticket fees
+    /// @return amountsToBuy amounts per market
+    /// @return buyInAmountInDefaultCollateral buy-in amount in default collateral
+    /// @return riskStatus risk status
+    function tradeQuoteSystem(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        address _collateral,
+        bool _isLive,
+        uint8 _systemBetDenominator
+    )
+        external
+        view
+        returns (
+            uint totalQuote,
+            uint payout,
+            uint fees,
+            uint[] memory amountsToBuy,
+            uint buyInAmountInDefaultCollateral,
+            ISportsAMMV2RiskManager.RiskStatus riskStatus
+        )
+    {
+        (totalQuote, payout, fees, amountsToBuy, buyInAmountInDefaultCollateral, riskStatus) = _tradeQuoteCommon(
+            _tradeData,
+            _buyInAmount,
+            _collateral,
+            _isLive,
+            _systemBetDenominator
+        );
+    }
+
+    function _tradeQuoteCommon(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        address _collateral,
+        bool _isLive,
+        uint8 _systemBetDenominator
+    )
+        internal
+        view
+        returns (
+            uint totalQuote,
+            uint payout,
+            uint fees,
+            uint[] memory amountsToBuy,
+            uint buyInAmountInDefaultCollateral,
+            ISportsAMMV2RiskManager.RiskStatus riskStatus
+        )
+    {
         uint useAmount = _buyInAmount;
         buyInAmountInDefaultCollateral = _buyInAmount;
 
@@ -214,7 +289,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         (totalQuote, payout, fees, amountsToBuy, riskStatus) = _tradeQuote(
             _tradeData,
-            TradeDataQuoteInternal(useAmount, true, buyInAmountInDefaultCollateral, _collateral, _isLive)
+            TradeDataQuoteInternal(useAmount, true, buyInAmountInDefaultCollateral, _collateral, _isLive),
+            _systemBetDenominator
         );
     }
 
@@ -238,6 +314,64 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _collateral,
         bool _isEth
     ) external payable nonReentrant notPaused returns (address _createdTicket) {
+        _createdTicket = _tradeInternal(
+            _tradeData,
+            _buyInAmount,
+            _expectedQuote,
+            _additionalSlippage,
+            _referrer,
+            _collateral,
+            _isEth,
+            NON_SYSTEM_BET
+        );
+    }
+
+    /// @notice make a trade and create a ticket
+    /// @param _tradeData trade data with all market info needed for ticket
+    /// @param _buyInAmount ticket buy-in amount
+    /// @param _expectedQuote expected payout got from quote method
+    /// @param _additionalSlippage slippage tolerance
+    /// @param _referrer referrer to get referral fee
+    /// @param _collateral different collateral used for payment
+    /// @param _isEth pay with ETH
+    /// @param _systemBetDenominator minimum number of winning bets for a system bet
+    /// @return _createdTicket the address of the created ticket
+    function tradeSystemBet(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedQuote,
+        uint _additionalSlippage,
+        address _referrer,
+        address _collateral,
+        bool _isEth,
+        uint8 _systemBetDenominator
+    ) external payable nonReentrant notPaused returns (address _createdTicket) {
+        require(
+            _systemBetDenominator > 1 && _systemBetDenominator < _tradeData.length,
+            "_systemBetDenominator value out of range"
+        );
+        _createdTicket = _tradeInternal(
+            _tradeData,
+            _buyInAmount,
+            _expectedQuote,
+            _additionalSlippage,
+            _referrer,
+            _collateral,
+            _isEth,
+            _systemBetDenominator
+        );
+    }
+
+    function _tradeInternal(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedQuote,
+        uint _additionalSlippage,
+        address _referrer,
+        address _collateral,
+        bool _isEth,
+        uint8 _systemBetDenominator
+    ) internal returns (address _createdTicket) {
         require(_expectedQuote > 0 && _buyInAmount > 0, "Illegal input amounts");
 
         if (_referrer != address(0)) {
@@ -263,7 +397,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _collateral,
                 useLPpool,
                 collateralPriceInUSD
-            )
+            ),
+            _systemBetDenominator
         );
     }
 
@@ -309,7 +444,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _collateral,
                 useLPpool,
                 collateralPriceInUSD
-            )
+            ),
+            0
         );
     }
 
@@ -351,7 +487,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _tradeQuote(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        TradeDataQuoteInternal memory _tradeDataQuoteInternal
+        TradeDataQuoteInternal memory _tradeDataQuoteInternal,
+        uint8 _systemBetDenominator
     )
         internal
         view
@@ -382,11 +519,21 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             totalQuote = totalQuote == 0 ? marketOdds : (totalQuote * marketOdds) / ONE;
         }
         if (totalQuote != 0) {
+            if (_systemBetDenominator > 1) {
+                (payout, totalQuote) = riskManager.getMaxSystemBetPayout(
+                    _tradeData,
+                    _systemBetDenominator,
+                    _tradeDataQuoteInternal._buyInAmount,
+                    addedPayoutPercentage
+                );
+            } else {
+                payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
+            }
             if (totalQuote < maxSupportedOdds) {
                 totalQuote = maxSupportedOdds;
+                payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
             }
 
-            payout = (_tradeDataQuoteInternal._buyInAmount * ONE) / totalQuote;
             fees = _getFees(_tradeDataQuoteInternal._buyInAmount);
 
             if (_tradeDataQuoteInternal._shouldCheckRisks) {
@@ -451,14 +598,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _trade(
         ISportsAMMV2.TradeData[] memory _tradeData,
-        TradeDataInternal memory _tradeDataInternal
+        TradeDataInternal memory _tradeDataInternal,
+        uint8 _systemBetDenominator
     ) internal returns (address) {
-        uint totalQuote;
-        uint payout;
-        uint fees;
-        uint addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
+        TradeProcessingParams memory processingParams;
+        processingParams._addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataInternal._collateral];
+
         if (!_tradeDataInternal._isLive) {
-            (totalQuote, payout, fees, , ) = _tradeQuote(
+            (processingParams._totalQuote, processingParams._payout, processingParams._fees, , ) = _tradeQuote(
                 _tradeData,
                 TradeDataQuoteInternal(
                     _tradeDataInternal._buyInAmount,
@@ -466,51 +613,65 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     0,
                     _tradeDataInternal._collateral,
                     _tradeDataInternal._isLive
-                )
+                ),
+                _systemBetDenominator
             );
         } else {
-            totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
-            totalQuote = (totalQuote * ONE) / ((ONE + addedPayoutPercentage) - (addedPayoutPercentage * totalQuote) / ONE);
-            payout = (ONE * _tradeDataInternal._buyInAmount) / totalQuote;
-            fees = _getFees(_tradeDataInternal._buyInAmount);
+            processingParams._totalQuote = (ONE * _tradeDataInternal._buyInAmount) / _tradeDataInternal._expectedPayout;
+            processingParams._totalQuote =
+                (processingParams._totalQuote * ONE) /
+                ((ONE + processingParams._addedPayoutPercentage) -
+                    (processingParams._addedPayoutPercentage * processingParams._totalQuote) /
+                    ONE);
+            processingParams._payout = (ONE * _tradeDataInternal._buyInAmount) / processingParams._totalQuote;
+            processingParams._fees = _getFees(_tradeDataInternal._buyInAmount);
         }
 
-        uint payoutWithFees = payout + fees;
-        _checkRisksLimitsAndUpdateStakingVolume(_tradeData, totalQuote, payout, _tradeDataInternal);
+        processingParams._payoutWithFees = processingParams._payout + processingParams._fees;
 
-        // clone a ticket
-        Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData, addedPayoutPercentage);
+        checkRisksLimits(_tradeData, processingParams._totalQuote, processingParams._payout, _tradeDataInternal);
+
+        // Clone a ticket
+        Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData, processingParams._addedPayoutPercentage);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
         ticket.initialize(
             Ticket.TicketInit(
                 markets,
                 _tradeDataInternal._buyInAmount,
-                fees,
-                totalQuote,
+                processingParams._fees,
+                processingParams._totalQuote,
                 address(this),
                 _tradeDataInternal._recipient,
                 IERC20(_tradeDataInternal._collateral),
                 (block.timestamp + riskManager.expiryDuration()),
-                _tradeDataInternal._isLive
+                _tradeDataInternal._isLive,
+                _systemBetDenominator
             )
         );
+
         manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._recipient);
 
         ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
             address(ticket),
-            payoutWithFees - _tradeDataInternal._buyInAmount
+            processingParams._payoutWithFees - _tradeDataInternal._buyInAmount
         );
-        IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), payoutWithFees);
+        IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), processingParams._payoutWithFees);
 
-        emit NewTicket(markets, address(ticket), _tradeDataInternal._buyInAmount, payout, _tradeDataInternal._isLive);
+        emit NewTicket(
+            markets,
+            address(ticket),
+            _tradeDataInternal._buyInAmount,
+            processingParams._payout,
+            _tradeDataInternal._isLive
+        );
         emit TicketCreated(
             address(ticket),
             _tradeDataInternal._recipient,
             _tradeDataInternal._buyInAmount,
-            fees,
-            payout,
-            totalQuote,
+            processingParams._fees,
+            processingParams._payout,
+            processingParams._totalQuote,
             _tradeDataInternal._collateral
         );
 
@@ -533,7 +694,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     // Checks risk and updates Staking Volume
-    function _checkRisksLimitsAndUpdateStakingVolume(
+    function checkRisksLimits(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _totalQuote,
         uint _payout,
@@ -567,13 +728,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeDataInternal._additionalSlippage,
             _tradeData.length
         );
-        if (address(stakingThales) != address(0)) {
-            stakingThales.updateVolumeAtAmountDecimals(
-                _tradeDataInternal._recipient,
-                _buyInAmount,
-                defaultCollateralDecimals
-            );
-        }
     }
 
     function _getTicketMarkets(

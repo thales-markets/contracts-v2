@@ -20,6 +20,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint maxSupportedOdds;
         uint safeBoxFee;
         bool paused;
+        uint maxAllowedSystemCombinations;
     }
 
     struct MarketData {
@@ -59,6 +60,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isExercisable;
         uint finalPayout;
         bool isLive;
+        bool isSystem;
+        uint8 systemBetDenominator;
     }
 
     struct TicketMarketInfo {
@@ -95,7 +98,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 riskManager.maxSupportedAmount(),
                 riskManager.maxSupportedOdds(),
                 sportsAMM.safeBoxFee(),
-                sportsAMM.paused()
+                sportsAMM.paused(),
+                riskManager.maxAllowedSystemCombinations()
             );
     }
 
@@ -289,6 +293,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 marketsData[j] = _getMarketData(ticket, j);
                 marketsResult[j] = _getMarketResult(ticket, j);
             }
+            bool isSystem = sportsAMM.manager().isSystemTicket(address(ticket));
 
             tickets[i] = TicketData(
                 ticketsArray[i],
@@ -309,7 +314,9 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 ticket.isUserTheWinner(),
                 ticket.isTicketExercisable(),
                 ticket.finalPayout(),
-                ticket.isLive()
+                ticket.isLive(),
+                isSystem,
+                isSystem ? ticket.systemBetDenominator() : 0
             );
         }
         return tickets;
