@@ -41,7 +41,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -50,7 +51,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -62,7 +64,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			let checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				sameGameDifferentPlayersDifferentProps,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.InvalidCombination);
@@ -72,7 +75,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				sameGameDifferentPlayersDifferentProps,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -84,7 +88,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				sameGameSamePlayersDifferentProps,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.InvalidCombination);
@@ -96,7 +101,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataSameGames,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.InvalidCombination);
@@ -108,7 +114,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			let checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				sameGameWithFirstPlayerProps,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.InvalidCombination);
@@ -116,7 +123,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				sameGameWithSecondPlayerProps,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.InvalidCombination);
@@ -134,7 +142,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			const checkRisksDataRegular = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksDataRegular.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -144,7 +153,8 @@ describe('SportsAMMV2RiskManager Invalid Ticket Combination', () => {
 			const checkRisksDataInvalid = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksDataInvalid.riskStatus).to.equal(RISK_STATUS.InvalidCombination);

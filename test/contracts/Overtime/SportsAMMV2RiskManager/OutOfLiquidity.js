@@ -38,7 +38,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataCurrentRound,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -47,7 +48,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				BUY_IN_AMOUNT,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -56,7 +58,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataCurrentRound,
 				0,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.NoRisk);
@@ -81,7 +84,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);
@@ -123,7 +127,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);
@@ -147,7 +152,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);
@@ -199,7 +205,8 @@ describe('SportsAMMV2RiskManager Out Of Liquidity', () => {
 			const checkRisksData = await sportsAMMV2RiskManager.checkRisks(
 				tradeDataTenMarketsCurrentRound,
 				buyInAmount,
-				false
+				false,
+				0
 			);
 
 			expect(checkRisksData.riskStatus).to.equal(RISK_STATUS.OutOfLiquidity);
