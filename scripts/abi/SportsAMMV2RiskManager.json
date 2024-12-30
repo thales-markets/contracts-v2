@@ -742,6 +742,11 @@
         "internalType": "bool",
         "name": "_isLive",
         "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_systemBetDenominator",
+        "type": "uint8"
       }
     ],
     "name": "checkAndUpdateRisks",
@@ -877,6 +882,11 @@
         "internalType": "bool",
         "name": "_isLive",
         "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_systemBetDenominator",
+        "type": "uint8"
       }
     ],
     "name": "checkRisks",
