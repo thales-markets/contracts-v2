@@ -73,7 +73,7 @@
 		"ResolveBlockerImplementation": "0xd62f3Cc9a9414Fe1303386a511307b94cB57F124",
 		"ResolveBlockerProxyAdmin": "0x74e781ADdfC588aFf25c1A724b963E8A75f9a631",
 		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x9750d5D6E339aCbE9d6585E9AFe1b12d2773E6a9",
-		"FreeBetsHolderImplementation": "0x216ab2B991EF0F25696D268d3ab0f2e2cE435F8C"
+		"FreeBetsHolderImplementation": "0x19CB56810E23FA70d9692E590eAA471C240699CA"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
