@@ -928,5 +928,155 @@
 		"id": 11230,
 		"result_type": 2,
 		"name": "PROP_STEALS_PLUS_BLOCKS"
+	},
+	{
+		"id": 10221,
+		"result_type": 4,
+		"name": "CHILD_SPREAD_CORNERS"
+	},
+	{
+		"id": 10222,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_CORNERS"
+	},
+	{
+		"id": 10223,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_CORNERS"
+	},
+	{
+		"id": 10224,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_CORNERS"
+	},
+	{
+		"id": 10225,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_CORNERS_ODD_EVEN"
+	},
+	{
+		"id": 10226,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_CORNERS_FIRST_PERIOD"
+	},
+	{
+		"id": 10227,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_CORNERS_SECOND_PERIOD"
+	},
+	{
+		"id": 10228,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_CORNERS_FIRST_PERIOD"
+	},
+	{
+		"id": 10229,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_CORNERS_FIRST_PERIOD"
+	},
+	{
+		"id": 10230,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_CORNERS_SECOND_PERIOD"
+	},
+	{
+		"id": 10231,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_CORNERS_SECOND_PERIOD"
+	},
+	{
+		"id": 10232,
+		"result_type": 2,
+		"name": "CHILD_SPREAD_CORNERS_FIRST_PERIOD"
+	},
+	{
+		"id": 10233,
+		"result_type": 4,
+		"name": "CHILD_SPREAD_CORNERS_SECOND_PERIOD"
+	},
+	{
+		"id": 10234,
+		"result_type": 1,
+		"name": "CHILD_MOST_CORNERS"
+	},
+	{
+		"id": 10235,
+		"result_type": 1,
+		"name": "CHILD_MOST_CORNERS_FIRST_PERIOD"
+	},
+	{
+		"id": 10236,
+		"result_type": 1,
+		"name": "CHILD_MOST_CORNERS_SECOND_PERIOD"
+	},
+	{
+		"id": 10241,
+		"result_type": 4,
+		"name": "CHILD_SPREAD_CARDS_POINTS"
+	},
+	{
+		"id": 10242,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_CARDS_POINTS"
+	},
+	{
+		"id": 10243,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_CARD_POINTS"
+	},
+	{
+		"id": 10244,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_CARD_POINTS"
+	},
+	{
+		"id": 10245,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_RED_CARDS"
+	},
+	{
+		"id": 10246,
+		"result_type": 1,
+		"name": "CHILD_MOST_CARDS"
+	},
+	{
+		"id": 10247,
+		"result_type": 1,
+		"name": "CHILD_FIRST_CARD"
+	},
+	{
+		"id": 10248,
+		"result_type": 1,
+		"name": "CHILD_LAST_CARD"
+	},
+	{
+		"id": 11234,
+		"result_type": 2,
+		"name": "ANYTIME_CARD_RECEIVER"
+	},
+	{
+		"id": 11235,
+		"result_type": 2,
+		"name": "ANYTIME_RED_CARD_RECEIVER"
+	},
+	{
+		"id": 11236,
+		"result_type": 2,
+		"name": "FIRST_GOAL_SCORER"
+	},
+	{
+		"id": 11237,
+		"result_type": 2,
+		"name": "LAST_GOAL_SCORER"
+	},
+	{
+		"id": 11238,
+		"result_type": 2,
+		"name": "PROP_SHOTS_ON_TARGET"
+	},
+	{
+		"id": 11239,
+		"result_type": 2,
+		"name": "PROP_PLAYER_SHOTS"
 	}
 ]
