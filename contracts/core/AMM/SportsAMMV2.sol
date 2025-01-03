@@ -794,7 +794,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 collateralDecimals
             );
         }
-        riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount, _tradeDataInternal._isLive, _systemBetDenominator);
+        riskManager.checkAndUpdateRisks(
+            _tradeData,
+            _buyInAmount,
+            _tradeDataInternal._isLive,
+            _systemBetDenominator,
+            _tradeDataInternal._isSGP
+        );
         riskManager.checkLimits(
             _buyInAmount,
             _totalQuote,

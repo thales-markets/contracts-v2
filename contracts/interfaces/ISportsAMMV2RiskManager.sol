@@ -79,7 +79,8 @@ interface ISportsAMMV2RiskManager {
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
         bool _isLive,
-        uint8 _systemBetDenominator
+        uint8 _systemBetDenominator,
+        bool _isSGP
     ) external;
 
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure;

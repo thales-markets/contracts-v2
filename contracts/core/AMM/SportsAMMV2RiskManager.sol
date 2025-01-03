@@ -391,12 +391,15 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice check and update risks for ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
+    /// @param _isLive whether this ticket is live
     /// @param _systemBetDenominator in case of system bets, otherwise 0
+    /// @param _isSGP whether this ticket is SGP
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
         bool _isLive,
-        uint8 _systemBetDenominator
+        uint8 _systemBetDenominator,
+        bool _isSGP
     ) external onlySportsAMM(msg.sender) {
         uint numOfMarkets = _tradeData.length;
         bool isSystemBet = _systemBetDenominator > 1;
@@ -423,7 +426,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                     "Risk per market and position exceeded"
                 );
                 require(!_isRiskPerGameExceeded(marketTradeData, marketRiskAmount), "Risk per game exceeded");
-                require(!_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i), "Invalid combination detected");
+                require(
+                    _isSGP || !_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i),
+                    "Invalid combination detected"
+                );
                 _updateRisk(marketTradeData, marketRiskAmount);
             }
         }

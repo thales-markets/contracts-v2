@@ -143,6 +143,11 @@
         "internalType": "uint8",
         "name": "_systemBetDenominator",
         "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isSGP",
+        "type": "bool"
       }
     ],
     "name": "checkAndUpdateRisks",
