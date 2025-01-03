@@ -143,7 +143,8 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 				sportsAMMV2RiskManager.checkAndUpdateRisks(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
-					false
+					false,
+					0
 				)
 			).to.be.revertedWith('Only the AMM may perform these methods');
 		});

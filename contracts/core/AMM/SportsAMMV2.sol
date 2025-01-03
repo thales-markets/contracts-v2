@@ -557,6 +557,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint numOfMarkets = _tradeData.length;
         amountsToBuy = new uint[](numOfMarkets);
         uint maxSupportedOdds = riskManager.maxSupportedOdds();
+        bool isSystemBet = _systemBetDenominator > 1;
 
         uint addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataQuoteInternal._collateral];
 
@@ -569,11 +570,18 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             uint marketOdds = marketTradeData.odds[marketTradeData.position];
             marketOdds = (marketOdds * ONE) / ((ONE + addedPayoutPercentage) - (addedPayoutPercentage * marketOdds) / ONE);
 
-            amountsToBuy[i] = (ONE * _tradeDataQuoteInternal._buyInAmount) / marketOdds;
+            amountsToBuy[i] =
+                (ONE * _tradeDataQuoteInternal._buyInAmount) /
+                marketOdds -
+                _tradeDataQuoteInternal._buyInAmount;
+            if (isSystemBet) {
+                amountsToBuy[i] = (amountsToBuy[i] * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
+            }
+            // amounts to buy should be decreased by buyinamount
             totalQuote = totalQuote == 0 ? marketOdds : (totalQuote * marketOdds) / ONE;
         }
         if (totalQuote != 0) {
-            if (_systemBetDenominator > 1) {
+            if (isSystemBet) {
                 (payout, totalQuote) = riskManager.getMaxSystemBetPayout(
                     _tradeData,
                     _systemBetDenominator,
@@ -598,7 +606,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 (riskStatus, isMarketOutOfLiquidity) = riskManager.checkRisks(
                     _tradeData,
                     _tradeDataQuoteInternal._buyInAmountInDefaultCollateral,
-                    _tradeDataQuoteInternal._isLive
+                    _tradeDataQuoteInternal._isLive,
+                    _systemBetDenominator
                 );
 
                 for (uint i = 0; i < numOfMarkets; i++) {
@@ -688,7 +697,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         processingParams._payoutWithFees = processingParams._payout + processingParams._fees;
 
-        checkRisksLimits(_tradeData, processingParams._totalQuote, processingParams._payout, _tradeDataInternal);
+        checkRisksLimits(
+            _tradeData,
+            processingParams._totalQuote,
+            processingParams._payout,
+            _tradeDataInternal,
+            _systemBetDenominator
+        );
 
         // Clone a ticket
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData, processingParams._addedPayoutPercentage);
@@ -757,7 +772,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _totalQuote,
         uint _payout,
-        TradeDataInternal memory _tradeDataInternal
+        TradeDataInternal memory _tradeDataInternal,
+        uint8 _systemBetDenominator
     ) internal {
         uint _buyInAmount = _tradeDataInternal._buyInAmount;
         uint _collateralPriceInUSD = _tradeDataInternal._collateralPriceInUSD;
@@ -778,7 +794,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 collateralDecimals
             );
         }
-        riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount, _tradeDataInternal._isLive);
+        riskManager.checkAndUpdateRisks(_tradeData, _buyInAmount, _tradeDataInternal._isLive, _systemBetDenominator);
         riskManager.checkLimits(
             _buyInAmount,
             _totalQuote,

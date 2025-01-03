@@ -168,12 +168,14 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice check risk for ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
+    /// @param _systemBetDenominator in case of system bets, otherwise 0
     /// @return riskStatus risk status
     /// @return isMarketOutOfLiquidity array of boolean values that indicates if some market is out of liquidity
     function checkRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
-        bool _isLive
+        bool _isLive,
+        uint8 _systemBetDenominator
     )
         external
         view
@@ -186,6 +188,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint numOfMarkets = _tradeData.length;
         isMarketOutOfLiquidity = new bool[](numOfMarkets);
         bool isFutureOnParlay;
+        bool isSystemBet = _systemBetDenominator > 1;
 
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
@@ -197,6 +200,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             );
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
             uint marketRiskAmount = amountToBuy - _buyInAmount;
+            if (isSystemBet) {
+                marketRiskAmount = (marketRiskAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
+            }
 
             if (isFutureOnParlay || _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
                 riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
@@ -385,12 +391,16 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice check and update risks for ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
+    /// @param _systemBetDenominator in case of system bets, otherwise 0
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
-        bool _isLive
+        bool _isLive,
+        uint8 _systemBetDenominator
     ) external onlySportsAMM(msg.sender) {
-        for (uint i = 0; i < _tradeData.length; i++) {
+        uint numOfMarkets = _tradeData.length;
+        bool isSystemBet = _systemBetDenominator > 1;
+        for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
             require(!isSportIdFuture[marketTradeData.sportId] || _tradeData.length == 1, "Can't combine futures on parlays");
@@ -404,6 +414,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             uint amountToBuy = odds[position] == 0 ? 0 : (ONE * _buyInAmount) / odds[position];
             if (amountToBuy > _buyInAmount) {
                 uint marketRiskAmount = amountToBuy - _buyInAmount;
+                if (isSystemBet) {
+                    marketRiskAmount = (marketRiskAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
+                }
 
                 require(
                     !_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive),
