@@ -40,6 +40,7 @@ contract Ticket {
         uint _expiry;
         bool _isLive;
         uint8 _systemBetDenominator;
+        bool _isSGP;
     }
 
     ISportsAMMV2 public sportsAMM;
@@ -68,6 +69,8 @@ contract Ticket {
 
     uint8 public systemBetDenominator;
 
+    bool public isSGP;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the ticket contract
@@ -90,6 +93,7 @@ contract Ticket {
         createdAt = block.timestamp;
         systemBetDenominator = params._systemBetDenominator;
         isSystem = systemBetDenominator > 0;
+        isSGP = params._isSGP;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */

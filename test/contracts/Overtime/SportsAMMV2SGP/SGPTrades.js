@@ -18,6 +18,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolETH,
 		tradeDataThreeMarketsCurrentRound,
+		sameGameWithFirstPlayerProps,
 		firstLiquidityProvider,
 		firstTrader,
 		secondAccount,
@@ -34,6 +35,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
 			tradeDataThreeMarketsCurrentRound,
+			sameGameWithFirstPlayerProps,
 			sgpTradingProcessor,
 			mockChainlinkOracle,
 			weth,
@@ -47,34 +49,16 @@ describe('SportsAMMV2Live Live Trades', () => {
 			.connect(firstLiquidityProvider)
 			.deposit(ethers.parseEther('1000'));
 		await sportsAMMV2LiquidityPool.start();
-
-		await sportsAMMV2LiquidityPoolETH
-			.connect(firstLiquidityProvider)
-			.deposit(ethers.parseEther('1'));
-		await sportsAMMV2LiquidityPoolETH.start();
-
-		quote = await sportsAMMV2.tradeQuote(
-			tradeDataThreeMarketsCurrentRound,
-			BUY_IN_AMOUNT,
-			ZERO_ADDRESS,
-			false
-		);
-		quoteETH = await sportsAMMV2.tradeQuote(
-			tradeDataThreeMarketsCurrentRound,
-			ETH_BUY_IN_AMOUNT,
-			ZERO_ADDRESS,
-			false
-		);
 	});
 
 	describe('SGP Trade', () => {
 		it('Should buy a SGP trade', async () => {
-			expect(quote.payout).to.equal(ethers.parseEther('42.735042735042735042'));
+			let approvedQuote = ethers.parseEther('0.5');
 
 			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
 				_tradeData: tradeDataThreeMarketsCurrentRound,
 				_buyInAmount: BUY_IN_AMOUNT,
-				_expectedQuote: quote.totalQuote,
+				_expectedQuote: approvedQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
@@ -83,7 +67,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			let requestId = await sgpTradingProcessor.counterToRequestId(0);
 			console.log('requestId is ' + requestId);
 
-			await mockChainlinkOracle.fulfillSGPTrade(requestId, true, quote.totalQuote);
+			await mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote);
 
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];

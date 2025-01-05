@@ -407,6 +407,11 @@
             "internalType": "uint8",
             "name": "_systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "_isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct Ticket.TicketInit",
@@ -435,6 +440,19 @@
   {
     "inputs": [],
     "name": "isLive",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isSGP",
     "outputs": [
       {
         "internalType": "bool",

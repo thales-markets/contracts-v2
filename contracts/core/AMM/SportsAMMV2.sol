@@ -720,7 +720,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 IERC20(_tradeDataInternal._collateral),
                 (block.timestamp + riskManager.expiryDuration()),
                 _tradeDataInternal._isLive,
-                _systemBetDenominator
+                _systemBetDenominator,
+                _tradeDataInternal._isSGP
             )
         );
 
