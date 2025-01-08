@@ -33,7 +33,7 @@ describe('Exchange Thales for Over', () => {
 			const balanceOnExchange = await overToken.balanceOf(exchangeThalesForOver.target);
 
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).exchangeThalesForOver(exchangeAmount)
+				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(exchangeAmount)
 			).to.be.revertedWithCustomError(
 				overToken,
 				'ERC20InsufficientBalance(address,uint256,uint256)'
@@ -42,7 +42,7 @@ describe('Exchange Thales for Over', () => {
 			await overToken.connect(owner).transfer(exchangeThalesForOver.target, exchangeAmount);
 
 			// Perform exchange
-			await exchangeThalesForOver.connect(firstTrader).exchangeThalesForOver(exchangeAmount);
+			await exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(exchangeAmount);
 
 			// Get final balances
 			const finalThalesBalance = await thalesToken.balanceOf(firstTrader.address);
@@ -55,21 +55,21 @@ describe('Exchange Thales for Over', () => {
 
 		it('Should revert when exchange amount is zero', async () => {
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).exchangeThalesForOver(0)
+				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(0)
 			).to.be.revertedWithCustomError(exchangeThalesForOver, 'AmountIsZero()');
 		});
 
 		it('Should revert when user has insufficient balance', async () => {
 			const largeAmount = ethers.parseEther('1000000');
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).exchangeThalesForOver(largeAmount)
+				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(largeAmount)
 			).to.be.revertedWithCustomError(thalesToken, 'ERC20InsufficientAllowance');
 		});
 		it('Should revert when user has insufficient balance', async () => {
 			const largeAmount = ethers.parseEther('1000000');
 			await thalesToken.connect(firstTrader).approve(exchangeThalesForOver.target, largeAmount);
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).exchangeThalesForOver(largeAmount)
+				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(largeAmount)
 			).to.be.revertedWithCustomError(
 				thalesToken,
 				'ERC20InsufficientBalance(address,uint256,uint256)'
@@ -81,7 +81,7 @@ describe('Exchange Thales for Over', () => {
 			await exchangeThalesForOver.setPaused(true);
 
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).exchangeThalesForOver(exchangeAmount)
+				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(exchangeAmount)
 			).to.be.revertedWith('This action cannot be performed while the contract is paused');
 		});
 	});
@@ -111,7 +111,7 @@ describe('Exchange Thales for Over', () => {
 			const newAddress = secondAccount.address;
 			await exchangeThalesForOver.connect(owner).setThales(newAddress);
 
-			expect(await exchangeThalesForOver.Thales()).to.equal(newAddress);
+			expect(await exchangeThalesForOver.thalesToken()).to.equal(newAddress);
 		});
 
 		it('Should revert setThales if called by non-owner', async () => {
@@ -125,7 +125,7 @@ describe('Exchange Thales for Over', () => {
 			const newAddress = secondAccount.address;
 			await exchangeThalesForOver.connect(owner).setOver(newAddress);
 
-			expect(await exchangeThalesForOver.Over()).to.equal(newAddress);
+			expect(await exchangeThalesForOver.overToken()).to.equal(newAddress);
 		});
 
 		it('Should revert setOver if called by non-owner', async () => {
@@ -160,22 +160,22 @@ describe('Exchange Thales for Over', () => {
 	});
 
 	describe('Basic token information', () => {
-        it('Should return correct token name', async () => {
-            expect(await overToken.name()).to.equal('OVERtime Token');
-        });
+		it('Should return correct token name', async () => {
+			expect(await overToken.name()).to.equal('Overtime DAO Token');
+		});
 
-        it('Should return correct token symbol', async () => {
-            expect(await overToken.symbol()).to.equal('OVER');
-        });
+		it('Should return correct token symbol', async () => {
+			expect(await overToken.symbol()).to.equal('OVER');
+		});
 
-        it('Should return correct number of decimals', async () => {
-            expect(await overToken.decimals()).to.equal(18);
-        });
+		it('Should return correct number of decimals', async () => {
+			expect(await overToken.decimals()).to.equal(18);
+		});
 
-        it('Should have minted initial supply to treasury', async () => {
-            const expectedSupply = ethers.parseEther('69420000');
-            expect(await overToken.totalSupply()).to.equal(expectedSupply);
-            expect(await overToken.balanceOf(owner.address)).to.equal(expectedSupply);
-        });
-    });
+		it('Should have minted initial supply to treasury', async () => {
+			const expectedSupply = ethers.parseEther('69420000');
+			expect(await overToken.totalSupply()).to.equal(expectedSupply);
+			expect(await overToken.balanceOf(owner.address)).to.equal(expectedSupply);
+		});
+	});
 });

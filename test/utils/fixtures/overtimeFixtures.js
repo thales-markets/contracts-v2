@@ -71,15 +71,15 @@ async function deployTokenFixture() {
 
 	const collateralSixDecimals2 = await ExoticUSDC.deploy();
 
-	const OverToken = await ethers.getContractFactory('Over');
+	const OverToken = await ethers.getContractFactory('OverToken');
 	const overToken = await OverToken.deploy(owner.address);
 	const overTokenAddress = await overToken.getAddress();
 
-	const ThalesToken = await ethers.getContractFactory('ThalesToken');
-	const thalesToken = await ThalesToken.deploy(owner.address);
+	const ThalesToken = await ethers.getContractFactory('Thales');
+	const thalesToken = await ThalesToken.deploy();
 	const thalesTokenAddress = await thalesToken.getAddress();
 
-	const ExchangeThalesForOver = await ethers.getContractFactory('ExchangeThalesForOver');
+	const ExchangeThalesForOver = await ethers.getContractFactory('ThalesToOverMigration');
 	const exchangeThalesForOver = await ExchangeThalesForOver.deploy();
 	await exchangeThalesForOver
 		.connect(owner)

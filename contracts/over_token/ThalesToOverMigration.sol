@@ -13,29 +13,29 @@ import "../utils/proxy/ProxyReentrancyGuard.sol";
 
 error AmountIsZero();
 
-contract ExchangeThalesForOver is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
+contract ThalesToOverMigration is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
     address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
-    IERC20 public Thales;
-    IERC20 public Over;
+    IERC20 public thalesToken;
+    IERC20 public overToken;
 
     function initialize(address _owner, address _thalesAddress, address _overAddress) external initializer {
         setOwner(_owner);
         initNonReentrant();
 
-        Thales = IERC20(_thalesAddress);
-        Over = IERC20(_overAddress);
+        thalesToken = IERC20(_thalesAddress);
+        overToken = IERC20(_overAddress);
     }
 
     /// @notice Exchanges Thales tokens for Over tokens at a 1:1 ratio
     /// @param _amount The amount of Thales tokens to exchange for Over tokens
     /// @dev Burns the Thales tokens and transfers an equal amount of Over tokens to the sender
-    function exchangeThalesForOver(uint _amount) external nonReentrant notPaused {
+    function migrateThalesToOver(uint _amount) external nonReentrant notPaused {
         if (_amount == 0) revert AmountIsZero();
         // burn Thales
-        Thales.safeTransferFrom(msg.sender, BURN_ADDRESS, _amount);
+        thalesToken.safeTransferFrom(msg.sender, address(this), _amount);
         // send Over
-        Over.safeTransfer(msg.sender, _amount);
+        overToken.safeTransfer(msg.sender, _amount);
 
         emit ThalesToOverExchanged(msg.sender, _amount);
     }
@@ -51,14 +51,14 @@ contract ExchangeThalesForOver is Initializable, ProxyOwned, ProxyPausable, Prox
     /// @notice Updates the Thales token contract address
     /// @param _thalesAddress The new Thales token contract address
     function setThales(address _thalesAddress) external onlyOwner {
-        Thales = IERC20(_thalesAddress);
+        thalesToken = IERC20(_thalesAddress);
         emit SetThales(_thalesAddress);
     }
 
     /// @notice Updates the Over token contract address
     /// @param _overAddress The new Over token contract address
     function setOver(address _overAddress) external onlyOwner {
-        Over = IERC20(_overAddress);
+        overToken = IERC20(_overAddress);
         emit SetOver(_overAddress);
     }
 
