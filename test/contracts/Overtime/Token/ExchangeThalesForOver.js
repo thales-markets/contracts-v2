@@ -160,22 +160,22 @@ describe('Exchange Thales for Over', () => {
 	});
 
 	describe('Basic token information', () => {
-        it('Should return correct token name', async () => {
-            expect(await overToken.name()).to.equal('OVERtime Token');
-        });
+		it('Should return correct token name', async () => {
+			expect(await overToken.name()).to.equal('OVERtime Token');
+		});
 
-        it('Should return correct token symbol', async () => {
-            expect(await overToken.symbol()).to.equal('OVER');
-        });
+		it('Should return correct token symbol', async () => {
+			expect(await overToken.symbol()).to.equal('OVER');
+		});
 
-        it('Should return correct number of decimals', async () => {
-            expect(await overToken.decimals()).to.equal(18);
-        });
+		it('Should return correct number of decimals', async () => {
+			expect(await overToken.decimals()).to.equal(18);
+		});
 
-        it('Should have minted initial supply to treasury', async () => {
-            const expectedSupply = ethers.parseEther('69420000');
-            expect(await overToken.totalSupply()).to.equal(expectedSupply);
-            expect(await overToken.balanceOf(owner.address)).to.equal(expectedSupply);
-        });
-    });
+		it('Should have minted initial supply to treasury', async () => {
+			const expectedSupply = ethers.parseEther('69420000');
+			expect(await overToken.totalSupply()).to.equal(expectedSupply);
+			expect(await overToken.balanceOf(owner.address)).to.equal(expectedSupply);
+		});
+	});
 });

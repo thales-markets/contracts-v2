@@ -40,12 +40,12 @@ echo "Deploying WETH Liquidity Pool..."
 run_script "scripts/deployContracts/deployETHLiquidityPool/deploySportsAMMV2LiquidityPool.js"
 run_script "scripts/deployContracts/deployETHLiquidityPool/deployDefaultLiquidityProvider.js"
 
-# 6. THALES Liquidity Pool
-echo "Deploying THALES Liquidity Pool..."
-run_script "scripts/deployContracts/deployTHALESLiquidityPool/deploySportsAMMV2LiquidityPool.js"
-run_script "scripts/deployContracts/deployTHALESLiquidityPool/deployDefaultLiquidityProvider.js"
+# 7. OVER Liquidity Pool
+echo "Deploying OVER Liquidity Pool..."
+run_script "scripts/deployContracts/deployOVERLiquidityPool/deploySportsAMMV2LiquidityPool.js"
+run_script "scripts/deployContracts/deployOVERLiquidityPool/deployDefaultLiquidityProvider.js"
 
-# 7. Deploy OTP
+# 8. Deploy OTP
 echo "Deploying OTP..."
 run_script "scripts/deployUtils/deployOTP.js"
 
