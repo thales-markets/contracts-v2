@@ -11,11 +11,11 @@ import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../utils/proxy/ProxyReentrancyGuard.sol";
 
-error AmountIsZero();
-
 contract ThalesToOverMigration is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
-    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+
+    error AmountIsZero();
+
     IERC20 public thalesToken;
     IERC20 public overToken;
 
