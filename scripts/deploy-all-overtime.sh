@@ -45,6 +45,10 @@ echo "Deploying THALES Liquidity Pool..."
 run_script "scripts/deployContracts/deployTHALESLiquidityPool/deploySportsAMMV2LiquidityPool.js"
 run_script "scripts/deployContracts/deployTHALESLiquidityPool/deployDefaultLiquidityProvider.js"
 
+# 7. Deploy OTP
+echo "Deploying OTP..."
+run_script "scripts/deployUtils/deployOTP.js"
+
 echo "==================================================="
 echo "All deployments completed!"
 echo "==================================================="
