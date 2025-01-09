@@ -32,12 +32,15 @@ contract ThalesToOverMigration is Initializable, ProxyOwned, ProxyPausable, Prox
     /// @dev Burns the Thales tokens and transfers an equal amount of Over tokens to the sender
     function migrateThalesToOver(uint _amount) external nonReentrant notPaused {
         if (_amount == 0) revert AmountIsZero();
+
+        require(overToken.balanceOf(address(this)) >= _amount, "Insufficient OVER token balance");
+
         // burn Thales
         thalesToken.safeTransferFrom(msg.sender, address(this), _amount);
         // send Over
         overToken.safeTransfer(msg.sender, _amount);
 
-        emit ThalesToOverExchanged(msg.sender, _amount);
+        emit ThalesToOverMigrated(msg.sender, _amount);
     }
 
     /// @notice Allows the owner to withdraw any ERC20 tokens from the contract
@@ -62,7 +65,7 @@ contract ThalesToOverMigration is Initializable, ProxyOwned, ProxyPausable, Prox
         emit SetOver(_overAddress);
     }
 
-    event ThalesToOverExchanged(address indexed user, uint amount);
+    event ThalesToOverMigrated(address indexed user, uint amount);
     event SetThales(address indexed thalesAddress);
     event SetOver(address indexed overAddress);
     event WithdrawnCollateral(address indexed collateral, uint amount);

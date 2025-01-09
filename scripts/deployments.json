@@ -72,7 +72,8 @@
 		"ResolveBlocker": "0x13488544345346d6a61b4408eF5f936ec5C8c027",
 		"ResolveBlockerImplementation": "0xd62f3Cc9a9414Fe1303386a511307b94cB57F124",
 		"ResolveBlockerProxyAdmin": "0x74e781ADdfC588aFf25c1A724b963E8A75f9a631",
-		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x9750d5D6E339aCbE9d6585E9AFe1b12d2773E6a9"
+		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x9750d5D6E339aCbE9d6585E9AFe1b12d2773E6a9",
+		"OverTokenL2": "0xdDEDfAF154a0228cD15b2FDAaEc9F0ADA5fae2a2"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
@@ -198,5 +199,7 @@
 		"ResolveBlocker": "0x758c0fb1F629d0597b195B1653e2D656c5A55f53",
 		"ResolveBlockerImplementation": "0x619ba1500F922577e56a30178D93A93e4Ee13dC3",
 		"ResolveBlockerProxyAdmin": "0x59e28e3789ae8227596482857F7c8b5144607794"
-	}
+	},
+	"mainnet": { "OverToken": "0x3a48CC26aF23E109d14478Ba33B4E0eb62625a2C" },
+	"sepolia": { "OverToken": "0xA2dCFEe657Bc0a71AC31d146366246202eae18a4" }
 }

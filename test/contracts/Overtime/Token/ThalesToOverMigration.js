@@ -8,7 +8,7 @@ const {
 const { ZERO_ADDRESS } = require('../../../constants/general');
 const { ethers } = require('hardhat');
 
-describe('Exchange Thales for Over', () => {
+describe('Migrate Thales to Over', () => {
 	let overToken, exchangeThalesForOver, firstLiquidityProvider, owner, secondAccount, firstTrader;
 
 	beforeEach(async () => {
@@ -18,12 +18,12 @@ describe('Exchange Thales for Over', () => {
 			await loadFixture(deployAccountsFixture));
 	});
 
-	describe('Exchange Thales for Over', () => {
+	describe('Migrate Thales to Over', () => {
 		beforeEach(async () => {
 			await thalesToken.connect(owner).transfer(firstTrader.address, ethers.parseEther('1000'));
 		});
 
-		it('Exchange Thales for Over', async () => {
+		it('Migrate Thales to Over', async () => {
 			// Set up initial balances
 			const exchangeAmount = ethers.parseEther('100');
 			await thalesToken.connect(firstTrader).approve(exchangeThalesForOver.target, exchangeAmount);
@@ -34,10 +34,7 @@ describe('Exchange Thales for Over', () => {
 
 			await expect(
 				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(exchangeAmount)
-			).to.be.revertedWithCustomError(
-				overToken,
-				'ERC20InsufficientBalance(address,uint256,uint256)'
-			);
+			).to.be.revertedWith('Insufficient OVER token balance');
 
 			await overToken.connect(owner).transfer(exchangeThalesForOver.target, exchangeAmount);
 
@@ -63,17 +60,14 @@ describe('Exchange Thales for Over', () => {
 			const largeAmount = ethers.parseEther('1000000');
 			await expect(
 				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(largeAmount)
-			).to.be.revertedWithCustomError(thalesToken, 'ERC20InsufficientAllowance');
+			).to.be.revertedWith('Insufficient OVER token balance');
 		});
 		it('Should revert when user has insufficient balance', async () => {
 			const largeAmount = ethers.parseEther('1000000');
 			await thalesToken.connect(firstTrader).approve(exchangeThalesForOver.target, largeAmount);
 			await expect(
 				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(largeAmount)
-			).to.be.revertedWithCustomError(
-				thalesToken,
-				'ERC20InsufficientBalance(address,uint256,uint256)'
-			);
+			).to.be.revertedWith('Insufficient OVER token balance');
 		});
 
 		it('Should revert when contract is paused', async () => {
