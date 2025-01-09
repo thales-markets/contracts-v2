@@ -106,6 +106,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // store whether a sportId is a futures market type
     mapping(uint16 => bool) public isSportIdFuture;
 
+    // the maximum number of combinations on a system ticket
+    uint public maxAllowedSystemCombinations;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -165,16 +168,19 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice check risk for ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
+    /// @param _systemBetDenominator in case of system bets, otherwise 0
     /// @return riskStatus risk status
     /// @return isMarketOutOfLiquidity array of boolean values that indicates if some market is out of liquidity
     function checkRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
-        bool _isLive
+        bool _isLive,
+        uint8 _systemBetDenominator
     ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity) {
         uint numOfMarkets = _tradeData.length;
         isMarketOutOfLiquidity = new bool[](numOfMarkets);
         bool isFutureOnParlay;
+        bool isSystemBet = _systemBetDenominator > 1;
 
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
@@ -186,6 +192,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             );
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
             uint marketRiskAmount = amountToBuy - _buyInAmount;
+            if (isSystemBet) {
+                marketRiskAmount = (marketRiskAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
+            }
 
             if (isFutureOnParlay || _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
                 riskStatus = ISportsAMMV2RiskManager.RiskStatus.InvalidCombination;
@@ -266,17 +275,124 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
+    /**
+     * @notice Calculates the maximum system bet payout based on trade data, system bet denominator, and buy-in amount.
+     * @dev This function computes the payout for a system bet based on the provided data and conditions.
+     * @param _tradeData The array of trade data for the markets involved in the bet.
+     * @param _systemBetDenominator The system bet denominator to adjust the payout calculation.
+     * @param _buyInAmount The amount of collateral staked by the user in the system bet.
+     * @param _addedPayoutPercentage The bonus payout in case THALES is used
+     * @return systemBetPayout The calculated payout amount based on the input parameters.
+     * @return systemBetQuote The calculated quote odds based on the input parameters.
+     */
+    function getMaxSystemBetPayout(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint8 _systemBetDenominator,
+        uint _buyInAmount,
+        uint _addedPayoutPercentage
+    ) external view returns (uint systemBetPayout, uint systemBetQuote) {
+        uint8[][] memory systemCombinations = generateCombinations(uint8(_tradeData.length), _systemBetDenominator);
+        uint totalCombinations = systemCombinations.length;
+
+        require(totalCombinations <= maxAllowedSystemCombinations, "maxAllowedSystemCombinations exceeded");
+
+        uint buyinPerCombination = ((_buyInAmount * ONE) / totalCombinations) / ONE;
+
+        // Loop through each stored combination
+        for (uint i = 0; i < totalCombinations; i++) {
+            uint8[] memory currentCombination = systemCombinations[i];
+
+            uint combinationQuote;
+
+            for (uint8 j = 0; j < currentCombination.length; j++) {
+                uint8 marketIndex = currentCombination[j];
+                uint odds = _tradeData[marketIndex].odds[_tradeData[marketIndex].position];
+                odds = (odds * ONE) / ((ONE + _addedPayoutPercentage) - (_addedPayoutPercentage * odds) / ONE);
+                combinationQuote = combinationQuote == 0 ? odds : (combinationQuote * odds) / ONE;
+            }
+
+            if (combinationQuote > 0) {
+                uint combinationPayout = (buyinPerCombination * ONE) / combinationQuote;
+                systemBetPayout += combinationPayout;
+            }
+        }
+        systemBetQuote = (ONE * _buyInAmount) / systemBetPayout;
+    }
+
+    /* ========== SYSTEM BET UTILS ========== */
+
+    /**
+     * @notice Generates all unique combinations of size `k` from a set of integers {0, 1, ..., n-1}.
+     * @dev Uses `uint8` to reduce gas costs since `n` is guaranteed to be <= 15.
+     * @param n The size of the set (must be greater than `k`).
+     * @param k The size of each combination (must be greater than 1 and less than `n`).
+     * @return combinations A 2D array where each sub-array is a unique combination of `k` integers.
+     */
+    function generateCombinations(uint8 n, uint8 k) public pure returns (uint8[][] memory) {
+        require(k > 1 && k < n, "k has to be greater than 1 and less than n");
+
+        // Calculate the number of combinations: n! / (k! * (n-k)!)
+        uint combinationsCount = 1;
+        for (uint8 i = 0; i < k; i++) {
+            combinationsCount = (combinationsCount * (n - i)) / (i + 1);
+        }
+
+        // Initialize combinations array
+        uint8[][] memory combinations = new uint8[][](combinationsCount);
+
+        // Generate combinations
+        uint8[] memory indices = new uint8[](k);
+        for (uint8 i = 0; i < k; i++) {
+            indices[i] = i;
+        }
+
+        uint index = 0;
+
+        while (true) {
+            // Add the current combination
+            uint8[] memory combination = new uint8[](k);
+            for (uint8 i = 0; i < k; i++) {
+                combination[i] = indices[i];
+            }
+            combinations[index] = combination;
+            index++;
+
+            // Generate the next combination
+            bool done = true;
+            for (uint8 i = k; i > 0; i--) {
+                if (indices[i - 1] < n - (k - (i - 1))) {
+                    indices[i - 1]++;
+                    for (uint8 j = i; j < k; j++) {
+                        indices[j] = indices[j - 1] + 1;
+                    }
+                    done = false;
+                    break;
+                }
+            }
+
+            if (done) {
+                break;
+            }
+        }
+
+        return combinations;
+    }
+
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice check and update risks for ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
+    /// @param _systemBetDenominator in case of system bets, otherwise 0
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
-        bool _isLive
+        bool _isLive,
+        uint8 _systemBetDenominator
     ) external onlySportsAMM(msg.sender) {
-        for (uint i = 0; i < _tradeData.length; i++) {
+        uint numOfMarkets = _tradeData.length;
+        bool isSystemBet = _systemBetDenominator > 1;
+        for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
             require(!isSportIdFuture[marketTradeData.sportId] || _tradeData.length == 1, "Can't combine futures on parlays");
@@ -290,6 +406,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             uint amountToBuy = odds[position] == 0 ? 0 : (ONE * _buyInAmount) / odds[position];
             if (amountToBuy > _buyInAmount) {
                 uint marketRiskAmount = amountToBuy - _buyInAmount;
+                if (isSystemBet) {
+                    marketRiskAmount = (marketRiskAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
+                }
 
                 require(
                     !_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive),
@@ -732,13 +851,21 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint _minBuyInAmount,
         uint _maxTicketSize,
         uint _maxSupportedAmount,
-        uint _maxSupportedOdds
+        uint _maxSupportedOdds,
+        uint _maxAllowedSystemCombinations
     ) external onlyOwner {
         minBuyInAmount = _minBuyInAmount;
         maxTicketSize = _maxTicketSize;
         maxSupportedAmount = _maxSupportedAmount;
         maxSupportedOdds = _maxSupportedOdds;
-        emit TicketParamsUpdated(_minBuyInAmount, _maxTicketSize, _maxSupportedAmount, _maxSupportedOdds);
+        maxAllowedSystemCombinations = _maxAllowedSystemCombinations;
+        emit TicketParamsUpdated(
+            _minBuyInAmount,
+            _maxTicketSize,
+            _maxSupportedAmount,
+            _maxSupportedOdds,
+            _maxAllowedSystemCombinations
+        );
     }
 
     /// @notice sets different times/periods
@@ -830,7 +957,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetSportsAMM(address sportsAMM);
     event SetLiveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId, bool _enabled);
     event SetCombiningPerSportEnabled(uint _sportID, bool _enabled);
-    event TicketParamsUpdated(uint minBuyInAmount, uint maxTicketSize, uint maxSupportedAmount, uint maxSupportedOdds);
+    event TicketParamsUpdated(
+        uint minBuyInAmount,
+        uint maxTicketSize,
+        uint maxSupportedAmount,
+        uint maxSupportedOdds,
+        uint maxAllowedSystemCombinations
+    );
     event TimesUpdated(uint minimalTimeLeftToMaturity, uint expiryDuration);
 
     event SetLiveCapDivider(uint _sportId, uint _divider);

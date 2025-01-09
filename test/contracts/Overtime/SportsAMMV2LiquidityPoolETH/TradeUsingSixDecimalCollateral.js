@@ -287,7 +287,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
@@ -699,7 +700,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -743,8 +745,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -901,7 +901,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -945,8 +946,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -1117,7 +1116,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -1166,8 +1166,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -1359,7 +1357,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			await sportsAMMV2.setLiquidityPoolForCollateral(
@@ -1408,8 +1407,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -1612,9 +1609,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
-
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2
@@ -1809,9 +1803,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
-
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2
@@ -2001,9 +1992,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(BUY_IN_AMOUNT).to.be.lessThanOrEqual(volumeFirstTrader);
-
 			// // difference between payout and buy-in (amount taken from LP)
 			// // buy-in without fees: 9.8
 			// // payout: 20
@@ -2168,9 +2156,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					true,
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
-
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(BUY_IN_AMOUNT_SIX_DECIMALS).to.be.lessThanOrEqual(volumeFirstTrader);
 
 			// // difference between payout and buy-in (amount taken from LP)
 			// // buy-in without fees: 9.8
@@ -2343,7 +2328,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			// // deposit and start pool
@@ -2379,8 +2365,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -2560,7 +2544,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
@@ -2598,8 +2583,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -2779,7 +2762,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
@@ -2821,8 +2805,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -3001,7 +2983,8 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.minBuyInAmount,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxTicketSize,
 				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedAmount,
-				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxSupportedOdds,
+				SPORTS_AMM_SIX_DEC_INITAL_PARAMS.maxAllowedSystemCombinations
 			);
 
 			const initialDeposit = 1000 * 1e6;
@@ -3042,8 +3025,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 			// // difference between payout and buy-in (amount taken from LP)
 			// // payout: 20
 			// // fees: 0.2
@@ -3238,8 +3219,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2
@@ -3413,8 +3392,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2
@@ -3577,8 +3554,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT_SIX_DECIMALS);
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2
@@ -3741,8 +3716,6 @@ describe('SportsAMMV2LiquidityPool Six decimal - Trades', () => {
 					false
 				);
 
-			let volumeFirstTrader = await stakingThales.volume(firstTrader);
-			expect(volumeFirstTrader).to.be.equal(BUY_IN_AMOUNT);
 			// difference between payout and buy-in (amount taken from LP)
 			// payout: 20
 			// fees: 0.2

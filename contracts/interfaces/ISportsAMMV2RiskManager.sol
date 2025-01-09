@@ -41,6 +41,8 @@ interface ISportsAMMV2RiskManager {
 
     function maxSupportedOdds() external view returns (uint);
 
+    function maxAllowedSystemCombinations() external view returns (uint);
+
     function expiryDuration() external view returns (uint);
 
     function liveTradingPerSportAndTypeEnabled(uint _sportId, uint _typeId) external view returns (bool _enabled);
@@ -58,7 +60,8 @@ interface ISportsAMMV2RiskManager {
     function checkRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
-        bool _isLive
+        bool _isLive,
+        uint8 _systemBetDenominator
     ) external view returns (ISportsAMMV2RiskManager.RiskStatus riskStatus, bool[] memory isMarketOutOfLiquidity);
 
     function checkLimits(
@@ -72,9 +75,23 @@ interface ISportsAMMV2RiskManager {
 
     function spentOnGame(bytes32 _gameId) external view returns (uint);
 
-    function checkAndUpdateRisks(ISportsAMMV2.TradeData[] memory _tradeData, uint _buyInAmount, bool _isLive) external;
+    function checkAndUpdateRisks(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint _buyInAmount,
+        bool _isLive,
+        uint8 _systemBetDenominator
+    ) external;
 
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure;
 
     function isSportIdFuture(uint16 _sportsId) external view returns (bool);
+
+    function getMaxSystemBetPayout(
+        ISportsAMMV2.TradeData[] memory _tradeData,
+        uint8 _systemBetDenominator,
+        uint _buyInAmount,
+        uint _addedPayoutPercentage
+    ) external view returns (uint systemBetPayout, uint systemBetQuote);
+
+    function generateCombinations(uint8 n, uint8 k) external pure returns (uint8[][] memory);
 }

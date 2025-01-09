@@ -125,6 +125,47 @@ describe('StakingThalesBettingProxy', () => {
 				firstTrader
 			);
 			expect(activeTickets.length).to.equal(1);
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+			expect(await userTicket.isSystem()).to.be.equal(false);
+		});
+
+		it('Should pass system', async () => {
+			await stakingThales.connect(firstTrader).stake(ethers.parseEther('100')); // Ensure enough staked
+
+			const quote = await sportsAMMV2.tradeQuoteSystem(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				collateralTHALESAddress,
+				false,
+				3
+			);
+
+			await stakingThalesBettingProxy
+				.connect(firstTrader)
+				.tradeSystemBet(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					collateralTHALESAddress,
+					3
+				);
+
+			const activeTickets = await stakingThalesBettingProxy.getActiveTicketsPerUser(
+				0,
+				1,
+				firstTrader
+			);
+			expect(activeTickets.length).to.equal(1);
+
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+			expect(await userTicket.isSystem()).to.be.equal(true);
 		});
 
 		it('Should pass live', async () => {

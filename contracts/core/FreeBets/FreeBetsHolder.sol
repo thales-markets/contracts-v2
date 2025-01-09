@@ -98,6 +98,19 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
     }
 
+    /// @notice buy a system bet ticket for a user if he has enough free bet in given collateral
+    function tradeSystemBet(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedQuote,
+        uint _additionalSlippage,
+        address _referrer,
+        address _collateral,
+        uint8 _systemBetDenominator
+    ) external notPaused nonReentrant canTrade(msg.sender, _collateral, _buyInAmount) {
+        _trade(_tradeData, _buyInAmount, _expectedQuote, _additionalSlippage, _referrer, _collateral, _systemBetDenominator);
+    }
+
     /// @notice buy a ticket for a user if he has enough free bet in given collateral
     function trade(
         ISportsAMMV2.TradeData[] calldata _tradeData,
@@ -107,16 +120,42 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _referrer,
         address _collateral
     ) external notPaused nonReentrant canTrade(msg.sender, _collateral, _buyInAmount) {
+        _trade(_tradeData, _buyInAmount, _expectedQuote, _additionalSlippage, _referrer, _collateral, 0);
+    }
+
+    function _trade(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _expectedQuote,
+        uint _additionalSlippage,
+        address _referrer,
+        address _collateral,
+        uint8 _systemBetDenominator
+    ) internal {
         balancePerUserAndCollateral[msg.sender][_collateral] -= _buyInAmount;
-        address _createdTicket = sportsAMM.trade(
-            _tradeData,
-            _buyInAmount,
-            _expectedQuote,
-            _additionalSlippage,
-            _referrer,
-            _collateral,
-            false
-        );
+        address _createdTicket;
+        if (_systemBetDenominator > 0) {
+            _createdTicket = sportsAMM.tradeSystemBet(
+                _tradeData,
+                _buyInAmount,
+                _expectedQuote,
+                _additionalSlippage,
+                _referrer,
+                _collateral,
+                false,
+                _systemBetDenominator
+            );
+        } else {
+            _createdTicket = sportsAMM.trade(
+                _tradeData,
+                _buyInAmount,
+                _expectedQuote,
+                _additionalSlippage,
+                _referrer,
+                _collateral,
+                false
+            );
+        }
         ticketToUser[_createdTicket] = msg.sender;
         activeTicketsPerUser[msg.sender].add(_createdTicket);
         emit FreeBetTrade(_createdTicket, _buyInAmount, msg.sender, false);
@@ -171,11 +210,14 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (_exercized > 0) {
             IERC20 _collateral = Ticket(_resolvedTicket).collateral();
             uint buyInAmount = Ticket(_resolvedTicket).buyInAmount();
-            balancePerUserAndCollateral[_user][address(_collateral)] += buyInAmount;
-
-            _earned = _exercized - buyInAmount;
-            if (_earned > 0) {
-                _collateral.safeTransfer(_user, _earned);
+            if (_exercized >= buyInAmount) {
+                balancePerUserAndCollateral[_user][address(_collateral)] += buyInAmount;
+                _earned = _exercized - buyInAmount;
+                if (_earned > 0) {
+                    _collateral.safeTransfer(_user, _earned);
+                }
+            } else {
+                balancePerUserAndCollateral[_user][address(_collateral)] += _exercized;
             }
         }
         emit FreeBetTicketResolved(_resolvedTicket, _user, _earned);

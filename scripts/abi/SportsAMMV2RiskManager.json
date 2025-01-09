@@ -428,6 +428,12 @@
         "internalType": "uint256",
         "name": "maxSupportedOdds",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxAllowedSystemCombinations",
+        "type": "uint256"
       }
     ],
     "name": "TicketParamsUpdated",
@@ -736,6 +742,11 @@
         "internalType": "bool",
         "name": "_isLive",
         "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_systemBetDenominator",
+        "type": "uint8"
       }
     ],
     "name": "checkAndUpdateRisks",
@@ -871,6 +882,11 @@
         "internalType": "bool",
         "name": "_isLive",
         "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_systemBetDenominator",
+        "type": "uint8"
       }
     ],
     "name": "checkRisks",
@@ -992,6 +1008,143 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "n",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "k",
+        "type": "uint8"
+      }
+    ],
+    "name": "generateCombinations",
+    "outputs": [
+      {
+        "internalType": "uint8[][]",
+        "name": "",
+        "type": "uint8[][]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "_tradeData",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_systemBetDenominator",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_addedPayoutPercentage",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMaxSystemBetPayout",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "systemBetPayout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "systemBetQuote",
         "type": "uint256"
       }
     ],
@@ -1218,6 +1371,19 @@
         "internalType": "contract ISportsAMMV2Manager",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxAllowedSystemCombinations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1879,6 +2045,11 @@
       {
         "internalType": "uint256",
         "name": "_maxSupportedOdds",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxAllowedSystemCombinations",
         "type": "uint256"
       }
     ],
