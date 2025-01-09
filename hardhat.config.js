@@ -13,7 +13,7 @@ const PRIVATE_KEY = vars.get('PRIVATE_KEY');
 const INFURA = vars.get('INFURA');
 const OP_ETHERSCAN_KEY = vars.get('OP_ETHERSCAN_KEY');
 const ARB_ETHERSCAN_KEY = vars.get('ARB_ETHERSCAN_KEY');
-const ETHERSCAN_KEY = vars.get('ETHERSCAN_KEY');
+const ETHERSCAN_KEY = vars.get('OP_ETHERSCAN_KEY');
 const REPORT_GAS = vars.get('REPORT_GAS');
 
 module.exports = {
