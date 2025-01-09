@@ -79,12 +79,12 @@ async function deployTokenFixture() {
 	const thalesToken = await ThalesToken.deploy();
 	const thalesTokenAddress = await thalesToken.getAddress();
 
-	const ExchangeThalesForOver = await ethers.getContractFactory('ThalesToOverMigration');
-	const exchangeThalesForOver = await ExchangeThalesForOver.deploy();
-	await exchangeThalesForOver
+	const ThalesToOverMigration = await ethers.getContractFactory('ThalesToOverMigration');
+	const thalesToOverMigration = await ThalesToOverMigration.deploy();
+	await thalesToOverMigration
 		.connect(owner)
 		.initialize(owner.address, thalesTokenAddress, overTokenAddress);
-	const exchangeThalesForOverAddress = await exchangeThalesForOver.getAddress();
+	const thalesToOverMigrationAddress = await thalesToOverMigration.getAddress();
 
 	return {
 		collateral,
@@ -94,7 +94,7 @@ async function deployTokenFixture() {
 		collateralTHALES,
 		overToken,
 		thalesToken,
-		exchangeThalesForOver,
+		thalesToOverMigration,
 	};
 }
 
@@ -118,7 +118,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralTHALES,
 		overToken,
 		thalesToken,
-		exchangeThalesForOver,
+		thalesToOverMigration,
 	} = await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
 	const collateralTHALESAddress = await collateralTHALES.getAddress();
@@ -870,7 +870,7 @@ async function deploySportsAMMV2Fixture() {
 		stakingThalesBettingProxy,
 		resolveBlocker,
 		resolveBlockerAddress,
-		exchangeThalesForOver,
+		thalesToOverMigration,
 		overToken,
 		thalesToken,
 	};

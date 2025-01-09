@@ -120,7 +120,7 @@
         "type": "address"
       }
     ],
-    "name": "SetOver",
+    "name": "SetOverToken",
     "type": "event"
   },
   {
@@ -133,7 +133,7 @@
         "type": "address"
       }
     ],
-    "name": "SetThales",
+    "name": "SetThalesToken",
     "type": "event"
   },
   {
@@ -310,7 +310,7 @@
         "type": "address"
       }
     ],
-    "name": "setOver",
+    "name": "setOverToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -349,7 +349,7 @@
         "type": "address"
       }
     ],
-    "name": "setThales",
+    "name": "setThalesToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

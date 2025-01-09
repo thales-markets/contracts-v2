@@ -53,20 +53,20 @@ contract ThalesToOverMigration is Initializable, ProxyOwned, ProxyPausable, Prox
 
     /// @notice Updates the Thales token contract address
     /// @param _thalesAddress The new Thales token contract address
-    function setThales(address _thalesAddress) external onlyOwner {
+    function setThalesToken(address _thalesAddress) external onlyOwner {
         thalesToken = IERC20(_thalesAddress);
-        emit SetThales(_thalesAddress);
+        emit SetThalesToken(_thalesAddress);
     }
 
     /// @notice Updates the Over token contract address
     /// @param _overAddress The new Over token contract address
-    function setOver(address _overAddress) external onlyOwner {
+    function setOverToken(address _overAddress) external onlyOwner {
         overToken = IERC20(_overAddress);
-        emit SetOver(_overAddress);
+        emit SetOverToken(_overAddress);
     }
 
     event ThalesToOverMigrated(address indexed user, uint amount);
-    event SetThales(address indexed thalesAddress);
-    event SetOver(address indexed overAddress);
+    event SetThalesToken(address indexed thalesAddress);
+    event SetOverToken(address indexed overAddress);
     event WithdrawnCollateral(address indexed collateral, uint amount);
 }

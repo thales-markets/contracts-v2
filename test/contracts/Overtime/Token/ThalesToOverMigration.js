@@ -9,10 +9,10 @@ const { ZERO_ADDRESS } = require('../../../constants/general');
 const { ethers } = require('hardhat');
 
 describe('Migrate Thales to Over', () => {
-	let overToken, exchangeThalesForOver, firstLiquidityProvider, owner, secondAccount, firstTrader;
+	let overToken, thalesToOverMigration, firstLiquidityProvider, owner, secondAccount, firstTrader;
 
 	beforeEach(async () => {
-		({ overToken, thalesToken, exchangeThalesForOver } =
+		({ overToken, thalesToken, thalesToOverMigration } =
 			await loadFixture(deploySportsAMMV2Fixture));
 		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
@@ -26,20 +26,20 @@ describe('Migrate Thales to Over', () => {
 		it('Migrate Thales to Over', async () => {
 			// Set up initial balances
 			const exchangeAmount = ethers.parseEther('100');
-			await thalesToken.connect(firstTrader).approve(exchangeThalesForOver.target, exchangeAmount);
+			await thalesToken.connect(firstTrader).approve(thalesToOverMigration.target, exchangeAmount);
 			// Get initial balances
 			const initialThalesBalance = await thalesToken.balanceOf(firstTrader.address);
 			const initialOverBalance = await overToken.balanceOf(firstTrader.address);
-			const balanceOnExchange = await overToken.balanceOf(exchangeThalesForOver.target);
+			const balanceOnExchange = await overToken.balanceOf(thalesToOverMigration.target);
 
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(exchangeAmount)
+				thalesToOverMigration.connect(firstTrader).migrateThalesToOver(exchangeAmount)
 			).to.be.revertedWith('Insufficient OVER token balance');
 
-			await overToken.connect(owner).transfer(exchangeThalesForOver.target, exchangeAmount);
+			await overToken.connect(owner).transfer(thalesToOverMigration.target, exchangeAmount);
 
 			// Perform exchange
-			await exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(exchangeAmount);
+			await thalesToOverMigration.connect(firstTrader).migrateThalesToOver(exchangeAmount);
 
 			// Get final balances
 			const finalThalesBalance = await thalesToken.balanceOf(firstTrader.address);
@@ -52,30 +52,30 @@ describe('Migrate Thales to Over', () => {
 
 		it('Should revert when exchange amount is zero', async () => {
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(0)
-			).to.be.revertedWithCustomError(exchangeThalesForOver, 'AmountIsZero()');
+				thalesToOverMigration.connect(firstTrader).migrateThalesToOver(0)
+			).to.be.revertedWithCustomError(thalesToOverMigration, 'AmountIsZero()');
 		});
 
 		it('Should revert when user has insufficient balance', async () => {
 			const largeAmount = ethers.parseEther('1000000');
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(largeAmount)
+				thalesToOverMigration.connect(firstTrader).migrateThalesToOver(largeAmount)
 			).to.be.revertedWith('Insufficient OVER token balance');
 		});
 		it('Should revert when user has insufficient balance', async () => {
 			const largeAmount = ethers.parseEther('1000000');
-			await thalesToken.connect(firstTrader).approve(exchangeThalesForOver.target, largeAmount);
+			await thalesToken.connect(firstTrader).approve(thalesToOverMigration.target, largeAmount);
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(largeAmount)
+				thalesToOverMigration.connect(firstTrader).migrateThalesToOver(largeAmount)
 			).to.be.revertedWith('Insufficient OVER token balance');
 		});
 
 		it('Should revert when contract is paused', async () => {
 			const exchangeAmount = ethers.parseEther('100');
-			await exchangeThalesForOver.setPaused(true);
+			await thalesToOverMigration.setPaused(true);
 
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).migrateThalesToOver(exchangeAmount)
+				thalesToOverMigration.connect(firstTrader).migrateThalesToOver(exchangeAmount)
 			).to.be.revertedWith('This action cannot be performed while the contract is paused');
 		});
 	});
@@ -84,11 +84,11 @@ describe('Migrate Thales to Over', () => {
 		it('Should allow owner to withdraw collateral', async () => {
 			const amount = ethers.parseEther('100');
 			// Transfer some tokens to the contract first
-			await overToken.connect(owner).transfer(exchangeThalesForOver.target, amount);
+			await overToken.connect(owner).transfer(thalesToOverMigration.target, amount);
 
 			const initialBalance = await overToken.balanceOf(owner.address);
 
-			await exchangeThalesForOver.connect(owner).withdrawCollateral(overToken.target, amount);
+			await thalesToOverMigration.connect(owner).withdrawCollateral(overToken.target, amount);
 
 			const finalBalance = await overToken.balanceOf(owner.address);
 			expect(finalBalance).to.equal(initialBalance + amount);
@@ -97,35 +97,35 @@ describe('Migrate Thales to Over', () => {
 		it('Should revert withdrawCollateral if called by non-owner', async () => {
 			const amount = ethers.parseEther('100');
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).withdrawCollateral(overToken.target, amount)
+				thalesToOverMigration.connect(firstTrader).withdrawCollateral(overToken.target, amount)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 
 		it('Should allow owner to set new Thales address', async () => {
 			const newAddress = secondAccount.address;
-			await exchangeThalesForOver.connect(owner).setThales(newAddress);
+			await thalesToOverMigration.connect(owner).setThalesToken(newAddress);
 
-			expect(await exchangeThalesForOver.thalesToken()).to.equal(newAddress);
+			expect(await thalesToOverMigration.thalesToken()).to.equal(newAddress);
 		});
 
 		it('Should revert setThales if called by non-owner', async () => {
 			const newAddress = secondAccount.address;
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).setThales(newAddress)
+				thalesToOverMigration.connect(firstTrader).setThalesToken(newAddress)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 
 		it('Should allow owner to set new Over address', async () => {
 			const newAddress = secondAccount.address;
-			await exchangeThalesForOver.connect(owner).setOver(newAddress);
+			await thalesToOverMigration.connect(owner).setOverToken(newAddress);
 
-			expect(await exchangeThalesForOver.overToken()).to.equal(newAddress);
+			expect(await thalesToOverMigration.overToken()).to.equal(newAddress);
 		});
 
 		it('Should revert setOver if called by non-owner', async () => {
 			const newAddress = secondAccount.address;
 			await expect(
-				exchangeThalesForOver.connect(firstTrader).setOver(newAddress)
+				thalesToOverMigration.connect(firstTrader).setOverToken(newAddress)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 
@@ -134,21 +134,21 @@ describe('Migrate Thales to Over', () => {
 			const newAddress = secondAccount.address;
 
 			// Test SetThales event
-			await expect(exchangeThalesForOver.connect(owner).setThales(newAddress))
-				.to.emit(exchangeThalesForOver, 'SetThales')
+			await expect(thalesToOverMigration.connect(owner).setThalesToken(newAddress))
+				.to.emit(thalesToOverMigration, 'SetThalesToken')
 				.withArgs(newAddress);
 
 			// Test SetOver event
-			await expect(exchangeThalesForOver.connect(owner).setOver(newAddress))
-				.to.emit(exchangeThalesForOver, 'SetOver')
+			await expect(thalesToOverMigration.connect(owner).setOverToken(newAddress))
+				.to.emit(thalesToOverMigration, 'SetOverToken')
 				.withArgs(newAddress);
 
 			// Transfer some tokens to test WithdrawnCollateral event
-			await overToken.connect(owner).transfer(exchangeThalesForOver.target, amount);
+			await overToken.connect(owner).transfer(thalesToOverMigration.target, amount);
 			await expect(
-				exchangeThalesForOver.connect(owner).withdrawCollateral(overToken.target, amount)
+				thalesToOverMigration.connect(owner).withdrawCollateral(overToken.target, amount)
 			)
-				.to.emit(exchangeThalesForOver, 'WithdrawnCollateral')
+				.to.emit(thalesToOverMigration, 'WithdrawnCollateral')
 				.withArgs(overToken.target, amount);
 		});
 	});
