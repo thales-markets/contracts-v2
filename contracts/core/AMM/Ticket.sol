@@ -204,6 +204,11 @@ contract Ticket {
                     markets[i].combinedPositions
                 );
                 if (isCancelledMarketPosition) {
+                    //TODO: if a SGP, cancel the whole ticket if any of the legs are cancelled
+                    if (isSGP) {
+                        isCancelled = true;
+                        break;
+                    }
                     finalPayout = (finalPayout * markets[i].odd) / ONE;
                 } else {
                     isCancelled = false;
