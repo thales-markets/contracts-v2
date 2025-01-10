@@ -45,9 +45,6 @@ echo "Deploying OVER Liquidity Pool..."
 run_script "scripts/deployContracts/deployOVERLiquidityPool/deploySportsAMMV2LiquidityPool.js"
 run_script "scripts/deployContracts/deployOVERLiquidityPool/deployDefaultLiquidityProvider.js"
 
-# 8. Deploy OTP
-echo "Deploying OTP..."
-run_script "scripts/deployUtils/deployOTP.js"
 
 echo "==================================================="
 echo "All deployments completed!"

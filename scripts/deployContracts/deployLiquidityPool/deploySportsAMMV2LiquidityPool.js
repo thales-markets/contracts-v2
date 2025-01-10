@@ -17,12 +17,12 @@ async function main() {
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const addressManagerAddress = getTargetAddress('AddressManager', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
-	const maxAllowedDeposit = '300000000000';
+	const maxAllowedDeposit = '2000000000000';
 	const minDepositAmount = '100000000';
 	const maxAllowedUsers = 100;
 	const week = 7 * 24 * 60 * 60;
-	const utilizationRate = ethers.parseEther('0.5');
-	const safeBoxImpact = ethers.parseEther('0.2');
+	const utilizationRate = ethers.parseEther('0.3');
+	const safeBoxImpact = ethers.parseEther('0.3');
 
 	const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 	const sportsAMMV2LiquidityPoolDeployed = await upgrades.deployProxy(
