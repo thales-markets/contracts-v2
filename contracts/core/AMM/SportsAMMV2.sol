@@ -816,7 +816,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 
-        if (ticketOwner == freeBetsHolder || ticketOwner == stakingThalesBettingProxy) {
+        if (ticketOwner == freeBetsHolder) {
             IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
         }
         if (!ticket.cancelled()) {
