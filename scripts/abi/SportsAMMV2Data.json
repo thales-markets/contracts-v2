@@ -781,6 +781,40 @@
         "type": "bytes32[]"
       },
       {
+        "internalType": "uint16[]",
+        "name": "_sportIds",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "uint16[]",
+        "name": "_typeIds",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_maturities",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getCapsPerMarkets",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "caps",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      },
+      {
         "internalType": "uint256",
         "name": "_startIndex",
         "type": "uint256"
@@ -1424,6 +1458,40 @@
         "internalType": "int24[][]",
         "name": "resultsForMarkets",
         "type": "int24[][]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_typeIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_playerIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_positions",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getRiskOnMarkets",
+    "outputs": [
+      {
+        "internalType": "int256[]",
+        "name": "riskAmounts",
+        "type": "int256[]"
       }
     ],
     "stateMutability": "view",

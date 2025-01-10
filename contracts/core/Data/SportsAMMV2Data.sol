@@ -283,6 +283,35 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         }
     }
 
+    function getRiskOnMarkets(
+        bytes32[] calldata _gameIds,
+        uint[] calldata _typeIds,
+        uint[] calldata _playerIds,
+        uint[] calldata _positions
+    ) external view returns (int[] memory riskAmounts) {
+        riskAmounts = new int[](_gameIds.length);
+        for (uint i = 0; i < _gameIds.length; i++) {
+            riskAmounts[i] = riskManager.riskPerMarketTypeAndPosition(
+                _gameIds[i],
+                _typeIds[i],
+                _playerIds[i],
+                _positions[i]
+            );
+        }
+    }
+
+    function getCapsPerMarkets(
+        bytes32[] calldata _gameIds,
+        uint16[] calldata _sportIds,
+        uint16[] calldata _typeIds,
+        uint[] calldata _maturities
+    ) external view returns (uint[] memory caps) {
+        caps = new uint[](_gameIds.length);
+        for (uint i = 0; i < _gameIds.length; i++) {
+            caps[i] = riskManager.calculateCapToBeUsed(_gameIds[i], _sportIds[i], _typeIds[i], 0, 0, _maturities[i], false);
+        }
+    }
+
     function _getTicketsData(address[] memory ticketsArray) internal view returns (TicketData[] memory) {
         TicketData[] memory tickets = new TicketData[](ticketsArray.length);
         for (uint i = 0; i < ticketsArray.length; i++) {
