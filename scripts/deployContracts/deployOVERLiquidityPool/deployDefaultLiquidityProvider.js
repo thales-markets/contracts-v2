@@ -1,32 +1,78 @@
-const { ethers } = require('hardhat');
-const { getTargetAddress, setTargetAddress } = require('../../helpers');
+const { ethers, upgrades } = require('hardhat');
+const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../../helpers');
 
 async function main() {
-	const networkName = hre.network.name;
-	const [deployer] = await ethers.getSigners();
+	let accounts = await ethers.getSigners();
+	let owner = accounts[0];
+	let networkObj = await ethers.provider.getNetwork();
+	let network = networkObj.name;
 
-	console.log('Deploying DefaultLiquidityProvider for OVER with the account:', deployer.address);
+	console.log('Owner is:', owner.address);
+	console.log('Network:', network);
 
-	const DefaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
+	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
+	const overCollateralAddress = getTargetAddress('OVER', network);
+	const sportsAMMV2LiquidityPoolAddress = getTargetAddress('SportsAMMV2LiquidityPoolWETH', network);
 
-	const liquidityPool = await getTargetAddress('SportsAMMV2OVERLiquidityPool', networkName);
-	const overToken = await getTargetAddress('OVER', networkName);
-
-	const defaultLiquidityProvider = await DefaultLiquidityProvider.deploy(liquidityPool, overToken);
-
-	await defaultLiquidityProvider.deployed();
-
-	console.log('DefaultLiquidityProvider deployed to:', defaultLiquidityProvider.address);
-	setTargetAddress(
-		'SportsAMMV2OVERDefaultLiquidityProvider',
-		networkName,
-		defaultLiquidityProvider.address
+	const defaultLiquidityProvider = await ethers.getContractFactory('DefaultLiquidityProvider');
+	const defaultLiquidityProviderDeployed = await upgrades.deployProxy(
+		defaultLiquidityProvider,
+		[owner.address, sportsAMMV2LiquidityPoolAddress, overCollateralAddress],
+		{ initialOwner: protocolDAOAddress }
 	);
+	await defaultLiquidityProviderDeployed.waitForDeployment();
+
+	const defaultLiquidityProviderAddress = await defaultLiquidityProviderDeployed.getAddress();
+
+	console.log('DefaultLiquidityProvider deployed on:', defaultLiquidityProviderAddress);
+	setTargetAddress('DefaultLiquidityProviderWETH', network, defaultLiquidityProviderAddress);
+	await delay(5000);
+
+	const defaultLiquidityProviderImplementationAddress = await getImplementationAddress(
+		ethers.provider,
+		defaultLiquidityProviderAddress
+	);
+	console.log(
+		'DefaultLiquidityProvider Implementation:',
+		defaultLiquidityProviderImplementationAddress
+	);
+	setTargetAddress(
+		'DefaultLiquidityProviderImplementationOVER',
+		network,
+		defaultLiquidityProviderImplementationAddress
+	);
+
+	const defaultLiquidityProviderProxyAdminAddress = await getAdminAddress(
+		ethers.provider,
+		defaultLiquidityProviderAddress
+	);
+	console.log('DefaultLiquidityProvider Proxy Admin:', defaultLiquidityProviderProxyAdminAddress);
+	setTargetAddress(
+		'DefaultLiquidityProviderProxyAdminOVER',
+		network,
+		defaultLiquidityProviderProxyAdminAddress
+	);
+
+	if (isTestNetwork(networkObj.chainId)) {
+		const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
+		const sportsAMMV2LiquidityPoolDeployed = sportsAMMV2LiquidityPool.attach(
+			sportsAMMV2LiquidityPoolAddress
+		);
+		await sportsAMMV2LiquidityPoolDeployed.setDefaultLiquidityProvider(
+			defaultLiquidityProviderAddress,
+			{
+				from: owner.address,
+			}
+		);
+		console.log('DefaultLiquidityProvider set in SportsAMMV2LiquidityPool');
+	}
+
+	await delay(5000);
 
 	try {
 		await hre.run('verify:verify', {
-			address: defaultLiquidityProvider.address,
-			constructorArguments: [liquidityPool, overToken],
+			address: defaultLiquidityProviderAddress,
 		});
 	} catch (e) {
 		console.log(e);
