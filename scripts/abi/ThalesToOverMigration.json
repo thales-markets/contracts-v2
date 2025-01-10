@@ -120,7 +120,7 @@
         "type": "address"
       }
     ],
-    "name": "SetOver",
+    "name": "SetOverToken",
     "type": "event"
   },
   {
@@ -133,7 +133,7 @@
         "type": "address"
       }
     ],
-    "name": "SetThales",
+    "name": "SetThalesToken",
     "type": "event"
   },
   {
@@ -152,7 +152,7 @@
         "type": "uint256"
       }
     ],
-    "name": "ThalesToOverExchanged",
+    "name": "ThalesToOverMigrated",
     "type": "event"
   },
   {
@@ -176,59 +176,7 @@
   },
   {
     "inputs": [],
-    "name": "BURN_ADDRESS",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "Over",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "Thales",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "acceptOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "exchangeThalesForOver",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -279,6 +227,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "migrateThalesToOver",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_owner",
         "type": "address"
@@ -295,6 +256,19 @@
     "outputs": [
       {
         "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "overToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
         "name": "",
         "type": "address"
       }
@@ -336,7 +310,7 @@
         "type": "address"
       }
     ],
-    "name": "setOver",
+    "name": "setOverToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -375,9 +349,22 @@
         "type": "address"
       }
     ],
-    "name": "setThales",
+    "name": "setThalesToken",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "thalesToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

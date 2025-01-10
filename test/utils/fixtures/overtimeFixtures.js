@@ -71,20 +71,20 @@ async function deployTokenFixture() {
 
 	const collateralSixDecimals2 = await ExoticUSDC.deploy();
 
-	const OverToken = await ethers.getContractFactory('Over');
+	const OverToken = await ethers.getContractFactory('OverToken');
 	const overToken = await OverToken.deploy(owner.address);
 	const overTokenAddress = await overToken.getAddress();
 
-	const ThalesToken = await ethers.getContractFactory('ThalesToken');
-	const thalesToken = await ThalesToken.deploy(owner.address);
+	const ThalesToken = await ethers.getContractFactory('Thales');
+	const thalesToken = await ThalesToken.deploy();
 	const thalesTokenAddress = await thalesToken.getAddress();
 
-	const ExchangeThalesForOver = await ethers.getContractFactory('ExchangeThalesForOver');
-	const exchangeThalesForOver = await ExchangeThalesForOver.deploy();
-	await exchangeThalesForOver
+	const ThalesToOverMigration = await ethers.getContractFactory('ThalesToOverMigration');
+	const thalesToOverMigration = await ThalesToOverMigration.deploy();
+	await thalesToOverMigration
 		.connect(owner)
 		.initialize(owner.address, thalesTokenAddress, overTokenAddress);
-	const exchangeThalesForOverAddress = await exchangeThalesForOver.getAddress();
+	const thalesToOverMigrationAddress = await thalesToOverMigration.getAddress();
 
 	return {
 		collateral,
@@ -94,7 +94,7 @@ async function deployTokenFixture() {
 		collateralTHALES,
 		overToken,
 		thalesToken,
-		exchangeThalesForOver,
+		thalesToOverMigration,
 	};
 }
 
@@ -118,7 +118,7 @@ async function deploySportsAMMV2Fixture() {
 		collateralTHALES,
 		overToken,
 		thalesToken,
-		exchangeThalesForOver,
+		thalesToOverMigration,
 	} = await deployTokenFixture();
 	const collateralAddress = await collateral.getAddress();
 	const collateralTHALESAddress = await collateralTHALES.getAddress();
@@ -880,7 +880,7 @@ async function deploySportsAMMV2Fixture() {
 		stakingThalesBettingProxy,
 		resolveBlocker,
 		resolveBlockerAddress,
-		exchangeThalesForOver,
+		thalesToOverMigration,
 		overToken,
 		thalesToken,
 	};
