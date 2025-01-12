@@ -26,7 +26,7 @@ async function main() {
 	const defaultLiquidityProviderAddress = await defaultLiquidityProviderDeployed.getAddress();
 
 	console.log('DefaultLiquidityProvider deployed on:', defaultLiquidityProviderAddress);
-	setTargetAddress('DefaultLiquidityProviderWETH', network, defaultLiquidityProviderAddress);
+	setTargetAddress('DefaultLiquidityProviderOVER', network, defaultLiquidityProviderAddress);
 	await delay(5000);
 
 	const defaultLiquidityProviderImplementationAddress = await getImplementationAddress(
