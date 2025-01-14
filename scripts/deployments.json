@@ -143,7 +143,10 @@
 		"SportsAMMV2LiquidityPoolProxyAdminOVER": "0xAbaEEE9BB0b1A996E26A545dF565c0E544e67533",
 		"DefaultLiquidityProviderOVER": "0x3088f15c9908dcD44e302b52120F84D208a04B00",
 		"DefaultLiquidityProviderImplementationOVER": "0x02443C24a84Dd7211A8131c2aE0aA7f5F343cf64",
-		"DefaultLiquidityProviderProxyAdminOVER": "0x562588953D23726872f1111bDb97028C2c066dc5"
+		"DefaultLiquidityProviderProxyAdminOVER": "0x562588953D23726872f1111bDb97028C2c066dc5",
+		"ThalesToOverMigration": "0xd71841fcF6F5862Ceb69d8432800D0A02B1d3cb6",
+		"ThalesToOverMigrationImplementation": "0x362cD574f50FfeeFeE05c2094BC10C10E077c54d",
+		"ThalesToOverMigrationProxyAdmin": "0x81d80885876cc528E755Df3AF7CE8DbDF25D5d24"
 	},
 	"arbitrumOne": {
 		"ProtocolDAO": "0x0089282AC624BbBDA7eC472d63ee99643d7eDf4a",
@@ -213,7 +216,10 @@
 		"SportsAMMV2LiquidityPoolProxyAdminOVER": "0xa93afD6ed98034aF38E5e293f897e4978c06c459",
 		"DefaultLiquidityProviderOVER": "0x220527AAE4BE461a04429d3D483052440E11Fc92",
 		"DefaultLiquidityProviderImplementationOVER": "0x482610a1c1f8C5057bca7ed1a5148C00d868d020",
-		"DefaultLiquidityProviderProxyAdminOVER": "0x112C8A01fC9Cfa324cb16FE7a41CB22d671929aE"
+		"DefaultLiquidityProviderProxyAdminOVER": "0x112C8A01fC9Cfa324cb16FE7a41CB22d671929aE",
+		"ThalesToOverMigration": "0xb308f26b7dc1eCdB52ce05dceb10818c41BA75E8",
+		"ThalesToOverMigrationImplementation": "0xD6Ef945F0B81B2A8EEce84a1Da2b691aB13Ad0c2",
+		"ThalesToOverMigrationProxyAdmin": "0xBC418cf09A6F173Bc7ed72A70F5b9C0d34E3dbF9"
 	},
 	"baseMainnet": {
 		"ProtocolDAO": "0xf334412B96FE4a9Fc0a93D6297574a3b30217E64",
@@ -264,7 +270,10 @@
 		"SportsAMMV2LiquidityPoolProxyAdminOVER": "0x0Bd34be27d081162A3Ec337D683c67707Dfada1F",
 		"DefaultLiquidityProviderOVER": "0xf6446317f3aA199fCE22F7EB0e57D813BAA4d571",
 		"DefaultLiquidityProviderImplementationOVER": "0x32077d9F7BF3994f3A0E905b3EefF34410eCA9A5",
-		"DefaultLiquidityProviderProxyAdminOVER": "0x94579254E453a7c66FDd37C0DcE7eC7571059Dac"
+		"DefaultLiquidityProviderProxyAdminOVER": "0x94579254E453a7c66FDd37C0DcE7eC7571059Dac",
+		"ThalesToOverMigration": "0x2152A0bC2DE4a1D4FA1E81F60e094C44ec24Fe2D",
+		"ThalesToOverMigrationImplementation": "0xA67A7A3d0C3166feEA63944f70870a7C115a5516",
+		"ThalesToOverMigrationProxyAdmin": "0x2856eBb943A3587F9c7e2D5f83B90CBF6cD8f73D"
 	},
 	"mainnet": { "OVER": "0x3a48CC26aF23E109d14478Ba33B4E0eb62625a2C" },
 	"sepolia": { "OVER": "0xA2dCFEe657Bc0a71AC31d146366246202eae18a4" }
