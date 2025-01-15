@@ -45,6 +45,17 @@ echo "Deploying OVER Liquidity Pool..."
 run_script "scripts/deployContracts/deployOVERLiquidityPool/deploySportsAMMV2LiquidityPool.js"
 run_script "scripts/deployContracts/deployOVERLiquidityPool/deployDefaultLiquidityProvider.js"
 
+# 8. Oracle Infrastructure
+echo "Deploying Oracle Infrastructure..."
+run_script "scripts/deployContracts/deployChainlinkResolver.js"
+
+# 9. Trading Infrastructure
+echo "Deploying Trading Infrastructure..."
+run_script "scripts/deployContracts/deployLiveTradingProcessor.js"
+
+# 10. Additional Components
+echo "Deploying Additional Components..."
+run_script "scripts/deployContracts/deployFreeBetsHolder.js"
 
 echo "==================================================="
 echo "All deployments completed!"
