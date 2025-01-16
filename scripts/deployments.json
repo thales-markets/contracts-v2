@@ -273,7 +273,15 @@
 		"DefaultLiquidityProviderProxyAdminOVER": "0x94579254E453a7c66FDd37C0DcE7eC7571059Dac",
 		"ThalesToOverMigration": "0x2152A0bC2DE4a1D4FA1E81F60e094C44ec24Fe2D",
 		"ThalesToOverMigrationImplementation": "0xA67A7A3d0C3166feEA63944f70870a7C115a5516",
-		"ThalesToOverMigrationProxyAdmin": "0x2856eBb943A3587F9c7e2D5f83B90CBF6cD8f73D"
+		"ThalesToOverMigrationProxyAdmin": "0x2856eBb943A3587F9c7e2D5f83B90CBF6cD8f73D",
+		"OvertimePaymentToken": "0x149459AD88d23d2ce0F4F1371203Db2122331d94",
+		"ChainlinkResolver": "0x34d38CD05886F0A9B15B8ab9fB393FF739494E0C",
+		"LiveTradingProcessor": "0x64598450396494faDd5ebaC9906CF5169a2B3e0a",
+		"FreeBetsHolder": "0x2929Cf1edAc2DB91F68e2822CEc25736cAe029bf",
+		"FreeBetsHolderImplementation": "0x4e6B4cDE4ecBaE4c11630bBba708C4a0609c7774",
+		"FreeBetsHolderProxyAdmin": "0xa70Fab4899fCFbDc3a838b4730047101517b722A",
+		"MultiCollateralOnOffRampUSDC": "0x9e8dDCcd5AF4A25712Cd7Bd3De24e931AeC1CE16",
+		"MultiCollateralOnOffRampImplementationUSDC": "0xe52340277315CF227C53284E91A942469FA7484d"
 	},
 	"mainnet": { "OVER": "0x3a48CC26aF23E109d14478Ba33B4E0eb62625a2C" },
 	"sepolia": { "OVER": "0xA2dCFEe657Bc0a71AC31d146366246202eae18a4" }
