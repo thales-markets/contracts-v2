@@ -282,7 +282,8 @@
 		"FreeBetsHolderImplementation": "0x4e6B4cDE4ecBaE4c11630bBba708C4a0609c7774",
 		"FreeBetsHolderProxyAdmin": "0xa70Fab4899fCFbDc3a838b4730047101517b722A",
 		"MultiCollateralOnOffRampUSDC": "0x9e8dDCcd5AF4A25712Cd7Bd3De24e931AeC1CE16",
-		"MultiCollateralOnOffRampImplementationUSDC": "0xe52340277315CF227C53284E91A942469FA7484d"
+		"MultiCollateralOnOffRampImplementationUSDC": "0xe52340277315CF227C53284E91A942469FA7484d",
+		"SwapRouterThales": "0xeA05705e26C8aabeA407994ea5e9D84db217e78C"
 	},
 	"mainnet": {
 		"OVER": "0x3a48CC26aF23E109d14478Ba33B4E0eb62625a2C",
