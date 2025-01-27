@@ -152,6 +152,14 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address[] memory ticketsArray = sportsAMM.manager().getActiveTicketsPerUser(_startIndex, _pageSize, user);
         ticketsData = _getTicketsData(ticketsArray);
         freeBetsData = _getTicketsData(freeBetsArray);
+        if (address(sportsAMM.stakingThalesBettingProxy()) != address(0)) {
+            address[] memory stakingBettingProxyArray = sportsAMM.stakingThalesBettingProxy().getActiveTicketsPerUser(
+                _startIndex,
+                _pageSize,
+                user
+            );
+            stakingBettingProxyData = _getTicketsData(stakingBettingProxyArray);
+        }
     }
 
     /**
@@ -181,6 +189,14 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address[] memory ticketsArray = sportsAMM.manager().getResolvedTicketsPerUser(_startIndex, _pageSize, user);
         ticketsData = _getTicketsData(ticketsArray);
         freeBetsData = _getTicketsData(freeBetsArray);
+        if (address(sportsAMM.stakingThalesBettingProxy()) != address(0)) {
+            address[] memory stakingBettingProxyArray = sportsAMM.stakingThalesBettingProxy().getActiveTicketsPerUser(
+                _startIndex,
+                _pageSize,
+                user
+            );
+            stakingBettingProxyData = _getTicketsData(stakingBettingProxyArray);
+        }
     }
 
     /**
