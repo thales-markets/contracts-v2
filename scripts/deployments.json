@@ -286,7 +286,8 @@
 		"SwapRouterThales": "0xeA05705e26C8aabeA407994ea5e9D84db217e78C",
 		"ResolveBlocker": "0xe9E88dA0Ae53F5bBA1871b4bb18A182bae093ece",
 		"ResolveBlockerImplementation": "0x7cbEB69734504E9121907da2c4e1c814268e201d",
-		"ResolveBlockerProxyAdmin": "0xaEa8DF07Da384C2b16EE10D8557AAfb900917A4d"
+		"ResolveBlockerProxyAdmin": "0xaEa8DF07Da384C2b16EE10D8557AAfb900917A4d",
+		"SafeBoxBuyback": "0xd5679539c29eEBe69347acE5DEef867b19dba7b7"
 	},
 	"mainnet": {
 		"OVER": "0x3a48CC26aF23E109d14478Ba33B4E0eb62625a2C",
