@@ -16,7 +16,7 @@ async function main() {
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
 	const sportsAMMV2RiskManagerAddress = getTargetAddress('SportsAMMV2RiskManager', network);
 	const sportsAMMV2ResultManagerAddress = getTargetAddress('SportsAMMV2ResultManager', network);
-	const stakingThalesAddress = getTargetAddress('StakingThales', network);
+	const stakingThalesAddress = '0x0000000000000000000000000000000000000000';
 	const referralsAddress = getTargetAddress('Referrals', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
 

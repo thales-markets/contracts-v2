@@ -12,17 +12,17 @@ async function main() {
 	console.log('Network:', network);
 
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
-	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
-	const collateralKey = ethers.encodeBytes32String('USDC');
+	const overCollateralAddress = getTargetAddress('OVER', network);
+	const collateralKey = ethers.encodeBytes32String('OVER');
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const addressManagerAddress = getTargetAddress('AddressManager', network);
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
-	const maxAllowedDeposit = '2000000000000';
-	const minDepositAmount = '100000000';
+	const maxAllowedDeposit = ethers.parseEther('2000000');
+	const minDepositAmount = ethers.parseEther('20');
 	const maxAllowedUsers = 100;
 	const week = 7 * 24 * 60 * 60;
-	const utilizationRate = ethers.parseEther('0.3');
-	const safeBoxImpact = ethers.parseEther('0.3');
+	const utilizationRate = ethers.parseEther('0.9');
+	const safeBoxImpact = ethers.parseEther('0.2');
 
 	const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
 	const sportsAMMV2LiquidityPoolDeployed = await upgrades.deployProxy(
@@ -32,7 +32,7 @@ async function main() {
 				_owner: owner.address,
 				_sportsAMM: sportsAMMV2Address,
 				_addressManager: addressManagerAddress,
-				_collateral: defaultCollateralAddress,
+				_collateral: overCollateralAddress,
 				_collateralKey: collateralKey,
 				_roundLength: week,
 				_maxAllowedDeposit: maxAllowedDeposit,
@@ -50,7 +50,7 @@ async function main() {
 	const sportsAMMV2LiquidityPoolAddress = await sportsAMMV2LiquidityPoolDeployed.getAddress();
 
 	console.log('SportsAMMV2LiquidityPool deployed on:', sportsAMMV2LiquidityPoolAddress);
-	setTargetAddress('SportsAMMV2LiquidityPool', network, sportsAMMV2LiquidityPoolAddress);
+	setTargetAddress('SportsAMMV2LiquidityPoolOVER', network, sportsAMMV2LiquidityPoolAddress);
 	await delay(5000);
 
 	const sportsAMMV2LiquidityPoolImplementationAddress = await getImplementationAddress(
@@ -62,7 +62,7 @@ async function main() {
 		sportsAMMV2LiquidityPoolImplementationAddress
 	);
 	setTargetAddress(
-		'SportsAMMV2LiquidityPoolImplementation',
+		'SportsAMMV2LiquidityPoolImplementationOVER',
 		network,
 		sportsAMMV2LiquidityPoolImplementationAddress
 	);
@@ -73,7 +73,7 @@ async function main() {
 	);
 	console.log('SportsAMMV2LiquidityPool Proxy Admin:', sportsAMMV2LiquidityPoolProxyAdminAddress);
 	setTargetAddress(
-		'SportsAMMV2LiquidityPoolProxyAdmin',
+		'SportsAMMV2LiquidityPoolProxyAdminOVER',
 		network,
 		sportsAMMV2LiquidityPoolProxyAdminAddress
 	);
@@ -82,7 +82,7 @@ async function main() {
 		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
 		await sportsAMMV2Deployed.setLiquidityPoolForCollateral(
-			defaultCollateralAddress,
+			overCollateralAddress,
 			sportsAMMV2LiquidityPoolAddress,
 			{
 				from: owner.address,

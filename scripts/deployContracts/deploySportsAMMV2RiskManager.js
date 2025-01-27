@@ -16,9 +16,10 @@ async function main() {
 	const sportsAMMV2ResultManagerAddress = getTargetAddress('SportsAMMV2ResultManager', network);
 
 	let defaultCap = '1000000000';
-	let defaultRiskMultiplier = '3';
+	let defaultRiskMultiplier = '5';
 	let maxCap = '20000000000';
 	let maxRiskMultiplier = '10';
+	const maxAllowedSystemCombinations = '500';
 
 	const minBuyInAmount = '3000000';
 	const maxTicketSize = '15';
@@ -55,6 +56,7 @@ async function main() {
 		maxTicketSize,
 		maxSupportedAmount,
 		maxSupportedOdds,
+		maxAllowedSystemCombinations,
 		{
 			from: owner.address,
 		}
