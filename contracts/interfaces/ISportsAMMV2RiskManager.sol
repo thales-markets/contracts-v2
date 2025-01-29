@@ -75,6 +75,13 @@ interface ISportsAMMV2RiskManager {
 
     function spentOnGame(bytes32 _gameId) external view returns (uint);
 
+    function riskPerMarketTypeAndPosition(
+        bytes32 _gameId,
+        uint _typeId,
+        uint _playerId,
+        uint _position
+    ) external view returns (int);
+
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,

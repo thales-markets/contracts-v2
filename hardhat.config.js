@@ -13,6 +13,8 @@ const PRIVATE_KEY = vars.get('PRIVATE_KEY');
 const INFURA = vars.get('INFURA');
 const OP_ETHERSCAN_KEY = vars.get('OP_ETHERSCAN_KEY');
 const ARB_ETHERSCAN_KEY = vars.get('ARB_ETHERSCAN_KEY');
+const ETHERSCAN_KEY = vars.get('ETHERSCAN_KEY');
+const BASESCAN_KEY = vars.get('BASESCAN_KEY');
 const REPORT_GAS = vars.get('REPORT_GAS');
 
 module.exports = {
@@ -37,14 +39,25 @@ module.exports = {
 			},
 		],
 		apiKey: {
+			sepolia: ETHERSCAN_KEY,
 			optimisticSepolia: OP_ETHERSCAN_KEY,
 			optimisticEthereum: OP_ETHERSCAN_KEY,
 			arbitrumOne: ARB_ETHERSCAN_KEY,
+			mainnet: ETHERSCAN_KEY,
+			base: BASESCAN_KEY,
 		},
 	},
 	networks: {
+		mainnet: {
+			url: `https://mainnet.infura.io/v3/${INFURA}`,
+			accounts: [TEST_PRIVATE_KEY],
+		},
 		optimisticSepolia: {
 			url: `https://optimism-sepolia.infura.io/v3/${INFURA}`,
+			accounts: [TEST_PRIVATE_KEY],
+		},
+		sepolia: {
+			url: `https://sepolia.infura.io/v3/${INFURA}`,
 			accounts: [TEST_PRIVATE_KEY],
 		},
 		optimisticEthereum: {
@@ -54,6 +67,10 @@ module.exports = {
 		arbitrumOne: {
 			url: `https://arbitrum-mainnet.infura.io/v3/${INFURA}`,
 			accounts: [PRIVATE_KEY],
+		},
+		baseMainnet: {
+			url: `https://base-mainnet.infura.io/v3/${INFURA}`,
+			accounts: [TEST_PRIVATE_KEY],
 		},
 	},
 	gasReporter: {

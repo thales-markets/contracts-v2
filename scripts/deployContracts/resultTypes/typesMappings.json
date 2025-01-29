@@ -1050,6 +1050,16 @@
 		"name": "CHILD_LAST_CARD"
 	},
 	{
+		"id": 11231,
+		"result_type": 2,
+		"name": "PLAYER_ACES"
+	},
+	{
+		"id": 11232,
+		"result_type": 2,
+		"name": "PLAYER_BREAK_POINTS_WON"
+	},
+	{
 		"id": 11234,
 		"result_type": 2,
 		"name": "ANYTIME_CARD_RECEIVER"
@@ -1078,5 +1088,10 @@
 		"id": 11239,
 		"result_type": 2,
 		"name": "PROP_PLAYER_SHOTS"
+	},
+	{
+		"id": 11240,
+		"result_type": 2,
+		"name": "PLAYER_DOUBLE_FAULTS"
 	}
 ]

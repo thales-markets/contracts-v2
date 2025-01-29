@@ -235,5 +235,57 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(spentAmounts[0]).to.be.gt(0);
 			expect(spentAmounts[1]).to.be.gt(0);
 		});
+
+		it('Should return spent and risk amounts for multiple markets', async () => {
+			// Get first two gameIds from the trade data
+			const gameIds = [
+				tradeDataTenMarketsCurrentRound[0].gameId,
+				tradeDataTenMarketsCurrentRound[1].gameId,
+			];
+			const typeIds = [
+				tradeDataTenMarketsCurrentRound[0].typeId,
+				tradeDataTenMarketsCurrentRound[1].typeId,
+			];
+			const playerIds = [
+				tradeDataTenMarketsCurrentRound[0].playerId,
+				tradeDataTenMarketsCurrentRound[1].playerId,
+			];
+			const positions = [0, 0];
+
+			const sportIds = [4, 4];
+
+			const maturities = [
+				tradeDataTenMarketsCurrentRound[0].maturity,
+				tradeDataTenMarketsCurrentRound[1].maturity,
+			];
+
+			const riskAmounts = await sportsAMMV2Data.getRiskOnMarkets(
+				gameIds,
+				typeIds,
+				playerIds,
+				positions
+			);
+
+			console.log('riskAmounts: ' + riskAmounts);
+
+			const capAmounts = await sportsAMMV2Data.getCapsPerMarkets(
+				gameIds,
+				sportIds,
+				typeIds,
+				maturities
+			);
+
+			console.log('capAmounts: ' + capAmounts);
+
+			// Since we made trades on these games, riskAmounts should be non-zero
+			expect(riskAmounts.length).to.equal(2);
+			expect(riskAmounts[0]).to.be.gt(0);
+			expect(riskAmounts[1]).to.be.gt(0);
+
+			// Since we made trades on these games, capAmounts should be non-zero
+			expect(capAmounts.length).to.equal(2);
+			expect(capAmounts[0]).to.be.gt(0);
+			expect(capAmounts[1]).to.be.gt(0);
+		});
 	});
 });
