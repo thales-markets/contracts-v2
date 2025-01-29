@@ -764,7 +764,6 @@ async function deploySportsAMMV2Fixture() {
 		.approve(stakingThalesBettingProxyAddress, DEFAULT_AMOUNT);
 	await stakingThales.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await liveTradingProcessor.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
-	await sgpTradingProcessor.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await sportsAMMV2.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await mockChainlinkOracle.setSGPTradingProcessor(sgpTradingProcessorAddress);

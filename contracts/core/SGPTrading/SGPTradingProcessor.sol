@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/ISGPTradingProcessor.sol";
-import "../../interfaces/IStakingThalesBettingProxy.sol";
 
 contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Strings for uint;
@@ -41,8 +40,6 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint public requestCounter;
     mapping(uint => bytes32) public counterToRequestId;
-
-    address public stakingThalesBettingProxy;
 
     constructor(
         address _link,
@@ -124,13 +121,6 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         );
 
         if (_allow) {
-            if (requester == stakingThalesBettingProxy) {
-                IStakingThalesBettingProxy(stakingThalesBettingProxy).preConfirmSGPTrade(
-                    _requestId,
-                    sgpTradeData._buyInAmount
-                );
-            }
-
             address _createdTicket = sportsAMM.tradeSGP(
                 sgpTradeData._tradeData,
                 sgpTradeData._buyInAmount,
@@ -146,12 +136,6 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
                     _createdTicket,
                     sgpTradeData._buyInAmount,
                     sgpTradeData._collateral
-                );
-            } else if (requester == stakingThalesBettingProxy) {
-                IStakingThalesBettingProxy(stakingThalesBettingProxy).confirmSGPTrade(
-                    _requestId,
-                    _createdTicket,
-                    sgpTradeData._buyInAmount
                 );
             }
         }
@@ -203,12 +187,6 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
-    /// @notice sets the stakingThalesBettingProxy address, required for handling ticket claiming via StakingThalesBettingProxy
-    function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
-        stakingThalesBettingProxy = _stakingThalesBettingProxy;
-        emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);
-    }
-
     /// @notice setMaxAllowedExecutionDelay
     /// @param _maxAllowedExecutionDelay maximum allowed buffer for the CL request to be executed, defaulted at 60 seconds
     function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
@@ -247,5 +225,4 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     );
     event SetMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay);
     event SetFreeBetsHolder(address _freeBetsHolder);
-    event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
 }
