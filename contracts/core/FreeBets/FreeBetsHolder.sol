@@ -218,7 +218,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         uint _buyInAmount,
         address _collateral
     ) external notPaused nonReentrant {
-        require(msg.sender == address(sgpTradingProcessor), "Only callable from LiveTradingProcessor");
+        require(msg.sender == address(sgpTradingProcessor), "Only callable from SGPTradingProcessor");
 
         address _user = sgpRequestsPerUser[requestId];
         require(_user != address(0), "Unknown live ticket");
@@ -318,11 +318,19 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /// @notice sets the LiveTradingProcessor contract address
-    /// @param _liveTradingProcessor the address of Sports AMM contract
+    /// @param _liveTradingProcessor the address of Live Trading Processor contract
     function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
         require(_liveTradingProcessor != address(0), "Invalid address");
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
         emit SetLiveTradingProcessor(_liveTradingProcessor);
+    }
+
+    /// @notice sets the SGPTradingProcessor contract address
+    /// @param _sgpTradingProcessor the address of SGP Trading Processor contract
+    function setSGPTradingProcessor(address _sgpTradingProcessor) external onlyOwner {
+        require(_sgpTradingProcessor != address(0), "Invalid address");
+        sgpTradingProcessor = ISGPTradingProcessor(_sgpTradingProcessor);
+        emit SetSGPTradingProcessor(_sgpTradingProcessor);
     }
 
     /// @notice sets the Sports AMM contract address
@@ -347,6 +355,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /* ========== EVENTS ========== */
     event SetSportsAMM(address sportsAMM);
     event SetLiveTradingProcessor(address liveTradingProcessor);
+    event SetSGPTradingProcessor(address sgpTradingProcessor);
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event CollateralSupportChanged(address collateral, bool supported);

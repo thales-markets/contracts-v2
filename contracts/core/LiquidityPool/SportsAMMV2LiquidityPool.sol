@@ -300,8 +300,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
         bool isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(collateral);
 
-        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
-
         for (uint i = usersProcessedInRound; i < endCursor; i++) {
             address user = usersPerRound[round][i];
             uint balanceAfterCurRound = (balancesPerRound[round][user] * profitAndLossPerRound[round]) / ONE;
