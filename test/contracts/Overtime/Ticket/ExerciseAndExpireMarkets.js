@@ -270,9 +270,14 @@ describe('Ticket Exercise and Expire', () => {
 			expect(await userTicket.phase()).to.be.equal(1);
 			await time.increase(1);
 			expect(await userTicket.phase()).to.be.equal(2);
+			const numOfActiveTicketsBefore = await sportsAMMV2Manager.numOfActiveTickets();
 			expect(await sportsAMMV2.expireTickets([ticketAddress]))
 				.to.emit(userTicket, 'Expired')
 				.withArgs(safeBox.target);
+			const numOfActiveTicketsAfter = await sportsAMMV2Manager.numOfActiveTickets();
+			expect(numOfActiveTicketsAfter.toString() * 1).to.be.equal(
+				numOfActiveTicketsBefore.toString() * 1 - 1
+			);
 		});
 
 		it('Auto exercise losing tickets when results are set', async () => {
