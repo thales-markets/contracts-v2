@@ -984,28 +984,25 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    /// @notice sets the LiveTradingProcessor, required for any live trading
-    function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
+    /**
+     * @notice Sets the addresses of various betting processors.
+     * @dev This function can only be called by the contract owner.
+     * @param _liveTradingProcessor Address of the live trading processor contract.
+     * @param _sgpTradingProcessor Address of the single-game parlay trading processor contract.
+     * @param _freeBetsHolder Address of the free bets holder contract.
+     * @param _stakingThalesBettingProxy Address of the staking Thales betting proxy contract.
+     */
+    function setBettingProcessors(
+        address _liveTradingProcessor,
+        address _sgpTradingProcessor,
+        address _freeBetsHolder,
+        address _stakingThalesBettingProxy
+    ) external onlyOwner {
         liveTradingProcessor = _liveTradingProcessor;
-        emit SetLiveTradingProcessor(_liveTradingProcessor);
-    }
-
-    /// @notice sets the SGPTradingProcessor, required for any sgp trading
-    function setSGPTradingProcessor(address _sgpTradingProcessor) external onlyOwner {
         sgpTradingProcessor = _sgpTradingProcessor;
-        emit SetSGPTradingProcessor(_sgpTradingProcessor);
-    }
-
-    /// @notice sets the FreeBetsHolder address, required for handling ticket claiming via FreeBetsHolder
-    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
         freeBetsHolder = _freeBetsHolder;
-        emit SetFreeBetsHolder(_freeBetsHolder);
-    }
-
-    /// @notice sets the stakingThalesBettingProxy address, required for handling ticket claiming via StakingThalesBettingProxy
-    function setStakingThalesBettingProxy(address _stakingThalesBettingProxy) external onlyOwner {
         stakingThalesBettingProxy = _stakingThalesBettingProxy;
-        emit SetStakingThalesBettingProxy(_stakingThalesBettingProxy);
+        emit SetBettingProcessors(liveTradingProcessor, sgpTradingProcessor, freeBetsHolder, stakingThalesBettingProxy);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -1106,10 +1103,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     event TicketMastercopyUpdated(address ticketMastercopy);
     event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
-    event SetLiveTradingProcessor(address liveTradingProcessor);
-    event SetSGPTradingProcessor(address sgpTradingProcessor);
-    event SetFreeBetsHolder(address freeBetsHolder);
-    event SetStakingThalesBettingProxy(address _stakingThalesBettingProxy);
     event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
     event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
+    event SetBettingProcessors(
+        address liveTradingProcessor,
+        address sgpTradingProcessor,
+        address freeBetsHolder,
+        address stakingThalesBettingProxy
+    );
 }

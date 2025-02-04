@@ -384,11 +384,29 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "liveTradingProcessor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sgpTradingProcessor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "freeBetsHolder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "stakingThalesBettingProxy",
         "type": "address"
       }
     ],
-    "name": "SetFreeBetsHolder",
+    "name": "SetBettingProcessors",
     "type": "event"
   },
   {
@@ -416,19 +434,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "liveTradingProcessor",
-        "type": "address"
-      }
-    ],
-    "name": "SetLiveTradingProcessor",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "onOffRamper",
         "type": "address"
       },
@@ -448,19 +453,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "sgpTradingProcessor",
-        "type": "address"
-      }
-    ],
-    "name": "SetSGPTradingProcessor",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "_collateral",
         "type": "address"
       },
@@ -472,19 +464,6 @@
       }
     ],
     "name": "SetSafeBoxPerCollateral",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_stakingThalesBettingProxy",
-        "type": "address"
-      }
-    ],
-    "name": "SetStakingThalesBettingProxy",
     "type": "event"
   },
   {
@@ -1079,11 +1058,26 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_liveTradingProcessor",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_sgpTradingProcessor",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "_freeBetsHolder",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_stakingThalesBettingProxy",
         "type": "address"
       }
     ],
-    "name": "setFreeBetsHolder",
+    "name": "setBettingProcessors",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1102,19 +1096,6 @@
       }
     ],
     "name": "setLiquidityPoolForCollateral",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_liveTradingProcessor",
-        "type": "address"
-      }
-    ],
-    "name": "setLiveTradingProcessor",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1203,19 +1184,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_sgpTradingProcessor",
-        "type": "address"
-      }
-    ],
-    "name": "setSGPTradingProcessor",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_collateral",
         "type": "address"
       },
@@ -1226,19 +1194,6 @@
       }
     ],
     "name": "setSafeBoxPerCollateral",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_stakingThalesBettingProxy",
-        "type": "address"
-      }
-    ],
-    "name": "setStakingThalesBettingProxy",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

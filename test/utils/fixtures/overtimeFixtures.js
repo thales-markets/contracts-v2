@@ -764,11 +764,8 @@ async function deploySportsAMMV2Fixture() {
 		.approve(stakingThalesBettingProxyAddress, DEFAULT_AMOUNT);
 	await stakingThales.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await liveTradingProcessor.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
-	await sportsAMMV2.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await mockChainlinkOracle.setSGPTradingProcessor(sgpTradingProcessorAddress);
-	await sportsAMMV2.setLiveTradingProcessor(liveTradingProcessorAddress);
-	await sportsAMMV2.setSGPTradingProcessor(sgpTradingProcessorAddress);
 
 	// deploy ChainlinkResolver
 	const ChainlinkResolver = await ethers.getContractFactory('ChainlinkResolver');
@@ -802,7 +799,12 @@ async function deploySportsAMMV2Fixture() {
 	await freeBetsHolder.addSupportedCollateral(collateralAddress, true);
 	await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);
 
-	await sportsAMMV2.setFreeBetsHolder(freeBetsHolderAddress);
+	await sportsAMMV2.setBettingProcessors(
+		liveTradingProcessorAddress,
+		sgpTradingProcessorAddress,
+		freeBetsHolderAddress,
+		stakingThalesBettingProxyAddress
+	);
 
 	await sportsAMMV2.setLiquidityPoolForCollateral(
 		collateralTHALESAddress,
