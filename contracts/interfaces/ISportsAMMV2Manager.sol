@@ -53,6 +53,8 @@ interface ISportsAMMV2Manager {
 
     function resolveKnownTicket(address ticket, address ticketOwner) external;
 
+    function expireKnownTicket(address ticket, address ticketOwner) external;
+
     function isSystemTicket(address _ticket) external view returns (bool);
 
     function isSGPTicket(address _ticket) external view returns (bool);

@@ -79,6 +79,14 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         resolvedTicketsPerUser[_user].add(_ticket);
     }
 
+    /// @notice remove known ticket from active
+    /// @param _ticket ticket address
+    /// @param _user to update the ticket for
+    function expireKnownTicket(address _ticket, address _user) external onlySportAMMV2 {
+        knownTickets.remove(_ticket);
+        activeTicketsPerUser[_user].remove(_ticket);
+    }
+
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
     /// @notice check whether a ticket is known
