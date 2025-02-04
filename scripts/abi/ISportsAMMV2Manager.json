@@ -110,6 +110,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "ticketOwner",
+        "type": "address"
+      }
+    ],
+    "name": "expireKnownTicket",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "feeToken",
     "outputs": [
