@@ -18,12 +18,10 @@ contract SafeBox is Initializable, ProxyOwned {
 
     /// @notice Allows the owner to withdraw any ERC20 tokens from the contract
     /// @param _collateral The address of the ERC20 token to withdraw
-    /// @param _recipient The address of the recipient
     /// @param _amount The amount of tokens to withdraw
-    function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
-        address recipient = _recipient == address(0) ? owner : _recipient;
-        IERC20(_collateral).safeTransfer(recipient, _amount);
-        emit WithdrawnCollateral(_collateral, recipient, _amount);
+    function withdrawCollateral(address _collateral, uint _amount) external onlyOwner {
+        IERC20(_collateral).safeTransfer(msg.sender, _amount);
+        emit WithdrawnCollateral(_collateral, msg.sender, _amount);
     }
 
     event WithdrawnCollateral(address indexed collateral, address indexed recipient, uint amount);
