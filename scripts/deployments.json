@@ -287,7 +287,14 @@
 		"ResolveBlocker": "0xe9E88dA0Ae53F5bBA1871b4bb18A182bae093ece",
 		"ResolveBlockerImplementation": "0x7cbEB69734504E9121907da2c4e1c814268e201d",
 		"ResolveBlockerProxyAdmin": "0xaEa8DF07Da384C2b16EE10D8557AAfb900917A4d",
-		"SafeBoxBuyback": "0xd5679539c29eEBe69347acE5DEef867b19dba7b7"
+		"SafeBoxBuyback": "0xd5679539c29eEBe69347acE5DEef867b19dba7b7",
+		"CBTC": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+		"SportsAMMV2LiquidityPoolCBTC": "0x8d4f838327DedFc735e202731358AcFc260c207a",
+		"SportsAMMV2LiquidityPoolImplementationCBTC": "0x04fA33175c71e6626281C4261fC1e2b998DB3235",
+		"SportsAMMV2LiquidityPoolProxyAdminCBTC": "0x13Af62083b3D8e415a471596CC08E9c84c88E65D",
+		"DefaultLiquidityProviderCBTC": "0x784a2a01EF49b5c81FEa8bD2a9DC8CcbAecca8B0",
+		"DefaultLiquidityProviderImplementationCBTC": "0x32077d9F7BF3994f3A0E905b3EefF34410eCA9A5",
+		"DefaultLiquidityProviderProxyAdminCBTC": "0x45EF93c437131b158A4e4c4Eac1be4cEddB210A8"
 	},
 	"mainnet": {
 		"OVER": "0x3a48CC26aF23E109d14478Ba33B4E0eb62625a2C",
