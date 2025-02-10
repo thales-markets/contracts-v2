@@ -219,7 +219,14 @@
 		"DefaultLiquidityProviderProxyAdminOVER": "0x112C8A01fC9Cfa324cb16FE7a41CB22d671929aE",
 		"ThalesToOverMigration": "0xb308f26b7dc1eCdB52ce05dceb10818c41BA75E8",
 		"ThalesToOverMigrationImplementation": "0xD6Ef945F0B81B2A8EEce84a1Da2b691aB13Ad0c2",
-		"ThalesToOverMigrationProxyAdmin": "0xBC418cf09A6F173Bc7ed72A70F5b9C0d34E3dbF9"
+		"ThalesToOverMigrationProxyAdmin": "0xBC418cf09A6F173Bc7ed72A70F5b9C0d34E3dbF9",
+		"CBTC": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+		"SportsAMMV2LiquidityPoolCBTC": "0xbD08D8F8c17C22fb0a12Fe490F38f40c59B60d2A",
+		"SportsAMMV2LiquidityPoolImplementationCBTC": "0x3472114c0AaEDC74fc518d5fbe6b027CaCD471e6",
+		"SportsAMMV2LiquidityPoolProxyAdminCBTC": "0xCe9F9f16C7398cA360B057bc00c96B9C405A540E",
+		"DefaultLiquidityProviderCBTC": "0x82D2204bFd840502CAe393374508929F88F01C96",
+		"DefaultLiquidityProviderImplementationCBTC": "0x482610a1c1f8C5057bca7ed1a5148C00d868d020",
+		"DefaultLiquidityProviderProxyAdminCBTC": "0x26cDA85D9AABC0c1FAdbC7d9Cf124B95E2Af3a3C"
 	},
 	"baseMainnet": {
 		"ProtocolDAO": "0xf334412B96FE4a9Fc0a93D6297574a3b30217E64",
@@ -287,7 +294,14 @@
 		"ResolveBlocker": "0xe9E88dA0Ae53F5bBA1871b4bb18A182bae093ece",
 		"ResolveBlockerImplementation": "0x7cbEB69734504E9121907da2c4e1c814268e201d",
 		"ResolveBlockerProxyAdmin": "0xaEa8DF07Da384C2b16EE10D8557AAfb900917A4d",
-		"SafeBoxBuyback": "0xd5679539c29eEBe69347acE5DEef867b19dba7b7"
+		"SafeBoxBuyback": "0xd5679539c29eEBe69347acE5DEef867b19dba7b7",
+		"CBTC": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+		"SportsAMMV2LiquidityPoolCBTC": "0x8d4f838327DedFc735e202731358AcFc260c207a",
+		"SportsAMMV2LiquidityPoolImplementationCBTC": "0x04fA33175c71e6626281C4261fC1e2b998DB3235",
+		"SportsAMMV2LiquidityPoolProxyAdminCBTC": "0x13Af62083b3D8e415a471596CC08E9c84c88E65D",
+		"DefaultLiquidityProviderCBTC": "0x784a2a01EF49b5c81FEa8bD2a9DC8CcbAecca8B0",
+		"DefaultLiquidityProviderImplementationCBTC": "0x32077d9F7BF3994f3A0E905b3EefF34410eCA9A5",
+		"DefaultLiquidityProviderProxyAdminCBTC": "0x45EF93c437131b158A4e4c4Eac1be4cEddB210A8"
 	},
 	"mainnet": {
 		"OVER": "0x3a48CC26aF23E109d14478Ba33B4E0eb62625a2C",
