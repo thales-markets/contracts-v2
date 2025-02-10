@@ -1093,5 +1093,10 @@
 		"id": 11240,
 		"result_type": 2,
 		"name": "PLAYER_DOUBLE_FAULTS"
+	},
+	{
+		"id": 11241,
+		"result_type": 2,
+		"name": "PLAYER_LONGEST_RUSH"
 	}
 ]
