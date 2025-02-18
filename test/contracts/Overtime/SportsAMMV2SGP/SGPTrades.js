@@ -83,6 +83,10 @@ describe('SportsAMMV2Live Live Trades', () => {
 			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
 			let approvedQuote = ethers.parseEther('0.5');
 
+			let sgpRiskBefore = await sportsAMMV2RiskManager.sgpSpentOnGame(
+				sameGameWithFirstPlayerProps[0].gameId
+			);
+
 			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
 				_tradeData: sameGameWithFirstPlayerProps,
 				_buyInAmount: BUY_IN_AMOUNT,
@@ -93,7 +97,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 			});
 
 			let requestId = await sgpTradingProcessor.counterToRequestId(0);
-			console.log('requestId is ' + requestId);
 
 			await mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote);
 
@@ -105,9 +108,39 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			const marketData = await userTicket.markets(0);
 
-			// expect(marketData.odd).to.equal(ethers.parseEther('0.5'));
-			//
-			// expect(await userTicket.isLive()).to.eq(true);
+			let sgpRiskAfter = await sportsAMMV2RiskManager.sgpSpentOnGame(
+				sameGameWithFirstPlayerProps[0].gameId
+			);
+
+			expect(sgpRiskBefore).to.equal(ethers.parseEther('0'));
+			expect(sgpRiskAfter).to.equal(ethers.parseEther('10'));
+		});
+
+		it('Should fail SGP due to liquidity', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+			await sportsAMMV2RiskManager.setSGPCapDivider(10);
+			// await sportsAMMV2RiskManager.setCapsPerSport([SPORT_ID_NBA], ethers.parseEther('1000'));
+
+			let approvedQuote = ethers.parseEther('0.5');
+
+			let sgpRiskBefore = await sportsAMMV2RiskManager.sgpSpentOnGame(
+				sameGameWithFirstPlayerProps[0].gameId
+			);
+
+			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+				_tradeData: sameGameWithFirstPlayerProps,
+				_buyInAmount: ethers.parseEther('500'),
+				_expectedQuote: approvedQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
+
+			let requestId = await sgpTradingProcessor.counterToRequestId(0);
+
+			await expect(
+				mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote)
+			).to.be.revertedWith('SGP Risk per game exceeded');
 		});
 	});
 });

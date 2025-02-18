@@ -85,6 +85,7 @@ interface ISportsAMMV2RiskManager {
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
+        uint _payout,
         bool _isLive,
         uint8 _systemBetDenominator,
         bool _isSGP

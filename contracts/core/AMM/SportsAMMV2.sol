@@ -802,6 +802,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         riskManager.checkAndUpdateRisks(
             _tradeData,
             _buyInAmount,
+            _payout,
             _tradeDataInternal._isLive,
             _systemBetDenominator,
             _tradeDataInternal._isSGP
