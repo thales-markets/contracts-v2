@@ -143,6 +143,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 				sportsAMMV2RiskManager.checkAndUpdateRisks(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
+					BUY_IN_AMOUNT,
 					false,
 					0,
 					false
