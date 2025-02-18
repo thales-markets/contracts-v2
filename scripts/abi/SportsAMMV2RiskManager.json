@@ -381,6 +381,38 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_divider",
+        "type": "uint256"
+      }
+    ],
+    "name": "SetSGPCapDivider",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "_sportId",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "_isEnabled",
+        "type": "bool"
+      }
+    ],
+    "name": "SetSGPEnabledOnSport",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "sportsAMM",
         "type": "address"
@@ -739,6 +771,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "_payout",
+        "type": "uint256"
+      },
+      {
         "internalType": "bool",
         "name": "_isLive",
         "type": "bool"
@@ -747,6 +784,11 @@
         "internalType": "uint8",
         "name": "_systemBetDenominator",
         "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isSGP",
+        "type": "bool"
       }
     ],
     "name": "checkAndUpdateRisks",
@@ -2002,6 +2044,37 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_divider",
+        "type": "uint256"
+      }
+    ],
+    "name": "setSGPCapDivider",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16[]",
+        "name": "_sportIds",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isEnabled",
+        "type": "bool"
+      }
+    ],
+    "name": "setSGPEnabledOnSportIds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_sportsAMM",
         "type": "address"
@@ -2074,6 +2147,57 @@
     "name": "setTimes",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sgpCapDivider",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "name": "sgpOnSportIdEnabled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "sgpSpentOnGame",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

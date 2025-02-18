@@ -1,0 +1,146 @@
+const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { expect } = require('chai');
+const {
+	deployAccountsFixture,
+	deploySportsAMMV2Fixture,
+} = require('../../../utils/fixtures/overtimeFixtures');
+const {
+	BUY_IN_AMOUNT,
+	ETH_BUY_IN_AMOUNT,
+	ADDITIONAL_SLIPPAGE,
+	SPORT_ID_NBA,
+} = require('../../../constants/overtime');
+const { ZERO_ADDRESS } = require('../../../constants/general');
+const { ethers } = require('hardhat');
+
+describe('SportsAMMV2Live Live Trades', () => {
+	let sportsAMMV2,
+		sportsAMMV2LiquidityPool,
+		sportsAMMV2LiquidityPoolETH,
+		tradeDataThreeMarketsCurrentRound,
+		sameGameWithFirstPlayerProps,
+		firstLiquidityProvider,
+		firstTrader,
+		secondAccount,
+		sgpTradingProcessor,
+		mockChainlinkOracle,
+		sportsAMMV2RiskManager,
+		weth,
+		quote,
+		sportsAMMV2Manager;
+
+	beforeEach(async () => {
+		({
+			sportsAMMV2,
+			sportsAMMV2LiquidityPool,
+			sportsAMMV2LiquidityPoolETH,
+			tradeDataThreeMarketsCurrentRound,
+			sameGameWithFirstPlayerProps,
+			sgpTradingProcessor,
+			mockChainlinkOracle,
+			weth,
+			sportsAMMV2RiskManager,
+			sportsAMMV2Manager,
+		} = await loadFixture(deploySportsAMMV2Fixture));
+		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
+			await loadFixture(deployAccountsFixture));
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+	});
+
+	describe('SGP Trade', () => {
+		let approvedQuote = ethers.parseEther('0.5');
+		it('Should revert if not the same game', async () => {
+			await expect(
+				sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+					_tradeData: tradeDataThreeMarketsCurrentRound,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: approvedQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+				})
+			).to.be.revertedWith('SGP only possible on the same game');
+		});
+
+		it('Should revert if not enabled a SGP trade', async () => {
+			await expect(
+				sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+					_tradeData: sameGameWithFirstPlayerProps,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: approvedQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+				})
+			).to.be.revertedWith('SGP trading not enabled on _sportId');
+		});
+
+		it('Should buy a SGP trade', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+			let approvedQuote = ethers.parseEther('0.5');
+
+			let sgpRiskBefore = await sportsAMMV2RiskManager.sgpSpentOnGame(
+				sameGameWithFirstPlayerProps[0].gameId
+			);
+
+			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+				_tradeData: sameGameWithFirstPlayerProps,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: approvedQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
+
+			let requestId = await sgpTradingProcessor.counterToRequestId(0);
+
+			await mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			const marketData = await userTicket.markets(0);
+
+			let sgpRiskAfter = await sportsAMMV2RiskManager.sgpSpentOnGame(
+				sameGameWithFirstPlayerProps[0].gameId
+			);
+
+			expect(sgpRiskBefore).to.equal(ethers.parseEther('0'));
+			expect(sgpRiskAfter).to.equal(ethers.parseEther('10'));
+		});
+
+		it('Should fail SGP due to liquidity', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+			await sportsAMMV2RiskManager.setSGPCapDivider(10);
+			// await sportsAMMV2RiskManager.setCapsPerSport([SPORT_ID_NBA], ethers.parseEther('1000'));
+
+			let approvedQuote = ethers.parseEther('0.5');
+
+			let sgpRiskBefore = await sportsAMMV2RiskManager.sgpSpentOnGame(
+				sameGameWithFirstPlayerProps[0].gameId
+			);
+
+			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+				_tradeData: sameGameWithFirstPlayerProps,
+				_buyInAmount: ethers.parseEther('500'),
+				_expectedQuote: approvedQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
+
+			let requestId = await sgpTradingProcessor.counterToRequestId(0);
+
+			await expect(
+				mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote)
+			).to.be.revertedWith('SGP Risk per game exceeded');
+		});
+	});
+});
