@@ -601,6 +601,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint16",
+        "name": "_sportsId",
+        "type": "uint16"
+      }
+    ],
+    "name": "sgpOnSportIdEnabled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "_gameId",
         "type": "bytes32"

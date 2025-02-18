@@ -109,6 +109,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // the maximum number of combinations on a system ticket
     uint public maxAllowedSystemCombinations;
 
+    // store whether a sportId is a futures market type
+    mapping(uint16 => bool) public sgpOnSportIdEnabled;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -937,6 +940,17 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetIsSportIdFuture(_sportId, _isFuture);
     }
 
+    /// @notice sets whether a sportsId has SGP enabled
+    /// @param _sportIds to set whether SGP enabled
+    /// @param _isEnabled boolean representing whether the given _sportId should have SGPs enabled
+    function setSGPEnabledOnSportIds(uint16[] calldata _sportIds, bool _isEnabled) external onlyOwner {
+        for (uint index = 0; index < _sportIds.length; index++) {
+            uint16 _sportId = _sportIds[index];
+            sgpOnSportIdEnabled[_sportId] = _isEnabled;
+            emit SetSGPEnabledOnSport(_sportId, _isEnabled);
+        }
+    }
+
     /* ========== MODIFIERS ========== */
 
     modifier onlyWhitelistedAddresses(address sender) {
@@ -984,4 +998,5 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetDefaultLiveCapDivider(uint _divider);
 
     event SetIsSportIdFuture(uint16 _sportId, bool _isFuture);
+    event SetSGPEnabledOnSport(uint16 _sportId, bool _isEnabled);
 }

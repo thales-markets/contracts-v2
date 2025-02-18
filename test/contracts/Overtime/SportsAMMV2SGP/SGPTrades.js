@@ -52,11 +52,39 @@ describe('SportsAMMV2Live Live Trades', () => {
 	});
 
 	describe('SGP Trade', () => {
+		let approvedQuote = ethers.parseEther('0.5');
+		it('Should revert if not the same game', async () => {
+			await expect(
+				sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+					_tradeData: tradeDataThreeMarketsCurrentRound,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: approvedQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+				})
+			).to.be.revertedWith('SGP only possible on the same game');
+		});
+
+		it('Should revert if not enabled a SGP trade', async () => {
+			await expect(
+				sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+					_tradeData: sameGameWithFirstPlayerProps,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: approvedQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+				})
+			).to.be.revertedWith('SGP trading not enabled on _sportId');
+		});
+
 		it('Should buy a SGP trade', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
 			let approvedQuote = ethers.parseEther('0.5');
 
 			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
-				_tradeData: tradeDataThreeMarketsCurrentRound,
+				_tradeData: sameGameWithFirstPlayerProps,
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: approvedQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,

@@ -18,7 +18,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		sportsAMMV2Manager,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
-		tradeDataThreeMarketsCurrentRound,
+		sameGameWithFirstPlayerProps,
 		firstLiquidityProvider,
 		firstTrader,
 		freeBetsHolder,
@@ -35,7 +35,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			sportsAMMV2Manager,
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
-			tradeDataThreeMarketsCurrentRound,
+			sameGameWithFirstPlayerProps,
 			freeBetsHolder,
 			collateralAddress,
 			sportsAMMV2RiskManager,
@@ -49,6 +49,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			.connect(firstLiquidityProvider)
 			.deposit(ethers.parseEther('1000'));
 		await sportsAMMV2LiquidityPool.start();
+		await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
 	});
 
 	describe('Trade with free bet SGP', () => {
@@ -79,7 +80,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			let approvedQuote = ethers.parseEther('0.5');
 
 			await freeBetsHolder.connect(firstTrader).tradeSGP({
-				_tradeData: tradeDataThreeMarketsCurrentRound,
+				_tradeData: sameGameWithFirstPlayerProps,
 				_buyInAmount: BUY_IN_AMOUNT,
 				_expectedQuote: approvedQuote,
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,

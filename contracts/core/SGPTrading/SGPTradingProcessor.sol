@@ -67,21 +67,36 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillSGPTrade.selector);
 
+        string[] memory sportIds = new string[](numOfMarkets);
         string[] memory gameIds = new string[](numOfMarkets);
         string[] memory typeIds = new string[](numOfMarkets);
         string[] memory playerIds = new string[](numOfMarkets);
         string[] memory lines = new string[](numOfMarkets);
         string[] memory positions = new string[](numOfMarkets);
 
+        uint16 sportId;
+        bytes32 gameId;
+
         for (uint i = 0; i < numOfMarkets; i++) {
             ISportsAMMV2.TradeData memory marketTradeData = _sgpTradeData._tradeData[i];
+            sportIds[i] = uint256(marketTradeData.sportId).toString();
             gameIds[i] = bytes32ToString(marketTradeData.gameId);
             typeIds[i] = uint256(marketTradeData.typeId).toString();
             playerIds[i] = uint256(marketTradeData.playerId).toString();
             lines[i] = int256(marketTradeData.line).toStringSigned();
             positions[i] = uint256(marketTradeData.position).toString();
+
+            if (i == 0) {
+                sportId = marketTradeData.sportId;
+                gameId = marketTradeData.gameId;
+            } else {
+                require(gameId == marketTradeData.gameId, "SGP only possible on the same game");
+            }
         }
 
+        require(sportsAMM.riskManager().sgpOnSportIdEnabled(sportId), "SGP trading not enabled on _sportId");
+
+        req.addStringArray("sportIds", sportIds);
         req.addStringArray("gameIds", gameIds);
         req.addStringArray("typeIds", typeIds);
         req.addStringArray("playerIds", playerIds);

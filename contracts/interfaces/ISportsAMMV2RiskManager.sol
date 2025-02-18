@@ -94,6 +94,8 @@ interface ISportsAMMV2RiskManager {
 
     function isSportIdFuture(uint16 _sportsId) external view returns (bool);
 
+    function sgpOnSportIdEnabled(uint16 _sportsId) external view returns (bool);
+
     function getMaxSystemBetPayout(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint8 _systemBetDenominator,
