@@ -1,24 +1,51 @@
-const { ethers } = require('hardhat');
-const { getTargetAddress } = require('../../helpers');
+const { ethers, upgrades } = require('hardhat');
+const { getImplementationAddress } = require('@openzeppelin/upgrades-core');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../../helpers');
 
 async function main() {
-	const networkName = hre.network.name;
-	const [deployer] = await ethers.getSigners();
+	let accounts = await ethers.getSigners();
+	let owner = accounts[0];
+	let networkObj = await ethers.provider.getNetwork();
+	let network = networkObj.name;
 
-	console.log('Upgrading SportsAMMV2LiquidityPool for OVER with the account:', deployer.address);
+	console.log('Owner is:', owner.address);
+	console.log('Network:', network);
 
-	const SportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
-	const proxyAddress = await getTargetAddress('SportsAMMV2OVERLiquidityPool', networkName);
+	const sportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
+	const sportsAMMV2LiquidityPoolAddress = getTargetAddress('SportsAMMV2LiquidityPoolOVER', network);
 
-	console.log('Proxy address:', proxyAddress);
+	let sportsAMMV2LiquidityPoolImplementationAddress;
 
-	const implementation = await upgrades.prepareUpgrade(proxyAddress, SportsAMMV2LiquidityPool);
-	console.log('New SportsAMMV2LiquidityPool implementation:', implementation);
+	// upgrade if test networks
+	if (isTestNetwork(networkObj.chainId)) {
+		await upgrades.upgradeProxy(sportsAMMV2LiquidityPoolAddress, sportsAMMV2LiquidityPool);
+
+		sportsAMMV2LiquidityPoolImplementationAddress = await getImplementationAddress(
+			ethers.provider,
+			sportsAMMV2LiquidityPoolAddress
+		);
+	} else {
+		sportsAMMV2LiquidityPoolImplementationAddress = await upgrades.prepareUpgrade(
+			sportsAMMV2LiquidityPoolAddress,
+			sportsAMMV2LiquidityPool
+		);
+	}
+
+	console.log('SportsAMMV2LiquidityPool upgraded');
+	console.log(
+		'SportsAMMV2LiquidityPool Implementation:',
+		sportsAMMV2LiquidityPoolImplementationAddress
+	);
+	setTargetAddress(
+		'SportsAMMV2LiquidityPoolImplementationOVER',
+		network,
+		sportsAMMV2LiquidityPoolImplementationAddress
+	);
+	await delay(5000);
 
 	try {
 		await hre.run('verify:verify', {
-			address: implementation,
-			constructorArguments: [],
+			address: sportsAMMV2LiquidityPoolImplementationAddress,
 		});
 	} catch (e) {
 		console.log(e);

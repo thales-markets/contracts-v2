@@ -298,9 +298,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (endCursor > usersPerRound[round].length) {
             endCursor = usersPerRound[round].length;
         }
-        bool isDefaultCollateral = address(sportsAMM.defaultCollateral()) == address(collateral);
-
-        IStakingThales stakingThales = IStakingThales(addressManager.getAddress("StakingThales"));
 
         for (uint i = usersProcessedInRound; i < endCursor; i++) {
             address user = usersPerRound[round][i];
@@ -557,10 +554,20 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (!ticketAlreadyExercisedInRound[_roundNumber][ticketAddress]) {
             Ticket ticket = Ticket(ticketAddress);
             bool isWinner = ticket.isUserTheWinner();
-            if (ticket.isTicketExercisable() && !isWinner) {
+
+            bool isSystemExercisable = false;
+            bool isSystem = false;
+            if (round > 1) {
+                isSystem = ticket.isSystem();
+            }
+            // in case round needs to be closed, ensure all system bets are exercised too, as there could be money in those that needs to be returned to LP rounds
+            if (isSystem && block.timestamp > getRoundEndTime(_roundNumber)) {
+                isSystemExercisable = true;
+            }
+            if (ticket.isTicketExercisable() && (!isWinner || isSystemExercisable)) {
                 sportsAMM.exerciseTicket(ticketAddress);
             }
-            if (isWinner || ticket.resolved()) {
+            if ((isWinner && !isSystem) || ticket.resolved()) {
                 ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;
                 exercised = true;
             }
