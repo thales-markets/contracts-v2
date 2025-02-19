@@ -19,7 +19,7 @@ async function main() {
 	const safeBoxAddress = getTargetAddress('SafeBox', network);
 	const maxAllowedDeposit = ethers.parseEther('2000000');
 	const minDepositAmount = ethers.parseEther('20');
-	const maxAllowedUsers = 100;
+	const maxAllowedUsers = 1;
 	const week = 7 * 24 * 60 * 60;
 	const utilizationRate = ethers.parseEther('0.9');
 	const safeBoxImpact = ethers.parseEther('0.2');
