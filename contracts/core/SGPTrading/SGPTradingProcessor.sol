@@ -24,7 +24,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     ISportsAMMV2 public sportsAMM;
 
-    address freeBetsHolder;
+    address public freeBetsHolder;
 
     bytes32 public jobSpecId;
 
