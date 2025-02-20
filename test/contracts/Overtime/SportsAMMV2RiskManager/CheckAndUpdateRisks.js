@@ -143,8 +143,10 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 				sportsAMMV2RiskManager.checkAndUpdateRisks(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
+					BUY_IN_AMOUNT,
 					false,
-					0
+					0,
+					false
 				)
 			).to.be.revertedWith('Only the AMM may perform these methods');
 		});
@@ -170,7 +172,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Invalid position');
+			).to.be.revertedWith('InvalidPosition');
 		});
 
 		it('Should fail with "Not trading"', async () => {
@@ -216,7 +218,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Illegal input amounts');
+			).to.be.revertedWith('IllegalInputAmounts');
 		});
 
 		it('Should fail with "Risk per market and position exceeded"', async () => {

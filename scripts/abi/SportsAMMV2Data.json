@@ -336,6 +336,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -524,6 +529,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -712,6 +722,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1048,6 +1063,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1236,6 +1256,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1424,6 +1449,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1758,6 +1788,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1970,6 +2005,11 @@
             "internalType": "uint8",
             "name": "systemBetDenominator",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
