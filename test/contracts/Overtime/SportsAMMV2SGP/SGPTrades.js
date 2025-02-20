@@ -165,6 +165,27 @@ describe('SportsAMMV2Live Live Trades', () => {
 			);
 			expect(sgpComboRiskBefore).to.equal(ethers.parseEther('0'));
 			expect(sgpComboRiskAfter).to.equal(ethers.parseEther('100'));
+
+			let spentOnGame = await sportsAMMV2RiskManager.spentOnGame(
+				sameGameWithFirstPlayerProps[0].gameId
+			);
+
+			let positionRisk0 = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+				sameGameWithFirstPlayerProps[0].gameId,
+				sameGameWithFirstPlayerProps[0].typeId,
+				sameGameWithFirstPlayerProps[0].playerId,
+				0
+			);
+			let positionRisk1 = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+				sameGameWithFirstPlayerProps[1].gameId,
+				sameGameWithFirstPlayerProps[1].typeId,
+				sameGameWithFirstPlayerProps[1].playerId,
+				0
+			);
+
+			expect(spentOnGame.toString() * 1.0).to.equal(
+				positionRisk0.toString() * 1.0 + positionRisk1.toString() * 1.0
+			);
 		});
 
 		it('Should fail SGP due to SGP combo risk', async () => {
