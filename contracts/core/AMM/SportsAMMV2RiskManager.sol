@@ -118,6 +118,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // sgp cap divider
     uint public sgpCapDivider;
 
+    // sgp risk per combination
+    mapping(bytes32 => uint) public sgpRiskPerCombination;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -437,8 +440,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             }
         }
         if (_isSGP) {
-            require(!_isSGPRiskPerGameExceeded(_tradeData[0], _payout - _buyInAmount), "SGP Risk per game exceeded");
+            require(!_isSGPRiskPerGameExceeded(_tradeData, _payout - _buyInAmount), "SGP Risk per game exceeded");
             sgpSpentOnGame[_tradeData[0].gameId] += (_payout - _buyInAmount);
+            sgpRiskPerCombination[_getSGPHash(_tradeData)] += (_payout - _buyInAmount);
         }
     }
 
@@ -472,6 +476,17 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bytes32 leaf = keccak256(encodePackedOutput);
         // verify the proof is valid
         require(MerkleProof.verify(_marketTradeData.merkleProof, _rootPerGame, leaf), "Proof is not valid");
+    }
+
+    /**
+     * @notice Reads the total risk stored for a given Same Game Parlay (SGP) combination.
+     * @dev Computes the SGP hash and retrieves the associated risk amount.
+     * @param trades The array of `TradeData` structs representing the parlay selections.
+     * @return uint The total risk amount associated with the given SGP.
+     */
+    function getSGPCombinationRisk(ISportsAMMV2.TradeData[] memory trades) external view returns (uint) {
+        bytes32 sgpHash = _getSGPHash(trades);
+        return sgpRiskPerCombination[sgpHash];
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -528,14 +543,28 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     }
 
     function _isSGPRiskPerGameExceeded(
-        ISportsAMMV2.TradeData memory _marketTradeData,
+        ISportsAMMV2.TradeData[] memory _marketTradeData,
         uint marketRiskAmount
     ) internal view returns (bool) {
         uint sgpDividerToUse = sgpCapDivider > 0 ? sgpCapDivider : 2;
-        return
-            (sgpSpentOnGame[_marketTradeData.gameId] + marketRiskAmount) >
-            (_calculateTotalRiskOnGame(_marketTradeData.gameId, _marketTradeData.sportId, _marketTradeData.maturity) /
-                sgpDividerToUse);
+        bool totalSGPRiskExceeded = (sgpSpentOnGame[_marketTradeData[0].gameId] + marketRiskAmount) >
+            (_calculateTotalRiskOnGame(
+                _marketTradeData[0].gameId,
+                _marketTradeData[0].sportId,
+                _marketTradeData[0].maturity
+            ) / sgpDividerToUse);
+        // risk for a unique SGP combination cant exceed moneyline cap
+        bool combinationSGPRiskExceeded = sgpRiskPerCombination[_getSGPHash(_marketTradeData)] + marketRiskAmount >
+            _calculateCapToBeUsed(
+                _marketTradeData[0].gameId,
+                _marketTradeData[0].sportId,
+                0,
+                0,
+                0,
+                _marketTradeData[0].maturity,
+                false
+            );
+        return totalSGPRiskExceeded || combinationSGPRiskExceeded;
     }
 
     function _isInvalidCombinationOnTicket(
@@ -933,6 +962,25 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetSGPCapDivider(_divider);
     }
 
+    /// @notice sets whether a sportsId is future
+    /// @param _sportId to set whether is a future
+    /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
+    function setIsSportIdFuture(uint16 _sportId, bool _isFuture) external onlyWhitelistedAddresses(msg.sender) {
+        isSportIdFuture[_sportId] = _isFuture;
+        emit SetIsSportIdFuture(_sportId, _isFuture);
+    }
+
+    /// @notice sets whether a sportsId has SGP enabled
+    /// @param _sportIds to set whether SGP enabled
+    /// @param _isEnabled boolean representing whether the given _sportId should have SGPs enabled
+    function setSGPEnabledOnSportIds(uint16[] calldata _sportIds, bool _isEnabled) external onlyOwner {
+        for (uint index = 0; index < _sportIds.length; index++) {
+            uint16 _sportId = _sportIds[index];
+            sgpOnSportIdEnabled[_sportId] = _isEnabled;
+            emit SetSGPEnabledOnSport(_sportId, _isEnabled);
+        }
+    }
+
     /* ========== INTERNAL SETTERS ========== */
 
     function _setCapPerSport(uint _sportId, uint _capPerSport) internal {
@@ -955,23 +1003,24 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetCapPerSportAndType(_sportId, _typeId, _capPerType);
     }
 
-    /// @notice sets whether a sportsId is future
-    /// @param _sportId to set whether is a future
-    /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
-    function setIsSportIdFuture(uint16 _sportId, bool _isFuture) external onlyWhitelistedAddresses(msg.sender) {
-        isSportIdFuture[_sportId] = _isFuture;
-        emit SetIsSportIdFuture(_sportId, _isFuture);
-    }
+    /**
+     * @notice Computes a unique hash for a Same Game Parlay (SGP) using only relevant fields.
+     * @dev Extracts `gameId`, `typeId`, and `playerId` from the `TradeData` struct and hashes them.
+     * @param trades The array of `TradeData` structs representing the parlay selections.
+     * @return bytes32 A unique hash representing the SGP combination.
+     */
+    function _getSGPHash(ISportsAMMV2.TradeData[] memory trades) internal pure returns (bytes32) {
+        bytes32[] memory gameIds = new bytes32[](trades.length);
+        uint16[] memory typeIds = new uint16[](trades.length);
+        uint24[] memory playerIds = new uint24[](trades.length);
 
-    /// @notice sets whether a sportsId has SGP enabled
-    /// @param _sportIds to set whether SGP enabled
-    /// @param _isEnabled boolean representing whether the given _sportId should have SGPs enabled
-    function setSGPEnabledOnSportIds(uint16[] calldata _sportIds, bool _isEnabled) external onlyOwner {
-        for (uint index = 0; index < _sportIds.length; index++) {
-            uint16 _sportId = _sportIds[index];
-            sgpOnSportIdEnabled[_sportId] = _isEnabled;
-            emit SetSGPEnabledOnSport(_sportId, _isEnabled);
+        for (uint i = 0; i < trades.length; i++) {
+            gameIds[i] = trades[i].gameId;
+            typeIds[i] = trades[i].typeId;
+            playerIds[i] = trades[i].playerId;
         }
+
+        return keccak256(abi.encode(gameIds, typeIds, playerIds));
     }
 
     /* ========== MODIFIERS ========== */

@@ -47,7 +47,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
-			.deposit(ethers.parseEther('1000'));
+			.deposit(ethers.parseEther('2000'));
 		await sportsAMMV2LiquidityPool.start();
 	});
 
@@ -119,13 +119,58 @@ describe('SportsAMMV2Live Live Trades', () => {
 		it('Should fail SGP due to liquidity', async () => {
 			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
 			await sportsAMMV2RiskManager.setSGPCapDivider(10);
-			// await sportsAMMV2RiskManager.setCapsPerSport([SPORT_ID_NBA], ethers.parseEther('1000'));
 
 			let approvedQuote = ethers.parseEther('0.5');
 
-			let sgpRiskBefore = await sportsAMMV2RiskManager.sgpSpentOnGame(
-				sameGameWithFirstPlayerProps[0].gameId
+			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+				_tradeData: sameGameWithFirstPlayerProps,
+				_buyInAmount: ethers.parseEther('500'),
+				_expectedQuote: approvedQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
+
+			let requestId = await sgpTradingProcessor.counterToRequestId(0);
+
+			await expect(
+				mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote)
+			).to.be.revertedWith('SGP Risk per game exceeded');
+		});
+
+		it('Check that risk per SGP combo is properly calculated', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+			await sportsAMMV2RiskManager.setCapsPerSport([SPORT_ID_NBA], [ethers.parseEther('1000')]);
+
+			let approvedQuote = ethers.parseEther('0.5');
+
+			let sgpComboRiskBefore = await sportsAMMV2RiskManager.getSGPCombinationRisk(
+				sameGameWithFirstPlayerProps
 			);
+
+			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+				_tradeData: sameGameWithFirstPlayerProps,
+				_buyInAmount: ethers.parseEther('100'),
+				_expectedQuote: approvedQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
+
+			let requestId = await sgpTradingProcessor.counterToRequestId(0);
+			await mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote);
+
+			let sgpComboRiskAfter = await sportsAMMV2RiskManager.getSGPCombinationRisk(
+				sameGameWithFirstPlayerProps
+			);
+			expect(sgpComboRiskBefore).to.equal(ethers.parseEther('0'));
+			expect(sgpComboRiskAfter).to.equal(ethers.parseEther('100'));
+		});
+
+		it('Should fail SGP due to SGP combo risk', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+
+			let approvedQuote = ethers.parseEther('0.25');
 
 			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
 				_tradeData: sameGameWithFirstPlayerProps,
