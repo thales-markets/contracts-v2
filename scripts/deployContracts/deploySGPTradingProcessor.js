@@ -15,6 +15,10 @@ async function main() {
 	// const mockChainlinkOracleAddress = '0xaC69Dcaf76f0EE3aC7e2035825d7765Ebbb654B9';
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 
+	console.log('defaultCollateralAddress: ' + defaultCollateralAddress);
+	console.log('mockChainlinkOracleAddress: ' + mockChainlinkOracleAddress);
+	console.log('sportsAMMV2Address: ' + sportsAMMV2Address);
+
 	const mockSpecId = '0x6435303366646236656233653433613539353665666166636431393532623065';
 	const paymentAmount = ethers.parseEther('1');
 
