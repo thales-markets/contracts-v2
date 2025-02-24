@@ -174,7 +174,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16 _sportId,
         uint _maturity
     ) external view returns (uint totalRisk) {
-        return _calculateTotalRiskOnGame(_gameId, _sportId, _maturity);
+        (totalRisk, ) = _calculateTotalRiskOnGame(_gameId, _sportId, _maturity);
     }
 
     /// @notice check risk for ticket
@@ -440,9 +440,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             }
         }
         if (_isSGP) {
-            require(!_isSGPRiskPerGameExceeded(_tradeData, _payout - _buyInAmount), "SGP Risk per game exceeded");
-            sgpSpentOnGame[_tradeData[0].gameId] += (_payout - _buyInAmount);
-            sgpRiskPerCombination[_getSGPHash(_tradeData)] += (_payout - _buyInAmount);
+            uint marketRiskAmount = _payout - _buyInAmount;
+            require(!_isSGPRiskExceeded(_tradeData, marketRiskAmount), "SGP Risk per game exceeded");
+            sgpSpentOnGame[_tradeData[0].gameId] += marketRiskAmount;
+            sgpRiskPerCombination[getSGPHash(_tradeData)] += marketRiskAmount;
         }
     }
 
@@ -485,7 +486,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
      * @return uint The total risk amount associated with the given SGP.
      */
     function getSGPCombinationRisk(ISportsAMMV2.TradeData[] memory trades) external view returns (uint) {
-        bytes32 sgpHash = _getSGPHash(trades);
+        bytes32 sgpHash = getSGPHash(trades);
         return sgpRiskPerCombination[sgpHash];
     }
 
@@ -537,33 +538,25 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint marketRiskAmount
     ) internal view returns (bool) {
         bytes32 gameId = _marketTradeData.gameId;
-        return
-            (spentOnGame[gameId] + marketRiskAmount) >
-            _calculateTotalRiskOnGame(gameId, _marketTradeData.sportId, _marketTradeData.maturity);
+        (uint totalRisk, ) = _calculateTotalRiskOnGame(gameId, _marketTradeData.sportId, _marketTradeData.maturity);
+        return (spentOnGame[gameId] + marketRiskAmount) > totalRisk;
     }
 
-    function _isSGPRiskPerGameExceeded(
+    function _isSGPRiskExceeded(
         ISportsAMMV2.TradeData[] memory _marketTradeData,
         uint marketRiskAmount
     ) internal view returns (bool) {
         uint sgpDividerToUse = sgpCapDivider > 0 ? sgpCapDivider : 2;
+        (uint totalRisk, uint capToBeUsed) = _calculateTotalRiskOnGame(
+            _marketTradeData[0].gameId,
+            _marketTradeData[0].sportId,
+            _marketTradeData[0].maturity
+        );
         bool totalSGPRiskExceeded = (sgpSpentOnGame[_marketTradeData[0].gameId] + marketRiskAmount) >
-            (_calculateTotalRiskOnGame(
-                _marketTradeData[0].gameId,
-                _marketTradeData[0].sportId,
-                _marketTradeData[0].maturity
-            ) / sgpDividerToUse);
-        // risk for a unique SGP combination cant exceed moneyline cap
-        bool combinationSGPRiskExceeded = sgpRiskPerCombination[_getSGPHash(_marketTradeData)] + marketRiskAmount >
-            _calculateCapToBeUsed(
-                _marketTradeData[0].gameId,
-                _marketTradeData[0].sportId,
-                0,
-                0,
-                0,
-                _marketTradeData[0].maturity,
-                false
-            );
+            (totalRisk / sgpDividerToUse);
+        // risk for a unique SGP combination cant exceed moneyline cap / sgpDivider
+        bool combinationSGPRiskExceeded = sgpRiskPerCombination[getSGPHash(_marketTradeData)] + marketRiskAmount >
+            (capToBeUsed / sgpDividerToUse);
         return totalSGPRiskExceeded || combinationSGPRiskExceeded;
     }
 
@@ -681,12 +674,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bytes32 _gameId,
         uint16 _sportId,
         uint _maturity
-    ) internal view returns (uint totalRisk) {
+    ) internal view returns (uint totalRisk, uint capToBeUsed) {
         // get cap for parent market
-        uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity, false);
+        capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity, false);
         uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId);
 
-        return (capToBeUsed * riskMultiplier);
+        totalRisk = (capToBeUsed * riskMultiplier);
     }
 
     /* ========== SETTERS ========== */
@@ -1009,7 +1002,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
      * @param trades The array of `TradeData` structs representing the parlay selections.
      * @return bytes32 A unique hash representing the SGP combination.
      */
-    function _getSGPHash(ISportsAMMV2.TradeData[] memory trades) internal pure returns (bytes32) {
+    function getSGPHash(ISportsAMMV2.TradeData[] memory trades) public pure returns (bytes32) {
+        // Sort trades based on (typeId, playerId and lineId)
+        _sortSGPLegs(trades);
+
         bytes32[] memory gameIds = new bytes32[](trades.length);
         uint16[] memory typeIds = new uint16[](trades.length);
         uint24[] memory playerIds = new uint24[](trades.length);
@@ -1021,6 +1017,28 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
 
         return keccak256(abi.encode(gameIds, typeIds, playerIds));
+    }
+
+    function _sortSGPLegs(ISportsAMMV2.TradeData[] memory trades) internal pure {
+        uint256 length = trades.length;
+        for (uint256 i = 0; i < length - 1; i++) {
+            for (uint256 j = i + 1; j < length; j++) {
+                if (_compareSGPLegs(trades[i], trades[j]) > 0) {
+                    // Swap trades[i] and trades[j]
+                    (trades[i], trades[j]) = (trades[j], trades[i]);
+                }
+            }
+        }
+    }
+
+    function _compareSGPLegs(ISportsAMMV2.TradeData memory a, ISportsAMMV2.TradeData memory b) internal pure returns (int) {
+        if (a.typeId < b.typeId) return -1;
+        if (a.typeId > b.typeId) return 1;
+        if (a.playerId < b.playerId) return -1;
+        if (a.playerId > b.playerId) return 1;
+        if (a.line < b.line) return -1;
+        if (a.line > b.line) return 1;
+        return 0;
     }
 
     /* ========== MODIFIERS ========== */

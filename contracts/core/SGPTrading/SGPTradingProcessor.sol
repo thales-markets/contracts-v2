@@ -119,7 +119,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     /// @notice fulfillSGPTrade
     /// @param _requestId which is being fulfilled
-    /// @param _allow whether the live trade should go through
+    /// @param _allow whether the sgp trade should go through
     /// @param _approvedQuote what will be the actual payout
     function fulfillSGPTrade(
         bytes32 _requestId,
@@ -172,7 +172,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     //////////// SETTERS
 
-    /// @notice pause live trading
+    /// @notice pause sgp trading
     /// @param _setPausing whether to pause or unpause
     function setPaused(bool _setPausing) external onlyOwner {
         _setPausing ? _pause() : _unpause();

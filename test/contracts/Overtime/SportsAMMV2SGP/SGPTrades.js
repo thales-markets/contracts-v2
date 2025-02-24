@@ -19,6 +19,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 		sportsAMMV2LiquidityPoolETH,
 		tradeDataThreeMarketsCurrentRound,
 		sameGameWithFirstPlayerProps,
+		sameGameWithSecondPlayerProps,
 		firstLiquidityProvider,
 		firstTrader,
 		secondAccount,
@@ -36,6 +37,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			sportsAMMV2LiquidityPoolETH,
 			tradeDataThreeMarketsCurrentRound,
 			sameGameWithFirstPlayerProps,
+			sameGameWithSecondPlayerProps,
 			sgpTradingProcessor,
 			mockChainlinkOracle,
 			weth,
@@ -207,6 +209,14 @@ describe('SportsAMMV2Live Live Trades', () => {
 			await expect(
 				mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote)
 			).to.be.revertedWith('SGP Risk per game exceeded');
+		});
+
+		it('Ensure same SGP hashes for different order on SGP', async () => {
+			let sgpHashFirst = await sportsAMMV2RiskManager.getSGPHash(sameGameWithFirstPlayerProps);
+
+			let sgpHashSecond = await sportsAMMV2RiskManager.getSGPHash(sameGameWithSecondPlayerProps);
+
+			expect(sgpHashFirst).to.equal(sgpHashSecond);
 		});
 	});
 });

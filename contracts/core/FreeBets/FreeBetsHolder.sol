@@ -221,7 +221,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         require(msg.sender == address(sgpTradingProcessor), "Only callable from SGPTradingProcessor");
 
         address _user = sgpRequestsPerUser[requestId];
-        require(_user != address(0), "Unknown live ticket");
+        require(_user != address(0), "Unknown SGP ticket");
 
         if (_collateral == address(0)) {
             _collateral = address(sportsAMM.defaultCollateral());
