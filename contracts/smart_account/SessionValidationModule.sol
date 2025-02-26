@@ -2,7 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {ECDSA} from "./openzeppelin/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /**
  * @title SessionValidationModule
@@ -10,6 +11,9 @@ import {ECDSA} from "./openzeppelin/ECDSA.sol";
  * It includes an owner-managed whitelist of allowed contract addresses.
  */
 contract SessionValidationModule is Initializable {
+    using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
+
     /**
      * @notice User Operation struct
      * @dev Represents a user operation that must be validated before execution.
@@ -119,6 +123,13 @@ contract SessionValidationModule is Initializable {
 
         // Check if the destination contract(s) are whitelisted
         require(whitelistedContracts[destContract] || whitelistedContracts[destContract2], "DestContractNotWhitelisted");
-        return address(sessionKey) == ECDSA.recover(ECDSA.toEthSignedMessageHash(_userOpHash), _sessionKeySignature);
+
+        // Use MessageHashUtils to compute the Ethereum signed message hash
+        bytes32 ethSignedMessageHash = _userOpHash.toEthSignedMessageHash();
+
+        // Recover the address from the signature
+        address recoveredAddress = ECDSA.recover(ethSignedMessageHash, _sessionKeySignature);
+
+        return sessionKey == recoveredAddress;
     }
 }
