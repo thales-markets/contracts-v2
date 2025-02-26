@@ -64,29 +64,4 @@ describe('SessionValidationModule', function () {
 			).to.be.revertedWith('Not the owner');
 		});
 	});
-
-	// describe('Session Validation', function () {
-	// 	it('Should validate whitelisted contract interactions', async function () {
-	// 		const { sessionValidationModule, owner, otherAccount } = await loadFixture(deploySessionValidationModuleFixture);
-	// 		await sessionValidationModule.updateWhitelist(otherAccount.address, true);
-	//
-	// 		// Mocking user operation and signature
-	// 		const userOpHash = ethers.keccak256(ethers.toUtf8Bytes("test-operation"));
-	// 		const signature = await owner.signMessage(ethers.getBytes(userOpHash));
-	//
-	// 		expect(await sessionValidationModule.validateSessionUserOp({
-	// 			sender: owner.address,
-	// 			nonce: 0,
-	// 			initCode: "0x",
-	// 			callData: ethers.solidityPacked(["address"], [otherAccount.address]),
-	// 			callGasLimit: 0,
-	// 			verificationGasLimit: 0,
-	// 			preVerificationGas: 0,
-	// 			maxFeePerGas: 0,
-	// 			maxPriorityFeePerGas: 0,
-	// 			paymasterAndData: "0x",
-	// 			signature: signature
-	// 		}, userOpHash, "0x", signature)).to.be.true;
-	// 	});
-	// });
 });
