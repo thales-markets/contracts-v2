@@ -85,13 +85,17 @@ interface ISportsAMMV2RiskManager {
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
+        uint _payout,
         bool _isLive,
-        uint8 _systemBetDenominator
+        uint8 _systemBetDenominator,
+        bool _isSGP
     ) external;
 
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure;
 
     function isSportIdFuture(uint16 _sportsId) external view returns (bool);
+
+    function sgpOnSportIdEnabled(uint16 _sportsId) external view returns (bool);
 
     function getMaxSystemBetPayout(
         ISportsAMMV2.TradeData[] memory _tradeData,

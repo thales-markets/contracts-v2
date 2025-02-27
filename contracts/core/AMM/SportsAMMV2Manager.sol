@@ -37,6 +37,9 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     // stores whether a given ticket address is a system bet
     mapping(address => bool) public isSystemTicket;
 
+    // stores whether a given ticket address is a SGP bet
+    mapping(address => bool) public isSGPTicket;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner) external initializer {
@@ -63,6 +66,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         }
 
         isSystemTicket[_ticket] = ITicket(_ticket).isSystem();
+        isSGPTicket[_ticket] = ITicket(_ticket).isSGP();
     }
 
     /// @notice remove known ticket from active and add as resolved

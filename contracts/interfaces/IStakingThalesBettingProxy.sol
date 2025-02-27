@@ -5,4 +5,6 @@ import "./IProxyBetting.sol";
 interface IStakingThalesBettingProxy is IProxyBetting {
     function preConfirmLiveTrade(bytes32 requestId, uint _buyInAmount) external;
     function confirmLiveTrade(bytes32 requestId, address _createdTicket, uint _buyInAmount) external;
+    function preConfirmSGPTrade(bytes32 requestId, uint _buyInAmount) external;
+    function confirmSGPTrade(bytes32 requestId, address _createdTicket, uint _buyInAmount) external;
 }
