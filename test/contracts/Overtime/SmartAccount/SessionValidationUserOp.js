@@ -52,9 +52,6 @@ describe('SessionValidationModule', () => {
 				ethers.zeroPadValue(whitelistedContract1.address, 32), // 32-byte padded destination contract address
 			]);
 
-			// Log the callData for debugging
-			console.log('Generated callData:', callData);
-
 			// Create a mock UserOperation
 			const userOp = {
 				sender: user.address,
@@ -107,9 +104,6 @@ describe('SessionValidationModule', () => {
 
 			// Encode sessionKeyData as raw bytes (without ABI encoding)
 			const sessionKeyData = ethers.getBytes(sessionKey.address);
-
-			// Log the sessionKeyData for debugging
-			console.log('SessionKeyData:', sessionKeyData);
 
 			// Call the function as a view function (no transaction)
 			const isValid = await sessionValidationModule.validateSessionUserOp.staticCall(

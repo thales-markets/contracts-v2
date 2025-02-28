@@ -1,5 +1,6 @@
 const { ethers, upgrades } = require('hardhat');
 const { getTargetAddress, setTargetAddress, isTestNetwork, delay } = require('../helpers');
+const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
 
 async function main() {
 	let accounts = await ethers.getSigners();
@@ -21,20 +22,49 @@ async function main() {
 		getTargetAddress('LiveTradingProcessor', network),
 	];
 
-	// Deploy SessionValidationModule
+	// Deploy SessionValidationModule as a proxy
 	const SessionValidationModule = await ethers.getContractFactory('SessionValidationModule');
-	const sessionValidationModule = await SessionValidationModule.deploy(SessionValidationModule, [
-		protocolDAOAddress,
-		whitelistedContracts,
-	]);
-	await sessionValidationModule.deployed();
+	const sessionValidationModule = await upgrades.deployProxy(
+		SessionValidationModule,
+		[protocolDAOAddress, whitelistedContracts],
+		{ initialOwner: protocolDAOAddress }
+	);
+	await sessionValidationModule.waitForDeployment();
 
 	const sessionValidationModuleAddress = await sessionValidationModule.getAddress();
 	console.log('SessionValidationModule deployed at:', sessionValidationModuleAddress);
 	setTargetAddress('SessionValidationModule', network, sessionValidationModuleAddress);
 
+	// Get implementation address
+	const sessionValidationModuleImplementationAddress = await getImplementationAddress(
+		ethers.provider,
+		sessionValidationModuleAddress
+	);
+	console.log(
+		'SessionValidationModule Implementation:',
+		sessionValidationModuleImplementationAddress
+	);
+	setTargetAddress(
+		'SessionValidationModuleImplementation',
+		network,
+		sessionValidationModuleImplementationAddress
+	);
+
+	// Get proxy admin address
+	const sessionValidationModuleProxyAdminAddress = await getAdminAddress(
+		ethers.provider,
+		sessionValidationModuleAddress
+	);
+	console.log('SessionValidationModule Proxy Admin:', sessionValidationModuleProxyAdminAddress);
+	setTargetAddress(
+		'SessionValidationModuleProxyAdmin',
+		network,
+		sessionValidationModuleProxyAdminAddress
+	);
+
 	await delay(5000);
 
+	// Verify the contract
 	try {
 		await hre.run('verify:verify', {
 			address: sessionValidationModuleAddress,
