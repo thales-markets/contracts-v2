@@ -190,7 +190,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         ticketsData = _getTicketsData(ticketsArray);
         freeBetsData = _getTicketsData(freeBetsArray);
         if (address(sportsAMM.stakingThalesBettingProxy()) != address(0)) {
-            address[] memory stakingBettingProxyArray = sportsAMM.stakingThalesBettingProxy().getActiveTicketsPerUser(
+            address[] memory stakingBettingProxyArray = sportsAMM.stakingThalesBettingProxy().getResolvedTicketsPerUser(
                 _startIndex,
                 _pageSize,
                 user
