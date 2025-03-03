@@ -62,6 +62,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isLive;
         bool isSystem;
         uint8 systemBetDenominator;
+        bool isSGP;
     }
 
     struct TicketMarketInfo {
@@ -428,6 +429,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 marketsResult[j] = _getMarketResult(ticket, j);
             }
             bool isSystem = sportsAMM.manager().isSystemTicket(address(ticket));
+            bool isSGP = sportsAMM.manager().isSGPTicket(address(ticket));
 
             tickets[i] = TicketData(
                 ticketsArray[i],
@@ -450,7 +452,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 ticket.finalPayout(),
                 ticket.isLive(),
                 isSystem,
-                isSystem ? ticket.systemBetDenominator() : 0
+                isSystem ? ticket.systemBetDenominator() : 0,
+                isSGP
             );
         }
         return tickets;

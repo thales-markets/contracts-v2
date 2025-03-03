@@ -109,6 +109,18 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // the maximum number of combinations on a system ticket
     uint public maxAllowedSystemCombinations;
 
+    // store whether a sportId is a futures market type
+    mapping(uint16 => bool) public sgpOnSportIdEnabled;
+
+    // spent on sgp per game
+    mapping(bytes32 => uint) public sgpSpentOnGame;
+
+    // sgp cap divider
+    uint public sgpCapDivider;
+
+    // sgp risk per combination
+    mapping(bytes32 => uint) public sgpRiskPerCombination;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -162,7 +174,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16 _sportId,
         uint _maturity
     ) external view returns (uint totalRisk) {
-        return _calculateTotalRiskOnGame(_gameId, _sportId, _maturity);
+        (totalRisk, ) = _calculateTotalRiskOnGame(_gameId, _sportId, _maturity);
     }
 
     /// @notice check risk for ticket
@@ -383,12 +395,17 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice check and update risks for ticket
     /// @param _tradeData trade data with all market info needed for ticket
     /// @param _buyInAmount ticket buy-in amount
+    /// @param _payout ticket _payout
+    /// @param _isLive whether this ticket is live
     /// @param _systemBetDenominator in case of system bets, otherwise 0
+    /// @param _isSGP whether this ticket is SGP
     function checkAndUpdateRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
+        uint _payout,
         bool _isLive,
-        uint8 _systemBetDenominator
+        uint8 _systemBetDenominator,
+        bool _isSGP
     ) external onlySportsAMM(msg.sender) {
         uint numOfMarkets = _tradeData.length;
         bool isSystemBet = _systemBetDenominator > 1;
@@ -415,9 +432,18 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                     "Risk per market and position exceeded"
                 );
                 require(!_isRiskPerGameExceeded(marketTradeData, marketRiskAmount), "Risk per game exceeded");
-                require(!_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i), "Invalid combination detected");
+                require(
+                    _isSGP || !_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i),
+                    "Invalid combination detected"
+                );
                 _updateRisk(marketTradeData, marketRiskAmount);
             }
+        }
+        if (_isSGP) {
+            uint marketRiskAmount = _payout - _buyInAmount;
+            require(!_isSGPRiskExceeded(_tradeData, marketRiskAmount), "SGP Risk per game exceeded");
+            sgpSpentOnGame[_tradeData[0].gameId] += marketRiskAmount;
+            sgpRiskPerCombination[getSGPHash(_tradeData)] += marketRiskAmount;
         }
     }
 
@@ -451,6 +477,17 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bytes32 leaf = keccak256(encodePackedOutput);
         // verify the proof is valid
         require(MerkleProof.verify(_marketTradeData.merkleProof, _rootPerGame, leaf), "Proof is not valid");
+    }
+
+    /**
+     * @notice Reads the total risk stored for a given Same Game Parlay (SGP) combination.
+     * @dev Computes the SGP hash and retrieves the associated risk amount.
+     * @param trades The array of `TradeData` structs representing the parlay selections.
+     * @return uint The total risk amount associated with the given SGP.
+     */
+    function getSGPCombinationRisk(ISportsAMMV2.TradeData[] memory trades) external view returns (uint) {
+        bytes32 sgpHash = getSGPHash(trades);
+        return sgpRiskPerCombination[sgpHash];
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -501,9 +538,26 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint marketRiskAmount
     ) internal view returns (bool) {
         bytes32 gameId = _marketTradeData.gameId;
-        return
-            (spentOnGame[gameId] + marketRiskAmount) >
-            _calculateTotalRiskOnGame(gameId, _marketTradeData.sportId, _marketTradeData.maturity);
+        (uint totalRisk, ) = _calculateTotalRiskOnGame(gameId, _marketTradeData.sportId, _marketTradeData.maturity);
+        return (spentOnGame[gameId] + marketRiskAmount) > totalRisk;
+    }
+
+    function _isSGPRiskExceeded(
+        ISportsAMMV2.TradeData[] memory _marketTradeData,
+        uint marketRiskAmount
+    ) internal view returns (bool) {
+        uint sgpDividerToUse = sgpCapDivider > 0 ? sgpCapDivider : 2;
+        (uint totalRisk, uint capToBeUsed) = _calculateTotalRiskOnGame(
+            _marketTradeData[0].gameId,
+            _marketTradeData[0].sportId,
+            _marketTradeData[0].maturity
+        );
+        bool totalSGPRiskExceeded = (sgpSpentOnGame[_marketTradeData[0].gameId] + marketRiskAmount) >
+            (totalRisk / sgpDividerToUse);
+        // risk for a unique SGP combination cant exceed moneyline cap / sgpDivider
+        bool combinationSGPRiskExceeded = sgpRiskPerCombination[getSGPHash(_marketTradeData)] + marketRiskAmount >
+            (capToBeUsed / sgpDividerToUse);
+        return totalSGPRiskExceeded || combinationSGPRiskExceeded;
     }
 
     function _isInvalidCombinationOnTicket(
@@ -620,12 +674,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bytes32 _gameId,
         uint16 _sportId,
         uint _maturity
-    ) internal view returns (uint totalRisk) {
+    ) internal view returns (uint totalRisk, uint capToBeUsed) {
         // get cap for parent market
-        uint capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity, false);
+        capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity, false);
         uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId);
 
-        return (capToBeUsed * riskMultiplier);
+        totalRisk = (capToBeUsed * riskMultiplier);
     }
 
     /* ========== SETTERS ========== */
@@ -893,6 +947,33 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetDefaultLiveCapDivider(_divider);
     }
 
+    /// @notice sets divider to reduce prematch sgp cap for
+    /// @param _divider to reduce prematch sgp cap for
+    function setSGPCapDivider(uint _divider) external onlyWhitelistedAddresses(msg.sender) {
+        require(_divider > 0 && _divider <= 10, "Divider out of range");
+        sgpCapDivider = _divider;
+        emit SetSGPCapDivider(_divider);
+    }
+
+    /// @notice sets whether a sportsId is future
+    /// @param _sportId to set whether is a future
+    /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
+    function setIsSportIdFuture(uint16 _sportId, bool _isFuture) external onlyWhitelistedAddresses(msg.sender) {
+        isSportIdFuture[_sportId] = _isFuture;
+        emit SetIsSportIdFuture(_sportId, _isFuture);
+    }
+
+    /// @notice sets whether a sportsId has SGP enabled
+    /// @param _sportIds to set whether SGP enabled
+    /// @param _isEnabled boolean representing whether the given _sportId should have SGPs enabled
+    function setSGPEnabledOnSportIds(uint16[] calldata _sportIds, bool _isEnabled) external onlyOwner {
+        for (uint index = 0; index < _sportIds.length; index++) {
+            uint16 _sportId = _sportIds[index];
+            sgpOnSportIdEnabled[_sportId] = _isEnabled;
+            emit SetSGPEnabledOnSport(_sportId, _isEnabled);
+        }
+    }
+
     /* ========== INTERNAL SETTERS ========== */
 
     function _setCapPerSport(uint _sportId, uint _capPerSport) internal {
@@ -915,12 +996,49 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetCapPerSportAndType(_sportId, _typeId, _capPerType);
     }
 
-    /// @notice sets whether a sportsId is future
-    /// @param _sportId to set whether is a future
-    /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
-    function setIsSportIdFuture(uint16 _sportId, bool _isFuture) external onlyWhitelistedAddresses(msg.sender) {
-        isSportIdFuture[_sportId] = _isFuture;
-        emit SetIsSportIdFuture(_sportId, _isFuture);
+    /**
+     * @notice Computes a unique hash for a Same Game Parlay (SGP) using only relevant fields.
+     * @dev Extracts `gameId`, `typeId`, and `playerId` from the `TradeData` struct and hashes them.
+     * @param trades The array of `TradeData` structs representing the parlay selections.
+     * @return bytes32 A unique hash representing the SGP combination.
+     */
+    function getSGPHash(ISportsAMMV2.TradeData[] memory trades) public pure returns (bytes32) {
+        // Sort trades based on (typeId, playerId and lineId)
+        _sortSGPLegs(trades);
+
+        bytes32[] memory gameIds = new bytes32[](trades.length);
+        uint16[] memory typeIds = new uint16[](trades.length);
+        uint24[] memory playerIds = new uint24[](trades.length);
+
+        for (uint i = 0; i < trades.length; i++) {
+            gameIds[i] = trades[i].gameId;
+            typeIds[i] = trades[i].typeId;
+            playerIds[i] = trades[i].playerId;
+        }
+
+        return keccak256(abi.encode(gameIds, typeIds, playerIds));
+    }
+
+    function _sortSGPLegs(ISportsAMMV2.TradeData[] memory trades) internal pure {
+        uint256 length = trades.length;
+        for (uint256 i = 0; i < length - 1; i++) {
+            for (uint256 j = i + 1; j < length; j++) {
+                if (_compareSGPLegs(trades[i], trades[j]) > 0) {
+                    // Swap trades[i] and trades[j]
+                    (trades[i], trades[j]) = (trades[j], trades[i]);
+                }
+            }
+        }
+    }
+
+    function _compareSGPLegs(ISportsAMMV2.TradeData memory a, ISportsAMMV2.TradeData memory b) internal pure returns (int) {
+        if (a.typeId < b.typeId) return -1;
+        if (a.typeId > b.typeId) return 1;
+        if (a.playerId < b.playerId) return -1;
+        if (a.playerId > b.playerId) return 1;
+        if (a.line < b.line) return -1;
+        if (a.line > b.line) return 1;
+        return 0;
     }
 
     /* ========== MODIFIERS ========== */
@@ -968,6 +1086,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     event SetLiveCapDivider(uint _sportId, uint _divider);
     event SetDefaultLiveCapDivider(uint _divider);
+    event SetSGPCapDivider(uint _divider);
 
     event SetIsSportIdFuture(uint16 _sportId, bool _isFuture);
+    event SetSGPEnabledOnSport(uint16 _sportId, bool _isEnabled);
 }
