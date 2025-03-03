@@ -151,7 +151,10 @@
 		"SafeBoxImplementation": "0x56e787E8636B5920eF984465D0A34bFe79cE81c7",
 		"SafeBoxProxyAdmin": "0xf64cCdD00d89C142A435C69f54741fcE1329ebB8",
 		"ChainlinkOracle": "0x8318B56352DB3Cf696BaFEF4Bb0f71eeD910aCCa",
-		"SGPTradingProcessor": "0xc685436615B831030208c3DcfD147816b0Da0391"
+		"SGPTradingProcessor": "0xc685436615B831030208c3DcfD147816b0Da0391",
+		"SessionValidationModule": "0x867072511E55479E4c9A8f2C470FbCf3a37De0F7",
+		"SessionValidationModuleImplementation": "0x6b0d586720902da72BD39C04f44Acd62C1a870ed",
+		"SessionValidationModuleProxyAdmin": "0xf697D759829A60c150b13666F6319Ee70eC338d7"
 	},
 	"arbitrumOne": {
 		"ProtocolDAO": "0x0089282AC624BbBDA7eC472d63ee99643d7eDf4a",
@@ -235,7 +238,10 @@
 		"DefaultLiquidityProviderImplementationCBTC": "0x482610a1c1f8C5057bca7ed1a5148C00d868d020",
 		"DefaultLiquidityProviderProxyAdminCBTC": "0x26cDA85D9AABC0c1FAdbC7d9Cf124B95E2Af3a3C",
 		"ChainlinkOracle": "0x739347344c4f2101f7bea345307fcd619956cbc0",
-		"SGPTradingProcessor": "0xEA9363f4739F1d45F88c584940b6709a9cF6bbe5"
+		"SGPTradingProcessor": "0xEA9363f4739F1d45F88c584940b6709a9cF6bbe5",
+		"SessionValidationModule": "0xA530B2bB8894c02fdC0fD97D4B46fe3570Cb8752",
+		"SessionValidationModuleImplementation": "0x9a15e02689646C77c34ecd31a2ADdbA28bfA3846",
+		"SessionValidationModuleProxyAdmin": "0x02005dFD09619306Bd736fBc14D1c312CA62DEE8"
 	},
 	"baseMainnet": {
 		"ProtocolDAO": "0xf334412B96FE4a9Fc0a93D6297574a3b30217E64",
@@ -314,7 +320,10 @@
 		"DefaultLiquidityProviderImplementationCBTC": "0x32077d9F7BF3994f3A0E905b3EefF34410eCA9A5",
 		"DefaultLiquidityProviderProxyAdminCBTC": "0x45EF93c437131b158A4e4c4Eac1be4cEddB210A8",
 		"ChainlinkOracle": "0xB7dec0966366ecC5A1906F83caA12CCA2EDb0a8c",
-		"SGPTradingProcessor": "0xef780c362cA89fee6e7d3Ddf20564B9288E01ac6"
+		"SGPTradingProcessor": "0xef780c362cA89fee6e7d3Ddf20564B9288E01ac6",
+		"SessionValidationModule": "0x16C9A5AB1f4Ae48329DD5481174336DE52a55bc5",
+		"SessionValidationModuleImplementation": "0xe940cB4f66eC72bd178961BbB2c872a98900E9Cd",
+		"SessionValidationModuleProxyAdmin": "0xe9Bee3FdB4a05bB8498eA1BC49Ff7dFBDc5215D3"
 	},
 	"mainnet": {
 		"OVER": "0x90ce5720c17587d28e4af120ae2d313b3bad1722",
