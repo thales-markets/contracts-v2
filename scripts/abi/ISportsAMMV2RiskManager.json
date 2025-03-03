@@ -135,6 +135,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "_payout",
+        "type": "uint256"
+      },
+      {
         "internalType": "bool",
         "name": "_isLive",
         "type": "bool"
@@ -143,6 +148,11 @@
         "internalType": "uint8",
         "name": "_systemBetDenominator",
         "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isSGP",
+        "type": "bool"
       }
     ],
     "name": "checkAndUpdateRisks",
@@ -588,6 +598,25 @@
         "internalType": "int256",
         "name": "",
         "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "_sportsId",
+        "type": "uint16"
+      }
+    ],
+    "name": "sgpOnSportIdEnabled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

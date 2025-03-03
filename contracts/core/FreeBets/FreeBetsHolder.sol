@@ -11,6 +11,7 @@ import "../../utils/libraries/AddressSetLib.sol";
 
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
+import "../../interfaces/ISGPTradingProcessor.sol";
 
 import "./../AMM/Ticket.sol";
 
@@ -39,6 +40,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     // stores resolved tickets per user
     mapping(address => AddressSetLib.AddressSet) internal resolvedTicketsPerUser;
+
+    ISGPTradingProcessor public sgpTradingProcessor;
+
+    mapping(bytes32 => address) public sgpRequestsPerUser;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -197,6 +202,42 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit FreeBetTrade(_createdTicket, _buyInAmount, _user, true);
     }
 
+    /// @notice request a sgp ticket for a user if he has enough free bet in given collateral
+    function tradeSGP(
+        ISGPTradingProcessor.SGPTradeData calldata _sgpTradeData
+    ) external notPaused canTrade(msg.sender, _sgpTradeData._collateral, _sgpTradeData._buyInAmount) {
+        bytes32 _requestId = sgpTradingProcessor.requestSGPTrade(_sgpTradeData);
+        sgpRequestsPerUser[_requestId] = msg.sender;
+        emit FreeBetSGPTradeRequested(msg.sender, _sgpTradeData._buyInAmount, _requestId);
+    }
+
+    /// @notice confirm a SGP ticket purchase. As SGP betting is a 2 step approach, the SGPradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
+    function confirmSGPTrade(
+        bytes32 requestId,
+        address _createdTicket,
+        uint _buyInAmount,
+        address _collateral
+    ) external notPaused nonReentrant {
+        require(msg.sender == address(sgpTradingProcessor), "Only callable from SGPTradingProcessor");
+
+        address _user = sgpRequestsPerUser[requestId];
+        require(_user != address(0), "Unknown SGP ticket");
+
+        if (_collateral == address(0)) {
+            _collateral = address(sportsAMM.defaultCollateral());
+        }
+
+        require(supportedCollateral[_collateral], "Unsupported collateral");
+        require(balancePerUserAndCollateral[_user][_collateral] >= _buyInAmount, "Insufficient balance");
+
+        balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
+        ticketToUser[_createdTicket] = _user;
+
+        activeTicketsPerUser[_user].add(_createdTicket);
+
+        emit FreeBetTrade(_createdTicket, _buyInAmount, _user, true);
+    }
+
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes back to the freebet balance
     function confirmTicketResolved(address _resolvedTicket) external {
         require(msg.sender == address(sportsAMM), "Only allowed from SportsAMM");
@@ -277,11 +318,19 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /// @notice sets the LiveTradingProcessor contract address
-    /// @param _liveTradingProcessor the address of Sports AMM contract
+    /// @param _liveTradingProcessor the address of Live Trading Processor contract
     function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
         require(_liveTradingProcessor != address(0), "Invalid address");
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
         emit SetLiveTradingProcessor(_liveTradingProcessor);
+    }
+
+    /// @notice sets the SGPTradingProcessor contract address
+    /// @param _sgpTradingProcessor the address of SGP Trading Processor contract
+    function setSGPTradingProcessor(address _sgpTradingProcessor) external onlyOwner {
+        require(_sgpTradingProcessor != address(0), "Invalid address");
+        sgpTradingProcessor = ISGPTradingProcessor(_sgpTradingProcessor);
+        emit SetSGPTradingProcessor(_sgpTradingProcessor);
     }
 
     /// @notice sets the Sports AMM contract address
@@ -306,10 +355,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /* ========== EVENTS ========== */
     event SetSportsAMM(address sportsAMM);
     event SetLiveTradingProcessor(address liveTradingProcessor);
+    event SetSGPTradingProcessor(address sgpTradingProcessor);
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event CollateralSupportChanged(address collateral, bool supported);
     event FreeBetTicketResolved(address ticket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
+    event FreeBetSGPTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event UserFundingRemoved(address _user, address _collateral, address _receiver, uint _amount);
 }

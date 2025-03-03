@@ -76,6 +76,15 @@ interface ISportsAMMV2 {
         uint8 _systemBetDenominator
     ) external returns (address _createdTicket);
 
+    function tradeSGP(
+        ISportsAMMV2.TradeData[] calldata _tradeData,
+        uint _buyInAmount,
+        uint _approvedQuote,
+        address _recipient,
+        address _referrer,
+        address _collateral
+    ) external returns (address _createdTicket);
+
     function rootPerGame(bytes32 game) external view returns (bytes32);
 
     function paused() external view returns (bool);

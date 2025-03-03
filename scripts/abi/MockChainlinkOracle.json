@@ -59,6 +59,29 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "allow",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "approvedQuote",
+        "type": "uint256"
+      }
+    ],
+    "name": "fulfillSGPTrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "liveTradingProcessor",
     "outputs": [
@@ -95,6 +118,32 @@
     "name": "setLiveTradingProcessor",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sgpTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "setSGPTradingProcessor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sgpTradingProcessor",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
