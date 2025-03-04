@@ -223,6 +223,22 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
+    /// @notice migrate ticket to next round
+    /// @param _ticket ticket to migrate
+    /// @param _newRound new round (0 for next round)
+    function migrateTicketToAnotherRound(address _ticket, uint _newRound) external onlyOwner roundClosingNotPrepared {
+        _migrateTicketToNewRound(_ticket, _newRound == 0 ? round + 1 : _newRound);
+    }
+
+    /// @notice migrate batch of tickets to another round
+    /// @param _tickets batch of tickets to migrate
+    /// @param _newRound new round (0 for next round)
+    function migrateBatchOfTicketsToAnotherRound(address[] memory _tickets, uint _newRound) external onlyOwner roundClosingNotPrepared {
+        for (uint i = 0; i < _tickets.length; i++) {
+            _migrateTicketToNewRound(_tickets[i], _newRound == 0 ? round + 1 : _newRound);
+        }
+    }
+
     /// @notice request withdrawal from the LP
     function withdrawalRequest() external nonReentrant canWithdraw whenNotPaused roundClosingNotPrepared {
         if (totalDeposited > balancesPerRound[round][msg.sender]) {
@@ -637,6 +653,35 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         }
     }
 
+    function _migrateTicketToNewRound(address _ticket, uint _newRound) internal {
+        require(_newRound > round || _newRound == 1, "RoundAlreadyClosed");
+        uint ticketRound = getTicketRound(_ticket);
+        require(isTradingTicketInARound[ticketRound][_ticket], "TicketNotInCurrentRound");
+        require(!ticketAlreadyExercisedInRound[ticketRound][_ticket], "TicketAlreadyExercised");
+        ticketAlreadyExercisedInRound[ticketRound][_ticket] = true;
+        isTradingTicketInARound[ticketRound][_ticket] = false;
+        address oldLiquidityPoolRound = _getOrCreateRoundPool(ticketRound);
+        _removeTicketFromRound(ticketRound, _ticket);
+        address newLiquidityPoolRound = _getOrCreateRoundPool(_newRound);
+        roundPerTicket[_ticket] = _newRound;
+        isTradingTicketInARound[_newRound][_ticket] = true;
+        // checks for new pool balance is avoided. Transaction will revert if new pool balance is not enough
+        collateral.safeTransferFrom(newLiquidityPoolRound, oldLiquidityPoolRound, collateral.balanceOf(_ticket)-Ticket(_ticket).buyInAmount());
+        tradingTicketsPerRound[_newRound].push(_ticket);
+        emit TicketMigratedToNextRound(_ticket, ticketRound, _newRound);
+    }
+
+
+    function _removeTicketFromRound(uint _round, address _ticket) internal {
+        for (uint i = 0; i < tradingTicketsPerRound[_round].length; i++) {
+            if (tradingTicketsPerRound[_round][i] == _ticket) {
+                tradingTicketsPerRound[_round][i] = tradingTicketsPerRound[_round][tradingTicketsPerRound[_round].length - 1];
+                tradingTicketsPerRound[_round].pop();
+                break;
+            }
+        }
+    }
+
     /* ========== SETTERS ========== */
 
     /// @notice Pause/unpause LP
@@ -772,4 +817,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     event MaxAllowedUsersChanged(uint maxAllowedUsersChanged);
     event UtilizationRateChanged(uint utilizationRate);
     event SetSafeBoxParams(address safeBox, uint safeBoxImpact);
+
+    event TicketMigratedToNextRound(address ticket, uint oldRound, uint newRound);
 }

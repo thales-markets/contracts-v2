@@ -375,6 +375,31 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "ticket",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldRound",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newRound",
+        "type": "uint256"
+      }
+    ],
+    "name": "TicketMigratedToNextRound",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "account",
         "type": "address"
       }
@@ -953,6 +978,42 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "_tickets",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_newRound",
+        "type": "uint256"
+      }
+    ],
+    "name": "migrateBatchOfTicketsToAnotherRound",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_newRound",
+        "type": "uint256"
+      }
+    ],
+    "name": "migrateTicketToAnotherRound",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
