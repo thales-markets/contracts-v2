@@ -177,10 +177,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice get roots for the list of games
     /// @param _games to return roots for
+    /// @notice get roots for the list of games
+    /// @param _games to return roots for
     function getRootsPerGames(bytes32[] calldata _games) external view returns (bytes32[] memory _roots) {
-        _roots = new bytes32[](_games.length);
-        for (uint i; i < _games.length; i++) {
-            _roots[i] = rootPerGame[_games[i]];
+        uint len = _games.length;
+        _roots = new bytes32[](len);
+
+        unchecked {
+            for (uint i; i < len; ++i) {
+                _roots[i] = rootPerGame[_games[i]];
+            }
         }
     }
 
@@ -293,7 +299,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _buyInAmount,
                     priceInUSD,
                     defaultCollateralDecimals,
-                    ISportsAMMV2Manager(address(_collateral)).decimals()
+                    ISportsAMMV2Manager(_collateral).decimals()
                 );
             }
         }
@@ -504,7 +510,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice expire provided tickets
     /// @param _tickets array of tickets to be expired
     function expireTickets(address[] calldata _tickets) external onlyOwner {
-        for (uint i = 0; i < _tickets.length; i++) {
+        for (uint i; i < _tickets.length; ++i) {
             address ticketAddress = _tickets[i];
             address ticketOwner = Ticket(ticketAddress).ticketOwner();
             if (ticketOwner != freeBetsHolder && ticketOwner != stakingThalesBettingProxy) {
@@ -538,7 +544,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         uint addedPayoutPercentage = addedPayoutPercentagePerCollateral[_tradeDataQuoteInternal._collateral];
 
-        for (uint i = 0; i < numOfMarkets; i++) {
+        for (uint i; i < numOfMarkets; ++i) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
             riskManager.verifyMerkleTree(marketTradeData, rootPerGame[marketTradeData.gameId]);
@@ -553,7 +559,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _divWithDecimals(_tradeDataQuoteInternal._buyInAmount, marketOdds) -
                 _tradeDataQuoteInternal._buyInAmount;
             if (isSystemBet) {
-                amountsToBuy[i] = (amountsToBuy[i] * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
+                amountsToBuy[i] = (amountsToBuy[i] * _systemBetDenominator) / numOfMarkets;
             }
             // amounts to buy should be decreased by buyinamount
             totalQuote = totalQuote == 0 ? marketOdds : _mulWithDecimals(totalQuote, marketOdds);
@@ -591,11 +597,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     _systemBetDenominator
                 );
 
-                for (uint i = 0; i < numOfMarkets; i++) {
-                    if (isMarketOutOfLiquidity[i]) {
-                        amountsToBuy[i] = 0;
+                unchecked {
+                    for (uint i; i < numOfMarkets; ) {
+                        if (isMarketOutOfLiquidity[i]) amountsToBuy[i] = 0;
+                        ++i;
                     }
                 }
+
                 if (riskStatus != ISportsAMMV2RiskManager.RiskStatus.NoRisk) {
                     totalQuote = 0;
                     payout = 0;
@@ -612,13 +620,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) internal returns (address lqPool, uint collateralPrice, uint buyInAmount, address collateralAfterOnramp) {
         buyInAmount = _buyInAmount;
         collateralAfterOnramp = _collateral;
-        if (_collateral != address(0) && _collateral != address(defaultCollateral)) {
+
+        if (_collateral == address(0) || _collateral == address(defaultCollateral)) {
+            collateralAfterOnramp = address(defaultCollateral);
+            defaultCollateral.safeTransferFrom(_fromAddress, address(this), _buyInAmount);
+        } else {
             if (_isEth) {
-                // wrap ETH
                 require(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount, "InsuffETHSent");
                 IWeth(_collateral).deposit{value: msg.value}();
             } else {
-                // Generic case for any collateral used (THALES/ARB/OP)
                 IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
             }
 
@@ -628,15 +638,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 require(collateralPrice > 0, "ZeroPriceForCollateral");
             } else {
                 require(multicollateralEnabled, "Multi-collatDisabled");
-                uint buyInAmountInDefaultCollateral = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+                uint minReceived = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
                 IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
                 buyInAmount = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
-                require(buyInAmount >= buyInAmountInDefaultCollateral, "InsuffReceived");
+                require(buyInAmount >= minReceived, "InsuffReceived");
                 collateralAfterOnramp = address(defaultCollateral);
             }
-        } else {
-            collateralAfterOnramp = address(defaultCollateral);
-            defaultCollateral.safeTransferFrom(_fromAddress, address(this), _buyInAmount);
         }
         lqPool = liquidityPoolForCollateral[collateralAfterOnramp];
     }
@@ -798,27 +805,27 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _addedPayoutPercentage
     ) internal pure returns (Ticket.MarketData[] memory markets) {
-        markets = new Ticket.MarketData[](_tradeData.length);
+        uint len = _tradeData.length;
+        markets = new Ticket.MarketData[](len);
 
-        for (uint i = 0; i < _tradeData.length; i++) {
-            ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+        unchecked {
+            for (uint i; i < len; ++i) {
+                ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
+                uint odds = marketTradeData.odds[marketTradeData.position];
 
-            uint marketOdds = (marketTradeData.odds[marketTradeData.position] * ONE) /
-                ((ONE + _addedPayoutPercentage) -
-                    _mulWithDecimals(_addedPayoutPercentage, marketTradeData.odds[marketTradeData.position]));
-
-            markets[i] = Ticket.MarketData(
-                marketTradeData.gameId,
-                marketTradeData.sportId,
-                marketTradeData.typeId,
-                marketTradeData.maturity,
-                marketTradeData.status,
-                marketTradeData.line,
-                marketTradeData.playerId,
-                marketTradeData.position,
-                marketOdds,
-                marketTradeData.combinedPositions[marketTradeData.position]
-            );
+                markets[i] = Ticket.MarketData(
+                    marketTradeData.gameId,
+                    marketTradeData.sportId,
+                    marketTradeData.typeId,
+                    marketTradeData.maturity,
+                    marketTradeData.status,
+                    marketTradeData.line,
+                    marketTradeData.playerId,
+                    marketTradeData.position,
+                    (odds * ONE) / ((ONE + _addedPayoutPercentage) - _mulWithDecimals(_addedPayoutPercentage, odds)),
+                    marketTradeData.combinedPositions[marketTradeData.position]
+                );
+            }
         }
     }
 
@@ -852,22 +859,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _getFees(uint _buyInAmount) internal view returns (uint fees) {
-        fees = (_buyInAmount * safeBoxFee) / ONE;
+    function _getFees(uint _buyInAmount) internal view returns (uint) {
+        return (_buyInAmount * safeBoxFee) / ONE;
     }
 
-    function _divWithDecimals(uint _divident, uint _divisor) internal pure returns (uint result) {
-        result = (ONE * _divident) / _divisor;
+    function _divWithDecimals(uint _dividend, uint _divisor) internal pure returns (uint) {
+        return (ONE * _dividend) / _divisor;
     }
 
-    function _mulWithDecimals(uint _firstMul, uint _secondMul) internal pure returns (uint result) {
-        result = (_firstMul * _secondMul) / ONE;
+    function _mulWithDecimals(uint _firstMul, uint _secondMul) internal pure returns (uint) {
+        return (_firstMul * _secondMul) / ONE;
     }
 
     function _setReferrer(address _referrer, address _recipient) internal {
-        if (_referrer != address(0)) {
-            referrals.setReferrer(_referrer, _recipient);
-        }
+        if (_referrer != address(0)) referrals.setReferrer(_referrer, _recipient);
     }
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth, bool _cancelTicket) internal {
@@ -914,8 +919,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _roots new roots
     function setRootsPerGames(bytes32[] memory _games, bytes32[] memory _roots) external onlyWhitelistedAddresses {
         require(_games.length == _roots.length, "InvalidLength");
-        for (uint i; i < _games.length; i++) {
-            _setRootForGame(_games[i], _roots[i]);
+        unchecked {
+            for (uint i; i < _games.length; ++i) {
+                _setRootForGame(_games[i], _roots[i]);
+            }
         }
     }
 
@@ -1021,13 +1028,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _liquidityPool new LP address
     function setLiquidityPoolForCollateral(address _collateralAddress, address _liquidityPool) external onlyOwner {
         address prevPool = liquidityPoolForCollateral[_collateralAddress];
-        if (prevPool != address(0)) {
-            IERC20(_collateralAddress).approve(prevPool, 0);
-        }
+
+        if (prevPool != address(0)) IERC20(_collateralAddress).approve(prevPool, 0);
+
         liquidityPoolForCollateral[_collateralAddress] = _liquidityPool;
-        if (_liquidityPool != address(0)) {
-            IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
-        }
+
+        if (_liquidityPool != address(0)) IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
+
         emit SetLiquidityPoolForCollateral(_liquidityPool, _collateralAddress);
     }
 
@@ -1035,14 +1042,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _onOffRamper new multi-collateral on/off ramp address
     /// @param _enabled enable/disable multi-collateral on/off ramp
     function setMultiCollateralOnOffRamp(address _onOffRamper, bool _enabled) external onlyOwner {
-        if (address(multiCollateralOnOffRamp) != address(0)) {
-            defaultCollateral.approve(address(multiCollateralOnOffRamp), 0);
-        }
+        address prevOnOffRamp = address(multiCollateralOnOffRamp);
+
+        if (prevOnOffRamp != address(0)) defaultCollateral.approve(prevOnOffRamp, 0);
+
         multiCollateralOnOffRamp = IMultiCollateralOnOffRamp(_onOffRamper);
         multicollateralEnabled = _enabled;
-        if (_enabled) {
-            defaultCollateral.approve(_onOffRamper, MAX_APPROVAL);
-        }
+
+        if (_enabled) defaultCollateral.approve(_onOffRamper, MAX_APPROVAL);
+
         emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
     }
 
@@ -1084,10 +1092,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EVENTS ========== */
 
-    event NewTicket(Ticket.MarketData[] markets, address ticket, uint buyInAmount, uint payout, bool isLive);
+    /* ========== EVENTS ========== */
+
+    event NewTicket(Ticket.MarketData[] markets, address indexed ticket, uint buyInAmount, uint payout, bool isLive);
     event TicketCreated(
-        address ticket,
-        address recipient,
+        address indexed ticket,
+        address indexed recipient,
         uint buyInAmount,
         uint fees,
         uint payout,
@@ -1095,30 +1105,30 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address collateral
     );
 
-    event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
-    event ReferrerPaid(address refferer, address trader, uint amount, uint volume, address collateral);
-    event SafeBoxFeePaid(uint safeBoxFee, uint safeBoxAmount, address collateral);
+    event TicketResolved(address indexed ticket, address indexed ticketOwner, bool isUserTheWinner);
+    event ReferrerPaid(address indexed referrer, address indexed trader, uint amount, uint volume, address collateral);
+    event SafeBoxFeePaid(uint safeBoxFee, uint safeBoxAmount, address indexed collateral);
 
-    event GameRootUpdated(bytes32 game, bytes32 root);
+    event GameRootUpdated(bytes32 indexed game, bytes32 root);
     event AmountsUpdated(uint safeBoxFee);
     event AddressesUpdated(
-        IERC20 defaultCollateral,
-        address manager,
-        address riskManager,
+        IERC20 indexed defaultCollateral,
+        address indexed manager,
+        address indexed riskManager,
         address resultManager,
         address referrals,
         address stakingThales,
         address safeBox
     );
-    event TicketMastercopyUpdated(address ticketMastercopy);
-    event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
-    event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
-    event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
-    event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
+    event TicketMastercopyUpdated(address indexed ticketMastercopy);
+    event SetLiquidityPoolForCollateral(address indexed liquidityPool, address indexed collateral);
+    event SetMultiCollateralOnOffRamp(address indexed onOffRamper, bool enabled);
+    event SetAddedPayoutPercentagePerCollateral(address indexed _collateral, uint _addedPayout);
+    event SetSafeBoxPerCollateral(address indexed _collateral, address indexed _safeBox);
     event SetBettingProcessors(
-        address liveTradingProcessor,
-        address sgpTradingProcessor,
-        address freeBetsHolder,
+        address indexed liveTradingProcessor,
+        address indexed sgpTradingProcessor,
+        address indexed freeBetsHolder,
         address stakingThalesBettingProxy
     );
 }
