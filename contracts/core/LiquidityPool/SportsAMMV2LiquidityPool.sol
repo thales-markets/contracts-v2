@@ -244,13 +244,26 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         uint _newRound,
         uint[] memory _ticketsIndexInRound
     ) external onlyOwner roundClosingNotPrepared {
+        _newRound = _newRound == 0 ? round + 1 : _newRound;
         if (_ticketsIndexInRound.length == 0) {
             for (uint i = 0; i < _tickets.length; i++) {
-                _migrateTicketToNewRound(_tickets[i], _newRound == 0 ? round + 1 : _newRound, 0);
+                _migrateTicketToNewRound(_tickets[i], _newRound, 0);
             }
         } else {
+            uint tradingTicketsLength = tradingTicketsPerRound[round].length;
             for (uint i = 0; i < _tickets.length; i++) {
-                _migrateTicketToNewRound(_tickets[i], _newRound == 0 ? round + 1 : _newRound, _ticketsIndexInRound[i]);
+                if (_ticketsIndexInRound[i] < tradingTicketsLength - i) {
+                    _migrateTicketToNewRound(_tickets[i], _newRound, _ticketsIndexInRound[i]);
+                } else {
+                    uint n;
+                    while (
+                        tradingTicketsPerRound[round][_ticketsIndexInRound[n]] != _tickets[i] &&
+                        n < _ticketsIndexInRound.length
+                    ) {
+                        n++;
+                    }
+                    _migrateTicketToNewRound(_tickets[i], _newRound, _ticketsIndexInRound[n]);
+                }
             }
         }
     }
@@ -732,6 +745,11 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 }
             }
         } else {
+            require(
+                _ticketIndexInRound < tradingTicketsPerRound[_round].length &&
+                    tradingTicketsPerRound[_round][_ticketIndexInRound] == _ticket,
+                "TicketNotFound"
+            );
             tradingTicketsPerRound[_round][_ticketIndexInRound] = tradingTicketsPerRound[_round][
                 tradingTicketsPerRound[_round].length - 1
             ];
