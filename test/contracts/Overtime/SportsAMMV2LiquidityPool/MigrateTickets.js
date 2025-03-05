@@ -310,7 +310,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					0,
 					maxTicketIndex
 				);
-			expect(Number(IicketsInRoundLengthReturned)).to.equal(7);
+			expect(Number(IicketsInRoundLengthReturned)).to.equal(maxTicketIndex);
 			await sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(
 				ticketAddresses,
 				10,
