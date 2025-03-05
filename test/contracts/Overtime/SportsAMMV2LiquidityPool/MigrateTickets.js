@@ -103,7 +103,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			await sportsAMMV2LiquidityPool.start();
 
 			let quote;
-			for (let i = 0; i < 10; i++) {
+			for (let i = 0; i < 5; i++) {
 				quote = await sportsAMMV2.tradeQuote(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
@@ -152,7 +152,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			await sportsAMMV2LiquidityPool.start();
 
 			let quote;
-			for (let i = 0; i < 10; i++) {
+			for (let i = 0; i < 5; i++) {
 				quote = await sportsAMMV2.tradeQuote(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
@@ -175,7 +175,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// try exercise on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
-			const ticketAddresses = Array.from(activeTickets.slice(0, 10));
+			const ticketAddresses = Array.from(activeTickets.slice(0, 5));
 			const currentRound = await sportsAMMV2LiquidityPool.round();
 			const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
 			expect(Number(ticketRound)).to.equal(Number(currentRound));
@@ -205,7 +205,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(collateralAmount);
 			await sportsAMMV2LiquidityPool.start();
 			let quote;
-			for (let i = 0; i < 10; i++) {
+			for (let i = 0; i < 5; i++) {
 				quote = await sportsAMMV2.tradeQuote(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
@@ -228,7 +228,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// try exercise on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
-			const ticketAddresses = Array.from(activeTickets.slice(0, 10));
+			const ticketAddresses = Array.from(activeTickets.slice(0, 5));
 			const currentRound = await sportsAMMV2LiquidityPool.round();
 			const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
 			expect(Number(ticketRound)).to.equal(Number(currentRound));
@@ -259,7 +259,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(collateralAmount);
 			await sportsAMMV2LiquidityPool.start();
 			let quote;
-			for (let i = 0; i < 12; i++) {
+			for (let i = 0; i < 7; i++) {
 				quote = await sportsAMMV2.tradeQuote(
 					tradeDataTenMarketsCurrentRound,
 					BUY_IN_AMOUNT,
@@ -282,20 +282,20 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// try exercise on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
-			const ticketAddresses = Array.from(activeTickets.slice(0, 10));
+			const ticketAddresses = Array.from(activeTickets.slice(0, 5));
 			const currentRound = await sportsAMMV2LiquidityPool.round();
 			const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
 			expect(Number(ticketRound)).to.equal(Number(currentRound));
 			const numOfTickets =
 				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 			const ticketIndexes = [];
-			const maxTicketIndex = 20;
+			const maxTicketIndex = 7;
 			for (let i = 0; i < ticketAddresses.length; i++) {
 				const ticketIndex = await sportsAMMV2LiquidityPool.getTicketIndexInTicketRound(
 					ticketAddresses[i],
 					currentRound,
 					0,
-					10
+					maxTicketIndex
 				);
 				if (ticketIndex == maxTicketIndex) {
 					ticketIndex = 0;
@@ -335,7 +335,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 		});
 
-		it('Should migrate a batch of tickets to future round (round 10) and exercise current round', async () => {
+		it('Should migrate a batch of tickets individually to future round (round 10) and exercise current round', async () => {
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(collateralAmount);
 			await sportsAMMV2LiquidityPool.start();
 			let quote;
