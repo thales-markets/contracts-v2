@@ -464,7 +464,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) external pure {
         require(_marketTradeData.length == _rootPerGame.length, "Mismatched input lengths");
 
-        for (uint i = 0; i < _marketTradeData.length; ++i) {
+        for (uint i; i < _marketTradeData.length; ++i) {
             bytes32 leaf = _computeMerkleLeaf(_marketTradeData[i]);
             require(MerkleProof.verify(_marketTradeData[i].merkleProof, _rootPerGame[i], leaf), "Proof is not valid");
         }
@@ -485,8 +485,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             _marketTradeData.odds
         );
 
-        for (uint i = 0; i < _marketTradeData.combinedPositions.length; ++i) {
-            for (uint j = 0; j < _marketTradeData.combinedPositions[i].length; ++j) {
+        for (uint i; i < _marketTradeData.combinedPositions.length; ++i) {
+            for (uint j; j < _marketTradeData.combinedPositions[i].length; ++j) {
                 encodePackedOutput = abi.encodePacked(
                     encodePackedOutput,
                     uint(_marketTradeData.combinedPositions[i][j].typeId),
