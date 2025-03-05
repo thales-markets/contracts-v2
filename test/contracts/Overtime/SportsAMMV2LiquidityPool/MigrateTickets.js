@@ -315,21 +315,23 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			// try exercise on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
-            const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
-            const currentRound = await sportsAMMV2LiquidityPool.round();
-            const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
+			const currentRound = await sportsAMMV2LiquidityPool.round();
+			const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
 			expect(Number(ticketRound)).to.equal(Number(currentRound));
-            const numOfTickets = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			const numOfTickets =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 
+			await sportsAMMV2LiquidityPool.migrateTicketToAnotherRound(ticketAddress, 0);
 
-            await sportsAMMV2LiquidityPool.migrateTicketToAnotherRound(ticketAddress, 0);
-            
-            const numOfTicketsAfterMigration = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
-            expect(Number(numOfTicketsAfterMigration)).to.equal(Number(numOfTickets) - 1);
-            
-            const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
-            expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
+			const numOfTicketsAfterMigration =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			expect(Number(numOfTicketsAfterMigration)).to.equal(Number(numOfTickets) - 1);
+
+			const ticketRoundAfterMigration =
+				await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
+			expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
 
 			// const ticketMarket1 = tradeDataTenMarketsCurrentRound[9];
 			// await sportsAMMV2ResultManager.setResultsPerMarkets(
@@ -342,8 +344,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(true);
 			// await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 		});
-		
-        it('Should migrate a batch of tickets to next round', async () => {
+
+		it('Should migrate a batch of tickets to next round', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 
 			// deposit and start pool
@@ -572,24 +574,31 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			// try exercise on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
-            const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddresses = Array.from(activeTickets.slice(0, 10));
-            const currentRound = await sportsAMMV2LiquidityPool.round();
-            const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
+			const currentRound = await sportsAMMV2LiquidityPool.round();
+			const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
 			expect(Number(ticketRound)).to.equal(Number(currentRound));
-            const numOfTickets = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			const numOfTickets =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 
-            await sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(ticketAddresses, 0);
-            
-            const numOfTicketsAfterMigration = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
-            expect(Number(numOfTicketsAfterMigration)).to.equal(Number(numOfTickets) - ticketAddresses.length);
-            
-            const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
-            expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
-            for (const ticketAddress of ticketAddresses) {
-                const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
-                expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
-            }
+			await sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(ticketAddresses, 0);
+
+			const numOfTicketsAfterMigration =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			expect(Number(numOfTicketsAfterMigration)).to.equal(
+				Number(numOfTickets) - ticketAddresses.length
+			);
+
+			const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(
+				ticketAddresses[0]
+			);
+			expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
+			for (const ticketAddress of ticketAddresses) {
+				const ticketRoundAfterMigration =
+					await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
+				expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
+			}
 			// const ticketMarket1 = tradeDataTenMarketsCurrentRound[9];
 			// await sportsAMMV2ResultManager.setResultsPerMarkets(
 			// 	[ticketMarket1.gameId],
@@ -601,7 +610,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(true);
 			// await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 		});
-        it('Should migrate a batch of tickets to future round (round 10)', async () => {
+		it('Should migrate a batch of tickets to future round (round 10)', async () => {
 			const initialDeposit = ethers.parseEther('1000');
 
 			// deposit and start pool
@@ -830,24 +839,31 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			// try exercise on LP
 			expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
-            const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddresses = Array.from(activeTickets.slice(0, 10));
-            const currentRound = await sportsAMMV2LiquidityPool.round();
-            const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
+			const currentRound = await sportsAMMV2LiquidityPool.round();
+			const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
 			expect(Number(ticketRound)).to.equal(Number(currentRound));
-            const numOfTickets = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			const numOfTickets =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 
-            await sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(ticketAddresses, 10);
-            
-            const numOfTicketsAfterMigration = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
-            expect(Number(numOfTicketsAfterMigration)).to.equal(Number(numOfTickets) - ticketAddresses.length);
-            
-            const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddresses[0]);
-            expect(Number(ticketRoundAfterMigration)).to.equal(10);
-            for (const ticketAddress of ticketAddresses) {
-                const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
-                expect(Number(ticketRoundAfterMigration)).to.equal(10);
-            }
+			await sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(ticketAddresses, 10);
+
+			const numOfTicketsAfterMigration =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			expect(Number(numOfTicketsAfterMigration)).to.equal(
+				Number(numOfTickets) - ticketAddresses.length
+			);
+
+			const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(
+				ticketAddresses[0]
+			);
+			expect(Number(ticketRoundAfterMigration)).to.equal(10);
+			for (const ticketAddress of ticketAddresses) {
+				const ticketRoundAfterMigration =
+					await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
+				expect(Number(ticketRoundAfterMigration)).to.equal(10);
+			}
 			// const ticketMarket1 = tradeDataTenMarketsCurrentRound[9];
 			// await sportsAMMV2ResultManager.setResultsPerMarkets(
 			// 	[ticketMarket1.gameId],
