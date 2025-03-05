@@ -252,9 +252,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         } else {
             uint tradingTicketsLength = tradingTicketsPerRound[round].length;
             for (uint i = 0; i < _tickets.length; i++) {
+                // check if the ticket index has not been migrated yet
                 if (_ticketsIndexInRound[i] < tradingTicketsLength - i) {
                     _migrateTicketToNewRound(_tickets[i], _newRound, _ticketsIndexInRound[i]);
                 } else {
+                    // if the ticket index has been migrated, find the new index
+                    // the new index is one of the ticket indexes in the _ticketsIndexInRound array
                     uint n;
                     while (
                         tradingTicketsPerRound[round][_ticketsIndexInRound[n]] != _tickets[i] &&
