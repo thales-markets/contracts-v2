@@ -494,6 +494,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _exerciseTicket(_ticket, address(0), false, true);
     }
 
+    /// @notice Withdraws collateral from a specified Ticket contract and sends it to the target address
+    /// @param ticketAddress The address of the Ticket contract
+    /// @param recipient The address to receive the withdrawn collateral
+    function withdrawCollateralFromTicket(address ticketAddress, address recipient) external onlyOwner {
+        // Call withdrawCollateral on the specified Ticket contract
+        Ticket(ticketAddress).withdrawCollateral(recipient);
+    }
+
     /// @notice exercise specific ticket to an off ramp collateral
     /// @param _ticket ticket address
     /// @param _exerciseCollateral collateral address to off ramp to
