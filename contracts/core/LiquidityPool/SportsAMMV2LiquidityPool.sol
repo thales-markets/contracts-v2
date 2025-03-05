@@ -233,7 +233,10 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice migrate batch of tickets to another round
     /// @param _tickets batch of tickets to migrate
     /// @param _newRound new round (0 for next round)
-    function migrateBatchOfTicketsToAnotherRound(address[] memory _tickets, uint _newRound) external onlyOwner roundClosingNotPrepared {
+    function migrateBatchOfTicketsToAnotherRound(
+        address[] memory _tickets,
+        uint _newRound
+    ) external onlyOwner roundClosingNotPrepared {
         for (uint i = 0; i < _tickets.length; i++) {
             _migrateTicketToNewRound(_tickets[i], _newRound == 0 ? round + 1 : _newRound);
         }
@@ -658,24 +661,35 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         uint ticketRound = getTicketRound(_ticket);
         require(isTradingTicketInARound[ticketRound][_ticket], "TicketNotInCurrentRound");
         require(!ticketAlreadyExercisedInRound[ticketRound][_ticket], "TicketAlreadyExercised");
-        ticketAlreadyExercisedInRound[ticketRound][_ticket] = true;
-        isTradingTicketInARound[ticketRound][_ticket] = false;
-        address oldLiquidityPoolRound = _getOrCreateRoundPool(ticketRound);
+
+        // removing from old round
+        delete isTradingTicketInARound[ticketRound][_ticket];
         _removeTicketFromRound(ticketRound, _ticket);
+
+        // transfer funds from new pool to old pool
+        address oldLiquidityPoolRound = _getOrCreateRoundPool(ticketRound);
         address newLiquidityPoolRound = _getOrCreateRoundPool(_newRound);
+        uint transferAmountNewToOld = collateral.balanceOf(_ticket) - Ticket(_ticket).buyInAmount();
+        uint newPoolBalance = collateral.balanceOf(newLiquidityPoolRound);
+        if (transferAmountNewToOld > newPoolBalance) {
+            uint differenceToLPAsDefault = transferAmountNewToOld - newPoolBalance;
+            _depositAsDefault(differenceToLPAsDefault, newLiquidityPoolRound, _newRound);
+        }
+        collateral.safeTransferFrom(newLiquidityPoolRound, oldLiquidityPoolRound, transferAmountNewToOld);
+
+        // adding ticket to new round
         roundPerTicket[_ticket] = _newRound;
         isTradingTicketInARound[_newRound][_ticket] = true;
-        // checks for new pool balance is avoided. Transaction will revert if new pool balance is not enough
-        collateral.safeTransferFrom(newLiquidityPoolRound, oldLiquidityPoolRound, collateral.balanceOf(_ticket)-Ticket(_ticket).buyInAmount());
         tradingTicketsPerRound[_newRound].push(_ticket);
         emit TicketMigratedToNextRound(_ticket, ticketRound, _newRound);
     }
 
-
     function _removeTicketFromRound(uint _round, address _ticket) internal {
         for (uint i = 0; i < tradingTicketsPerRound[_round].length; i++) {
             if (tradingTicketsPerRound[_round][i] == _ticket) {
-                tradingTicketsPerRound[_round][i] = tradingTicketsPerRound[_round][tradingTicketsPerRound[_round].length - 1];
+                tradingTicketsPerRound[_round][i] = tradingTicketsPerRound[_round][
+                    tradingTicketsPerRound[_round].length - 1
+                ];
                 tradingTicketsPerRound[_round].pop();
                 break;
             }
