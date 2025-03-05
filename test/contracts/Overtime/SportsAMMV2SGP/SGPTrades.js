@@ -238,7 +238,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
 				})
-			).to.be.revertedWith('Proof is not valid');
+			).to.be.revertedWith('One of the proofs is not valid');
 		});
 	});
 });
