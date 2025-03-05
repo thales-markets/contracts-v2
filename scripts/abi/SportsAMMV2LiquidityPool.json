@@ -758,6 +758,40 @@
         "internalType": "address",
         "name": "_ticket",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_round",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_endIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTicketIndexInTicketRound",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
       }
     ],
     "name": "getTicketPool",
@@ -991,6 +1025,11 @@
         "internalType": "uint256",
         "name": "_newRound",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_ticketsIndexInRound",
+        "type": "uint256[]"
       }
     ],
     "name": "migrateBatchOfTicketsToAnotherRound",
@@ -1008,6 +1047,11 @@
       {
         "internalType": "uint256",
         "name": "_newRound",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_ticketIndexInRound",
         "type": "uint256"
       }
     ],
