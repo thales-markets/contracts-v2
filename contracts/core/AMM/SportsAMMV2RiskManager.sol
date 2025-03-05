@@ -466,10 +466,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
         for (uint i; i < _marketTradeData.length; ++i) {
             bytes32 leaf = _computeMerkleLeaf(_marketTradeData[i]);
-            require(
-                MerkleProof.verify(_marketTradeData[i].merkleProof, _rootPerGame[i], leaf),
-                "One of the proofs is not valid"
-            );
+            require(MerkleProof.verify(_marketTradeData[i].merkleProof, _rootPerGame[i], leaf), "Proof is not valid");
         }
     }
 
