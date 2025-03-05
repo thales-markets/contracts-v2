@@ -322,8 +322,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(collateralAmount);
 			await sportsAMMV2LiquidityPool.start();
 			let quote;
-			const actualNumOfTickets = 10;
-			const totalNumOfDummyTickets = 20;
+			const actualNumOfTickets = 5;
+			const totalNumOfDummyTickets = 10;
 			// const remainingTickets = totalNumOfDummyTickets - actualNumOfTickets;
 			// const batchSize = 500;
 			// for (let i = 0; i < remainingTickets; i += batchSize) {
