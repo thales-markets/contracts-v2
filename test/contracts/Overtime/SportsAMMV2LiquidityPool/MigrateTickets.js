@@ -302,6 +302,15 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				}
 				ticketIndexes.push(ticketIndex);
 			}
+
+			const IicketsInRoundLengthReturned =
+				await sportsAMMV2LiquidityPool.getTicketIndexInTicketRound(
+					ZERO_ADDRESS,
+					currentRound,
+					0,
+					maxTicketIndex
+				);
+			expect(Number(IicketsInRoundLengthReturned)).to.equal(7);
 			await sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(
 				ticketAddresses,
 				10,
