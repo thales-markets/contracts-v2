@@ -194,13 +194,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bool isFutureOnParlay;
         bool isSystemBet = _systemBetDenominator > 1;
 
-        for (uint i = 0; i < numOfMarkets; i++) {
+        for (uint i; i < numOfMarkets; ++i) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
             isFutureOnParlay = isSportIdFuture[marketTradeData.sportId] && numOfMarkets > 1;
 
             require(
                 marketTradeData.odds[marketTradeData.position] > 0 && marketTradeData.odds[marketTradeData.position] < ONE,
-                "Invalid odds"
+                "InvalidOdds"
             );
             uint amountToBuy = (ONE * _buyInAmount) / marketTradeData.odds[marketTradeData.position];
             uint marketRiskAmount = amountToBuy - _buyInAmount;
@@ -239,11 +239,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint _ticketSize
     ) external view {
         // apply all checks
-        require(_buyInAmount >= minBuyInAmount, "Low buy-in amount");
-        require(_totalQuote >= maxSupportedOdds, "Exceeded max supported odds");
-        require((_payout - _buyInAmount) <= maxSupportedAmount, "Exceeded max supported amount");
-        require(((ONE * _expectedPayout) / _payout) <= (ONE + _additionalSlippage), "Slippage too high");
-        require(_ticketSize <= maxTicketSize, "Exceeded max ticket size");
+        require(_buyInAmount >= minBuyInAmount, "LowBuyin");
+        require(_totalQuote >= maxSupportedOdds, "OverMaxOdds");
+        require((_payout - _buyInAmount) <= maxSupportedAmount, "OverMaxOdds");
+        require(((ONE * _expectedPayout) / _payout) <= (ONE + _additionalSlippage), "SlippageHigh");
+        require(_ticketSize <= maxTicketSize, "OverMaxTicketSize");
     }
 
     /// @notice returns risk data for given sports and types
@@ -256,12 +256,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) external view returns (ISportsAMMV2RiskManager.RiskData[] memory riskData) {
         riskData = new ISportsAMMV2RiskManager.RiskData[](_sportIds.length);
 
-        for (uint i = 0; i < _sportIds.length; i++) {
+        for (uint i; i < _sportIds.length; ++i) {
             uint sportId = _sportIds[i];
 
             ISportsAMMV2RiskManager.TypeCap[] memory capPerType = new ISportsAMMV2RiskManager.TypeCap[](_typeIds.length);
 
-            for (uint j = 0; j < _typeIds.length; j++) {
+            for (uint j; j < _typeIds.length; ++j) {
                 uint typeId = _typeIds[j];
                 capPerType[j] = ISportsAMMV2RiskManager.TypeCap(typeId, capPerSportAndType[sportId][typeId]);
             }
@@ -306,17 +306,17 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint8[][] memory systemCombinations = generateCombinations(uint8(_tradeData.length), _systemBetDenominator);
         uint totalCombinations = systemCombinations.length;
 
-        require(totalCombinations <= maxAllowedSystemCombinations, "maxAllowedSystemCombinations exceeded");
+        require(totalCombinations <= maxAllowedSystemCombinations, "OverMaxCombinations");
 
         uint buyinPerCombination = ((_buyInAmount * ONE) / totalCombinations) / ONE;
 
         // Loop through each stored combination
-        for (uint i = 0; i < totalCombinations; i++) {
+        for (uint i; i < totalCombinations; ++i) {
             uint8[] memory currentCombination = systemCombinations[i];
 
             uint combinationQuote;
 
-            for (uint8 j = 0; j < currentCombination.length; j++) {
+            for (uint8 j; j < currentCombination.length; ++j) {
                 uint8 marketIndex = currentCombination[j];
                 uint odds = _tradeData[marketIndex].odds[_tradeData[marketIndex].position];
                 odds = (odds * ONE) / ((ONE + _addedPayoutPercentage) - (_addedPayoutPercentage * odds) / ONE);
@@ -341,11 +341,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
      * @return combinations A 2D array where each sub-array is a unique combination of `k` integers.
      */
     function generateCombinations(uint8 n, uint8 k) public pure returns (uint8[][] memory) {
-        require(k > 1 && k < n, "k has to be greater than 1 and less than n");
+        require(k > 1 && k < n, "InvalidRangeForK");
 
         // Calculate the number of combinations: n! / (k! * (n-k)!)
         uint combinationsCount = 1;
-        for (uint8 i = 0; i < k; i++) {
+        for (uint8 i; i < k; ++i) {
             combinationsCount = (combinationsCount * (n - i)) / (i + 1);
         }
 
@@ -354,7 +354,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
         // Generate combinations
         uint8[] memory indices = new uint8[](k);
-        for (uint8 i = 0; i < k; i++) {
+        for (uint8 i; i < k; ++i) {
             indices[i] = i;
         }
 
@@ -363,7 +363,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         while (true) {
             // Add the current combination
             uint8[] memory combination = new uint8[](k);
-            for (uint8 i = 0; i < k; i++) {
+            for (uint8 i; i < k; ++i) {
                 combination[i] = indices[i];
             }
             combinations[index] = combination;
@@ -409,16 +409,16 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) external onlySportsAMM(msg.sender) {
         uint numOfMarkets = _tradeData.length;
         bool isSystemBet = _systemBetDenominator > 1;
-        for (uint i = 0; i < numOfMarkets; i++) {
+        for (uint i; i < numOfMarkets; ++i) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
-            require(!isSportIdFuture[marketTradeData.sportId] || _tradeData.length == 1, "Can't combine futures on parlays");
+            require(!isSportIdFuture[marketTradeData.sportId] || _tradeData.length == 1, "CantParlayFutures");
 
             uint[] memory odds = marketTradeData.odds;
             uint8 position = marketTradeData.position;
 
-            require(odds.length > position, "Invalid position");
-            require(_isMarketInAMMTrading(marketTradeData), "Not trading");
+            require(odds.length > position, "InvalidPosition");
+            require(_isMarketInAMMTrading(marketTradeData), "NotTrading");
 
             uint amountToBuy = odds[position] == 0 ? 0 : (ONE * _buyInAmount) / odds[position];
             if (amountToBuy > _buyInAmount) {
@@ -429,19 +429,16 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
                 require(
                     !_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive),
-                    "Risk per market and position exceeded"
+                    "MarketPositionRiskExceeded"
                 );
-                require(!_isRiskPerGameExceeded(marketTradeData, marketRiskAmount), "Risk per game exceeded");
-                require(
-                    _isSGP || !_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i),
-                    "Invalid combination detected"
-                );
+                require(!_isRiskPerGameExceeded(marketTradeData, marketRiskAmount), "GameRiskExceeded");
+                require(_isSGP || !_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i), "InvalidCombination");
                 _updateRisk(marketTradeData, marketRiskAmount);
             }
         }
         if (_isSGP) {
             uint marketRiskAmount = _payout - _buyInAmount;
-            require(!_isSGPRiskExceeded(_tradeData, marketRiskAmount), "SGP Risk per game exceeded");
+            require(!_isSGPRiskExceeded(_tradeData, marketRiskAmount), "SGPRiskExceeded");
             sgpSpentOnGame[_tradeData[0].gameId] += marketRiskAmount;
             sgpRiskPerCombination[getSGPHash(_tradeData)] += marketRiskAmount;
         }
@@ -462,14 +459,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         ISportsAMMV2.TradeData[] memory _marketTradeData,
         bytes32[] memory _rootPerGame
     ) external pure {
-        require(_marketTradeData.length == _rootPerGame.length, "Mismatched input lengths");
+        require(_marketTradeData.length == _rootPerGame.length, "MismatchedInputs");
 
         for (uint i; i < _marketTradeData.length; ++i) {
             bytes32 leaf = _computeMerkleLeaf(_marketTradeData[i]);
-            require(
-                MerkleProof.verify(_marketTradeData[i].merkleProof, _rootPerGame[i], leaf),
-                "One of the proofs is not valid"
-            );
+            require(MerkleProof.verify(_marketTradeData[i].merkleProof, _rootPerGame[i], leaf), "Proof is not valid");
         }
     }
 
@@ -742,7 +736,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _sportIds,
         uint[] memory _capsPerSport
     ) external onlyWhitelistedAddresses(msg.sender) {
-        for (uint i; i < _sportIds.length; i++) {
+        for (uint i; i < _sportIds.length; ++i) {
             _setCapPerSport(_sportIds[i], _capsPerSport[i]);
         }
     }
@@ -754,7 +748,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _sportIds,
         uint[] memory _capsPerSportChild
     ) external onlyWhitelistedAddresses(msg.sender) {
-        for (uint i; i < _sportIds.length; i++) {
+        for (uint i; i < _sportIds.length; ++i) {
             _setCapPerSportChild(_sportIds[i], _capsPerSportChild[i]);
         }
     }
@@ -768,7 +762,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _typeIds,
         uint[] memory _capsPerType
     ) external onlyWhitelistedAddresses(msg.sender) {
-        for (uint i; i < _sportIds.length; i++) {
+        for (uint i; i < _sportIds.length; ++i) {
             _setCapPerSportAndType(_sportIds[i], _typeIds[i], _capsPerType[i]);
         }
     }
@@ -786,8 +780,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         int24[] memory _lines,
         uint[] memory _capsPerMarket
     ) external onlyWhitelistedAddresses(msg.sender) {
-        for (uint i; i < _gameIds.length; i++) {
-            require(_capsPerMarket[i] <= maxCap, "Invalid cap");
+        for (uint i; i < _gameIds.length; ++i) {
+            require(_capsPerMarket[i] <= maxCap, "InvalidCap");
             capPerMarket[_gameIds[i]][_typeIds[i]][_playerIds[i]][_lines[i]] = _capsPerMarket[i];
             emit SetCapPerMarket(_gameIds[i], _typeIds[i], _playerIds[i], _lines[i], _capsPerMarket[i]);
         }
@@ -810,13 +804,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _typeIds,
         uint[] memory _capsPerSportAndType
     ) external onlyWhitelistedAddresses(msg.sender) {
-        for (uint i; i < _sportIds.length; i++) {
+        for (uint i; i < _sportIds.length; ++i) {
             _setCapPerSport(_sportIds[i], _capsPerSport[i]);
         }
-        for (uint i; i < _sportIdsForChild.length; i++) {
+        for (uint i; i < _sportIdsForChild.length; ++i) {
             _setCapPerSportChild(_sportIdsForChild[i], _capsPerSportChild[i]);
         }
-        for (uint i; i < _sportIdsForType.length; i++) {
+        for (uint i; i < _sportIdsForType.length; ++i) {
             _setCapPerSportAndType(_sportIdsForType[i], _typeIds[i], _capsPerSportAndType[i]);
         }
     }
@@ -828,7 +822,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _sportIds,
         uint[] memory _riskMultipliersPerSport
     ) external onlyWhitelistedAddresses(msg.sender) {
-        for (uint i; i < _sportIds.length; i++) {
+        for (uint i; i < _sportIds.length; ++i) {
             require(_riskMultipliersPerSport[i] <= maxRiskMultiplier, "Invalid multiplier");
             riskMultiplierPerSport[_sportIds[i]] = _riskMultipliersPerSport[i];
             emit SetRiskMultiplierPerSport(_sportIds[i], _riskMultipliersPerSport[i]);
@@ -842,7 +836,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bytes32[] memory _gameIds,
         uint[] memory _riskMultipliersPerGame
     ) external onlyWhitelistedAddresses(msg.sender) {
-        for (uint i; i < _gameIds.length; i++) {
+        for (uint i; i < _gameIds.length; ++i) {
             require(_riskMultipliersPerGame[i] <= maxRiskMultiplier, "Invalid multiplier");
             riskMultiplierPerGame[_gameIds[i]] = _riskMultipliersPerGame[i];
             emit SetRiskMultiplierPerGame(_gameIds[i], _riskMultipliersPerGame[i]);
@@ -866,7 +860,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice sets the sports manager contract address
     /// @param _manager the address of sports manager contract
     function setSportsManager(address _manager) external onlyOwner {
-        require(_manager != address(0), "Invalid address");
+        require(_manager != address(0), "ZeroAddress");
         manager = ISportsAMMV2Manager(_manager);
         emit SetSportsManager(_manager);
     }
@@ -874,7 +868,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice sets the result manager contract address
     /// @param _resultManager the address of result manager contract
     function setResultManager(address _resultManager) external onlyOwner {
-        require(_resultManager != address(0), "Invalid address");
+        require(_resultManager != address(0), "ZeroAddress");
         resultManager = ISportsAMMV2ResultManager(_resultManager);
         emit SetResultManager(_resultManager);
     }
@@ -882,7 +876,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice sets the Sports AMM contract address
     /// @param _sportsAMM the address of Sports AMM contract
     function setSportsAMM(address _sportsAMM) external onlyOwner {
-        require(_sportsAMM != address(0), "Invalid address");
+        require(_sportsAMM != address(0), "ZeroAddress");
         sportsAMM = ISportsAMMV2(_sportsAMM);
         emit SetSportsAMM(_sportsAMM);
     }
@@ -1000,21 +994,21 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /* ========== INTERNAL SETTERS ========== */
 
     function _setCapPerSport(uint _sportId, uint _capPerSport) internal {
-        require(_capPerSport <= maxCap, "Invalid cap");
+        require(_capPerSport <= maxCap, "InvalidCap");
         capPerSport[_sportId] = _capPerSport;
         emit SetCapPerSport(_sportId, _capPerSport);
     }
 
     function _setCapPerSportChild(uint _sportId, uint _capPerSportChild) internal {
         uint currentCapPerSport = capPerSport[_sportId] > 0 ? capPerSport[_sportId] : defaultCap;
-        require(_capPerSportChild <= currentCapPerSport, "Invalid cap");
+        require(_capPerSportChild <= currentCapPerSport, "InvalidCap");
         capPerSportChild[_sportId] = _capPerSportChild;
         emit SetCapPerSportChild(_sportId, _capPerSportChild);
     }
 
     function _setCapPerSportAndType(uint _sportId, uint _typeId, uint _capPerType) internal {
         uint currentCapPerSport = capPerSport[_sportId] > 0 ? capPerSport[_sportId] : defaultCap;
-        require(_capPerType <= currentCapPerSport, "Invalid cap");
+        require(_capPerType <= currentCapPerSport, "InvalidCap");
         capPerSportAndType[_sportId][_typeId] = _capPerType;
         emit SetCapPerSportAndType(_sportId, _typeId, _capPerType);
     }
@@ -1033,7 +1027,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint16[] memory typeIds = new uint16[](trades.length);
         uint24[] memory playerIds = new uint24[](trades.length);
 
-        for (uint i = 0; i < trades.length; i++) {
+        for (uint i; i < trades.length; ++i) {
             gameIds[i] = trades[i].gameId;
             typeIds[i] = trades[i].typeId;
             playerIds[i] = trades[i].playerId;
@@ -1044,8 +1038,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     function _sortSGPLegs(ISportsAMMV2.TradeData[] memory trades) internal pure {
         uint256 length = trades.length;
-        for (uint256 i = 0; i < length - 1; i++) {
-            for (uint256 j = i + 1; j < length; j++) {
+        for (uint256 i; i < length - 1; ++i) {
+            for (uint256 j = i + 1; j < length; ++j) {
                 if (_compareSGPLegs(trades[i], trades[j]) > 0) {
                     // Swap trades[i] and trades[j]
                     (trades[i], trades[j]) = (trades[j], trades[i]);
@@ -1069,13 +1063,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     modifier onlyWhitelistedAddresses(address sender) {
         require(
             sender == owner || manager.isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.RISK_MANAGING),
-            "Invalid sender"
+            "InvalidSender"
         );
         _;
     }
 
     modifier onlySportsAMM(address sender) {
-        require(sender == address(sportsAMM), "Only the AMM may perform these methods");
+        require(sender == address(sportsAMM), "OnlyAMMAllowed");
         _;
     }
 
