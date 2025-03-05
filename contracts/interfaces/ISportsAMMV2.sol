@@ -87,5 +87,7 @@ interface ISportsAMMV2 {
 
     function rootPerGame(bytes32 game) external view returns (bytes32);
 
+    function getRootsPerGames(bytes32[] calldata _games) external view returns (bytes32[] memory _roots);
+
     function paused() external view returns (bool);
 }
