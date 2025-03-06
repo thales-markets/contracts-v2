@@ -56,45 +56,30 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     /// @notice requests SGP trade
-    /// @param _sgpTradeData for which to request a sgp trade
+    /// @param _sgpTradeData for which to request a SGP trade
     function requestSGPTrade(
         ISGPTradingProcessor.SGPTradeData calldata _sgpTradeData
     ) external whenNotPaused returns (bytes32 requestId) {
-        uint numOfMarkets = _sgpTradeData._tradeData.length;
-        require(numOfMarkets > 1, "SGP not possible for a single game");
+        require(_sgpTradeData._tradeData.length > 1, "SGP not possible for a single game");
 
-        Chainlink.Request memory req;
+        // **Verify Merkle Proofs**
+        _verifyMerkleProofs(_sgpTradeData._tradeData);
 
-        req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillSGPTrade.selector);
-
-        string[] memory sportIds = new string[](numOfMarkets);
-        string[] memory gameIds = new string[](numOfMarkets);
-        string[] memory typeIds = new string[](numOfMarkets);
-        string[] memory playerIds = new string[](numOfMarkets);
-        string[] memory lines = new string[](numOfMarkets);
-        string[] memory positions = new string[](numOfMarkets);
-
-        uint16 sportId;
-        bytes32 gameId;
-
-        for (uint i = 0; i < numOfMarkets; i++) {
-            ISportsAMMV2.TradeData memory marketTradeData = _sgpTradeData._tradeData[i];
-            sportIds[i] = uint256(marketTradeData.sportId).toString();
-            gameIds[i] = bytes32ToString(marketTradeData.gameId);
-            typeIds[i] = uint256(marketTradeData.typeId).toString();
-            playerIds[i] = uint256(marketTradeData.playerId).toString();
-            lines[i] = int256(marketTradeData.line).toStringSigned();
-            positions[i] = uint256(marketTradeData.position).toString();
-
-            if (i == 0) {
-                sportId = marketTradeData.sportId;
-                gameId = marketTradeData.gameId;
-            } else {
-                require(gameId == marketTradeData.gameId, "SGP only possible on the same game");
-            }
-        }
+        // **Process trade data**
+        (
+            string[] memory sportIds,
+            string[] memory gameIds,
+            string[] memory typeIds,
+            string[] memory playerIds,
+            string[] memory lines,
+            string[] memory positions,
+            uint16 sportId
+        ) = _processTradeData(_sgpTradeData._tradeData);
 
         require(sportsAMM.riskManager().sgpOnSportIdEnabled(sportId), "SGP trading not enabled on _sportId");
+
+        // **Create Chainlink request**
+        Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillSGPTrade.selector);
 
         req.addStringArray("sportIds", sportIds);
         req.addStringArray("gameIds", gameIds);
@@ -115,6 +100,72 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         emit SGPTradeRequested(msg.sender, requestCounter, requestId, _sgpTradeData);
         requestCounter++;
+    }
+
+    /// @notice Verifies Merkle proofs for the given trade data
+    /// @param tradeData The trade data array
+    function _verifyMerkleProofs(ISportsAMMV2.TradeData[] calldata tradeData) internal view {
+        uint numOfMarkets = tradeData.length;
+        bytes32[] memory gameIdsBytes = new bytes32[](numOfMarkets);
+
+        for (uint i; i < numOfMarkets; ++i) {
+            gameIdsBytes[i] = tradeData[i].gameId;
+        }
+
+        sportsAMM.riskManager().batchVerifyMerkleTree(tradeData, sportsAMM.getRootsPerGames(gameIdsBytes));
+    }
+
+    /// @notice Processes trade data and returns formatted arrays
+    /// @param tradeData The trade data array
+    /// @return sportIds Formatted sport IDs
+    /// @return gameIds Formatted game IDs as strings
+    /// @return typeIds Formatted type IDs
+    /// @return playerIds Formatted player IDs
+    /// @return lines Formatted lines
+    /// @return positions Formatted positions
+    /// @return sportId The validated sport ID
+    function _processTradeData(
+        ISportsAMMV2.TradeData[] calldata tradeData
+    )
+        internal
+        pure
+        returns (
+            string[] memory sportIds,
+            string[] memory gameIds,
+            string[] memory typeIds,
+            string[] memory playerIds,
+            string[] memory lines,
+            string[] memory positions,
+            uint16 sportId
+        )
+    {
+        uint numOfMarkets = tradeData.length;
+        sportIds = new string[](numOfMarkets);
+        gameIds = new string[](numOfMarkets);
+        typeIds = new string[](numOfMarkets);
+        playerIds = new string[](numOfMarkets);
+        lines = new string[](numOfMarkets);
+        positions = new string[](numOfMarkets);
+
+        bytes32 gameId;
+
+        for (uint i = 0; i < numOfMarkets; ++i) {
+            ISportsAMMV2.TradeData memory marketTradeData = tradeData[i];
+
+            sportIds[i] = uint256(marketTradeData.sportId).toString();
+            gameIds[i] = bytes32ToString(marketTradeData.gameId);
+            typeIds[i] = uint256(marketTradeData.typeId).toString();
+            playerIds[i] = uint256(marketTradeData.playerId).toString();
+            lines[i] = int256(marketTradeData.line).toStringSigned();
+            positions[i] = uint256(marketTradeData.position).toString();
+
+            if (i == 0) {
+                sportId = marketTradeData.sportId;
+                gameId = marketTradeData.gameId;
+            } else {
+                require(gameId == marketTradeData.gameId, "SGP only possible on the same game");
+            }
+        }
     }
 
     /// @notice fulfillSGPTrade
