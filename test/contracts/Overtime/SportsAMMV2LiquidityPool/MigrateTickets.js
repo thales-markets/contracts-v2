@@ -317,6 +317,14 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				ticketIndexes
 			);
 
+			const IicketsInRoundLengthReturnedAfterMigration =
+				await sportsAMMV2LiquidityPool.getTicketIndexInTicketRound(
+					ZERO_ADDRESS,
+					currentRound,
+					0,
+					1
+				);
+			expect(Number(IicketsInRoundLengthReturnedAfterMigration)).to.equal(1);
 			const numOfTicketsAfterMigration =
 				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 			expect(Number(numOfTicketsAfterMigration)).to.equal(
