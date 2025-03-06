@@ -451,8 +451,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _marketTradeData trade data with all market info needed for ticket
     /// @param _rootPerGame to verify against
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure {
-        bytes32 leaf = _computeMerkleLeaf(_marketTradeData);
-        require(MerkleProof.verify(_marketTradeData.merkleProof, _rootPerGame, leaf), "Proof is not valid");
+        _verifyMerkleTree(_marketTradeData,_rootPerGame);
     }
 
     /// @notice Batch verification of multiple market trade data against respective roots
@@ -465,9 +464,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         require(_marketTradeData.length == _rootPerGame.length, "Mismatched input lengths");
 
         for (uint i; i < _marketTradeData.length; ++i) {
-            bytes32 leaf = _computeMerkleLeaf(_marketTradeData[i]);
-            require(MerkleProof.verify(_marketTradeData[i].merkleProof, _rootPerGame[i], leaf), "Proof is not valid");
+            _verifyMerkleTree(_marketTradeData[i],_rootPerGame[i]);
         }
+    }
+
+    function _verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) internal pure {
+        bytes32 leaf = _computeMerkleLeaf(_marketTradeData);
+        require(MerkleProof.verify(_marketTradeData.merkleProof, _rootPerGame, leaf), "Proof is not valid");
     }
 
     /// @notice Computes the merkle leaf from trade data
