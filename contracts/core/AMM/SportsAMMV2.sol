@@ -1102,10 +1102,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EVENTS ========== */
 
-    event NewTicket(Ticket.MarketData[] markets, address indexed ticket, uint buyInAmount, uint payout, bool isLive);
+    event NewTicket(Ticket.MarketData[] markets, address ticket, uint buyInAmount, uint payout, bool isLive);
     event TicketCreated(
-        address indexed ticket,
-        address indexed recipient,
+        address ticket,
+        address recipient,
         uint buyInAmount,
         uint fees,
         uint payout,
@@ -1113,30 +1113,30 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address collateral
     );
 
-    event TicketResolved(address indexed ticket, address indexed ticketOwner, bool isUserTheWinner);
-    event ReferrerPaid(address indexed referrer, address indexed trader, uint amount, uint volume, address collateral);
-    event SafeBoxFeePaid(uint safeBoxFee, uint safeBoxAmount, address indexed collateral);
+    event TicketResolved(address ticket, address ticketOwner, bool isUserTheWinner);
+    event ReferrerPaid(address refferer, address trader, uint amount, uint volume, address collateral);
+    event SafeBoxFeePaid(uint safeBoxFee, uint safeBoxAmount, address collateral);
 
-    event GameRootUpdated(bytes32 indexed game, bytes32 root);
+    event GameRootUpdated(bytes32 game, bytes32 root);
     event AmountsUpdated(uint safeBoxFee);
     event AddressesUpdated(
-        IERC20 indexed defaultCollateral,
-        address indexed manager,
-        address indexed riskManager,
+        IERC20 defaultCollateral,
+        address manager,
+        address riskManager,
         address resultManager,
         address referrals,
         address stakingThales,
         address safeBox
     );
-    event TicketMastercopyUpdated(address indexed ticketMastercopy);
-    event SetLiquidityPoolForCollateral(address indexed liquidityPool, address indexed collateral);
-    event SetMultiCollateralOnOffRamp(address indexed onOffRamper, bool enabled);
-    event SetAddedPayoutPercentagePerCollateral(address indexed _collateral, uint _addedPayout);
-    event SetSafeBoxPerCollateral(address indexed _collateral, address indexed _safeBox);
+    event TicketMastercopyUpdated(address ticketMastercopy);
+    event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
+    event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
+    event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
+    event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
     event SetBettingProcessors(
-        address indexed liveTradingProcessor,
-        address indexed sgpTradingProcessor,
-        address indexed freeBetsHolder,
+        address liveTradingProcessor,
+        address sgpTradingProcessor,
+        address freeBetsHolder,
         address stakingThalesBettingProxy
     );
 }
