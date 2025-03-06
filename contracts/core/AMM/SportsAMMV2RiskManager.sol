@@ -451,7 +451,32 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _marketTradeData trade data with all market info needed for ticket
     /// @param _rootPerGame to verify against
     function verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) external pure {
-        // Compute the merkle leaf from trade data
+        _verifyMerkleTree(_marketTradeData, _rootPerGame);
+    }
+
+    /// @notice Batch verification of multiple market trade data against respective roots
+    /// @param _marketTradeData array of trade data with all market info needed for ticket
+    /// @param _rootPerGame array of merkle roots to verify against
+    function batchVerifyMerkleTree(
+        ISportsAMMV2.TradeData[] memory _marketTradeData,
+        bytes32[] memory _rootPerGame
+    ) external pure {
+        require(_marketTradeData.length == _rootPerGame.length, "Mismatched input lengths");
+
+        for (uint i; i < _marketTradeData.length; ++i) {
+            _verifyMerkleTree(_marketTradeData[i], _rootPerGame[i]);
+        }
+    }
+
+    function _verifyMerkleTree(ISportsAMMV2.TradeData memory _marketTradeData, bytes32 _rootPerGame) internal pure {
+        bytes32 leaf = _computeMerkleLeaf(_marketTradeData);
+        require(MerkleProof.verify(_marketTradeData.merkleProof, _rootPerGame, leaf), "Proof is not valid");
+    }
+
+    /// @notice Computes the merkle leaf from trade data
+    /// @param _marketTradeData trade data with all market info needed for ticket
+    /// @return leaf computed merkle leaf
+    function _computeMerkleLeaf(ISportsAMMV2.TradeData memory _marketTradeData) private pure returns (bytes32) {
         bytes memory encodePackedOutput = abi.encodePacked(
             _marketTradeData.gameId,
             uint(_marketTradeData.sportId),
@@ -463,8 +488,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             _marketTradeData.odds
         );
 
-        for (uint i; i < _marketTradeData.combinedPositions.length; i++) {
-            for (uint j; j < _marketTradeData.combinedPositions[i].length; j++) {
+        for (uint i; i < _marketTradeData.combinedPositions.length; ++i) {
+            for (uint j; j < _marketTradeData.combinedPositions[i].length; ++j) {
                 encodePackedOutput = abi.encodePacked(
                     encodePackedOutput,
                     uint(_marketTradeData.combinedPositions[i][j].typeId),
@@ -474,9 +499,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             }
         }
 
-        bytes32 leaf = keccak256(encodePackedOutput);
-        // verify the proof is valid
-        require(MerkleProof.verify(_marketTradeData.merkleProof, _rootPerGame, leaf), "Proof is not valid");
+        return keccak256(encodePackedOutput);
     }
 
     /**
