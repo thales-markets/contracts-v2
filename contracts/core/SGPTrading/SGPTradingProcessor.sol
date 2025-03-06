@@ -60,8 +60,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     function requestSGPTrade(
         ISGPTradingProcessor.SGPTradeData calldata _sgpTradeData
     ) external whenNotPaused returns (bytes32 requestId) {
-        uint numOfMarkets = _sgpTradeData._tradeData.length;
-        require(numOfMarkets > 1, "SGP not possible for a single game");
+        require(_sgpTradeData._tradeData.length > 1, "SGP not possible for a single game");
 
         // **Verify Merkle Proofs**
         _verifyMerkleProofs(_sgpTradeData._tradeData);
@@ -109,7 +108,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint numOfMarkets = tradeData.length;
         bytes32[] memory gameIdsBytes = new bytes32[](numOfMarkets);
 
-        for (uint i = 0; i < numOfMarkets; ++i) {
+        for (uint i; i < numOfMarkets; ++i) {
             gameIdsBytes[i] = tradeData[i].gameId;
         }
 
