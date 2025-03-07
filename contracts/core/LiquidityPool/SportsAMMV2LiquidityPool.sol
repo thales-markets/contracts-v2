@@ -748,7 +748,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function _removeTicketFromRound(uint _round, address _ticket, uint _ticketIndexInRound) internal {
         // if _ticketIndexInRound is 0, we need to find the ticket in the round and remove it
         // lookup is performed by iterating through the array
-        bool found = false;
+        bool found;
         if (_ticketIndexInRound == 0) {
             for (uint i; i < tradingTicketsPerRound[_round].length; ++i) {
                 if (tradingTicketsPerRound[_round][i] == _ticket) {
