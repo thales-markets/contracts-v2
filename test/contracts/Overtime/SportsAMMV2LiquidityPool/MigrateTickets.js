@@ -310,10 +310,18 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				maxTicketIndex
 			);
 			expect(Number(ticketIndexAndFound[0])).to.equal(maxTicketIndex);
+			expect(
+				sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(
+					ticketAddresses,
+					10,
+					ticketIndexes
+				)
+			).to.be.revertedWith('TicketIndexMustBeGreaterThan0');
+
 			await sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(
-				ticketAddresses,
+				ticketAddresses.slice(1, 5),
 				10,
-				ticketIndexes
+				ticketIndexes.slice(1, 5)
 			);
 
 			const tupleIndexAndFound = await sportsAMMV2LiquidityPool.getTicketIndexInTicketRound(
@@ -326,14 +334,14 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			const numOfTicketsAfterMigration =
 				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 			expect(Number(numOfTicketsAfterMigration)).to.equal(
-				Number(numOfTickets) - ticketAddresses.length
+				Number(numOfTickets) - (ticketAddresses.length - 1)
 			);
 
 			const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(
-				ticketAddresses[0]
+				ticketAddresses[1]
 			);
 			expect(Number(ticketRoundAfterMigration)).to.equal(10);
-			for (const ticketAddress of ticketAddresses) {
+			for (const ticketAddress of ticketAddresses.slice(1, 5)) {
 				const ticketRoundAfterMigration =
 					await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
 				expect(Number(ticketRoundAfterMigration)).to.equal(10);

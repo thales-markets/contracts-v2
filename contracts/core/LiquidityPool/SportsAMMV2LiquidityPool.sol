@@ -255,6 +255,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             require(_tickets.length == _ticketsIndexInRound.length, "ArraysLengthsMustMatch");
             uint tradingTicketsLength = tradingTicketsPerRound[round].length;
             for (uint i = 0; i < _tickets.length; i++) {
+                require(_ticketsIndexInRound[i] > 0, "TicketIndexMustBeGreaterThan0");
                 // check if the ticket index has not been migrated yet
                 if (_ticketsIndexInRound[i] < tradingTicketsLength - i) {
                     _migrateTicketToNewRound(_tickets[i], _newRound, _ticketsIndexInRound[i]);
