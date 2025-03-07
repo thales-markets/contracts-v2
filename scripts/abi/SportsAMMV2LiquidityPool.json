@@ -779,8 +779,13 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "index",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "found",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

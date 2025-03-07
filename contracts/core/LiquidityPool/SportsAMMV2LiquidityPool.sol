@@ -226,19 +226,21 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice migrate ticket to next round
     /// @param _ticket ticket to migrate
     /// @param _newRound new round (0 for next round)
-    /// @param _ticketIndexInRound index of ticket in round
+    /// @param _ticketIndexInRound index of ticket in round (use 0 to perform automatic lookup through the round array)
     function migrateTicketToAnotherRound(
         address _ticket,
         uint _newRound,
         uint _ticketIndexInRound
     ) external onlyOwner roundClosingNotPrepared {
+        uint ticketRound = getTicketRound(_ticket);
+        require(ticketRound == round, "TicketNotInCurrentRound");
         _migrateTicketToNewRound(_ticket, _newRound == 0 ? round + 1 : _newRound, _ticketIndexInRound);
     }
 
     /// @notice migrate batch of tickets to another round
     /// @param _tickets batch of tickets to migrate
     /// @param _newRound new round (0 for next round)
-    /// @param _ticketsIndexInRound index of tickets in round
+    /// @param _ticketsIndexInRound index of tickets in round (use 0 to perform automatic lookup through the round array)
     function migrateBatchOfTicketsToAnotherRound(
         address[] memory _tickets,
         uint _newRound,
@@ -250,6 +252,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 _migrateTicketToNewRound(_tickets[i], _newRound, 0);
             }
         } else {
+            require(_tickets.length == _ticketsIndexInRound.length, "ArraysLengthsMustMatch");
             uint tradingTicketsLength = tradingTicketsPerRound[round].length;
             for (uint i = 0; i < _tickets.length; i++) {
                 // check if the ticket index has not been migrated yet
@@ -259,12 +262,15 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     // if the ticket index has been migrated, find the new index
                     // the new index is one of the ticket indexes in the _ticketsIndexInRound array
                     uint n;
-                    while (
-                        tradingTicketsPerRound[round][_ticketsIndexInRound[n]] != _tickets[i] &&
-                        n < _ticketsIndexInRound.length
-                    ) {
-                        n++;
+                    bool found = false;
+                    while (n < _ticketsIndexInRound.length) {
+                        if (tradingTicketsPerRound[round][_ticketsIndexInRound[n]] == _tickets[i]) {
+                            found = true;
+                            break;
+                        }
+                        ++n;
                     }
+                    require(found, "TicketNotFoundInInputArray");
                     _migrateTicketToNewRound(_tickets[i], _newRound, _ticketsIndexInRound[n]);
                 }
             }
@@ -583,22 +589,23 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @param _round The round number to search in
     /// @param _startIndex The starting index to search from
     /// @param _endIndex The ending index to search until
-    /// @return The index of the ticket if found, otherwise returns _endIndex
+    /// @return index The index of the ticket if found, otherwise returns _endIndex
+    /// @return found Whether the ticket was found
     function getTicketIndexInTicketRound(
         address _ticket,
         uint _round,
         uint _startIndex,
         uint _endIndex
-    ) external view returns (uint) {
+    ) external view returns (uint index, bool found) {
         uint finalIndex = tradingTicketsPerRound[_round].length > _endIndex
             ? _endIndex
             : tradingTicketsPerRound[_round].length;
-        for (uint i = _startIndex; i < finalIndex; i++) {
+        for (uint i = _startIndex; i < finalIndex; ++i) {
             if (tradingTicketsPerRound[_round][i] == _ticket) {
-                return i;
+                return (i, true);
             }
         }
-        return _endIndex;
+        return (_endIndex, false);
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -711,8 +718,10 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function _migrateTicketToNewRound(address _ticket, uint _newRound, uint _ticketIndexInRound) internal {
         require(_newRound > round || _newRound == 1, "RoundAlreadyClosed");
         uint ticketRound = getTicketRound(_ticket);
+        require(ticketRound == round, "Ticket not in current round");
         require(isTradingTicketInARound[ticketRound][_ticket], "TicketNotInCurrentRound");
         require(!ticketAlreadyExercisedInRound[ticketRound][_ticket], "TicketAlreadyExercised");
+        require(!Ticket(_ticket).resolved(), "TicketAlreadyResolved");
 
         // removing from old round
         delete isTradingTicketInARound[ticketRound][_ticket];
@@ -737,27 +746,27 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     }
 
     function _removeTicketFromRound(uint _round, address _ticket, uint _ticketIndexInRound) internal {
+        // if _ticketIndexInRound is 0, we need to find the ticket in the round and remove it
+        // lookup is performed by iterating through the array
+        bool found = false;
         if (_ticketIndexInRound == 0) {
-            for (uint i = 0; i < tradingTicketsPerRound[_round].length; i++) {
+            for (uint i; i < tradingTicketsPerRound[_round].length; ++i) {
                 if (tradingTicketsPerRound[_round][i] == _ticket) {
-                    tradingTicketsPerRound[_round][i] = tradingTicketsPerRound[_round][
-                        tradingTicketsPerRound[_round].length - 1
-                    ];
-                    tradingTicketsPerRound[_round].pop();
+                    found = true;
+                    _ticketIndexInRound = i;
                     break;
                 }
             }
         } else {
-            require(
+            found =
                 _ticketIndexInRound < tradingTicketsPerRound[_round].length &&
-                    tradingTicketsPerRound[_round][_ticketIndexInRound] == _ticket,
-                "TicketNotFound"
-            );
-            tradingTicketsPerRound[_round][_ticketIndexInRound] = tradingTicketsPerRound[_round][
-                tradingTicketsPerRound[_round].length - 1
-            ];
-            tradingTicketsPerRound[_round].pop();
+                tradingTicketsPerRound[_round][_ticketIndexInRound] == _ticket;
         }
+        require(found, "TicketNotFound");
+        tradingTicketsPerRound[_round][_ticketIndexInRound] = tradingTicketsPerRound[_round][
+            tradingTicketsPerRound[_round].length - 1
+        ];
+        tradingTicketsPerRound[_round].pop();
     }
 
     /* ========== SETTERS ========== */
