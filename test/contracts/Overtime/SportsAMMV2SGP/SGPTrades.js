@@ -218,5 +218,27 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			expect(sgpHashFirst).to.equal(sgpHashSecond);
 		});
+
+		it('Should revert if Merkle proof verification fails', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+			let approvedQuote = ethers.parseEther('0.5');
+
+			// Manipulate trade data to have an incorrect Merkle proof (simulate invalid proof)
+			let invalidTradeData = [...sameGameWithFirstPlayerProps];
+			invalidTradeData[0].merkleProof = [
+				'0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+			]; // Invalid proof
+
+			await expect(
+				sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+					_tradeData: invalidTradeData,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: approvedQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+				})
+			).to.be.revertedWith('Proof is not valid');
+		});
 	});
 });
