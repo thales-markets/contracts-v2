@@ -14,6 +14,8 @@ const { ZERO_ADDRESS } = require('../../../constants/general');
 describe('SportsAMMV2 Quotes And Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2RiskManager,
+		sportsAMMV2Manager,
+		collateral,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
@@ -24,6 +26,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		({
 			sportsAMMV2,
 			sportsAMMV2RiskManager,
+			sportsAMMV2Manager,
+			collateral,
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
@@ -173,6 +177,43 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 						false
 					)
 			).to.be.revertedWith("Can't combine futures on parlays");
+		});
+
+		it('Should buy a ticket (10 markets) and withdraw collateral', async () => {
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			expect(quote.payout).to.equal('28679719907924413133');
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			await expect(
+				sportsAMMV2.connect(firstTrader).withdrawCollateralFromTicket(ticketAddress, firstTrader)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+
+			const userBalanceBefore = await collateral.balanceOf(firstTrader);
+			await sportsAMMV2.withdrawCollateralFromTicket(ticketAddress, firstTrader);
+			const userBalanceAfter = await collateral.balanceOf(firstTrader);
+			expect(userBalanceAfter).greaterThan(userBalanceBefore);
+			const ticketBalance = await collateral.balanceOf(ticketAddress);
+			expect(ticketBalance).eq(0);
 		});
 	});
 });
