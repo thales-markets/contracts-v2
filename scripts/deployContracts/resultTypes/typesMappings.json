@@ -1098,5 +1098,115 @@
 		"id": 11241,
 		"result_type": 2,
 		"name": "PLAYER_LONGEST_RUSH"
+	},
+	{
+		"id": 10311,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_THIRD_PERIOD"
+	},
+	{
+		"id": 10312,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_THIRD_PERIOD"
+	},
+	{
+		"id": 10411,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_FOURTH_PERIOD"
+	},
+	{
+		"id": 10412,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_FOURTH_PERIOD"
+	},
+	{
+		"id": 10511,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_FIFTH_PERIOD"
+	},
+	{
+		"id": 10512,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_FIFTH_PERIOD"
+	},
+	{
+		"id": 10611,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_SIXTH_PERIOD"
+	},
+	{
+		"id": 10612,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_SIXTH_PERIOD"
+	},
+	{
+		"id": 10711,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_SEVENTH_PERIOD"
+	},
+	{
+		"id": 10712,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_SEVENTH_PERIOD"
+	},
+	{
+		"id": 10811,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_EIGHT_PERIOD"
+	},
+	{
+		"id": 10812,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_EIGHT_PERIOD"
+	},
+	{
+		"id": 10171,
+		"result_type": 2,
+		"name": "CHILD_TOTALS_FIRST_THREE_INNINGS"
+	},
+	{
+		"id": 10173,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_FIRST_THREE_INNINGS"
+	},
+	{
+		"id": 10174,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_FIRST_THREE_INNINGS"
+	},
+	{
+		"id": 10176,
+		"result_type": 2,
+		"name": "CHILD_TOTALS_FIRST_SEVEN_INNINGS"
+	},
+	{
+		"id": 10178,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_TO_SCORE_FIRST_SEVEN_INNINGS"
+	},
+	{
+		"id": 10179,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_TO_SCORE_FIRST_SEVEN_INNINGS"
+	},
+	{
+		"id": 10170,
+		"result_type": 1,
+		"name": "CHILD_MONEYLINE_FIRST_THREE_INNINGS"
+	},
+	{
+		"id": 10175,
+		"result_type": 1,
+		"name": "CHILD_MONEYLINE_FIRST_SEVEN_INNINGS"
+	},
+	{
+		"id": 10172,
+		"result_type": 4,
+		"name": "CHILD_SPREAD_FIRST_THREE_INNINGS"
+	},
+	{
+		"id": 10177,
+		"result_type": 4,
+		"name": "CHILD_SPREAD_FIRST_SEVEN_INNINGS"
 	}
 ]
