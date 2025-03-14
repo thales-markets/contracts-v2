@@ -587,8 +587,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         ISportsAMMV2.TradeData[] memory _tradeData,
         ISportsAMMV2.TradeData memory _currentTradaData,
         uint currentIndex
-    ) internal view returns (bool) {
-        for (uint j = currentIndex + 1; j < _tradeData.length; j++) {
+    ) internal view returns (bool isInvalid) {
+        for (uint j = currentIndex + 1; j < _tradeData.length; ++j) {
             ISportsAMMV2.TradeData memory tradeDataToCheckAgainst = _tradeData[j];
             if (
                 _currentTradaData.gameId == tradeDataToCheckAgainst.gameId &&
@@ -600,11 +600,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                     _currentTradaData.playerId == 0 ||
                     tradeDataToCheckAgainst.playerId == 0
                 ) {
-                    return true;
+                    isInvalid = true;
+                    break;
                 }
             }
         }
-        return false;
     }
 
     function _updateRisk(ISportsAMMV2.TradeData memory _marketTradeData, uint marketRiskAmount) internal {
@@ -615,15 +615,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
         for (uint j = 0; j < _marketTradeData.odds.length; j++) {
             int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
-            if (j == position) {
-                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
-                    currentRiskPerMarketTypeAndPosition +
-                    int(marketRiskAmount);
-            } else {
-                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] =
-                    currentRiskPerMarketTypeAndPosition -
-                    int(marketRiskAmount);
-            }
+            riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = (j == position)
+                ? currentRiskPerMarketTypeAndPosition + int(marketRiskAmount)
+                : currentRiskPerMarketTypeAndPosition - int(marketRiskAmount);
         }
         spentOnGame[gameId] += marketRiskAmount;
     }
