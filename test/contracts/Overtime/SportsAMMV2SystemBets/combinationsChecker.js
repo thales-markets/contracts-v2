@@ -60,15 +60,15 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 
 		it('Should revert if systemBetDenominator is not a proper value)', async () => {
 			await expect(sportsAMMV2RiskManager.generateCombinations(10, 10)).to.be.revertedWith(
-				'k has to be greater than 1 and less than n'
+				'BadRangeForK'
 			);
 
 			await expect(sportsAMMV2RiskManager.generateCombinations(10, 11)).to.be.revertedWith(
-				'k has to be greater than 1 and less than n'
+				'BadRangeForK'
 			);
 
 			await expect(sportsAMMV2RiskManager.generateCombinations(10, 1)).to.be.revertedWith(
-				'k has to be greater than 1 and less than n'
+				'BadRangeForK'
 			);
 		});
 	});

@@ -96,7 +96,7 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					ADDITIONAL_SLIPPAGE,
 					10
 				)
-			).to.be.revertedWith('Low buy-in amount');
+			).to.be.revertedWith('LowBuyin');
 		});
 
 		it('Should fail with "Exceeded max ticket size"', async () => {
@@ -109,7 +109,7 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					ADDITIONAL_SLIPPAGE,
 					11
 				)
-			).to.be.revertedWith('Exceeded max ticket size');
+			).to.be.revertedWith('ExceededMaxSize');
 		});
 
 		it('Should fail with "Exceeded max supported odds"', async () => {
@@ -122,7 +122,7 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					ADDITIONAL_SLIPPAGE,
 					10
 				)
-			).to.be.revertedWith('Exceeded max supported odds');
+			).to.be.revertedWith('ExceededMaxOdds');
 		});
 
 		it('Should fail with "Exceeded max supported amount"', async () => {
@@ -135,7 +135,7 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					ADDITIONAL_SLIPPAGE,
 					10
 				)
-			).to.be.revertedWith('Exceeded max supported amount');
+			).to.be.revertedWith('ExceededMaxAmount');
 		});
 
 		it('Should fail with "Slippage too high"', async () => {
@@ -148,7 +148,7 @@ describe('SportsAMMV2RiskManager Check Limits', () => {
 					ADDITIONAL_SLIPPAGE,
 					10
 				)
-			).to.be.revertedWith('Slippage too high');
+			).to.be.revertedWith('SlippageHigh');
 		});
 	});
 });
