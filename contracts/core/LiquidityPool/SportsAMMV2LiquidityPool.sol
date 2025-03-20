@@ -216,8 +216,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         if (ticketRound > 1 && ticketRound < round) {
             ticketRound = round;
         }
-        address liquidityPoolRound = ticketRound <= 1 ? defaultLiquidityProvider : _getOrCreateRoundPool(ticketRound);
         if (_amount > 0) {
+            address liquidityPoolRound = ticketRound <= 1 ? defaultLiquidityProvider : _getOrCreateRoundPool(ticketRound);
             collateral.safeTransferFrom(address(sportsAMM), liquidityPoolRound, _amount);
         }
         if (isTradingTicketInARound[ticketRound][_ticket]) {
