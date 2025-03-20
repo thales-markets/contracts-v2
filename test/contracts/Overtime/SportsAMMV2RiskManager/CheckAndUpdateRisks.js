@@ -148,7 +148,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 					0,
 					false
 				)
-			).to.be.revertedWith('Only the AMM may perform these methods');
+			).to.be.revertedWith('OnlyAMMAllowed');
 		});
 
 		it('Should fail with "Invalid position"', async () => {
@@ -248,7 +248,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Risk per market and position exceeded');
+			).to.be.revertedWith('ExceededMarketPositionRisk');
 		});
 
 		it('Should fail with "Risk per game exceeded"', async () => {
@@ -300,7 +300,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Risk per game exceeded');
+			).to.be.revertedWith('ExceededGameRisk');
 		});
 
 		it('Should fail with "Invalid combination detected"', async () => {
@@ -327,7 +327,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Invalid combination detected');
+			).to.be.revertedWith('InvalidCombination');
 		});
 	});
 });
