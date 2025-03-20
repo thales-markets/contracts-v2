@@ -911,8 +911,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         // mark ticket as exercised in LiquidityPool and return any funds to the pool if ticket was lost or cancelled
-        uint amount = ticketCollateral.balanceOf(address(this));
-        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(_ticket, amount);
+        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(
+            _ticket,
+            ticketCollateral.balanceOf(address(this))
+        );
     }
 
     /* ========== SETTERS ========== */
