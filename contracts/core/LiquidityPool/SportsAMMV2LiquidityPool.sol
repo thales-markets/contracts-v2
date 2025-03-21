@@ -637,7 +637,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
             bool isSystemExercisable = false;
             bool isSystem = false;
-            if (round > 1) {
+            if (_roundNumber > 1) {
                 isSystem = ticket.isSystem();
             }
             // in case round needs to be closed, ensure all system bets are exercised too, as there could be money in those that needs to be returned to LP rounds
