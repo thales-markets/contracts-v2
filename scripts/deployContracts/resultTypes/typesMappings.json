@@ -1278,5 +1278,25 @@
 		"id": 10191,
 		"result_type": 1,
 		"name": "CHILD_MOST_RUNS_OUTS"
+	},
+	{
+		"id": 11247,
+		"result_type": 2,
+		"name": "PROP_MAN_OF_THE_MATCH"
+	},
+	{
+		"id": 11248,
+		"result_type": 2,
+		"name": "PROP_PLAYER_WICKETS_TAKEN"
+	},
+	{
+		"id": 11249,
+		"result_type": 2,
+		"name": "PROP_PLAYER_SIXES"
+	},
+	{
+		"id": 11250,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FOURS"
 	}
 ]
