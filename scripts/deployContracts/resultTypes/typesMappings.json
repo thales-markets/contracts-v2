@@ -1210,6 +1210,46 @@
 		"name": "CHILD_SPREAD_FIRST_SEVEN_INNINGS"
 	},
 	{
+		"id": 13001,
+		"result_type": 1,
+		"name": "CHILD_LEAGUE_WINNER"
+	},
+	{
+		"id": 13002,
+		"result_type": 1,
+		"name": "CHILD_MVP"
+	},
+	{
+		"id": 13003,
+		"result_type": 1,
+		"name": "CHILD_CUP_WINNER"
+	},
+	{
+		"id": 13004,
+		"result_type": 1,
+		"name": "CHILD_TO_MAKE_PLAYOFFS"
+	},
+	{
+		"id": 13005,
+		"result_type": 1,
+		"name": "CHILD_TO_MAKE_FINAL_FOUR"
+	},
+	{
+		"id": 13006,
+		"result_type": 1,
+		"name": "CHILD_RACE_WINNER"
+	},
+	{
+		"id": 13007,
+		"result_type": 1,
+		"name": "CHILD_RACE_PODIUM"
+	},
+	{
+		"id": 13008,
+		"result_type": 1,
+		"name": "CHILD_END_OF_ROUND_ONE_LEADER"
+	},
+	{
 		"id": 10133,
 		"result_type": 1,
 		"name": "CHILD_WILL_THERE_BE_CENTURY"
