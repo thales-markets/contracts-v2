@@ -1208,5 +1208,15 @@
 		"id": 10177,
 		"result_type": 4,
 		"name": "CHILD_SPREAD_FIRST_SEVEN_INNINGS"
+	},
+	{
+		"id": 11245,
+		"result_type": 2,
+		"name": "PROP_BLOCKED_SHOTS"
+	},
+	{
+		"id": 11246,
+		"result_type": 2,
+		"name": "PROP_TURNOVERS"
 	}
 ]
