@@ -1210,6 +1210,76 @@
 		"name": "CHILD_SPREAD_FIRST_SEVEN_INNINGS"
 	},
 	{
+		"id": 10133,
+		"result_type": 1,
+		"name": "CHILD_WILL_THERE_BE_CENTURY"
+	},
+	{
+		"id": 10134,
+		"result_type": 1,
+		"name": "CHILD_WILL_THERE_BE_FIFTY"
+	},
+	{
+		"id": 10180,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_SIXES"
+	},
+	{
+		"id": 10181,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_FOURS"
+	},
+	{
+		"id": 10182,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_RUNS_OUTS"
+	},
+	{
+		"id": 10183,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_SIXERS"
+	},
+	{
+		"id": 10184,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_SIXERS"
+	},
+	{
+		"id": 10185,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_FOURS"
+	},
+	{
+		"id": 10186,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_FOURS"
+	},
+	{
+		"id": 10187,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_RUNS_OUTS"
+	},
+	{
+		"id": 10188,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_RUNS_OUTS"
+	},
+	{
+		"id": 10189,
+		"result_type": 1,
+		"name": "CHILD_MOST_FOURS"
+	},
+	{
+		"id": 10190,
+		"result_type": 1,
+		"name": "CHILD_MOST_SIXERS"
+	},
+	{
+		"id": 10191,
+		"result_type": 1,
+		"name": "CHILD_MOST_RUNS_OUTS"
+	},
+	{
 		"id": 11245,
 		"result_type": 2,
 		"name": "PROP_BLOCKED_SHOTS"
@@ -1218,5 +1288,25 @@
 		"id": 11246,
 		"result_type": 2,
 		"name": "PROP_TURNOVERS"
+	},
+	{
+		"id": 11247,
+		"result_type": 2,
+		"name": "PROP_MAN_OF_THE_MATCH"
+	},
+	{
+		"id": 11248,
+		"result_type": 2,
+		"name": "PROP_PLAYER_WICKETS_TAKEN"
+	},
+	{
+		"id": 11249,
+		"result_type": 2,
+		"name": "PROP_PLAYER_SIXES"
+	},
+	{
+		"id": 11250,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FOURS"
 	}
 ]
