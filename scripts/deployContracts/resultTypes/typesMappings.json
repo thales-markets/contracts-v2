@@ -1280,6 +1280,16 @@
 		"name": "CHILD_MOST_RUNS_OUTS"
 	},
 	{
+		"id": 11245,
+		"result_type": 2,
+		"name": "PROP_BLOCKED_SHOTS"
+	},
+	{
+		"id": 11246,
+		"result_type": 2,
+		"name": "PROP_TURNOVERS"
+	},
+	{
 		"id": 11247,
 		"result_type": 2,
 		"name": "PROP_MAN_OF_THE_MATCH"
