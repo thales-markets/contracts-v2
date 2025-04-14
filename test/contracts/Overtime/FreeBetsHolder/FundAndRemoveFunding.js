@@ -118,22 +118,31 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 		it('Should set freeBetExpirationUpgrade on first expiration period update', async () => {
 			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
-
+			const FreeBetsHolder = await ethers.getContractFactory('FreeBetsHolder');
+			const newFreeBetHolder = await FreeBetsHolder.deploy();
+			await newFreeBetHolder.initialize(
+				firstTrader.address,
+				sportsAMMV2.target,
+				liveTradingProcessor.target
+			);
+			const freeBetsHolderAddress = await newFreeBetHolder.getAddress();
 			// Check that upgrade timestamp is initially 0
-			const initialUpgrade = await freeBetsHolder.freeBetExpirationUpgrade();
+			const initialUpgrade = await newFreeBetHolder.freeBetExpirationUpgrade();
 			expect(initialUpgrade).to.equal(0);
 
 			// Set the expiration period
-			const txReceipt = await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod);
+			const txReceipt = await newFreeBetHolder
+				.connect(firstTrader)
+				.setFreeBetExpirationPeriod(expirationPeriod);
 			const blockTimestamp = (await ethers.provider.getBlock(txReceipt.blockNumber)).timestamp;
 
 			// Check that upgrade timestamp is set
-			const upgradedTimestamp = await freeBetsHolder.freeBetExpirationUpgrade();
+			const upgradedTimestamp = await newFreeBetHolder.freeBetExpirationUpgrade();
 			expect(upgradedTimestamp).to.equal(blockTimestamp);
 
 			// Setting again shouldn't change the upgrade timestamp
-			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod * 2);
-			const unchangedTimestamp = await freeBetsHolder.freeBetExpirationUpgrade();
+			await newFreeBetHolder.connect(firstTrader).setFreeBetExpirationPeriod(expirationPeriod * 2);
+			const unchangedTimestamp = await newFreeBetHolder.freeBetExpirationUpgrade();
 			expect(unchangedTimestamp).to.equal(blockTimestamp);
 		});
 
