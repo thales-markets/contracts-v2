@@ -365,12 +365,14 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     /// @notice sets the free bet expiration period
     /// @param _freeBetExpirationPeriod the new free bet expiration period
-    function setFreeBetExpirationPeriod(uint _freeBetExpirationPeriod) external onlyOwner {
+    function setFreeBetExpirationPeriod(uint _freeBetExpirationPeriod, uint _freeBetExpirationUpgrade) external onlyOwner {
         freeBetExpirationPeriod = _freeBetExpirationPeriod;
-        if (freeBetExpirationUpgrade == 0) {
+        if (_freeBetExpirationUpgrade == 0) {
             freeBetExpirationUpgrade = block.timestamp;
+        } else {
+            freeBetExpirationUpgrade = _freeBetExpirationUpgrade;
         }
-        emit SetFreeBetExpirationPeriod(_freeBetExpirationPeriod);
+        emit SetFreeBetExpirationPeriod(_freeBetExpirationPeriod, _freeBetExpirationUpgrade);
     }
 
     /* ========== MODIFIERS ========== */
@@ -401,5 +403,5 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event FreeBetSGPTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event UserFundingRemoved(address _user, address _collateral, address _receiver, uint _amount);
-    event SetFreeBetExpirationPeriod(uint freeBetExpirationPeriod);
+    event SetFreeBetExpirationPeriod(uint freeBetExpirationPeriod, uint freeBetExpirationUpgrade);
 }

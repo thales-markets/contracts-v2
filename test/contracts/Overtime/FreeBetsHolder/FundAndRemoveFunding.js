@@ -110,7 +110,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 		it('Should set and retrieve freeBetExpirationPeriod correctly', async () => {
 			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
-			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod);
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
 
 			const retrievedPeriod = await freeBetsHolder.freeBetExpirationPeriod();
 			expect(retrievedPeriod).to.equal(expirationPeriod);
@@ -133,7 +133,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			// Set the expiration period
 			const txReceipt = await newFreeBetHolder
 				.connect(firstTrader)
-				.setFreeBetExpirationPeriod(expirationPeriod);
+				.setFreeBetExpirationPeriod(expirationPeriod, 0);
 			const blockTimestamp = (await ethers.provider.getBlock(txReceipt.blockNumber)).timestamp;
 
 			// Check that upgrade timestamp is set
@@ -141,14 +141,16 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			expect(upgradedTimestamp).to.equal(blockTimestamp);
 
 			// Setting again shouldn't change the upgrade timestamp
-			await newFreeBetHolder.connect(firstTrader).setFreeBetExpirationPeriod(expirationPeriod * 2);
-			const unchangedTimestamp = await newFreeBetHolder.freeBetExpirationUpgrade();
-			expect(unchangedTimestamp).to.equal(blockTimestamp);
+			await newFreeBetHolder
+				.connect(firstTrader)
+				.setFreeBetExpirationPeriod(expirationPeriod * 2, 0);
+			const changedTimestamp = await newFreeBetHolder.freeBetExpirationUpgrade();
+			expect(changedTimestamp).to.equal(blockTimestamp + 1);
 		});
 
 		it('Should update freeBetExpiration when funding users', async () => {
 			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
-			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod);
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
 
 			// Fund a user
 			await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);
@@ -165,7 +167,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 		it('Should not allow removeExpiredUserFunding if free bet has not expired', async () => {
 			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
-			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod);
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
 
 			// Fund users
 			await freeBetsHolder.fundBatch([firstTrader, secondTrader], collateralAddress, BUY_IN_AMOUNT);
@@ -178,7 +180,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 		it('Should allow removeExpiredUserFunding after free bet expires', async () => {
 			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
-			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod);
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
 
 			// Fund users
 			await freeBetsHolder.fundBatch(
@@ -217,7 +219,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 		it('Should allow anyone to call removeExpiredUserFunding', async () => {
 			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
-			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod);
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
 
 			// Fund user
 			await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);

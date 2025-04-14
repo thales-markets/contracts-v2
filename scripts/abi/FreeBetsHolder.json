@@ -238,6 +238,12 @@
         "internalType": "uint256",
         "name": "freeBetExpirationPeriod",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "freeBetExpirationUpgrade",
+        "type": "uint256"
       }
     ],
     "name": "SetFreeBetExpirationPeriod",
@@ -887,6 +893,11 @@
       {
         "internalType": "uint256",
         "name": "_freeBetExpirationPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_freeBetExpirationUpgrade",
         "type": "uint256"
       }
     ],
