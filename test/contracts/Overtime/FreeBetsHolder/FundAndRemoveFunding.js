@@ -237,5 +237,107 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress)
 			).to.equal(0);
 		});
+
+		it('Should correctly report validity of free bets', async () => {
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+			
+			// Fund a user
+			await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);
+			
+			// Check validity immediately after funding
+			const [isValid, timeToExpiration] = await freeBetsHolder.isFreeBetValid(firstTrader, collateralAddress);
+			expect(isValid).to.be.true;
+			expect(timeToExpiration).to.equal(expirationPeriod);
+			
+			// Check validity for unfunded user
+			const [isValid2, timeToExpiration2] = await freeBetsHolder.isFreeBetValid(secondTrader, collateralAddress);
+			expect(isValid2).to.be.false;
+			expect(timeToExpiration2).to.equal(0);
+			
+			// Fast forward time to after expiration
+			await time.increase(expirationPeriod + 100);
+			
+			// Check validity after expiration
+			const [isValid3, timeToExpiration3] = await freeBetsHolder.isFreeBetValid(firstTrader, collateralAddress);
+			expect(isValid3).to.be.false;
+			expect(timeToExpiration3).to.equal(0);
+		});
+
+		it('Should handle global expiration for users without specific expiration', async () => {
+			const FreeBetsHolder = await ethers.getContractFactory('FreeBetsHolder');
+			const newFreeBetHolder = await FreeBetsHolder.deploy();
+			await newFreeBetHolder.initialize(
+				firstTrader.address,
+				sportsAMMV2.target,
+				liveTradingProcessor.target
+			);
+			
+			// Add collateral support 
+			await newFreeBetHolder.connect(firstTrader).addSupportedCollateral(collateralAddress, true);
+			
+			// Send some collateral to the contract
+			await collateral.connect(firstTrader).approve(newFreeBetHolder.target, BUY_IN_AMOUNT);
+			
+			// Set balance for user but don't set an expiration date
+			await newFreeBetHolder.connect(firstTrader).removeUserFunding(
+				firstTrader.address,
+				collateralAddress, 
+				firstTrader.address
+			);
+			
+			// Manually set the balance (simulate having a balance without expiration)
+			await newFreeBetHolder.connect(firstTrader).fund(secondTrader, collateralAddress, BUY_IN_AMOUNT);
+			
+			// Set expiration period which also sets the upgrade timestamp
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await newFreeBetHolder.connect(firstTrader).setFreeBetExpirationPeriod(expirationPeriod, 0);
+			const expirationPeriodOnContract = await newFreeBetHolder.freeBetExpirationPeriod();
+			expect(expirationPeriodOnContract).to.equal(expirationPeriod);
+			const upgradeTimestamp = await newFreeBetHolder.freeBetExpirationUpgrade();
+			const currentTimestamp = await time.latest();
+			expect(upgradeTimestamp).to.equal(currentTimestamp);
+			const freeBetAmount = await newFreeBetHolder.balancePerUserAndCollateral(secondTrader, collateralAddress);
+			expect(freeBetAmount).to.equal(BUY_IN_AMOUNT);
+			// Check validity - should be valid due to global expiration
+			const [isValid, timeToExpiration] = await newFreeBetHolder.isFreeBetValid(secondTrader, collateralAddress);
+			expect(isValid).to.be.true;
+			expect(timeToExpiration).to.equal(expirationPeriod);
+			
+			// Fast forward time to after global expiration
+			await time.increase(expirationPeriod + 100);
+			
+			// Check validity - should be invalid now
+			const [isValid2, timeToExpiration2] = await newFreeBetHolder.isFreeBetValid(secondTrader, collateralAddress);
+			expect(isValid2).to.be.false;
+			expect(timeToExpiration2).to.equal(0);
+		});
+
+		it('Should handle zero balances correctly', async () => {
+			// Set expiration period
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+			
+			// User with zero balance should have invalid free bet
+			const [isValid, timeToExpiration] = await freeBetsHolder.isFreeBetValid(thirdAccount, collateralAddress);
+			expect(isValid).to.be.false;
+			expect(timeToExpiration).to.equal(0);
+			
+			// Fund user
+			await freeBetsHolder.fund(thirdAccount, collateralAddress, BUY_IN_AMOUNT);
+			
+			// Now free bet should be valid
+			const [isValid2, timeToExpiration2] = await freeBetsHolder.isFreeBetValid(thirdAccount, collateralAddress);
+			expect(isValid2).to.be.true;
+			expect(timeToExpiration2).to.equal(expirationPeriod);
+			
+			// Remove all funding
+			await freeBetsHolder.removeUserFunding(thirdAccount, collateralAddress, firstTrader);
+			
+			// Free bet should be invalid due to zero balance
+			const [isValid3, timeToExpiration3] = await freeBetsHolder.isFreeBetValid(thirdAccount, collateralAddress);
+			expect(isValid3).to.be.false;
+			expect(timeToExpiration3).to.equal(0);
+		});
 	});
 });

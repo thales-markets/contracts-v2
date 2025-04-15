@@ -77,7 +77,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amount);
         balancePerUserAndCollateral[_user][_collateral] += _amount;
-        freeBetExpiration[_user][_collateral] = block.timestamp + freeBetExpirationPeriod;
+        freeBetExpiration[_user][_collateral] = freeBetExpirationPeriod > 0 ? block.timestamp + freeBetExpirationPeriod : 0;
         emit UserFunded(_user, _collateral, _amount, msg.sender);
     }
 
@@ -345,6 +345,23 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         require(_liveTradingProcessor != address(0), "Invalid address");
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
         emit SetLiveTradingProcessor(_liveTradingProcessor);
+    }
+
+    /// @notice checks if a free bet is valid
+    /// @param _user the address of the user
+    /// @param _collateral the address of the collateral
+    /// @return isValid true if the free bet is valid, false otherwise
+    /// @return timeToExpiration the time to expiration of the free bet, 0 if the free bet is not valid
+    function isFreeBetValid(address _user, address _collateral) public view returns (bool isValid, uint timeToExpiration) {
+        if(!supportedCollateral[_collateral] || balancePerUserAndCollateral[_user][_collateral] == 0) {
+            return (false, 0);
+        }
+        if (freeBetExpiration[_user][_collateral] == 0) {
+            timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp : 0;
+            return (timeToExpiration > 0, timeToExpiration);
+        }
+        timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp ? freeBetExpiration[_user][_collateral] - block.timestamp : 0;
+        return (timeToExpiration > 0, timeToExpiration);
     }
 
     /// @notice sets the SGPTradingProcessor contract address
