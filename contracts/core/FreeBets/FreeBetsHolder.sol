@@ -353,15 +353,14 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @return isValid true if the free bet is valid, false otherwise
     /// @return timeToExpiration the time to expiration of the free bet, 0 if the free bet is not valid
     function isFreeBetValid(address _user, address _collateral) public view returns (bool isValid, uint timeToExpiration) {
-        if(!supportedCollateral[_collateral] || balancePerUserAndCollateral[_user][_collateral] == 0) {
-            return (false, 0);
+        if(supportedCollateral[_collateral] && balancePerUserAndCollateral[_user][_collateral] > 0) {
+            if (freeBetExpiration[_user][_collateral] == 0) {
+                timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp : 0;
+            } else {
+                timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp ? freeBetExpiration[_user][_collateral] - block.timestamp : 0;
+            }
+            isValid = timeToExpiration > 0;
         }
-        if (freeBetExpiration[_user][_collateral] == 0) {
-            timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp : 0;
-            return (timeToExpiration > 0, timeToExpiration);
-        }
-        timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp ? freeBetExpiration[_user][_collateral] - block.timestamp : 0;
-        return (timeToExpiration > 0, timeToExpiration);
     }
 
     /// @notice sets the SGPTradingProcessor contract address
