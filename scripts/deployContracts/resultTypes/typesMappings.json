@@ -1265,6 +1265,16 @@
 		"name": "CHILD_END_OF_ROUND_FOUR_LEADER"
 	},
 	{
+		"id": 13012,
+		"result_type": 1,
+		"name": "CHILD_SERIES_WINNER"
+	},
+	{
+		"id": 13013,
+		"result_type": 1,
+		"name": "CHILD_SERIES_RESULT"
+	}
+	{
 		"id": 10133,
 		"result_type": 1,
 		"name": "CHILD_WILL_THERE_BE_CENTURY"
