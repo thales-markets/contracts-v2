@@ -97,7 +97,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function removeExpiredUserFunding(address[] calldata _users, address _collateral) external notPaused nonReentrant {
         for (uint256 index = 0; index < _users.length; index++) {
             address _user = _users[index];
-            require(freeBetExpiration[_user][_collateral] < block.timestamp, "Free bet not expired");
+            require(
+                freeBetExpiration[_user][_collateral] < block.timestamp ||
+                    (freeBetExpiration[_user][_collateral] == 0 &&
+                        freeBetExpirationUpgrade + freeBetExpirationPeriod < block.timestamp),
+                "Free bet not expired"
+            );
             _removeUserFunding(_user, _collateral, owner);
         }
     }
