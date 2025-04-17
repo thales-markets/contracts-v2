@@ -320,7 +320,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				collateralAddress
 			);
 			expect(isValid).to.be.true;
-			expect(timeToExpiration).to.equal(expirationPeriod-1);
+			expect(timeToExpiration).to.equal(expirationPeriod - 1);
 
 			// Fast forward time to after global expiration
 			await time.increase(expirationPeriod + 100);
