@@ -1,11 +1,17 @@
+const { expect } = require('chai');
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
-const { deploySportsAMMV2Fixture } = require('../../../utils/fixtures/overtimeFixtures');
+const {
+	deploySportsAMMV2Fixture,
+	deployAccountsFixture,
+} = require('../../../utils/fixtures/overtimeFixtures');
 
 describe('SportsAMMV2Live Deployment and Setters', () => {
-	let liveTradingProcessor, collateral;
+	let liveTradingProcessor, liveTradingProcessorData, collateral, secondAccount, thirdAccount;
 
 	beforeEach(async () => {
-		({ liveTradingProcessor, collateral } = await loadFixture(deploySportsAMMV2Fixture));
+		({ liveTradingProcessor, liveTradingProcessorData, collateral } =
+			await loadFixture(deploySportsAMMV2Fixture));
+		({ secondAccount, thirdAccount } = await loadFixture(deployAccountsFixture));
 	});
 
 	describe('Live Trade', () => {
@@ -22,6 +28,21 @@ describe('SportsAMMV2Live Deployment and Setters', () => {
 				mockSpecId, // _specId
 				0 // payment
 			);
+		});
+	});
+
+	describe('Live Trade Data', () => {
+		it('Should set the new Live Trading Processor', async () => {
+			await expect(
+				liveTradingProcessorData.connect(secondAccount).setLiveTradingProcessor(thirdAccount)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+
+			await liveTradingProcessorData.setLiveTradingProcessor(thirdAccount);
+			expect(await liveTradingProcessorData.liveTradingProcessor()).to.equal(thirdAccount.address);
+
+			await expect(liveTradingProcessorData.setLiveTradingProcessor(thirdAccount))
+				.to.emit(liveTradingProcessorData, 'LiveTradingProcessorChanged')
+				.withArgs(thirdAccount.address);
 		});
 	});
 });

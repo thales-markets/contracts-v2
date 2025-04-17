@@ -75,7 +75,10 @@
 		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x9750d5D6E339aCbE9d6585E9AFe1b12d2773E6a9",
 		"FreeBetsHolderImplementation": "0x7A6aFB7A11E997bE0475f901dfEd9e72238345b2",
 		"OVER": "0xdDEDfAF154a0228cD15b2FDAaEc9F0ADA5fae2a2",
-		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD"
+		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD",
+		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
+		"LiveTradingProcessorDataImplementation": "0xA1310683287811790D7bd5815f62A5B9fc22B2C7",
+		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",

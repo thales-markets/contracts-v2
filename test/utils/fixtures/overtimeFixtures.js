@@ -735,6 +735,13 @@ async function deploySportsAMMV2Fixture() {
 	);
 	const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
 
+	// deploy LiveTradingProcessorData
+	const LiveTradingProcessorData = await ethers.getContractFactory('LiveTradingProcessorData');
+	const liveTradingProcessorData = await upgrades.deployProxy(LiveTradingProcessorData, [
+		owner.address,
+		liveTradingProcessorAddress,
+	]);
+
 	// deploy SGPradingProcessor
 	const SGPTradingProcessor = await ethers.getContractFactory('SGPTradingProcessor');
 	const sgpTradingProcessor = await SGPTradingProcessor.deploy(
@@ -874,6 +881,7 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataTenMarketsCurrentRoundNineth,
 		tradeDataTenMarketsCurrentRoundTenth,
 		liveTradingProcessor,
+		liveTradingProcessorData,
 		sgpTradingProcessor,
 		mockChainlinkOracle,
 		sportsAMMV2Data,
