@@ -401,6 +401,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const canTrade2 = await freeBetsHolder.isFreeBetValid(thirdAccount, collateralAddress);
 			expect(canTrade2[0]).to.be.false;
 
+			await freeBetsHolder.setUserFreeBetExpiration(thirdAccount, collateralAddress, 10);
+			const canTrade3 = await freeBetsHolder.isFreeBetValid(thirdAccount, collateralAddress);
+			expect(canTrade3[0]).to.be.false;
 			// Remove all funding
 			await freeBetsHolder.removeUserFunding(thirdAccount, collateralAddress, firstTrader);
 
