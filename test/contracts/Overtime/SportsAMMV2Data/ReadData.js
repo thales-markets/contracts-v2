@@ -257,6 +257,8 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(freeBetsExpiryPerCollateral.length).to.equal(1);
 			expect(freeBetsAmountPerCollateral[0]).to.equal(fundAmount);
 
+			await freeBetsHolder.setUserFreeBetExpiration(secondTrader, collateralAddress, 0);
+
 			// Expiry should be approximately the expiration period (allowing for slight timestamp differences)
 			expect(freeBetsExpiryPerCollateral[0]).to.be.closeTo(expirationPeriod, 10);
 

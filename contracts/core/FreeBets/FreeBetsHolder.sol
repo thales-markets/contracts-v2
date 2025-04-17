@@ -396,6 +396,14 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit SetFreeBetExpirationPeriod(_freeBetExpirationPeriod, _freeBetExpirationUpgrade);
     }
 
+    /// @notice sets the free bet expiration for a user
+    /// @param _user the address of the user
+    /// @param _collateral the address of the collateral
+    /// @param _freeBetExpiration the new free bet expiration
+    function setUserFreeBetExpiration(address _user, address _collateral, uint _freeBetExpiration) external onlyOwner {
+        freeBetExpiration[_user][_collateral] = _freeBetExpiration;
+    }
+
     /* ========== MODIFIERS ========== */
     modifier canTrade(
         address _user,

@@ -311,13 +311,16 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				collateralAddress
 			);
 			expect(freeBetAmount).to.equal(BUY_IN_AMOUNT);
+			await newFreeBetHolder
+				.connect(firstTrader)
+				.setUserFreeBetExpiration(secondTrader, collateralAddress, 0);
 			// Check validity - should be valid due to global expiration
 			const [isValid, timeToExpiration] = await newFreeBetHolder.isFreeBetValid(
 				secondTrader,
 				collateralAddress
 			);
 			expect(isValid).to.be.true;
-			expect(timeToExpiration).to.equal(expirationPeriod);
+			expect(timeToExpiration).to.equal(expirationPeriod-1);
 
 			// Fast forward time to after global expiration
 			await time.increase(expirationPeriod + 100);
