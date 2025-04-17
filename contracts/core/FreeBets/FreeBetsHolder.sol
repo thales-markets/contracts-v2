@@ -339,28 +339,33 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         return resolvedTicketsPerUser[_user].elements.length;
     }
 
+    /// @notice checks if a free bet is valid
+    /// @param _user the address of the user
+    /// @param _collateral the address of the collateral
+    /// @return isValid true if the free bet is valid, false otherwise
+    /// @return timeToExpiration the time to expiration of the free bet, 0 if the free bet is not valid
+    function isFreeBetValid(address _user, address _collateral) external view returns (bool isValid, uint timeToExpiration) {
+        if (supportedCollateral[_collateral] && balancePerUserAndCollateral[_user][_collateral] > 0) {
+            if (freeBetExpiration[_user][_collateral] == 0) {
+                timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp
+                    ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp
+                    : 0;
+            } else {
+                timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp
+                    ? freeBetExpiration[_user][_collateral] - block.timestamp
+                    : 0;
+            }
+            isValid = timeToExpiration > 0;
+        }
+    }
+
+    /* ========== SETTERS ========== */
     /// @notice sets the LiveTradingProcessor contract address
     /// @param _liveTradingProcessor the address of Live Trading Processor contract
     function setLiveTradingProcessor(address _liveTradingProcessor) external onlyOwner {
         require(_liveTradingProcessor != address(0), "Invalid address");
         liveTradingProcessor = ILiveTradingProcessor(_liveTradingProcessor);
         emit SetLiveTradingProcessor(_liveTradingProcessor);
-    }
-
-    /// @notice checks if a free bet is valid
-    /// @param _user the address of the user
-    /// @param _collateral the address of the collateral
-    /// @return isValid true if the free bet is valid, false otherwise
-    /// @return timeToExpiration the time to expiration of the free bet, 0 if the free bet is not valid
-    function isFreeBetValid(address _user, address _collateral) public view returns (bool isValid, uint timeToExpiration) {
-        if(supportedCollateral[_collateral] && balancePerUserAndCollateral[_user][_collateral] > 0) {
-            if (freeBetExpiration[_user][_collateral] == 0) {
-                timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp : 0;
-            } else {
-                timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp ? freeBetExpiration[_user][_collateral] - block.timestamp : 0;
-            }
-            isValid = timeToExpiration > 0;
-        }
     }
 
     /// @notice sets the SGPTradingProcessor contract address

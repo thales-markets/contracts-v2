@@ -164,6 +164,39 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     }
 
     /**
+     * @notice Retrieves free bets data for a specific user.
+     * @dev Fetches free bets data for a given user and collateral addresses.
+     * @param user The address of the user.
+     * @param collateralAddresses An array of collateral addresses to retrieve free bets data for.
+     * @return freeBetsAmountPerCollateral An array of free bets amounts for each collateral address.
+     * @return freeBetsExpiryPerCollateral An array of free bets expiries for each collateral address.
+     */
+    function getFreeBetsDataPerUser(
+        address user,
+        address[] memory collateralAddresses
+    ) external view returns (uint[] memory freeBetsAmountPerCollateral, uint[] memory freeBetsExpiryPerCollateral) {
+        freeBetsAmountPerCollateral = new uint[](collateralAddresses.length);
+        freeBetsExpiryPerCollateral = new uint[](collateralAddresses.length);
+        IFreeBetsHolder freeBetsHolder = sportsAMM.freeBetsHolder();
+        for (uint i = 0; i < collateralAddresses.length; i++) {
+            freeBetsAmountPerCollateral[i] = freeBetsHolder.balancePerUserAndCollateral(user, collateralAddresses[i]);
+            uint userFreeBetExpiration = freeBetsHolder.freeBetExpiration(user, collateralAddresses[i]);
+            if (userFreeBetExpiration == 0) {
+                userFreeBetExpiration = freeBetsHolder.freeBetExpirationUpgrade() +
+                    freeBetsHolder.freeBetExpirationPeriod() >
+                    block.timestamp
+                    ? freeBetsHolder.freeBetExpirationUpgrade() + freeBetsHolder.freeBetExpirationPeriod() - block.timestamp
+                    : 0;
+            } else {
+                userFreeBetExpiration = userFreeBetExpiration > block.timestamp
+                    ? userFreeBetExpiration - block.timestamp
+                    : 0;
+            }
+            freeBetsExpiryPerCollateral[i] = userFreeBetExpiration;
+        }
+    }
+
+    /**
      * @notice Retrieves resolved ticket data for a specific user within a paginated range.
      * @dev Fetches data for resolved tickets, free bets, and staking proxy tickets.
      * @param user The address of the user.
