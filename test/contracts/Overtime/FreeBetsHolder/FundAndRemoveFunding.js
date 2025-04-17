@@ -369,5 +369,48 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			expect(isValid3).to.be.false;
 			expect(timeToExpiration3).to.equal(0);
 		});
+
+		it('Should handle zero experation period correctly', async () => {
+			// Set expiration period
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+
+			// User with zero balance should have invalid free bet
+			const [isValid, timeToExpiration] = await freeBetsHolder.isFreeBetValid(
+				thirdAccount,
+				collateralAddress
+			);
+			expect(isValid).to.be.false;
+			expect(timeToExpiration).to.equal(0);
+
+			// Fund user
+			await freeBetsHolder.fund(thirdAccount, collateralAddress, BUY_IN_AMOUNT);
+			const canTrade = await freeBetsHolder.isFreeBetValid(thirdAccount, collateralAddress);
+			expect(canTrade[0]).to.be.true;
+
+			// Now free bet should be valid
+			const [isValid2, timeToExpiration2] = await freeBetsHolder.isFreeBetValid(
+				thirdAccount,
+				collateralAddress
+			);
+			expect(isValid2).to.be.true;
+			expect(timeToExpiration2).to.equal(expirationPeriod);
+
+			await freeBetsHolder.setFreeBetExpirationPeriod(0, 0);
+			await freeBetsHolder.setUserFreeBetExpiration(thirdAccount, collateralAddress, 0);
+			const canTrade2 = await freeBetsHolder.isFreeBetValid(thirdAccount, collateralAddress);
+			expect(canTrade2[0]).to.be.false;
+
+			// Remove all funding
+			await freeBetsHolder.removeUserFunding(thirdAccount, collateralAddress, firstTrader);
+
+			// Free bet should be invalid due to zero balance
+			const [isValid3, timeToExpiration3] = await freeBetsHolder.isFreeBetValid(
+				thirdAccount,
+				collateralAddress
+			);
+			expect(isValid3).to.be.false;
+			expect(timeToExpiration3).to.equal(0);
+		});
 	});
 });

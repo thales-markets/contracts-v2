@@ -256,8 +256,7 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(freeBetsAmountPerCollateral.length).to.equal(1);
 			expect(freeBetsExpiryPerCollateral.length).to.equal(1);
 			expect(freeBetsAmountPerCollateral[0]).to.equal(fundAmount);
-
-			await freeBetsHolder.setUserFreeBetExpiration(secondTrader, collateralAddress, 0);
+			
 
 			// Expiry should be approximately the expiration period (allowing for slight timestamp differences)
 			expect(freeBetsExpiryPerCollateral[0]).to.be.closeTo(expirationPeriod, 10);
@@ -292,6 +291,20 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(amountsForBothCollaterals[1]).to.equal(0);
 			expect(expiriesForBothCollaterals[0]).to.be.closeTo(expirationPeriod, 10);
 			expect(expiriesForBothCollaterals[1]).to.be.closeTo(expirationPeriod, 10); // Should use global expiration
+
+			await freeBetsHolder.setFreeBetExpirationPeriod(0, 0);
+			await freeBetsHolder.setUserFreeBetExpiration(secondTrader, collateralAddress, 0);
+			const [amountsForBothCollaterals2, expiriesForBothCollaterals2] =
+				await sportsAMMV2Data.getFreeBetsDataPerUser(secondTrader, [
+					collateralAddress,
+					secondCollateralAddress,
+				]);
+			expect(amountsForBothCollaterals2.length).to.equal(2);
+			expect(expiriesForBothCollaterals2.length).to.equal(2);
+			expect(amountsForBothCollaterals2[0]).to.equal(fundAmount);
+			expect(amountsForBothCollaterals2[1]).to.equal(0);
+			expect(expiriesForBothCollaterals2[0]).to.equal(0);
+			expect(expiriesForBothCollaterals2[1]).to.equal(0);
 		});
 	});
 
