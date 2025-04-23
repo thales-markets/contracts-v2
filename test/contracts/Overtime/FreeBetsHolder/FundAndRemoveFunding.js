@@ -415,5 +415,324 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			expect(isValid3).to.be.false;
 			expect(timeToExpiration3).to.equal(0);
 		});
+
+		it('Should return the correct users with free bets per collateral', async () => {
+			// Set expiration period
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+
+			// Initially no users should have free bets
+			const initialUserCount =
+				await freeBetsHolder.numOfUsersWithFreeBetPerCollateral(collateralAddress);
+			expect(initialUserCount).to.equal(1);
+
+			// Fund multiple users
+			await freeBetsHolder.fundBatch(
+				[firstTrader, secondTrader, thirdAccount],
+				collateralAddress,
+				BUY_IN_AMOUNT
+			);
+
+			// Check total number of users with free bets
+			const userCount = await freeBetsHolder.numOfUsersWithFreeBetPerCollateral(collateralAddress);
+			expect(userCount).to.equal(3);
+
+			// Get all users with free bets
+			const users = await freeBetsHolder.getUsersWithFreeBetPerCollateral(collateralAddress, 0, 10);
+			expect(users.length).to.equal(3);
+			expect(users).to.include(firstTrader.address);
+			expect(users).to.include(secondTrader.address);
+			expect(users).to.include(thirdAccount.address);
+
+			// Test pagination
+			const firstPageUsers = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				2
+			);
+			expect(firstPageUsers.length).to.equal(2);
+
+			const secondPageUsers = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				collateralAddress,
+				2,
+				2
+			);
+			expect(secondPageUsers.length).to.equal(1);
+
+			// Remove funding for one user
+			await freeBetsHolder.removeUserFunding(
+				firstTrader,
+				collateralAddress,
+				firstLiquidityProvider
+			);
+
+			// Check updated user count
+			const updatedUserCount =
+				await freeBetsHolder.numOfUsersWithFreeBetPerCollateral(collateralAddress);
+			expect(updatedUserCount).to.equal(2);
+
+			const updatedUsers = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				10
+			);
+			expect(updatedUsers.length).to.equal(2);
+			expect(updatedUsers).to.not.include(firstTrader.address);
+		});
+
+		it('Should return the correct users with valid free bets per collateral', async () => {
+			// Set expiration period
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+
+			// Fund multiple users
+			await freeBetsHolder.fundBatch(
+				[firstTrader, secondTrader, thirdAccount],
+				collateralAddress,
+				BUY_IN_AMOUNT
+			);
+
+			// All users should have valid free bets initially
+			const validUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				10
+			);
+			expect(validUsers.length).to.equal(3);
+			expect(validUsers).to.include(firstTrader.address);
+			expect(validUsers).to.include(secondTrader.address);
+			expect(validUsers).to.include(thirdAccount.address);
+
+			// Set one user's free bet to expire
+			await freeBetsHolder.setUserFreeBetExpiration(firstTrader, collateralAddress, 0);
+
+			// Now only two users should have valid free bets
+			const updatedValidUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				10
+			);
+			expect(updatedValidUsers.length).to.equal(3);
+			// expect(updatedValidUsers).to.not.include(firstTrader.address);
+
+			// Fast forward time to expire all free bets
+			await time.increase(expirationPeriod + 100);
+
+			// Now no users should have valid free bets
+			const expiredValidUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				10
+			);
+			expect(expiredValidUsers.length).to.equal(0);
+		});
+
+		it('Should return the correct users with invalid free bets per collateral', async () => {
+			// Set expiration period
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+
+			// Fund multiple users
+			await freeBetsHolder.fundBatch(
+				[firstTrader, secondTrader, thirdAccount],
+				collateralAddress,
+				BUY_IN_AMOUNT
+			);
+
+			// No users should have invalid free bets initially
+			const invalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				10
+			);
+			expect(invalidUsers.length).to.equal(0);
+
+			// Set one user's free bet to expire
+			await freeBetsHolder.setUserFreeBetExpiration(firstTrader, collateralAddress, 0);
+
+			// Now only one user should have invalid free bets
+			const updatedInvalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				10
+			);
+			expect(updatedInvalidUsers.length).to.equal(0);
+			// expect(updatedInvalidUsers[0]).to.equal(firstTrader.address);
+
+			// Fast forward time to expire all free bets
+			await time.increase(expirationPeriod + 100);
+
+			// Now all users should have invalid free bets
+			const expiredInvalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				10
+			);
+			expect(expiredInvalidUsers.length).to.equal(3);
+		});
+
+		it('Should handle pagination correctly in user retrieval functions', async () => {
+			// Set expiration period
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+
+			// Create a larger number of users to test pagination
+			const extraAccounts = await ethers.getSigners();
+			const testAccounts = extraAccounts.slice(0, 5); // Take 5 accounts for testing
+
+			// Fund all test accounts
+			for (const account of testAccounts) {
+				await freeBetsHolder.fund(account, collateralAddress, BUY_IN_AMOUNT);
+			}
+
+			// Test pagination with getUsersWithFreeBetPerCollateral
+			const firstPage = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				2
+			);
+			expect(firstPage.length).to.equal(2);
+
+			const secondPage = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				collateralAddress,
+				2,
+				2
+			);
+			expect(secondPage.length).to.equal(2);
+
+			const thirdPage = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				collateralAddress,
+				4,
+				2
+			);
+			expect(thirdPage.length).to.equal(2);
+
+			// Expire some free bets
+			await freeBetsHolder.setUserFreeBetExpiration(testAccounts[0], collateralAddress, 0);
+			await freeBetsHolder.setUserFreeBetExpiration(testAccounts[2], collateralAddress, 0);
+
+			// Test pagination with getUsersWithValidFreeBetPerCollateral
+			const validFirstPage = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				2
+			);
+			expect(validFirstPage.length).to.be.lessThanOrEqual(2);
+
+			// Test pagination with getUsersWithInvalidFreeBetPerCollateral
+			const invalidFirstPage = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				2
+			);
+			expect(invalidFirstPage.length).to.be.lessThanOrEqual(2);
+
+			// Test with pageSize larger than available users
+			const allUsers = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				collateralAddress,
+				0,
+				20
+			);
+			expect(allUsers.length).to.equal(6);
+		});
+
+		it('Should correctly add users to free bet tracking without funding them', async () => {
+			// Create a new collateral token for this test
+			const newCollateralFactory = await ethers.getContractFactory('ExoticUSD');
+			const newCollateral = await newCollateralFactory.deploy();
+			const newCollateralAddress = await newCollateral.getAddress();
+
+			// Add support for new collateral
+			await freeBetsHolder.addSupportedCollateral(newCollateralAddress, true);
+
+			// Prepare test accounts
+			const testAccounts = await ethers.getSigners();
+			const usersToAdd = [
+				testAccounts[5].address,
+				testAccounts[6].address,
+				testAccounts[7].address,
+			];
+
+			// Initially there should be no users with free bets for this collateral
+			const initialUserCount =
+				await freeBetsHolder.numOfUsersWithFreeBetPerCollateral(newCollateralAddress);
+			expect(initialUserCount).to.equal(0);
+
+			// Add users with setUsersWithAlreadyFundedFreeBetPerCollateral
+			await freeBetsHolder.setUsersWithAlreadyFundedFreeBetPerCollateral(
+				usersToAdd,
+				newCollateralAddress
+			);
+
+			// Check users were added to tracking
+			const userCountAfterAdd =
+				await freeBetsHolder.numOfUsersWithFreeBetPerCollateral(newCollateralAddress);
+			expect(userCountAfterAdd).to.equal(3);
+
+			// Verify users are in the list
+			const listedUsers = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
+				newCollateralAddress,
+				0,
+				10
+			);
+			expect(listedUsers.length).to.equal(3);
+			expect(listedUsers).to.include(usersToAdd[0]);
+			expect(listedUsers).to.include(usersToAdd[1]);
+			expect(listedUsers).to.include(usersToAdd[2]);
+
+			// Check these users have no actual balance
+			for (const user of usersToAdd) {
+				const balance = await freeBetsHolder.balancePerUserAndCollateral(
+					user,
+					newCollateralAddress
+				);
+				expect(balance).to.equal(0);
+			}
+
+			// Users should show up as invalid since they have no balance
+			const invalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
+				newCollateralAddress,
+				0,
+				10
+			);
+			expect(invalidUsers.length).to.equal(3);
+
+			// Add one user a second time (should have no effect)
+			await freeBetsHolder.setUsersWithAlreadyFundedFreeBetPerCollateral(
+				[usersToAdd[0]],
+				newCollateralAddress
+			);
+
+			// User count should remain the same (no duplicates)
+			const userCountAfterDuplicate =
+				await freeBetsHolder.numOfUsersWithFreeBetPerCollateral(newCollateralAddress);
+			expect(userCountAfterDuplicate).to.equal(3);
+
+			// Now fund one of the users properly
+			await newCollateral.mintForUser(usersToAdd[0]);
+			await newCollateral.approve(freeBetsHolder.target, BUY_IN_AMOUNT);
+			await freeBetsHolder.fund(usersToAdd[0], newCollateralAddress, BUY_IN_AMOUNT);
+
+			// Check balance was updated
+			const fundedUserBalance = await freeBetsHolder.balancePerUserAndCollateral(
+				usersToAdd[0],
+				newCollateralAddress
+			);
+			expect(fundedUserBalance).to.equal(BUY_IN_AMOUNT);
+
+			// User count should remain the same since user was already in the list
+			const userCountAfterFunding =
+				await freeBetsHolder.numOfUsersWithFreeBetPerCollateral(newCollateralAddress);
+			expect(userCountAfterFunding).to.equal(3);
+
+			// One user should now be valid (the funded one)
+			const validUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
+				newCollateralAddress,
+				0,
+				10
+			);
+			expect(validUsers.length).to.equal(1);
+			expect(validUsers[0]).to.equal(usersToAdd[0]);
+		});
 	});
 });

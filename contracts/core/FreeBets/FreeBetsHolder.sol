@@ -51,6 +51,8 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     uint public freeBetExpirationUpgrade;
 
+    mapping(address => AddressSetLib.AddressSet) internal usersWithFreeBetPerCollateral;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner, address _sportsAMMV2, address _liveTradingProcessor) external initializer {
@@ -66,6 +68,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amountPerUser * _users.length);
         for (uint256 index = 0; index < _users.length; index++) {
             address _user = _users[index];
+            if (!usersWithFreeBetPerCollateral[_collateral].contains(_user)) {
+                usersWithFreeBetPerCollateral[_collateral].add(_user);
+            }
             balancePerUserAndCollateral[_user][_collateral] += _amountPerUser;
             freeBetExpiration[_user][_collateral] = block.timestamp + freeBetExpirationPeriod;
             emit UserFunded(_user, _collateral, _amountPerUser, msg.sender);
@@ -76,6 +81,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function fund(address _user, address _collateral, uint _amount) external notPaused nonReentrant {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amount);
+        if (!usersWithFreeBetPerCollateral[_collateral].contains(_user)) {
+            usersWithFreeBetPerCollateral[_collateral].add(_user);
+        }
         balancePerUserAndCollateral[_user][_collateral] += _amount;
         freeBetExpiration[_user][_collateral] = freeBetExpirationPeriod > 0 ? block.timestamp + freeBetExpirationPeriod : 0;
         emit UserFunded(_user, _collateral, _amount, msg.sender);
@@ -125,6 +133,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
         uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
         balancePerUserAndCollateral[_user][_collateral] = 0;
+        if (usersWithFreeBetPerCollateral[_collateral].contains(_user)) {
+            usersWithFreeBetPerCollateral[_collateral].remove(_user);
+        }
         emit UserFundingRemoved(_user, _collateral, _receiver, _amountRemoved);
     }
 
@@ -350,18 +361,87 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @return isValid true if the free bet is valid, false otherwise
     /// @return timeToExpiration the time to expiration of the free bet, 0 if the free bet is not valid
     function isFreeBetValid(address _user, address _collateral) external view returns (bool isValid, uint timeToExpiration) {
-        if (supportedCollateral[_collateral] && balancePerUserAndCollateral[_user][_collateral] > 0) {
-            if (freeBetExpiration[_user][_collateral] == 0) {
-                timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp
-                    ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp
-                    : 0;
-            } else {
-                timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp
-                    ? freeBetExpiration[_user][_collateral] - block.timestamp
-                    : 0;
-            }
-            isValid = timeToExpiration > 0;
+        (isValid, timeToExpiration) = _isFreeBetValid(_user, _collateral);
+    }
+
+    /// @notice get users with free bet per collateral
+    /// @param _collateral the address of the collateral
+    /// @param _index the start index
+    /// @param _pageSize the page size
+    /// @return users
+    function getUsersWithFreeBetPerCollateral(
+        address _collateral,
+        uint _index,
+        uint _pageSize
+    ) external view returns (address[] memory) {
+        return usersWithFreeBetPerCollateral[_collateral].getPage(_index, _pageSize);
+    }
+
+    /// @notice get number of users with free bet per collateral
+    /// @param _collateral the address of the collateral
+    /// @return number of users
+    function numOfUsersWithFreeBetPerCollateral(address _collateral) external view returns (uint) {
+        return usersWithFreeBetPerCollateral[_collateral].elements.length;
+    }
+
+    /// @notice get users with valid free bet per collateral
+    /// @param _collateral the address of the collateral
+    /// @param _index the start index
+    /// @param _pageSize the page size
+    /// @return users
+    function getUsersWithValidFreeBetPerCollateral(
+        address _collateral,
+        uint _index,
+        uint _pageSize
+    ) external view returns (address[] memory) {
+        if (_pageSize > usersWithFreeBetPerCollateral[_collateral].elements.length) {
+            _pageSize = usersWithFreeBetPerCollateral[_collateral].elements.length;
         }
+        address[] memory allValidUsers = new address[](_pageSize);
+        uint validUsersCount = 0;
+        for (uint i = 0; i < _pageSize; i++) {
+            address user = usersWithFreeBetPerCollateral[_collateral].elements[_index + i];
+            (bool isValid, ) = _isFreeBetValid(user, _collateral);
+            if (isValid) {
+                allValidUsers[validUsersCount] = user;
+                validUsersCount++;
+            }
+        }
+        address[] memory validUsers = new address[](validUsersCount);
+        for (uint i = 0; i < validUsersCount; i++) {
+            validUsers[i] = allValidUsers[i];
+        }
+        return validUsers;
+    }
+
+    /// @notice get users with invalid free bet per collateral
+    /// @param _collateral the address of the collateral
+    /// @param _index the start index
+    /// @param _pageSize the page size
+    /// @return users
+    function getUsersWithInvalidFreeBetPerCollateral(
+        address _collateral,
+        uint _index,
+        uint _pageSize
+    ) external view returns (address[] memory) {
+        if (_pageSize > usersWithFreeBetPerCollateral[_collateral].elements.length) {
+            _pageSize = usersWithFreeBetPerCollateral[_collateral].elements.length;
+        }
+        address[] memory allUsers = new address[](_pageSize);
+        uint invalidUsersCount = 0;
+        for (uint i = 0; i < _pageSize; i++) {
+            address user = usersWithFreeBetPerCollateral[_collateral].elements[_index + i];
+            (bool isValid, ) = _isFreeBetValid(user, _collateral);
+            if (!isValid) {
+                allUsers[invalidUsersCount] = user;
+                invalidUsersCount++;
+            }
+        }
+        address[] memory invalidUsers = new address[](invalidUsersCount);
+        for (uint i = 0; i < invalidUsersCount; i++) {
+            invalidUsers[i] = allUsers[i];
+        }
+        return invalidUsers;
     }
 
     /* ========== SETTERS ========== */
@@ -407,6 +487,40 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @param _freeBetExpiration the new free bet expiration
     function setUserFreeBetExpiration(address _user, address _collateral, uint _freeBetExpiration) external onlyOwner {
         freeBetExpiration[_user][_collateral] = _freeBetExpiration;
+    }
+
+    /// @notice sets the users with free bet per collateral
+    /// @param _users the addresses of the users
+    /// @param _collateral the address of the collateral
+    function setUsersWithAlreadyFundedFreeBetPerCollateral(
+        address[] calldata _users,
+        address _collateral
+    ) external onlyOwner {
+        for (uint i = 0; i < _users.length; i++) {
+            if (!usersWithFreeBetPerCollateral[_collateral].contains(_users[i])) {
+                usersWithFreeBetPerCollateral[_collateral].add(_users[i]);
+            }
+        }
+    }
+
+    /* ========== INTERNAL FUNCTIONS ========== */
+
+    function _isFreeBetValid(
+        address _user,
+        address _collateral
+    ) internal view returns (bool isValid, uint timeToExpiration) {
+        if (supportedCollateral[_collateral] && balancePerUserAndCollateral[_user][_collateral] > 0) {
+            if (freeBetExpiration[_user][_collateral] == 0) {
+                timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp
+                    ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp
+                    : 0;
+            } else {
+                timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp
+                    ? freeBetExpiration[_user][_collateral] - block.timestamp
+                    : 0;
+            }
+            isValid = timeToExpiration > 0;
+        }
     }
 
     /* ========== MODIFIERS ========== */
