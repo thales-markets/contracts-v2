@@ -68,12 +68,8 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amountPerUser * _users.length);
         for (uint256 index = 0; index < _users.length; index++) {
             address _user = _users[index];
-            if (!usersWithFreeBetPerCollateral[_collateral].contains(_user)) {
-                usersWithFreeBetPerCollateral[_collateral].add(_user);
-            }
-            balancePerUserAndCollateral[_user][_collateral] += _amountPerUser;
-            freeBetExpiration[_user][_collateral] = block.timestamp + freeBetExpirationPeriod;
-            emit UserFunded(_user, _collateral, _amountPerUser, msg.sender);
+            usersWithFreeBetPerCollateral[_collateral].add(_user);
+            _fundUser(_user, _collateral, _amountPerUser, msg.sender);
         }
     }
 
@@ -81,12 +77,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function fund(address _user, address _collateral, uint _amount) external notPaused nonReentrant {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amount);
-        if (!usersWithFreeBetPerCollateral[_collateral].contains(_user)) {
-            usersWithFreeBetPerCollateral[_collateral].add(_user);
-        }
-        balancePerUserAndCollateral[_user][_collateral] += _amount;
-        freeBetExpiration[_user][_collateral] = freeBetExpirationPeriod > 0 ? block.timestamp + freeBetExpirationPeriod : 0;
-        emit UserFunded(_user, _collateral, _amount, msg.sender);
+        _fundUser(_user, _collateral, _amount, msg.sender);
     }
 
     /// @notice admin method to unallocate free bet that hasn't been used in a while
@@ -106,7 +97,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         for (uint256 index = 0; index < _users.length; index++) {
             address _user = _users[index];
             require(
-                freeBetExpiration[_user][_collateral] < block.timestamp ||
+                (freeBetExpiration[_user][_collateral] > 0 && freeBetExpiration[_user][_collateral] < block.timestamp) ||
                     (freeBetExpiration[_user][_collateral] == 0 &&
                         freeBetExpirationUpgrade + freeBetExpirationPeriod < block.timestamp),
                 "Free bet not expired"
@@ -287,16 +278,15 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (_exercized > 0) {
             IERC20 _collateral = Ticket(_resolvedTicket).collateral();
             uint buyInAmount = Ticket(_resolvedTicket).buyInAmount();
+            freeBetExpiration[_user][address(_collateral)] = block.timestamp + freeBetExpirationPeriod;
             if (_exercized >= buyInAmount) {
                 balancePerUserAndCollateral[_user][address(_collateral)] += buyInAmount;
-                freeBetExpiration[_user][address(_collateral)] = block.timestamp + freeBetExpirationPeriod;
                 _earned = _exercized - buyInAmount;
                 if (_earned > 0) {
                     _collateral.safeTransfer(_user, _earned);
                 }
             } else {
                 balancePerUserAndCollateral[_user][address(_collateral)] += _exercized;
-                freeBetExpiration[_user][address(_collateral)] = block.timestamp + freeBetExpirationPeriod;
             }
         }
         emit FreeBetTicketResolved(_resolvedTicket, _user, _earned);
@@ -497,13 +487,18 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _collateral
     ) external onlyOwner {
         for (uint i = 0; i < _users.length; i++) {
-            if (!usersWithFreeBetPerCollateral[_collateral].contains(_users[i])) {
-                usersWithFreeBetPerCollateral[_collateral].add(_users[i]);
-            }
+            usersWithFreeBetPerCollateral[_collateral].add(_users[i]);
         }
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
+
+    function _fundUser(address _user, address _collateral, uint _amount, address _sender) internal {
+        usersWithFreeBetPerCollateral[_collateral].add(_user);
+        balancePerUserAndCollateral[_user][_collateral] += _amount;
+        freeBetExpiration[_user][_collateral] = freeBetExpirationPeriod > 0 ? block.timestamp + freeBetExpirationPeriod : 0;
+        emit UserFunded(_user, _collateral, _amount, _sender);
+    }
 
     function _isFreeBetValid(
         address _user,
