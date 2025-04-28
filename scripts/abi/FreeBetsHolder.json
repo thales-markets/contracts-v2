@@ -640,65 +640,51 @@
         "type": "uint256"
       }
     ],
+    "name": "getUsersFreeBetDataPerCollateral",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "allUsers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "freeBetAmounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "isValid",
+        "type": "bool[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "timeToExpiration",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
+      }
+    ],
     "name": "getUsersWithFreeBetPerCollateral",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_index",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pageSize",
-        "type": "uint256"
-      }
-    ],
-    "name": "getUsersWithInvalidFreeBetPerCollateral",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "",
-        "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_index",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pageSize",
-        "type": "uint256"
-      }
-    ],
-    "name": "getUsersWithValidFreeBetPerCollateral",
     "outputs": [
       {
         "internalType": "address[]",

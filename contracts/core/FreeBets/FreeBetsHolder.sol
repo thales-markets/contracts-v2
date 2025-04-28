@@ -374,64 +374,41 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         return usersWithFreeBetPerCollateral[_collateral].elements.length;
     }
 
-    /// @notice get users with valid free bet per collateral
+    /// @notice Get users with free bet per collateral, the free bet amount, if it's valid and the time to expiration
     /// @param _collateral the address of the collateral
     /// @param _index the start index
     /// @param _pageSize the page size
-    /// @return users
-    function getUsersWithValidFreeBetPerCollateral(
+    /// @return allUsers
+    /// @return freeBetAmounts
+    /// @return isValid
+    /// @return timeToExpiration
+    function getUsersFreeBetDataPerCollateral(
         address _collateral,
         uint _index,
         uint _pageSize
-    ) external view returns (address[] memory) {
+    )
+        external
+        view
+        returns (
+            address[] memory allUsers,
+            uint[] memory freeBetAmounts,
+            bool[] memory isValid,
+            uint[] memory timeToExpiration
+        )
+    {
         if (_pageSize > usersWithFreeBetPerCollateral[_collateral].elements.length) {
             _pageSize = usersWithFreeBetPerCollateral[_collateral].elements.length;
         }
-        address[] memory allValidUsers = new address[](_pageSize);
-        uint validUsersCount = 0;
+        allUsers = new address[](_pageSize);
+        isValid = new bool[](_pageSize);
+        freeBetAmounts = new uint[](_pageSize);
+        timeToExpiration = new uint[](_pageSize);
         for (uint i = 0; i < _pageSize; i++) {
             address user = usersWithFreeBetPerCollateral[_collateral].elements[_index + i];
-            (bool isValid, ) = _isFreeBetValid(user, _collateral);
-            if (isValid) {
-                allValidUsers[validUsersCount] = user;
-                validUsersCount++;
-            }
+            (isValid[i], timeToExpiration[i]) = _isFreeBetValid(user, _collateral);
+            allUsers[i] = user;
+            freeBetAmounts[i] = balancePerUserAndCollateral[user][_collateral];
         }
-        address[] memory validUsers = new address[](validUsersCount);
-        for (uint i = 0; i < validUsersCount; i++) {
-            validUsers[i] = allValidUsers[i];
-        }
-        return validUsers;
-    }
-
-    /// @notice get users with invalid free bet per collateral
-    /// @param _collateral the address of the collateral
-    /// @param _index the start index
-    /// @param _pageSize the page size
-    /// @return users
-    function getUsersWithInvalidFreeBetPerCollateral(
-        address _collateral,
-        uint _index,
-        uint _pageSize
-    ) external view returns (address[] memory) {
-        if (_pageSize > usersWithFreeBetPerCollateral[_collateral].elements.length) {
-            _pageSize = usersWithFreeBetPerCollateral[_collateral].elements.length;
-        }
-        address[] memory allUsers = new address[](_pageSize);
-        uint invalidUsersCount = 0;
-        for (uint i = 0; i < _pageSize; i++) {
-            address user = usersWithFreeBetPerCollateral[_collateral].elements[_index + i];
-            (bool isValid, ) = _isFreeBetValid(user, _collateral);
-            if (!isValid) {
-                allUsers[invalidUsersCount] = user;
-                invalidUsersCount++;
-            }
-        }
-        address[] memory invalidUsers = new address[](invalidUsersCount);
-        for (uint i = 0; i < invalidUsersCount; i++) {
-            invalidUsers[i] = allUsers[i];
-        }
-        return invalidUsers;
     }
 
     /* ========== SETTERS ========== */
