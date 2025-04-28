@@ -351,7 +351,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @return isValid true if the free bet is valid, false otherwise
     /// @return timeToExpiration the time to expiration of the free bet, 0 if the free bet is not valid
     function isFreeBetValid(address _user, address _collateral) external view returns (bool isValid, uint timeToExpiration) {
-        (isValid, timeToExpiration) = _isFreeBetValid(_user, _collateral);
+        (isValid, timeToExpiration) = _isFreeBetValidAndTimeToExpiration(_user, _collateral);
     }
 
     /// @notice get users with free bet per collateral
@@ -405,7 +405,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         timeToExpiration = new uint[](_pageSize);
         for (uint i; i < _pageSize; ++i) {
             address user = usersWithFreeBetPerCollateral[_collateral].elements[_index + i];
-            (isValid[i], timeToExpiration[i]) = _isFreeBetValid(user, _collateral);
+            (isValid[i], timeToExpiration[i]) = _isFreeBetValidAndTimeToExpiration(user, _collateral);
             allUsers[i] = user;
             freeBetAmounts[i] = balancePerUserAndCollateral[user][_collateral];
         }
@@ -473,7 +473,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit UserFunded(_user, _collateral, _amount, _sender);
     }
 
-    function _isFreeBetValid(
+    function _isFreeBetValidAndTimeToExpiration(
         address _user,
         address _collateral
     ) internal view returns (bool isValid, uint timeToExpiration) {
@@ -486,6 +486,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         }
     }
 
+    function _isFreeBetValid(address _user, address _collateral) internal view returns (bool) {
+        return
+            freeBetExpiration[_user][_collateral] > block.timestamp ||
+            (freeBetExpiration[_user][_collateral] == 0 &&
+                freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp);
+    }
+
     /* ========== MODIFIERS ========== */
     modifier canTrade(
         address _user,
@@ -494,12 +501,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     ) {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         require(balancePerUserAndCollateral[_user][_collateral] >= _amount, "Insufficient balance");
-        require(
-            freeBetExpiration[_user][_collateral] > block.timestamp ||
-                (freeBetExpiration[_user][_collateral] == 0 &&
-                    freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp),
-            "Free bet expired"
-        );
+        require(_isFreeBetValid(_user, _collateral), "Free bet expired");
         _;
     }
 
