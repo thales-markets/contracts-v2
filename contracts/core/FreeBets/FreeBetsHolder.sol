@@ -469,7 +469,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function _fundUser(address _user, address _collateral, uint _amount, address _sender) internal {
         usersWithFreeBetPerCollateral[_collateral].add(_user);
         balancePerUserAndCollateral[_user][_collateral] += _amount;
-        freeBetExpiration[_user][_collateral] = freeBetExpirationPeriod > 0 ? block.timestamp + freeBetExpirationPeriod : 0;
+        freeBetExpiration[_user][_collateral] = block.timestamp + freeBetExpirationPeriod;
         emit UserFunded(_user, _collateral, _amount, _sender);
     }
 
