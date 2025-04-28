@@ -440,11 +440,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @param _freeBetExpirationPeriod the new free bet expiration period
     function setFreeBetExpirationPeriod(uint _freeBetExpirationPeriod, uint _freeBetExpirationUpgrade) external onlyOwner {
         freeBetExpirationPeriod = _freeBetExpirationPeriod;
-        if (_freeBetExpirationUpgrade == 0) {
-            freeBetExpirationUpgrade = block.timestamp;
-        } else {
-            freeBetExpirationUpgrade = _freeBetExpirationUpgrade;
-        }
+        freeBetExpirationUpgrade = _freeBetExpirationUpgrade == 0 ? block.timestamp : _freeBetExpirationUpgrade;
         emit SetFreeBetExpirationPeriod(_freeBetExpirationPeriod, _freeBetExpirationUpgrade);
     }
 
@@ -463,7 +459,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address[] calldata _users,
         address _collateral
     ) external onlyOwner {
-        for (uint i = 0; i < _users.length; i++) {
+        for (uint i; i < _users.length; ++i) {
             usersWithFreeBetPerCollateral[_collateral].add(_users[i]);
         }
     }
@@ -482,16 +478,11 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _collateral
     ) internal view returns (bool isValid, uint timeToExpiration) {
         if (supportedCollateral[_collateral] && balancePerUserAndCollateral[_user][_collateral] > 0) {
-            if (freeBetExpiration[_user][_collateral] == 0) {
-                timeToExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp
-                    ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp
-                    : 0;
-            } else {
-                timeToExpiration = freeBetExpiration[_user][_collateral] > block.timestamp
-                    ? freeBetExpiration[_user][_collateral] - block.timestamp
-                    : 0;
-            }
-            isValid = timeToExpiration > 0;
+            uint expirationDate = freeBetExpiration[_user][_collateral] > 0
+                ? freeBetExpiration[_user][_collateral]
+                : freeBetExpirationUpgrade + freeBetExpirationPeriod;
+            isValid = expirationDate > block.timestamp;
+            timeToExpiration = isValid ? expirationDate - block.timestamp : 0;
         }
     }
 

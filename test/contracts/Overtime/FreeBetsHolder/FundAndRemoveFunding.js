@@ -493,38 +493,31 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 
 			// All users should have valid free bets initially
-			const validUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				10
-			);
-			expect(validUsers.length).to.equal(3);
-			expect(validUsers).to.include(firstTrader.address);
-			expect(validUsers).to.include(secondTrader.address);
-			expect(validUsers).to.include(thirdAccount.address);
+			const [allUsers, freeBetAmounts, isValid, timeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 10);
+			expect(allUsers.length).to.equal(3);
+			expect(allUsers).to.include(firstTrader.address);
+			expect(allUsers).to.include(secondTrader.address);
+			expect(allUsers).to.include(thirdAccount.address);
+			expect(isValid.filter(Boolean).length).to.equal(3);
 
 			// Set one user's free bet to expire
 			await freeBetsHolder.setUserFreeBetExpiration(firstTrader, collateralAddress, 0);
 
 			// Now only two users should have valid free bets
-			const updatedValidUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				10
-			);
-			expect(updatedValidUsers.length).to.equal(3);
-			// expect(updatedValidUsers).to.not.include(firstTrader.address);
+			const [updatedUsers, updatedAmounts, updatedIsValid, updatedTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 10);
+			expect(updatedUsers.length).to.equal(3);
+			expect(updatedIsValid.filter(Boolean).length).to.equal(3);
 
 			// Fast forward time to expire all free bets
 			await time.increase(expirationPeriod + 100);
 
 			// Now no users should have valid free bets
-			const expiredValidUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				10
-			);
-			expect(expiredValidUsers.length).to.equal(0);
+			const [expiredUsers, expiredAmounts, expiredIsValid, expiredTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 10);
+			expect(expiredUsers.length).to.equal(3);
+			expect(expiredIsValid.filter(Boolean).length).to.equal(0);
 		});
 
 		it('Should return the correct users with invalid free bets per collateral', async () => {
@@ -540,35 +533,28 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 
 			// No users should have invalid free bets initially
-			const invalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				10
-			);
-			expect(invalidUsers.length).to.equal(0);
+			const [allUsers, freeBetAmounts, isValid, timeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 10);
+			expect(allUsers.length).to.equal(3);
+			expect(isValid.filter(Boolean).length).to.equal(3);
 
 			// Set one user's free bet to expire
 			await freeBetsHolder.setUserFreeBetExpiration(firstTrader, collateralAddress, 0);
 
 			// Now only one user should have invalid free bets
-			const updatedInvalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				10
-			);
-			expect(updatedInvalidUsers.length).to.equal(0);
-			// expect(updatedInvalidUsers[0]).to.equal(firstTrader.address);
+			const [updatedUsers, updatedAmounts, updatedIsValid, updatedTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 10);
+			expect(updatedUsers.length).to.equal(3);
+			expect(updatedIsValid.filter(Boolean).length).to.equal(3);
 
 			// Fast forward time to expire all free bets
 			await time.increase(expirationPeriod + 100);
 
 			// Now all users should have invalid free bets
-			const expiredInvalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				10
-			);
-			expect(expiredInvalidUsers.length).to.equal(3);
+			const [expiredUsers, expiredAmounts, expiredIsValid, expiredTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 10);
+			expect(expiredUsers.length).to.equal(3);
+			expect(expiredIsValid.filter(Boolean).length).to.equal(0);
 		});
 
 		it('Should handle pagination correctly in user retrieval functions', async () => {
@@ -585,55 +571,33 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				await freeBetsHolder.fund(account, collateralAddress, BUY_IN_AMOUNT);
 			}
 
-			// Test pagination with getUsersWithFreeBetPerCollateral
-			const firstPage = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				2
-			);
-			expect(firstPage.length).to.equal(2);
+			// Test pagination with getUsersFreeBetDataPerCollateral
+			const [firstPageUsers, firstPageAmounts, firstPageIsValid, firstPageTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 2);
+			expect(firstPageUsers.length).to.equal(2);
 
-			const secondPage = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
-				collateralAddress,
-				2,
-				2
-			);
-			expect(secondPage.length).to.equal(2);
+			const [secondPageUsers, secondPageAmounts, secondPageIsValid, secondPageTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 2, 2);
+			expect(secondPageUsers.length).to.equal(2);
 
-			const thirdPage = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
-				collateralAddress,
-				4,
-				2
-			);
-			expect(thirdPage.length).to.equal(2);
+			const [thirdPageUsers, thirdPageAmounts, thirdPageIsValid, thirdPageTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 4, 2);
+			expect(thirdPageUsers.length).to.equal(2);
 
 			// Expire some free bets
 			await freeBetsHolder.setUserFreeBetExpiration(testAccounts[0], collateralAddress, 0);
 			await freeBetsHolder.setUserFreeBetExpiration(testAccounts[2], collateralAddress, 0);
 
-			// Test pagination with getUsersWithValidFreeBetPerCollateral
-			const validFirstPage = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				2
-			);
-			expect(validFirstPage.length).to.be.lessThanOrEqual(2);
-
-			// Test pagination with getUsersWithInvalidFreeBetPerCollateral
-			const invalidFirstPage = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				2
-			);
-			expect(invalidFirstPage.length).to.be.lessThanOrEqual(2);
+			// Test pagination with valid/invalid filtering
+			const [allUsers, allAmounts, allIsValid, allTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 2);
+			expect(allUsers.length).to.be.lessThanOrEqual(2);
+			expect(allIsValid.filter(Boolean).length).to.be.lessThanOrEqual(2);
 
 			// Test with pageSize larger than available users
-			const allUsers = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
-				collateralAddress,
-				0,
-				20
-			);
-			expect(allUsers.length).to.equal(6);
+			const [allUsersLarge, allAmountsLarge, allIsValidLarge, allTimeToExpirationLarge] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(collateralAddress, 0, 20);
+			expect(allUsersLarge.length).to.equal(6);
 		});
 
 		it('Should correctly add users to free bet tracking without funding them', async () => {
@@ -670,11 +634,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			expect(userCountAfterAdd).to.equal(3);
 
 			// Verify users are in the list
-			const listedUsers = await freeBetsHolder.getUsersWithFreeBetPerCollateral(
-				newCollateralAddress,
-				0,
-				10
-			);
+			const [listedUsers, listedAmounts, listedIsValid, listedTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(newCollateralAddress, 0, 10);
 			expect(listedUsers.length).to.equal(3);
 			expect(listedUsers).to.include(usersToAdd[0]);
 			expect(listedUsers).to.include(usersToAdd[1]);
@@ -690,12 +651,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			}
 
 			// Users should show up as invalid since they have no balance
-			const invalidUsers = await freeBetsHolder.getUsersWithInvalidFreeBetPerCollateral(
-				newCollateralAddress,
-				0,
-				10
-			);
+			const [invalidUsers, invalidAmounts, invalidIsValid, invalidTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(newCollateralAddress, 0, 10);
 			expect(invalidUsers.length).to.equal(3);
+			expect(invalidIsValid.filter(Boolean).length).to.equal(0);
 
 			// Add one user a second time (should have no effect)
 			await freeBetsHolder.setUsersWithAlreadyFundedFreeBetPerCollateral(
@@ -726,12 +685,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			expect(userCountAfterFunding).to.equal(3);
 
 			// One user should now be valid (the funded one)
-			const validUsers = await freeBetsHolder.getUsersWithValidFreeBetPerCollateral(
-				newCollateralAddress,
-				0,
-				10
-			);
-			expect(validUsers.length).to.equal(1);
+			const [validUsers, validAmounts, validIsValid, validTimeToExpiration] =
+				await freeBetsHolder.getUsersFreeBetDataPerCollateral(newCollateralAddress, 0, 10);
+			expect(validUsers.length).to.equal(3);
+			expect(validIsValid.filter(Boolean).length).to.equal(1);
 			expect(validUsers[0]).to.equal(usersToAdd[0]);
 		});
 	});
