@@ -403,7 +403,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         isValid = new bool[](_pageSize);
         freeBetAmounts = new uint[](_pageSize);
         timeToExpiration = new uint[](_pageSize);
-        for (uint i = 0; i < _pageSize; i++) {
+        for (uint i; i < _pageSize; ++i) {
             address user = usersWithFreeBetPerCollateral[_collateral].elements[_index + i];
             (isValid[i], timeToExpiration[i]) = _isFreeBetValid(user, _collateral);
             allUsers[i] = user;
