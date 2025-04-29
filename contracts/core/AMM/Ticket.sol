@@ -263,6 +263,22 @@ contract Ticket {
         collateral.safeTransfer(recipient, collateral.balanceOf(address(this)));
     }
 
+    /// @notice cancel the ticket by the owner via AMM
+    function cancelByOwner() external onlyAMM {
+        require(!paused, "Market paused");
+        require(!resolved, "Ticket already resolved");
+
+        cancelled = true;
+        resolved = true;
+
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
+        }
+
+        emit Resolved(false, true);
+    }
+
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _resolve(bool _hasUserWon, bool _cancelled) internal {
