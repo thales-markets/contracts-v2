@@ -22,6 +22,10 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         int24 line;
         uint8 position;
         uint buyInAmount;
+        uint expectedQuote;
+        uint additionalSlippage;
+        address referrer;
+        address collateral;
     }
 
     /* ========== STATE VARIABLES ========== */
@@ -50,19 +54,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
 
             bytes32 requestId = liveTradingProcessor.counterToRequestId(i);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
-
-            RequestData memory requestDataTemp;
-
-            (
-                requestDataTemp.gameId,
-                requestDataTemp.sportId,
-                requestDataTemp.typeId,
-                requestDataTemp.line,
-                requestDataTemp.position,
-                requestDataTemp.buyInAmount
-            ) = liveTradingProcessor.requestIdToTradeData(requestId);
-
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
+            ILiveTradingProcessor.LiveTradeData memory liveTradeData = liveTradingProcessor.getTradeData(requestId);
 
             requestsData[i] = RequestData({
                 user: requester,
@@ -70,12 +63,16 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
                 isFulfilled: liveTradingProcessor.requestIdFulfilled(requestId),
                 timestamp: timestampPerRequest,
                 maturityTimestamp: timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),
-                gameId: requestDataTemp.gameId,
-                sportId: requestDataTemp.sportId,
-                typeId: requestDataTemp.typeId,
-                line: requestDataTemp.line,
-                position: requestDataTemp.position,
-                buyInAmount: requestDataTemp.buyInAmount
+                gameId: liveTradeData._gameId,
+                sportId: liveTradeData._sportId,
+                typeId: liveTradeData._typeId,
+                line: liveTradeData._line,
+                position: liveTradeData._position,
+                buyInAmount: liveTradeData._buyInAmount,
+                expectedQuote: liveTradeData._expectedQuote,
+                additionalSlippage: liveTradeData._additionalSlippage,
+                referrer: liveTradeData._referrer,
+                collateral: liveTradeData._collateral
             });
         }
     }
@@ -106,18 +103,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
             if (requester != user) continue;
 
-            RequestData memory requestDataTemp;
-
-            (
-                requestDataTemp.gameId,
-                requestDataTemp.sportId,
-                requestDataTemp.typeId,
-                requestDataTemp.line,
-                requestDataTemp.position,
-                requestDataTemp.buyInAmount
-            ) = liveTradingProcessor.requestIdToTradeData(requestId);
-
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
+            ILiveTradingProcessor.LiveTradeData memory liveTradeData = liveTradingProcessor.getTradeData(requestId);
 
             requestsData[count] = RequestData({
                 user: requester,
@@ -125,12 +112,16 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
                 isFulfilled: liveTradingProcessor.requestIdFulfilled(requestId),
                 timestamp: timestampPerRequest,
                 maturityTimestamp: timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),
-                gameId: requestDataTemp.gameId,
-                sportId: requestDataTemp.sportId,
-                typeId: requestDataTemp.typeId,
-                line: requestDataTemp.line,
-                position: requestDataTemp.position,
-                buyInAmount: requestDataTemp.buyInAmount
+                gameId: liveTradeData._gameId,
+                sportId: liveTradeData._sportId,
+                typeId: liveTradeData._typeId,
+                line: liveTradeData._line,
+                position: liveTradeData._position,
+                buyInAmount: liveTradeData._buyInAmount,
+                expectedQuote: liveTradeData._expectedQuote,
+                additionalSlippage: liveTradeData._additionalSlippage,
+                referrer: liveTradeData._referrer,
+                collateral: liveTradeData._collateral
             });
 
             count++;

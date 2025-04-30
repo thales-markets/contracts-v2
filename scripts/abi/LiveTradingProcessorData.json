@@ -163,6 +163,26 @@
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expectedQuote",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",
@@ -244,6 +264,26 @@
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expectedQuote",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",

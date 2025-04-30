@@ -27,10 +27,7 @@ interface ILiveTradingProcessor {
 
     function timestampPerRequest(bytes32 _requestId) external view returns (uint);
 
-    // in order to return struct instead of tuple add getter for requestIdToTradeData to LiveTradingProcessor
-    function requestIdToTradeData(
-        bytes32 _requestId
-    ) external view returns (string memory, uint16, uint16, int24, uint8, uint);
+    function getTradeData(bytes32 _requestId) external view returns (LiveTradeData memory);
 
     function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedAmount) external;
 

@@ -42,6 +42,77 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getTradeData",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "_gameId",
+            "type": "string"
+          },
+          {
+            "internalType": "uint16",
+            "name": "_sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "_typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "int24",
+            "name": "_line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint8",
+            "name": "_position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_buyInAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_expectedQuote",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "_referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_collateral",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct ILiveTradingProcessor.LiveTradeData",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "maxAllowedExecutionDelay",
     "outputs": [
@@ -100,50 +171,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_requestId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "requestIdToTradeData",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      },
-      {
-        "internalType": "uint16",
-        "name": "",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "",
-        "type": "uint16"
-      },
-      {
-        "internalType": "int24",
-        "name": "",
-        "type": "int24"
-      },
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
