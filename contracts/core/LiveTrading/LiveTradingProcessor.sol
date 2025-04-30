@@ -247,6 +247,15 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         emit SetMaxAllowedExecutionDelay(_maxAllowedExecutionDelay);
     }
 
+    //// GETTERS
+
+    /// @notice gets trade data struct for specified request ID
+    /// @param requestId request ID
+    /// @return liveTradeData
+    function getTradeData(bytes32 requestId) external view returns (ILiveTradingProcessor.LiveTradeData memory) {
+        return requestIdToTradeData[requestId];
+    }
+
     //// UTILITY
     function stringToBytes32(string memory source) internal pure returns (bytes32 result) {
         bytes memory tempEmptyStringTest = bytes(source);
