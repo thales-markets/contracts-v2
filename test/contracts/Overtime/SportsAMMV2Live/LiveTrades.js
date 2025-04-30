@@ -353,6 +353,30 @@ describe('SportsAMMV2Live Live Trades', () => {
 					.withdrawCollateral(weth.target, secondAccount.address)
 			).to.be.reverted;
 		});
+
+		it('Should return trade data', async () => {
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+			});
+
+			const requestId = await liveTradingProcessor.counterToRequestId(0);
+
+			const tradeData = await liveTradingProcessor.getTradeData(requestId);
+
+			expect(tradeData._gameId).to.eq(tradeDataCurrentRound[0].gameId);
+			expect(tradeData._buyInAmount).to.eq(BUY_IN_AMOUNT);
+		});
 	});
 
 	describe('Live Trade Data', () => {
