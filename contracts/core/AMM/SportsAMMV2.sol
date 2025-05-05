@@ -482,14 +482,21 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @notice exercise specific ticket
     /// @param _ticket ticket address
     function exerciseTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        _exerciseTicket(_ticket, address(0), false, false);
+        _exerciseTicket(_ticket, address(0), false, false, false);
     }
 
     /// @notice cancel specific ticket by admin
     /// @param _ticket ticket address
     function cancelTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
         require(manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING), "UnsupportedSender");
-        _exerciseTicket(_ticket, address(0), false, true);
+        _exerciseTicket(_ticket, address(0), false, true, false);
+    }
+
+    /// @notice mark the specific ticket by admin as lost
+    /// @param _ticket ticket address
+    function markAsLost(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
+        require(manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING), "UnsupportedSender");
+        _exerciseTicket(_ticket, address(0), false, false, true);
     }
 
     /// @notice Withdraws collateral from a specified Ticket contract and sends it to the target address
@@ -510,7 +517,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _inEth
     ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
         require(msg.sender == Ticket(_ticket).ticketOwner(), "OnlyTicketOwner");
-        _exerciseTicket(_ticket, _exerciseCollateral, _inEth, false);
+        _exerciseTicket(_ticket, _exerciseCollateral, _inEth, false, false);
     }
 
     /// @notice expire provided tickets
@@ -880,9 +887,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_referrer != address(0)) referrals.setReferrer(_referrer, _recipient);
     }
 
-    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _inEth, bool _cancelTicket) internal {
+    function _exerciseTicket(
+        address _ticket,
+        address _exerciseCollateral,
+        bool _inEth,
+        bool _cancelTicket,
+        bool _markLost
+    ) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWonAmount = _cancelTicket ? ticket.cancel() : ticket.exercise(_exerciseCollateral);
+        uint userWonAmount = _markLost ? ticket.markAsLost() : _cancelTicket
+            ? ticket.cancel()
+            : ticket.exercise(_exerciseCollateral);
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 
