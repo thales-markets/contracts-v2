@@ -895,9 +895,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _markLost
     ) internal {
         Ticket ticket = Ticket(_ticket);
-        uint userWonAmount = _markLost ? ticket.markAsLost() : _cancelTicket
-            ? ticket.cancel()
-            : ticket.exercise(_exerciseCollateral);
+        uint userWonAmount;
+        if (_markLost) {
+            userWonAmount = ticket.markAsLost();
+        } else if (_cancelTicket) {
+            userWonAmount = ticket.cancel();
+        } else {
+            userWonAmount = ticket.exercise(_exerciseCollateral);
+        }
         IERC20 ticketCollateral = ticket.collateral();
         address ticketOwner = ticket.ticketOwner();
 
