@@ -825,6 +825,35 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "collateralAddresses",
+        "type": "address[]"
+      }
+    ],
+    "name": "getFreeBetsDataPerUser",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "freeBetsAmountPerCollateral",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "freeBetsExpiryPerCollateral",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32[]",
         "name": "_gameIds",
         "type": "bytes32[]"
