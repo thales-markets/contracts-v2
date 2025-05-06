@@ -178,14 +178,14 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         freeBetsAmountPerCollateral = new uint[](collateralAddresses.length);
         freeBetsExpiryPerCollateral = new uint[](collateralAddresses.length);
         IFreeBetsHolder freeBetsHolder = sportsAMM.freeBetsHolder();
+        uint freeBetExpirationUpgrade = freeBetsHolder.freeBetExpirationUpgrade();
+        uint freeBetExpirationPeriod = freeBetsHolder.freeBetExpirationPeriod();
         for (uint i = 0; i < collateralAddresses.length; i++) {
             freeBetsAmountPerCollateral[i] = freeBetsHolder.balancePerUserAndCollateral(user, collateralAddresses[i]);
             uint userFreeBetExpiration = freeBetsHolder.freeBetExpiration(user, collateralAddresses[i]);
             if (userFreeBetExpiration == 0) {
-                userFreeBetExpiration = freeBetsHolder.freeBetExpirationUpgrade() +
-                    freeBetsHolder.freeBetExpirationPeriod() >
-                    block.timestamp
-                    ? freeBetsHolder.freeBetExpirationUpgrade() + freeBetsHolder.freeBetExpirationPeriod() - block.timestamp
+                userFreeBetExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp
+                    ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp
                     : 0;
             } else {
                 userFreeBetExpiration = userFreeBetExpiration > block.timestamp

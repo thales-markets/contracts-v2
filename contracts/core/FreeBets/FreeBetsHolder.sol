@@ -66,9 +66,8 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function fundBatch(address[] calldata _users, address _collateral, uint _amountPerUser) external notPaused nonReentrant {
         require(supportedCollateral[_collateral], "Unsupported collateral");
         IERC20(_collateral).safeTransferFrom(msg.sender, address(this), _amountPerUser * _users.length);
-        for (uint256 index = 0; index < _users.length; index++) {
+        for (uint256 index; index < _users.length; ++index) {
             address _user = _users[index];
-            usersWithFreeBetPerCollateral[_collateral].add(_user);
             _fundUser(_user, _collateral, _amountPerUser, msg.sender);
         }
     }
@@ -94,15 +93,17 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @param _users Array of user addresses whose expired funds will be removed
     /// @param _collateral The token address of the collateral to be removed
     function removeExpiredUserFunding(address[] calldata _users, address _collateral) external notPaused nonReentrant {
-        for (uint256 index = 0; index < _users.length; index++) {
+        for (uint256 index; index < _users.length; ++index) {
             address _user = _users[index];
-            require(
-                (freeBetExpiration[_user][_collateral] > 0 && freeBetExpiration[_user][_collateral] < block.timestamp) ||
-                    (freeBetExpiration[_user][_collateral] == 0 &&
-                        freeBetExpirationUpgrade + freeBetExpirationPeriod < block.timestamp),
-                "Free bet not expired"
-            );
-            _removeUserFunding(_user, _collateral, owner);
+            if (balancePerUserAndCollateral[_user][_collateral] > 0) {
+                require(
+                    (freeBetExpiration[_user][_collateral] > 0 && freeBetExpiration[_user][_collateral] < block.timestamp) ||
+                        (freeBetExpiration[_user][_collateral] == 0 &&
+                            freeBetExpirationUpgrade + freeBetExpirationPeriod < block.timestamp),
+                    "Free bet not expired"
+                );
+                _removeUserFunding(_user, _collateral, owner);
+            }
         }
     }
 
@@ -113,7 +114,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _receiver
     ) external notPaused nonReentrant onlyOwner {
         require(supportedCollateral[_collateral], "Unsupported collateral");
-        for (uint256 index = 0; index < _users.length; index++) {
+        for (uint256 index; index < _users.length; ++index) {
             address _user = _users[index];
             _removeUserFunding(_user, _collateral, _receiver);
         }
