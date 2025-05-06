@@ -250,7 +250,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     ) external onlyOwner roundClosingNotPrepared {
         _newRound = _newRound == 0 ? round + 1 : _newRound;
         if (_ticketsIndexInRound.length == 0) {
-            for (uint i = 0; i < _tickets.length; i++) {
+            for (uint i; i < _tickets.length; i++) {
                 _migrateTicketToNewRound(_tickets[i], _newRound, 0);
             }
         } else {
