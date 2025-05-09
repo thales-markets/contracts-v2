@@ -157,7 +157,10 @@
 		"SGPTradingProcessor": "0x27A4403ba34d5FB8dA30bCBA455837FbF9aa1666",
 		"SessionValidationModule": "0x867072511E55479E4c9A8f2C470FbCf3a37De0F7",
 		"SessionValidationModuleImplementation": "0x6b0d586720902da72BD39C04f44Acd62C1a870ed",
-		"SessionValidationModuleProxyAdmin": "0xf697D759829A60c150b13666F6319Ee70eC338d7"
+		"SessionValidationModuleProxyAdmin": "0xf697D759829A60c150b13666F6319Ee70eC338d7",
+		"LiveTradingProcessorData": "0x5DC5D8619DA3d8b1Cadc2D7d2B1AaaE05c524B85",
+		"LiveTradingProcessorDataImplementation": "0x55FF33278900e5DE9414C14AA078608a73634778",
+		"LiveTradingProcessorDataProxyAdmin": "0x95b95Df0Db79F186C9d2b76466cd5A3633f1f7aB"
 	},
 	"arbitrumOne": {
 		"ProtocolDAO": "0x0089282AC624BbBDA7eC472d63ee99643d7eDf4a",
@@ -244,7 +247,10 @@
 		"SGPTradingProcessor": "0xcC2e7b42cB21386FD71dECB22ebd429754B505F2",
 		"SessionValidationModule": "0xA530B2bB8894c02fdC0fD97D4B46fe3570Cb8752",
 		"SessionValidationModuleImplementation": "0x9a15e02689646C77c34ecd31a2ADdbA28bfA3846",
-		"SessionValidationModuleProxyAdmin": "0x02005dFD09619306Bd736fBc14D1c312CA62DEE8"
+		"SessionValidationModuleProxyAdmin": "0x02005dFD09619306Bd736fBc14D1c312CA62DEE8",
+		"LiveTradingProcessorData": "0xb8bA5ad0FAA8463ea991505AC13a2f609E14dDff",
+		"LiveTradingProcessorDataImplementation": "0xECEE1f88697e90cdFcC6882ca13D0d155BA04d1b",
+		"LiveTradingProcessorDataProxyAdmin": "0x71609d254e6569C537D3a2d050eD05A4C74190eA"
 	},
 	"baseMainnet": {
 		"ProtocolDAO": "0xf334412B96FE4a9Fc0a93D6297574a3b30217E64",
@@ -326,7 +332,10 @@
 		"SGPTradingProcessor": "0xB908ED8efA7E37304602f2782674eE0B6CD19D47",
 		"SessionValidationModule": "0x16C9A5AB1f4Ae48329DD5481174336DE52a55bc5",
 		"SessionValidationModuleImplementation": "0xe940cB4f66eC72bd178961BbB2c872a98900E9Cd",
-		"SessionValidationModuleProxyAdmin": "0xe9Bee3FdB4a05bB8498eA1BC49Ff7dFBDc5215D3"
+		"SessionValidationModuleProxyAdmin": "0xe9Bee3FdB4a05bB8498eA1BC49Ff7dFBDc5215D3",
+		"LiveTradingProcessorData": "0x803Be54873f954e0fB52492bb844BE0D24A2f262",
+		"LiveTradingProcessorDataImplementation": "0x158BB6816E190E8f19635A00084dC1b38B65f859",
+		"LiveTradingProcessorDataProxyAdmin": "0xB84BBC175b63727Ccc89E04e4DCcD945E47ef465"
 	},
 	"mainnet": {
 		"OVER": "0x90ce5720c17587d28e4af120ae2d313b3bad1722",
