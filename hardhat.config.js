@@ -70,7 +70,7 @@ module.exports = {
 		},
 		baseMainnet: {
 			url: `https://base-mainnet.infura.io/v3/${INFURA}`,
-			accounts: [TEST_PRIVATE_KEY],
+			accounts: [PRIVATE_KEY],
 		},
 	},
 	gasReporter: {

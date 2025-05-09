@@ -15,6 +15,20 @@ interface ILiveTradingProcessor {
         address _collateral;
     }
 
+    function maxAllowedExecutionDelay() external view returns (uint);
+
+    function requestCounter() external view returns (uint);
+
+    function counterToRequestId(uint _counter) external view returns (bytes32);
+
+    function requestIdToRequester(bytes32 _requestId) external view returns (address);
+
+    function requestIdFulfilled(bytes32 _requestId) external view returns (bool);
+
+    function timestampPerRequest(bytes32 _requestId) external view returns (uint);
+
+    function getTradeData(bytes32 _requestId) external view returns (LiveTradeData memory);
+
     function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedAmount) external;
 
     function requestLiveTrade(LiveTradeData calldata _liveTradeData) external returns (bytes32);
