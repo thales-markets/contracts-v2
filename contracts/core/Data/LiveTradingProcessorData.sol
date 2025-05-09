@@ -49,9 +49,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
 
         requestsData = new RequestData[](_pageSize);
 
-        for (uint i = _startIndex; i < requestsSize; i++) {
-            if ((i - _startIndex) == _pageSize) break;
-
+        _pageSize = _pageSize > requestsSize - _startIndex ? requestsSize - _startIndex : _pageSize;
+        for (uint i = _startIndex; i < (_startIndex + _pageSize); i++) {
             bytes32 requestId = liveTradingProcessor.counterToRequestId(i);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
@@ -95,10 +94,9 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
 
         requestsData = new RequestData[](_maxSize);
 
+        _batchSize = _batchSize > requestsSize ? 0 : requestsSize - _batchSize;
         // iterate backwards in order to fetch most recent data
-        for (uint i = requestsSize; i > 0; --i) {
-            if ((requestsSize - i) == _batchSize) break;
-
+        for (uint i = requestsSize; i > _batchSize; --i) {
             bytes32 requestId = liveTradingProcessor.counterToRequestId(i - 1);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
             if (requester != user) continue;
