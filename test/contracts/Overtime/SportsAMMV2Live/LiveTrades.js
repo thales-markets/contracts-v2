@@ -413,7 +413,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			expect(requestsData.length).to.eq(PAGE_SIZE);
 			expect(requestsData[0].user).to.eq(firstTrader.address);
 			expect(requestsData[0].requestId).to.eq(userFirstRequestId);
-			expect(requestsData[0].ticketId).to.not.eq(userFirstRequestId);
+			expect(requestsData[0].ticketId).to.not.eq(ZERO_ADDRESS);
 		});
 
 		it('Should get a live trade requests data by user', async () => {

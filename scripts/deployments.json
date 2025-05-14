@@ -34,7 +34,7 @@
 		"MockChainlinkOracle": "0x13De488552594aAbC5dE42f77A3Ed61f745411BA",
 		"ChainlinkOracle": "0x41C1AFac7C03D7eEC6532EdFbb55d9F637Eefc14",
 		"OvertimePaymentToken": "0xE4aB69C077896252FAFBD49EFD26B5D171A32410",
-		"LiveTradingProcessor": "0x495b29aEfEBB79F1c048b4e8818D25494A2089cb",
+		"LiveTradingProcessor": "0xf01554725ad81a5FD959a696642299fA341B67E7",
 		"ChainlinkResolver": "0x2cbE8F5f9AdceDFc0D366e9226d319068673411a",
 		"SportsAMMV2LiquidityPoolData": "0xd61FA46d4e3CD47584a56fC20856Fdd197135756",
 		"SportsAMMV2LiquidityPoolDataImplementation": "0x8Dd6A779c0CAaF74F2f2A97FB7d51bB9c3f24Caa",
@@ -77,7 +77,7 @@
 		"OVER": "0xdDEDfAF154a0228cD15b2FDAaEc9F0ADA5fae2a2",
 		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD",
 		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
-		"LiveTradingProcessorDataImplementation": "0xAa29d936920d382C5a4E02e3EBCE3C3c6b3CE654",
+		"LiveTradingProcessorDataImplementation": "0xA613bcac2A57382A17922D5158946B2d87A3CC14",
 		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2"
 	},
 	"optimisticEthereum": {
