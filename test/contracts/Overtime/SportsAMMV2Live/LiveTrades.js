@@ -403,6 +403,8 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			const userFirstRequestId = await liveTradingProcessor.counterToRequestId(0);
 
+			await mockChainlinkOracle.fulfillLiveTrade(userFirstRequestId, true, quote.totalQuote);
+
 			// WHEN trying to fetch requests data for page size
 			const PAGE_SIZE = 3;
 			const requestsData = await liveTradingProcessorData.getRequestsData(0, PAGE_SIZE);
@@ -411,6 +413,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			expect(requestsData.length).to.eq(PAGE_SIZE);
 			expect(requestsData[0].user).to.eq(firstTrader.address);
 			expect(requestsData[0].requestId).to.eq(userFirstRequestId);
+			expect(requestsData[0].ticketId).to.not.eq(userFirstRequestId);
 		});
 
 		it('Should get a live trade requests data by user', async () => {

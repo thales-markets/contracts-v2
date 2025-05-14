@@ -40,6 +40,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     address public stakingThalesBettingProxy;
 
+    mapping(bytes32 => address) public requestIdToTicketId;
+
     constructor(
         address _link,
         address _oracle,
@@ -157,6 +159,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 lTradeData._referrer,
                 lTradeData._collateral
             );
+            requestIdToTicketId[_requestId] = _createdTicket;
 
             if (requester == freeBetsHolder) {
                 IFreeBetsHolder(freeBetsHolder).confirmLiveTrade(

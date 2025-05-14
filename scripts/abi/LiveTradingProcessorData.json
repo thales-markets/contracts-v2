@@ -120,6 +120,11 @@
             "type": "bytes32"
           },
           {
+            "internalType": "address",
+            "name": "ticketId",
+            "type": "address"
+          },
+          {
             "internalType": "bool",
             "name": "isFulfilled",
             "type": "bool"
@@ -219,6 +224,11 @@
             "internalType": "bytes32",
             "name": "requestId",
             "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "ticketId",
+            "type": "address"
           },
           {
             "internalType": "bool",
