@@ -13,6 +13,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
     struct RequestData {
         address user;
         bytes32 requestId;
+        address ticketId;
         bool isFulfilled;
         uint timestamp;
         uint maturityTimestamp;
@@ -53,12 +54,14 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         for (uint i = _startIndex; i < (_startIndex + _pageSize); i++) {
             bytes32 requestId = liveTradingProcessor.counterToRequestId(i);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
+            address ticketId = liveTradingProcessor.requestIdToTicketId(requestId);
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
             ILiveTradingProcessor.LiveTradeData memory liveTradeData = liveTradingProcessor.getTradeData(requestId);
 
             requestsData[i] = RequestData({
                 user: requester,
                 requestId: requestId,
+                ticketId: ticketId,
                 isFulfilled: liveTradingProcessor.requestIdFulfilled(requestId),
                 timestamp: timestampPerRequest,
                 maturityTimestamp: timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),
@@ -99,6 +102,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         for (uint i = requestsSize; i > _batchSize; --i) {
             bytes32 requestId = liveTradingProcessor.counterToRequestId(i - 1);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
+            address ticketId = liveTradingProcessor.requestIdToTicketId(requestId);
             if (requester != user) continue;
 
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
@@ -107,6 +111,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
             requestsData[count] = RequestData({
                 user: requester,
                 requestId: requestId,
+                ticketId: ticketId,
                 isFulfilled: liveTradingProcessor.requestIdFulfilled(requestId),
                 timestamp: timestampPerRequest,
                 maturityTimestamp: timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),

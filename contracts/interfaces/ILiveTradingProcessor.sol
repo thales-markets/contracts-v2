@@ -23,6 +23,8 @@ interface ILiveTradingProcessor {
 
     function requestIdToRequester(bytes32 _requestId) external view returns (address);
 
+    function requestIdToTicketId(bytes32 _requestId) external view returns (address);
+
     function requestIdFulfilled(bytes32 _requestId) external view returns (bool);
 
     function timestampPerRequest(bytes32 _requestId) external view returns (uint);

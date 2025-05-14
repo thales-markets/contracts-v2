@@ -34,7 +34,7 @@
 		"MockChainlinkOracle": "0x13De488552594aAbC5dE42f77A3Ed61f745411BA",
 		"ChainlinkOracle": "0x41C1AFac7C03D7eEC6532EdFbb55d9F637Eefc14",
 		"OvertimePaymentToken": "0xE4aB69C077896252FAFBD49EFD26B5D171A32410",
-		"LiveTradingProcessor": "0x495b29aEfEBB79F1c048b4e8818D25494A2089cb",
+		"LiveTradingProcessor": "0xf01554725ad81a5FD959a696642299fA341B67E7",
 		"ChainlinkResolver": "0x2cbE8F5f9AdceDFc0D366e9226d319068673411a",
 		"SportsAMMV2LiquidityPoolData": "0xd61FA46d4e3CD47584a56fC20856Fdd197135756",
 		"SportsAMMV2LiquidityPoolDataImplementation": "0x8Dd6A779c0CAaF74F2f2A97FB7d51bB9c3f24Caa",
@@ -77,7 +77,7 @@
 		"OVER": "0xdDEDfAF154a0228cD15b2FDAaEc9F0ADA5fae2a2",
 		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD",
 		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
-		"LiveTradingProcessorDataImplementation": "0xAa29d936920d382C5a4E02e3EBCE3C3c6b3CE654",
+		"LiveTradingProcessorDataImplementation": "0xA613bcac2A57382A17922D5158946B2d87A3CC14",
 		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2"
 	},
 	"optimisticEthereum": {
@@ -132,7 +132,7 @@
 		"MultiCollateralOnOffRampUSDC": "0xdD462615884E70C80037cCf8Aa0f82cb06056D81",
 		"MultiCollateralOnOffRampImplementationUSDC": "0x8ebBF37C80aFE0Fcfa569DeAc810bDe641225E4f",
 		"ChainlinkResolver": "0xc5a00fF7Dc2a127E8F63721DbbEd67d506C38211",
-		"LiveTradingProcessor": "0xA891AB016DCd40313fAcb449608d57fcabbfB63f",
+		"LiveTradingProcessor": "0xAeab38DA5530dDE6E8aF0Ab80B193aDf6bBD09bb",
 		"FreeBetsHolder": "0x8D18e68563d53be97c2ED791CA4354911F16A54B",
 		"FreeBetsHolderImplementation": "0xde979D7DA4ddC10F63bB99D8D379c01c4dBC7b9C",
 		"FreeBetsHolderProxyAdmin": "0x275D006bB022Cb23268AA759feCBDc63470a41A7",
@@ -159,7 +159,7 @@
 		"SessionValidationModuleImplementation": "0x6b0d586720902da72BD39C04f44Acd62C1a870ed",
 		"SessionValidationModuleProxyAdmin": "0xf697D759829A60c150b13666F6319Ee70eC338d7",
 		"LiveTradingProcessorData": "0x5DC5D8619DA3d8b1Cadc2D7d2B1AaaE05c524B85",
-		"LiveTradingProcessorDataImplementation": "0x55FF33278900e5DE9414C14AA078608a73634778",
+		"LiveTradingProcessorDataImplementation": "0x992c8C04DF85761c2EF9Cd9CC7426BA272b736ab",
 		"LiveTradingProcessorDataProxyAdmin": "0x95b95Df0Db79F186C9d2b76466cd5A3633f1f7aB"
 	},
 	"arbitrumOne": {
@@ -215,7 +215,7 @@
 		"DefaultLiquidityProviderImplementationTHALES": "0x482610a1c1f8C5057bca7ed1a5148C00d868d020",
 		"DefaultLiquidityProviderProxyAdminTHALES": "0x0Bd34be27d081162A3Ec337D683c67707Dfada1F",
 		"ChainlinkResolver": "0x4f2822D4e60af7f9F70E7e45BC1941fe3461231e",
-		"LiveTradingProcessor": "0x0b7B0731320e0f4e24eaA2DbF31ee7Ef323F9730",
+		"LiveTradingProcessor": "0x84BCFa2B138B351e177053bA0df21cbCaeCE58f7",
 		"FreeBetsHolder": "0xd1F2b87a9521315337855A132e5721cfe272BBd9",
 		"FreeBetsHolderImplementation": "0x5b1f6B8e7D2d88c0dbF1f475e4633359bD85789e",
 		"FreeBetsHolderProxyAdmin": "0x609AB342035075F360e6fFbb1c43Dc3E96B9FCF3",
@@ -249,7 +249,7 @@
 		"SessionValidationModuleImplementation": "0x9a15e02689646C77c34ecd31a2ADdbA28bfA3846",
 		"SessionValidationModuleProxyAdmin": "0x02005dFD09619306Bd736fBc14D1c312CA62DEE8",
 		"LiveTradingProcessorData": "0xb8bA5ad0FAA8463ea991505AC13a2f609E14dDff",
-		"LiveTradingProcessorDataImplementation": "0xECEE1f88697e90cdFcC6882ca13D0d155BA04d1b",
+		"LiveTradingProcessorDataImplementation": "0x4c98C6fAc5d26fDBcB1108EAcfEb2D1aF65aaE39",
 		"LiveTradingProcessorDataProxyAdmin": "0x71609d254e6569C537D3a2d050eD05A4C74190eA"
 	},
 	"baseMainnet": {
@@ -308,7 +308,7 @@
 		"ThalesToOverMigrationProxyAdmin": "0x2856eBb943A3587F9c7e2D5f83B90CBF6cD8f73D",
 		"OvertimePaymentToken": "0x149459AD88d23d2ce0F4F1371203Db2122331d94",
 		"ChainlinkResolver": "0x34d38CD05886F0A9B15B8ab9fB393FF739494E0C",
-		"LiveTradingProcessor": "0x0c3bD9eae173Cb2c03126212B2398509D6FCC5E0",
+		"LiveTradingProcessor": "0x6335697c970454e0bCc0F680E24BB03a35b266a9",
 		"FreeBetsHolder": "0x2929Cf1edAc2DB91F68e2822CEc25736cAe029bf",
 		"FreeBetsHolderImplementation": "0x7fda60f3eD121E662cf09fA7dF74DCED041F5Fe2",
 		"FreeBetsHolderProxyAdmin": "0xa70Fab4899fCFbDc3a838b4730047101517b722A",
@@ -334,7 +334,7 @@
 		"SessionValidationModuleImplementation": "0xe940cB4f66eC72bd178961BbB2c872a98900E9Cd",
 		"SessionValidationModuleProxyAdmin": "0xe9Bee3FdB4a05bB8498eA1BC49Ff7dFBDc5215D3",
 		"LiveTradingProcessorData": "0x803Be54873f954e0fB52492bb844BE0D24A2f262",
-		"LiveTradingProcessorDataImplementation": "0x158BB6816E190E8f19635A00084dC1b38B65f859",
+		"LiveTradingProcessorDataImplementation": "0x6719f034F5a6fFefcc78a58dD4b4563230102579",
 		"LiveTradingProcessorDataProxyAdmin": "0xB84BBC175b63727Ccc89E04e4DCcD945E47ef465"
 	},
 	"mainnet": {
