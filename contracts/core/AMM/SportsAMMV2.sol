@@ -114,7 +114,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     bool public multicollateralEnabled;
 
     // staking thales address
-    IStakingThales public stakingThales;
+    IStakingThales private stakingThales;
 
     // CL client that processes live requests
     address public liveTradingProcessor;
@@ -170,7 +170,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _riskManager the address of risk manager
     /// @param _riskManager the address of result manager
     /// @param _referrals the address of referrals
-    /// @param _stakingThales the address of staking thales
     /// @param _safeBox the address of safe box
     function initialize(
         address _owner,
@@ -179,7 +178,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         ISportsAMMV2RiskManager _riskManager,
         ISportsAMMV2ResultManager _resultManager,
         IReferrals _referrals,
-        IStakingThales _stakingThales,
         address _safeBox
     ) public initializer {
         setOwner(_owner);
@@ -190,7 +188,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             address(_riskManager),
             address(_resultManager),
             address(_referrals),
-            address(_stakingThales),
             _safeBox
         );
     }
@@ -532,14 +529,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    /// @notice Withdraws collateral from a specified Ticket contract and sends it to the target address
-    /// @param ticketAddress The address of the Ticket contract
-    /// @param recipient The address to receive the withdrawn collateral
-    function withdrawCollateralFromTicket(address ticketAddress, address recipient) external onlyOwner {
-        // Call withdrawCollateral on the specified Ticket contract
-        Ticket(ticketAddress).withdrawCollateral(recipient);
-    }
-
     /// @notice exercise specific ticket to an off ramp collateral
     /// @param _ticket ticket address
     /// @param _exerciseCollateral collateral address to off ramp to
@@ -551,6 +540,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
         if (msg.sender != Ticket(_ticket).ticketOwner()) revert OnlyTicketOwner();
         _exerciseTicket(_ticket, _exerciseCollateral, _inEth, false, false);
+    }
+
+    /// @notice Withdraws collateral from a specified Ticket contract and sends it to the target address
+    /// @param ticketAddress The address of the Ticket contract
+    /// @param recipient The address to receive the withdrawn collateral
+    function withdrawCollateralFromTicket(address ticketAddress, address recipient) external onlyOwner {
+        // Call withdrawCollateral on the specified Ticket contract
+        Ticket(ticketAddress).withdrawCollateral(recipient);
     }
 
     /// @notice expire provided tickets
@@ -675,7 +672,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         } else {
             if (_isEth) {
                 if (!(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount)) revert InsuffETHSent();
-
                 IWeth(_collateral).deposit{value: msg.value}();
             } else {
                 IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
@@ -1001,21 +997,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit GameRootUpdated(_game, _root);
     }
 
-    /// @notice sets different amounts
-    /// @param _safeBoxFee safe box fee paid on each trade
-    function setAmounts(uint _safeBoxFee) external onlyOwner {
-        if (_safeBoxFee > 1e17) revert SafeBoxFeeTooHigh();
-        safeBoxFee = _safeBoxFee;
-        emit AmountsUpdated(_safeBoxFee);
-    }
-
     /// @notice sets main addresses
     /// @param _defaultCollateral the default token used for payment
     /// @param _manager manager address
     /// @param _riskManager risk manager address
     /// @param _resultManager result manager address
     /// @param _referrals referrals address
-    /// @param _stakingThales staking thales address
     /// @param _safeBox safeBox address
     function setAddresses(
         IERC20 _defaultCollateral,
@@ -1023,10 +1010,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _riskManager,
         address _resultManager,
         address _referrals,
-        address _stakingThales,
         address _safeBox
     ) external onlyOwner {
-        _setAddresses(_defaultCollateral, _manager, _riskManager, _resultManager, _referrals, _stakingThales, _safeBox);
+        _setAddresses(_defaultCollateral, _manager, _riskManager, _resultManager, _referrals, _safeBox);
     }
 
     function _setAddresses(
@@ -1035,7 +1021,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _riskManager,
         address _resultManager,
         address _referrals,
-        address _stakingThales,
         address _safeBox
     ) internal {
         defaultCollateral = _defaultCollateral;
@@ -1044,18 +1029,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         riskManager = ISportsAMMV2RiskManager(_riskManager);
         resultManager = ISportsAMMV2ResultManager(_resultManager);
         referrals = IReferrals(_referrals);
-        stakingThales = IStakingThales(_stakingThales);
         safeBox = _safeBox;
 
-        emit AddressesUpdated(
-            _defaultCollateral,
-            _manager,
-            _riskManager,
-            _resultManager,
-            _referrals,
-            _stakingThales,
-            _safeBox
-        );
+        emit AddressesUpdated(_defaultCollateral, _manager, _riskManager, _resultManager, _referrals, _safeBox);
     }
 
     /**
@@ -1064,19 +1040,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
      * @param _liveTradingProcessor Address of the live trading processor contract.
      * @param _sgpTradingProcessor Address of the single-game parlay trading processor contract.
      * @param _freeBetsHolder Address of the free bets holder contract.
-     * @param _stakingThalesBettingProxy Address of the staking Thales betting proxy contract.
      */
     function setBettingProcessors(
         address _liveTradingProcessor,
         address _sgpTradingProcessor,
-        address _freeBetsHolder,
-        address _stakingThalesBettingProxy
+        address _freeBetsHolder
     ) external onlyOwner {
         liveTradingProcessor = _liveTradingProcessor;
         sgpTradingProcessor = _sgpTradingProcessor;
         freeBetsHolder = _freeBetsHolder;
-        stakingThalesBettingProxy = _stakingThalesBettingProxy;
-        emit SetBettingProcessors(liveTradingProcessor, sgpTradingProcessor, freeBetsHolder, stakingThalesBettingProxy);
+        emit SetBettingProcessors(liveTradingProcessor, sgpTradingProcessor, freeBetsHolder);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -1084,21 +1057,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function setTicketMastercopy(address _ticketMastercopy) external onlyOwner {
         ticketMastercopy = _ticketMastercopy;
         emit TicketMastercopyUpdated(_ticketMastercopy);
-    }
-
-    /// @notice sets new LP Pool with LP address and the supported collateral
-    /// @param _collateralAddress collateral address that is supported by the pool
-    /// @param _liquidityPool new LP address
-    function setLiquidityPoolForCollateral(address _collateralAddress, address _liquidityPool) external onlyOwner {
-        address prevPool = liquidityPoolForCollateral[_collateralAddress];
-
-        if (prevPool != address(0)) IERC20(_collateralAddress).approve(prevPool, 0);
-
-        liquidityPoolForCollateral[_collateralAddress] = _liquidityPool;
-
-        if (_liquidityPool != address(0)) IERC20(_collateralAddress).approve(_liquidityPool, MAX_APPROVAL);
-
-        emit SetLiquidityPoolForCollateral(_liquidityPool, _collateralAddress);
     }
 
     /// @notice sets multi-collateral on/off ramp contract and enable/disable
@@ -1117,27 +1075,53 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
     }
 
-    /// @notice sets additional payout percentage for certain collaterals
-    /// @param _collateral to add extra payout for
-    /// @param _addedPayout percentage amount for extra payout
-    function setAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout) external onlyOwner {
-        addedPayoutPercentagePerCollateral[_collateral] = _addedPayout;
-        emit SetAddedPayoutPercentagePerCollateral(_collateral, _addedPayout);
+    /// @notice sets different amounts
+    /// @param _safeBoxFee safe box fee paid on each trade
+    function setAmounts(uint _safeBoxFee) external onlyOwner {
+        if (_safeBoxFee > 1e17) revert SafeBoxFeeTooHigh();
+        safeBoxFee = _safeBoxFee;
+        emit AmountsUpdated(_safeBoxFee);
     }
 
-    /// @notice sets dedicated SafeBox per collateral
-    /// @param _collateral to set dedicated SafeBox for
-    /// @param _safeBox for the given collateral
-    function setSafeBoxPerCollateral(address _collateral, address _safeBox) external onlyOwner {
+    /// @notice Sets parameters related to a collateral asset.
+    /// @dev Only updates fields if the new value differs from the stored one.
+    /// @param _collateral The collateral token address.
+    /// @param _liquidityPool New liquidity pool address (optional, skip if same).
+    /// @param _addedPayout New added payout percentage (optional, skip if same).
+    /// @param _safeBox New dedicated SafeBox address (optional, skip if same).
+    function configureCollateral(
+        address _collateral,
+        address _liquidityPool,
+        uint _addedPayout,
+        address _safeBox
+    ) external onlyOwner {
+        // Liquidity pool update
+        if (liquidityPoolForCollateral[_collateral] != _liquidityPool) {
+            address prevPool = liquidityPoolForCollateral[_collateral];
+            if (prevPool != address(0)) {
+                IERC20(_collateral).approve(prevPool, 0);
+            }
+
+            liquidityPoolForCollateral[_collateral] = _liquidityPool;
+
+            if (_liquidityPool != address(0)) {
+                IERC20(_collateral).approve(_liquidityPool, MAX_APPROVAL);
+            }
+        }
+
+        // Added payout percentage update
+        addedPayoutPercentagePerCollateral[_collateral] = _addedPayout;
+
+        // SafeBox override update
         safeBoxPerCollateral[_collateral] = _safeBox;
-        emit SetSafeBoxPerCollateral(_collateral, _safeBox);
+
+        emit CollateralConfigured(_collateral, _liquidityPool, _addedPayout, _safeBox);
     }
 
     /* ========== MODIFIERS ========== */
 
     modifier onlyKnownTickets(address _ticket) {
         if (!manager.isKnownTicket(_ticket)) revert UnknownTicket();
-
         _;
     }
 
@@ -1151,8 +1135,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_recipient == address(0)) revert UndefinedRecipient();
         _;
     }
-
-    /* ========== EVENTS ========== */
 
     /* ========== EVENTS ========== */
 
@@ -1179,18 +1161,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address riskManager,
         address resultManager,
         address referrals,
-        address stakingThales,
         address safeBox
     );
     event TicketMastercopyUpdated(address ticketMastercopy);
-    event SetLiquidityPoolForCollateral(address liquidityPool, address collateral);
     event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
-    event SetAddedPayoutPercentagePerCollateral(address _collateral, uint _addedPayout);
-    event SetSafeBoxPerCollateral(address _collateral, address _safeBox);
-    event SetBettingProcessors(
-        address liveTradingProcessor,
-        address sgpTradingProcessor,
-        address freeBetsHolder,
-        address stakingThalesBettingProxy
-    );
+    event SetBettingProcessors(address liveTradingProcessor, address sgpTradingProcessor, address freeBetsHolder);
+    event CollateralConfigured(address collateral, address liquidityPool, uint addedPayout, address safeBox);
 }

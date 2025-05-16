@@ -56,7 +56,6 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 				await sportsAMMV2ResultManager.getAddress()
 			);
 			expect(await sportsAMMV2.referrals()).to.equal(await referrals.getAddress());
-			expect(await sportsAMMV2.stakingThales()).to.equal(await stakingThales.getAddress());
 			expect(await sportsAMMV2.safeBox()).to.equal(safeBox.address);
 		});
 
@@ -98,7 +97,6 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 						dummyAddress1,
 						dummyAddress2,
 						dummyAddress1,
-						dummyAddress2,
 						dummyAddress1
 					)
 			).to.be.revertedWith('Only the contract owner may perform this action');
@@ -109,7 +107,6 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 				dummyAddress1,
 				dummyAddress2,
 				dummyAddress1,
-				dummyAddress2,
 				dummyAddress1
 			);
 			expect(await sportsAMMV2.defaultCollateral()).to.equal(collateralAddress);
@@ -117,7 +114,6 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(await sportsAMMV2.riskManager()).to.equal(dummyAddress1);
 			expect(await sportsAMMV2.resultManager()).to.equal(dummyAddress2);
 			expect(await sportsAMMV2.referrals()).to.equal(dummyAddress1);
-			expect(await sportsAMMV2.stakingThales()).to.equal(dummyAddress2);
 			expect(await sportsAMMV2.safeBox()).to.equal(dummyAddress1);
 
 			await expect(
@@ -127,7 +123,6 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 					dummyAddress1,
 					dummyAddress2,
 					dummyAddress1,
-					dummyAddress2,
 					dummyAddress1
 				)
 			)
@@ -138,7 +133,6 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 					dummyAddress1,
 					dummyAddress2,
 					dummyAddress1,
-					dummyAddress2,
 					dummyAddress1
 				);
 		});
@@ -158,28 +152,42 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 				.withArgs(dummyAddress1);
 		});
 
-		it('Should set the new liquidity pool', async () => {
-			const dummyAddress1 = thirdAccount.address;
+		it('Should set new collateral config using configureCollateral', async () => {
+			const dummyLp = thirdAccount.address;
+			const dummySafeBox = fourthAccount.address;
+			const addedPayout = ethers.parseEther('0.05');
 
-			let curentLpAllowance = await collateral.allowance(
+			// Check initial allowance
+			let currentLpAllowance = await collateral.allowance(
 				await sportsAMMV2.getAddress(),
 				await sportsAMMV2LiquidityPool.getAddress()
 			);
-			expect(curentLpAllowance).to.equal(MAX_NUMBER);
+			expect(currentLpAllowance).to.equal(MAX_NUMBER);
 
+			// OnlyOwner check
 			await expect(
 				sportsAMMV2
 					.connect(secondAccount)
-					.setLiquidityPoolForCollateral(collateralAddress, dummyAddress1)
+					.configureCollateral(collateralAddress, dummyLp, addedPayout, dummySafeBox)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await sportsAMMV2.setLiquidityPoolForCollateral(collateralAddress, dummyAddress1);
-			expect(await sportsAMMV2.liquidityPoolForCollateral(collateralAddress)).to.equal(
-				dummyAddress1
-			);
+			// Perform update
+			await expect(
+				sportsAMMV2.configureCollateral(collateralAddress, dummyLp, addedPayout, dummySafeBox)
+			)
+				.to.emit(sportsAMMV2, 'CollateralConfigured')
+				.withArgs(collateralAddress, dummyLp, addedPayout, dummySafeBox);
 
-			curentLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyAddress1);
-			expect(curentLpAllowance).to.equal(MAX_NUMBER);
+			// Validate updated storage
+			expect(await sportsAMMV2.liquidityPoolForCollateral(collateralAddress)).to.equal(dummyLp);
+			expect(await sportsAMMV2.addedPayoutPercentagePerCollateral(collateralAddress)).to.equal(
+				addedPayout
+			);
+			expect(await sportsAMMV2.safeBoxPerCollateral(collateralAddress)).to.equal(dummySafeBox);
+
+			// Validate allowances
+			const newLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyLp);
+			expect(newLpAllowance).to.equal(MAX_NUMBER);
 
 			const oldLpAllowance = await collateral.allowance(
 				await sportsAMMV2.getAddress(),

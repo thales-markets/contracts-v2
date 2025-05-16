@@ -287,7 +287,6 @@ async function deploySportsAMMV2Fixture() {
 		sportsAMMV2RiskManagerAddress,
 		sportsAMMV2ResultManagerAddress,
 		referralsAddress,
-		stakingThalesAddress,
 		safeBox.address,
 	]);
 	const sportsAMMV2Address = await sportsAMMV2.getAddress();
@@ -397,11 +396,6 @@ async function deploySportsAMMV2Fixture() {
 
 	const sportsAMMV2LiquidityPoolSixDecimals2Address =
 		await sportsAMMV2LiquidityPoolSixDecimals2.getAddress();
-
-	await sportsAMMV2.setLiquidityPoolForCollateral(
-		collateralAddress,
-		sportsAMMV2LiquidityPoolAddress
-	);
 
 	// deploy Sports AMM liqudity pool round mastercopy
 	const SportsAMMV2LiquidityPoolRoundMastercopy = await ethers.getContractFactory(
@@ -685,11 +679,19 @@ async function deploySportsAMMV2Fixture() {
 
 	const sportsAMMV2LiquidityPoolETHAddress = await sportsAMMV2LiquidityPoolETH.getAddress();
 
-	await sportsAMMV2.setLiquidityPoolForCollateral(
+	await sportsAMMV2.configureCollateral(
 		collateralAddress,
-		sportsAMMV2LiquidityPoolAddress
+		sportsAMMV2LiquidityPoolAddress,
+		0,
+		safeBox.address // or ZERO_ADDRESS if not using a safebox override
 	);
-	await sportsAMMV2.setLiquidityPoolForCollateral(wethAddress, sportsAMMV2LiquidityPoolETHAddress);
+
+	await sportsAMMV2.configureCollateral(
+		wethAddress,
+		sportsAMMV2LiquidityPoolETHAddress,
+		0,
+		safeBox.address
+	);
 
 	await sportsAMMV2LiquidityPoolETH.setPoolRoundMastercopy(
 		sportsAMMV2LiquidityPoolRoundMastercopyAddress
@@ -811,21 +813,15 @@ async function deploySportsAMMV2Fixture() {
 	await sportsAMMV2.setBettingProcessors(
 		liveTradingProcessorAddress,
 		sgpTradingProcessorAddress,
-		freeBetsHolderAddress,
-		stakingThalesBettingProxyAddress
+		freeBetsHolderAddress
 	);
 
-	await sportsAMMV2.setLiquidityPoolForCollateral(
+	await sportsAMMV2.configureCollateral(
 		collateralTHALESAddress,
-		sportsAMMV2THALESLiquidityPoolAddress
+		sportsAMMV2THALESLiquidityPoolAddress,
+		ADDITIONAL_SLIPPAGE,
+		safeBoxTHALES.address
 	);
-
-	await sportsAMMV2.setAddedPayoutPercentagePerCollateral(
-		collateralTHALESAddress,
-		ADDITIONAL_SLIPPAGE
-	);
-
-	await sportsAMMV2.setSafeBoxPerCollateral(collateralTHALESAddress, safeBoxTHALES.address);
 
 	const safeBoxTHALESAddress = safeBoxTHALES.address;
 
