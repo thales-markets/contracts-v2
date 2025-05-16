@@ -127,8 +127,8 @@ describe('Admin MarkAsLost Functionality', () => {
 		const ticketAddress = activeTickets[0];
 
 		// Expect revert from unauthorized account
-		await expect(sportsAMMV2.connect(firstTrader).markAsLost(ticketAddress)).to.be.revertedWith(
-			'UnsupportedSender'
-		);
+		await expect(
+			sportsAMMV2.connect(firstTrader).markAsLost(ticketAddress)
+		).to.be.revertedWithCustomError(sportsAMMV2, 'UnsupportedSender');
 	});
 });

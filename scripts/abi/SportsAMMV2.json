@@ -33,12 +33,87 @@
   },
   {
     "inputs": [],
+    "name": "IllegalInputAmounts",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsuffETHSent",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsuffReceived",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "InvalidLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPosition",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MultiCollatDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MultiCollateralDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OfframpOnlyDefaultCollateralAllowed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyLiveProcessor",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlySGPProcessor",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyTicketOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SBDOutOfRange",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SafeBoxFeeTooHigh",
     "type": "error"
   },
   {
@@ -50,6 +125,31 @@
       }
     ],
     "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UndefinedRecipient",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnknownTicket",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnsupportedSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroPriceForCollateral",
     "type": "error"
   },
   {

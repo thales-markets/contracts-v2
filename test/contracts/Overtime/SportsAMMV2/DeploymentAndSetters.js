@@ -239,7 +239,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 
 			await expect(
 				sportsAMMV2.connect(secondAccount).setRootsPerGames([GAME_ID_1], [newRoot])
-			).to.be.revertedWith('InvalidSender');
+			).to.be.revertedWithCustomError(sportsAMMV2, 'InvalidSender');
 
 			await sportsAMMV2.setRootsPerGames([GAME_ID_1], [newRoot]);
 			expect(await sportsAMMV2.rootPerGame(GAME_ID_1)).to.equal(newRoot);

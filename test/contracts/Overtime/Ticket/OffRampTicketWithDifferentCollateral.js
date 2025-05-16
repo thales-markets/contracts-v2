@@ -128,7 +128,7 @@ describe('Ticket Exercise and Expire', () => {
 			expect(userBalanceBefore).to.be.equal(DEFAULT_AMOUNT);
 			await expect(
 				sportsAMMV2.exerciseTicketOffRamp(ticketAddress, collateral18, false)
-			).to.be.revertedWith('OnlyTicketOwner');
+			).to.be.revertedWithCustomError(sportsAMMV2, 'OnlyTicketOwner');
 			await sportsAMMV2
 				.connect(firstTrader)
 				.exerciseTicketOffRamp(ticketAddress, collateral18, false);
@@ -205,9 +205,9 @@ describe('Ticket Exercise and Expire', () => {
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
-			await expect(sportsAMMV2.exerciseTicketOffRamp(ticketAddress, weth, true)).to.be.revertedWith(
-				'OnlyTicketOwner'
-			);
+			await expect(
+				sportsAMMV2.exerciseTicketOffRamp(ticketAddress, weth, true)
+			).to.be.revertedWithCustomError(sportsAMMV2, 'OnlyTicketOwner');
 			let userBalanceBefore = await ethers.provider.getBalance(firstTrader);
 			await sportsAMMV2.connect(firstTrader).exerciseTicketOffRamp(ticketAddress, weth, true);
 			expect(await userTicket.resolved()).to.be.equal(true);
