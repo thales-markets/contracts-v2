@@ -501,26 +501,35 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    /// @notice exercise specific ticket
-    /// @param _ticket ticket address
-    function exerciseTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        _exerciseTicket(_ticket, address(0), false, false, false);
-    }
+    /**
+     * @notice Resolves a ticket by exercising, canceling, or marking it as lost.
+     * @dev
+     * - Anyone can call this to exercise a ticket.
+     * - Only addresses whitelisted as MARKET_RESOLVING can cancel or mark a ticket as lost.
+     * - Uses internal _exerciseTicket logic with the appropriate flags.
+     * @param _ticket The address of the ticket to be resolved.
+     * @param action The type of resolution action to perform:
+     *   - TicketAction.Exercise: Exercise a resolved ticket (no whitelist required)
+     *   - TicketAction.Cancel: Cancel the ticket (whitelist required)
+     *   - TicketAction.MarkLost: Mark the ticket as lost (whitelist required)
+     */
+    function handleTicketResolving(
+        address _ticket,
+        ISportsAMMV2.TicketAction action
+    ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
+        if (action != ISportsAMMV2.TicketAction.Exercise) {
+            if (!manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING)) {
+                revert UnsupportedSender();
+            }
+        }
 
-    /// @notice cancel specific ticket by admin
-    /// @param _ticket ticket address
-    function cancelTicket(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        if (!manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING)) revert UnsupportedSender();
-
-        _exerciseTicket(_ticket, address(0), false, true, false);
-    }
-
-    /// @notice mark the specific ticket by admin as lost
-    /// @param _ticket ticket address
-    function markAsLost(address _ticket) external nonReentrant notPaused onlyKnownTickets(_ticket) {
-        if (!manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING)) revert UnsupportedSender();
-
-        _exerciseTicket(_ticket, address(0), false, false, true);
+        if (action == ISportsAMMV2.TicketAction.Cancel) {
+            _exerciseTicket(_ticket, address(0), false, true, false);
+        } else if (action == ISportsAMMV2.TicketAction.MarkLost) {
+            _exerciseTicket(_ticket, address(0), false, false, true);
+        } else {
+            _exerciseTicket(_ticket, address(0), false, false, false);
+        }
     }
 
     /// @notice Withdraws collateral from a specified Ticket contract and sends it to the target address

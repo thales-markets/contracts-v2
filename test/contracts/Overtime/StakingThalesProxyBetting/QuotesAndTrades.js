@@ -270,7 +270,7 @@ describe('StakingThalesBettingProxy', () => {
 			const ticketsDataBeforeExercise = await sportsAMMV2Data.getTicketsData([ticketAddress]);
 
 			const stakingBalanceBefore = await stakingThales.stakedBalanceOf(firstTrader.address);
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const ticketsData = await sportsAMMV2Data.getTicketsData([ticketAddress]);
 
 			const firstTraderStakedBalance = await stakingThales.stakedBalanceOf(firstTrader.address);
