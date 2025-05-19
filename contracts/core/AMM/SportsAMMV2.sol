@@ -41,8 +41,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     error SBDOutOfRange();
     error IllegalInputAmounts();
     error OnlyOwner();
-    error OnlySGPProcessor();
-    error OnlyLiveProcessor();
+    error OnlyDedicatedProcessor();
     error UndefinedRecipient();
     error UnknownTicket();
     error UnsupportedSender();
@@ -55,7 +54,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     error InvalidSender();
     error ZeroAmount();
     error InvalidPosition();
-    error SafeBoxFeeTooHigh();
     error MultiCollatDisabled();
     error OnlyTicketOwner();
 
@@ -111,7 +109,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     IMultiCollateralOnOffRamp public multiCollateralOnOffRamp;
 
     // is multi-collateral enabled
-    bool public multicollateralEnabled;
+    bool private multicollateralEnabled;
 
     // staking thales address
     IStakingThales private stakingThales;
@@ -377,7 +375,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrer,
         address _collateral
     ) external payable nonReentrant notPaused onlyValidRecipient(_recipient) returns (address _createdTicket) {
-        if (msg.sender != sgpTradingProcessor) revert OnlySGPProcessor();
+        if (msg.sender != sgpTradingProcessor) revert OnlyDedicatedProcessor();
 
         _createdTicket = _tradeInternal(
             _tradeData,
@@ -412,7 +410,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _isEth,
         uint8 _systemBetDenominator
     ) external payable nonReentrant notPaused returns (address _createdTicket) {
-        if (!(_systemBetDenominator > 1 && _systemBetDenominator < _tradeData.length)) revert SBDOutOfRange();
+        if (_systemBetDenominator <= 1 || _systemBetDenominator >= _tradeData.length) revert SBDOutOfRange();
         _createdTicket = _tradeInternal(
             _tradeData,
             TradeTypeData(_systemBetDenominator, false, false),
@@ -442,7 +440,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrer,
         address _collateral
     ) external nonReentrant notPaused onlyValidRecipient(_recipient) returns (address _createdTicket) {
-        if (msg.sender != liveTradingProcessor) revert OnlyLiveProcessor();
+        if (msg.sender != liveTradingProcessor) revert OnlyDedicatedProcessor();
 
         _createdTicket = _tradeInternal(
             _tradeData,
@@ -649,8 +647,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 }
 
                 if (riskStatus != ISportsAMMV2RiskManager.RiskStatus.NoRisk) {
-                    totalQuote = 0;
-                    payout = 0;
+                    totalQuote = payout = 0;
                 }
             }
         }
@@ -663,34 +660,44 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _isEth
     ) internal returns (address lqPool, uint collateralPrice, uint buyInAmount, address collateralAfterOnramp) {
         buyInAmount = _buyInAmount;
-        collateralAfterOnramp = _collateral;
 
+        // Default collateral path (including address(0) case)
         if (_collateral == address(0) || _collateral == address(defaultCollateral)) {
             collateralAfterOnramp = address(defaultCollateral);
             defaultCollateral.safeTransferFrom(_fromAddress, address(this), _buyInAmount);
-        } else {
+        }
+        // Non-default collateral path
+        else {
+            collateralAfterOnramp = _collateral;
+
+            // Handle ETH or ERC20 transfer
             if (_isEth) {
-                if (!(_collateral == multiCollateralOnOffRamp.WETH9() && msg.value >= _buyInAmount)) revert InsuffETHSent();
+                if (_collateral != multiCollateralOnOffRamp.WETH9() || msg.value < _buyInAmount) revert InsuffETHSent();
                 IWeth(_collateral).deposit{value: msg.value}();
             } else {
                 IERC20(_collateral).safeTransferFrom(_fromAddress, address(this), _buyInAmount);
             }
 
+            // Check if direct liquidity pool exists for collateral
             lqPool = liquidityPoolForCollateral[_collateral];
             if (lqPool != address(0)) {
                 collateralPrice = ISportsAMMV2LiquidityPool(lqPool).getCollateralPrice();
                 if (collateralPrice == 0) revert ZeroPriceForCollateral();
-            } else {
-                if (!multicollateralEnabled) revert MultiCollatDisabled();
+            }
+            // Handle onramping if no direct pool
+            else {
+                if (address(multiCollateralOnOffRamp) == address(0)) revert MultiCollatDisabled();
 
-                uint minReceived = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
                 IERC20(_collateral).approve(address(multiCollateralOnOffRamp), _buyInAmount);
                 buyInAmount = multiCollateralOnOffRamp.onramp(_collateral, _buyInAmount);
-                if (buyInAmount < minReceived) revert InsuffReceived();
+                if (buyInAmount < multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount))
+                    revert InsuffReceived();
 
                 collateralAfterOnramp = address(defaultCollateral);
             }
         }
+
+        // Get final liquidity pool
         lqPool = liquidityPoolForCollateral[collateralAfterOnramp];
     }
 
@@ -1049,19 +1056,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice sets multi-collateral on/off ramp contract and enable/disable
     /// @param _onOffRamper new multi-collateral on/off ramp address
-    /// @param _enabled enable/disable multi-collateral on/off ramp
-    function setMultiCollateralOnOffRamp(address _onOffRamper, bool _enabled) external onlyOwner {
+    function setMultiCollateralOnOffRamp(address _onOffRamper) external onlyOwner {
         _updateApproval(defaultCollateral, address(multiCollateralOnOffRamp), _onOffRamper);
         multiCollateralOnOffRamp = IMultiCollateralOnOffRamp(_onOffRamper);
-
-        multicollateralEnabled = _enabled;
-        emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
+        emit SetMultiCollateralOnOffRamp(_onOffRamper);
     }
 
     /// @notice sets different amounts
     /// @param _safeBoxFee safe box fee paid on each trade
     function setAmounts(uint _safeBoxFee) external onlyOwner {
-        if (_safeBoxFee > 1e17) revert SafeBoxFeeTooHigh();
         safeBoxFee = _safeBoxFee;
         emit AmountsUpdated(_safeBoxFee);
     }
@@ -1149,7 +1152,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address safeBox
     );
     event TicketMastercopyUpdated(address ticketMastercopy);
-    event SetMultiCollateralOnOffRamp(address onOffRamper, bool enabled);
+    event SetMultiCollateralOnOffRamp(address onOffRamper);
     event SetBettingProcessors(address liveTradingProcessor, address sgpTradingProcessor, address freeBetsHolder);
     event CollateralConfigured(address collateral, address liquidityPool, uint addedPayout, address safeBox);
 }

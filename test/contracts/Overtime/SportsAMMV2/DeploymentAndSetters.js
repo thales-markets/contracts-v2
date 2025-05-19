@@ -204,12 +204,11 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			// expect(await sportsAMMV2.multicollateralEnabled()).to.equal(false);
 
 			await expect(
-				sportsAMMV2.connect(secondAccount).setMultiCollateralOnOffRamp(dummyAddress1, true)
+				sportsAMMV2.connect(secondAccount).setMultiCollateralOnOffRamp(dummyAddress1)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress1, true);
+			await sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress1);
 			expect(await sportsAMMV2.multiCollateralOnOffRamp()).to.equal(dummyAddress1);
-			expect(await sportsAMMV2.multicollateralEnabled()).to.equal(true);
 
 			let curentLpAllowance = await collateral.allowance(
 				await sportsAMMV2.getAddress(),
@@ -217,9 +216,8 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			);
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
 
-			await sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress2, false);
+			await sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress2);
 			expect(await sportsAMMV2.multiCollateralOnOffRamp()).to.equal(dummyAddress2);
-			expect(await sportsAMMV2.multicollateralEnabled()).to.equal(false);
 
 			curentLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyAddress2);
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
@@ -230,16 +228,15 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			);
 			expect(oldLpAllowance).to.equal(0);
 
-			await sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress2, true);
+			await sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress2);
 			expect(await sportsAMMV2.multiCollateralOnOffRamp()).to.equal(dummyAddress2);
-			expect(await sportsAMMV2.multicollateralEnabled()).to.equal(true);
 
 			curentLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyAddress2);
 			expect(curentLpAllowance).to.equal(MAX_NUMBER);
 
-			await expect(sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress1, true))
+			await expect(sportsAMMV2.setMultiCollateralOnOffRamp(dummyAddress1))
 				.to.emit(sportsAMMV2, 'SetMultiCollateralOnOffRamp')
-				.withArgs(dummyAddress1, true);
+				.withArgs(dummyAddress1);
 		});
 
 		it('Should set the new root per game', async () => {

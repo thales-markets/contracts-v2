@@ -295,7 +295,7 @@ async function deploySportsAMMV2Fixture() {
 	await sportsAMMV2RiskManager.setSportsAMM(sportsAMMV2Address);
 	await sportsAMMV2Manager.setSportsAMM(sportsAMMV2Address);
 
-	await sportsAMMV2.setMultiCollateralOnOffRamp(multiCollateralAddress, true);
+	await sportsAMMV2.setMultiCollateralOnOffRamp(multiCollateralAddress);
 
 	// deploy Sports AMM Data
 	const SportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
