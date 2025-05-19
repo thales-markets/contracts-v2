@@ -315,7 +315,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 buyInAmountInDefaultCollateral = _transformToUSD(
                     _buyInAmount,
                     ISportsAMMV2LiquidityPool(liqPoolToUse).getCollateralPrice(),
-                    defaultCollateralDecimals,
                     ISportsAMMV2Manager(_collateral).decimals()
                 );
             }
@@ -792,14 +791,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _transformToUSD(
         uint _amountInCollateral,
         uint _collateralPriceInUSD,
-        uint _defaultCollateralDecimals,
         uint _collateralDecimals
-    ) internal pure returns (uint amountInUSD) {
+    ) internal view returns (uint amountInUSD) {
         amountInUSD = _mulWithDecimals(_amountInCollateral, _collateralPriceInUSD);
-        if (_collateralDecimals < _defaultCollateralDecimals) {
-            amountInUSD = amountInUSD * 10 ** (_defaultCollateralDecimals - _collateralDecimals);
-        } else if (_collateralDecimals > _defaultCollateralDecimals) {
-            amountInUSD = amountInUSD / 10 ** (_collateralDecimals - _defaultCollateralDecimals);
+        if (_collateralDecimals < defaultCollateralDecimals) {
+            amountInUSD = amountInUSD * 10 ** (defaultCollateralDecimals - _collateralDecimals);
+        } else if (_collateralDecimals > defaultCollateralDecimals) {
+            amountInUSD = amountInUSD / 10 ** (_collateralDecimals - defaultCollateralDecimals);
         }
     }
 
@@ -816,19 +814,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _expectedPayout = _tradeDataInternal._expectedPayout;
         if (_collateralPriceInUSD > 0) {
             uint collateralDecimals = ISportsAMMV2Manager(_tradeDataInternal._collateral).decimals();
-            _buyInAmount = _transformToUSD(
-                _buyInAmount,
-                _collateralPriceInUSD,
-                defaultCollateralDecimals,
-                collateralDecimals
-            );
-            _payout = _transformToUSD(_payout, _collateralPriceInUSD, defaultCollateralDecimals, collateralDecimals);
-            _expectedPayout = _transformToUSD(
-                _expectedPayout,
-                _collateralPriceInUSD,
-                defaultCollateralDecimals,
-                collateralDecimals
-            );
+            _buyInAmount = _transformToUSD(_buyInAmount, _collateralPriceInUSD, collateralDecimals);
+            _payout = _transformToUSD(_payout, _collateralPriceInUSD, collateralDecimals);
+            _expectedPayout = _transformToUSD(_expectedPayout, _collateralPriceInUSD, collateralDecimals);
         }
         riskManager.checkAndUpdateRisks(
             _tradeData,
@@ -1063,15 +1051,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     /// @param _onOffRamper new multi-collateral on/off ramp address
     /// @param _enabled enable/disable multi-collateral on/off ramp
     function setMultiCollateralOnOffRamp(address _onOffRamper, bool _enabled) external onlyOwner {
-        address prevOnOffRamp = address(multiCollateralOnOffRamp);
-
-        if (prevOnOffRamp != address(0)) defaultCollateral.approve(prevOnOffRamp, 0);
-
+        _updateApproval(defaultCollateral, address(multiCollateralOnOffRamp), _onOffRamper);
         multiCollateralOnOffRamp = IMultiCollateralOnOffRamp(_onOffRamper);
+
         multicollateralEnabled = _enabled;
-
-        if (_enabled && _onOffRamper != address(0)) defaultCollateral.approve(_onOffRamper, MAX_APPROVAL);
-
         emit SetMultiCollateralOnOffRamp(_onOffRamper, _enabled);
     }
 
@@ -1097,16 +1080,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     ) external onlyOwner {
         // Liquidity pool update
         if (liquidityPoolForCollateral[_collateral] != _liquidityPool) {
-            address prevPool = liquidityPoolForCollateral[_collateral];
-            if (prevPool != address(0)) {
-                IERC20(_collateral).approve(prevPool, 0);
-            }
-
+            _updateApproval(IERC20(_collateral), liquidityPoolForCollateral[_collateral], _liquidityPool);
             liquidityPoolForCollateral[_collateral] = _liquidityPool;
-
-            if (_liquidityPool != address(0)) {
-                IERC20(_collateral).approve(_liquidityPool, MAX_APPROVAL);
-            }
         }
 
         // Added payout percentage update
@@ -1116,6 +1091,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         safeBoxPerCollateral[_collateral] = _safeBox;
 
         emit CollateralConfigured(_collateral, _liquidityPool, _addedPayout, _safeBox);
+    }
+
+    function _updateApproval(IERC20 token, address oldSpender, address newSpender) internal {
+        if (oldSpender != address(0)) {
+            token.approve(oldSpender, 0);
+        }
+
+        if (newSpender != address(0)) {
+            token.approve(newSpender, MAX_APPROVAL);
+        }
     }
 
     /* ========== MODIFIERS ========== */

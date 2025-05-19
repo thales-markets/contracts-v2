@@ -222,7 +222,7 @@ describe('SportsAMMV2 Deployment and Setters', () => {
 			expect(await sportsAMMV2.multicollateralEnabled()).to.equal(false);
 
 			curentLpAllowance = await collateral.allowance(await sportsAMMV2.getAddress(), dummyAddress2);
-			expect(curentLpAllowance).to.equal(0);
+			expect(curentLpAllowance).to.equal(MAX_NUMBER);
 
 			const oldLpAllowance = await collateral.allowance(
 				await sportsAMMV2.getAddress(),
