@@ -127,97 +127,14 @@ describe('Ticket Exercise and Expire', () => {
 			let userBalanceBefore = await collateral18.balanceOf(firstTrader);
 			expect(userBalanceBefore).to.be.equal(DEFAULT_AMOUNT);
 			await expect(
-				sportsAMMV2.exerciseTicketOffRamp(ticketAddress, collateral18, false)
+				sportsAMMV2.exerciseTicketOffRamp(ticketAddress, collateral18)
 			).to.be.revertedWithCustomError(sportsAMMV2, 'OnlyTicketOwner');
-			await sportsAMMV2
-				.connect(firstTrader)
-				.exerciseTicketOffRamp(ticketAddress, collateral18, false);
+			await sportsAMMV2.connect(firstTrader).exerciseTicketOffRamp(ticketAddress, collateral18);
 			expect(await userTicket.resolved()).to.be.equal(true);
 			let userBalanceAfter = await collateral18.balanceOf(firstTrader);
 			let calculatedBalance =
 				parseInt(swapAmount.toString()) + parseInt(userBalanceBefore.toString());
 			expect(parseInt(userBalanceAfter.toString())).to.be.equal(calculatedBalance);
-		});
-
-		it('Exercise with ETH', async () => {
-			tradeDataCurrentRound[0].position = 0;
-			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
-			await multiCollateral.setSwapRate(collateral, weth, ethers.parseEther('2'));
-
-			// Swap rate set for swaps collateral -> collateral18 and collateral18 -> collateral
-			expect(await multiCollateral.swapRate(collateral, weth)).to.be.equal(ethers.parseEther('2'));
-			expect(await multiCollateral.swapRate(weth, collateral)).to.be.equal(
-				ethers.parseEther('0.5')
-			);
-
-			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_1, 0, 0)).to.equal(
-				false
-			);
-			await expect(
-				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_1, 0, 0, 0)
-			).to.be.revertedWithoutReason();
-			expect(await sportsAMMV2ResultManager.areResultsPerMarketSet(GAME_ID_2, 0, 0)).to.equal(
-				false
-			);
-			await expect(
-				sportsAMMV2ResultManager.resultsPerMarket(GAME_ID_2, 0, 0, 0)
-			).to.be.revertedWithoutReason();
-
-			const quote = await sportsAMMV2.tradeQuote(
-				tradeDataCurrentRound,
-				BUY_IN_AMOUNT,
-				ZERO_ADDRESS,
-				false
-			);
-
-			expect(quote.payout).to.equal(ethers.parseEther('20'));
-
-			await sportsAMMV2
-				.connect(firstTrader)
-				.trade(
-					tradeDataCurrentRound,
-					BUY_IN_AMOUNT,
-					quote.totalQuote,
-					ADDITIONAL_SLIPPAGE,
-					ZERO_ADDRESS,
-					ZERO_ADDRESS,
-					false
-				);
-			let swapAmount = parseInt(quote.payout.toString()) * 2;
-			await firstLiquidityProvider.sendTransaction({
-				to: multiCollateral.target,
-				value: swapAmount.toString(),
-			});
-			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
-			const ticketAddress = activeTickets[0];
-
-			const ticketMarket1 = tradeDataCurrentRound[0];
-			await sportsAMMV2ResultManager.setResultsPerMarkets(
-				[ticketMarket1.gameId],
-				[ticketMarket1.typeId],
-				[ticketMarket1.playerId],
-				[[0]]
-			);
-
-			const TicketContract = await ethers.getContractFactory('Ticket');
-			const userTicket = await TicketContract.attach(ticketAddress);
-			expect(await userTicket.isTicketExercisable()).to.be.equal(true);
-			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
-			const phase = await userTicket.phase();
-			expect(phase).to.be.equal(1);
-			await expect(
-				sportsAMMV2.exerciseTicketOffRamp(ticketAddress, weth, true)
-			).to.be.revertedWithCustomError(sportsAMMV2, 'OnlyTicketOwner');
-			let userBalanceBefore = await ethers.provider.getBalance(firstTrader);
-			await sportsAMMV2.connect(firstTrader).exerciseTicketOffRamp(ticketAddress, weth, true);
-			expect(await userTicket.resolved()).to.be.equal(true);
-
-			let userBalanceAfter = await ethers.provider.getBalance(firstTrader);
-			let calculatedBalance =
-				parseInt(swapAmount.toString()) + parseInt(userBalanceBefore.toString());
-			userBalanceAfter = parseInt(parseInt(userBalanceAfter.toString()) / 1e15);
-			calculatedBalance = parseInt(calculatedBalance / 1e15);
-			expect(userBalanceAfter).to.be.approximately(calculatedBalance, 1);
 		});
 	});
 });

@@ -677,11 +677,6 @@
         "internalType": "address",
         "name": "_exerciseCollateral",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_inEth",
-        "type": "bool"
       }
     ],
     "name": "exerciseTicketOffRamp",

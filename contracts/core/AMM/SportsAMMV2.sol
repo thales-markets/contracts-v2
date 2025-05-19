@@ -518,25 +518,23 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         if (action == ISportsAMMV2.TicketAction.Cancel) {
-            _exerciseTicket(_ticket, address(0), false, true, false);
+            _exerciseTicket(_ticket, address(0), true, false);
         } else if (action == ISportsAMMV2.TicketAction.MarkLost) {
-            _exerciseTicket(_ticket, address(0), false, false, true);
+            _exerciseTicket(_ticket, address(0), false, true);
         } else {
-            _exerciseTicket(_ticket, address(0), false, false, false);
+            _exerciseTicket(_ticket, address(0), false, false);
         }
     }
 
     /// @notice exercise specific ticket to an off ramp collateral
     /// @param _ticket ticket address
     /// @param _exerciseCollateral collateral address to off ramp to
-    /// @param _inEth offramp with ETH
     function exerciseTicketOffRamp(
         address _ticket,
-        address _exerciseCollateral,
-        bool _inEth
+        address _exerciseCollateral
     ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
         if (msg.sender != Ticket(_ticket).ticketOwner()) revert OnlyTicketOwner();
-        _exerciseTicket(_ticket, _exerciseCollateral, _inEth, false, false);
+        _exerciseTicket(_ticket, _exerciseCollateral, false, false);
     }
 
     /// @notice Withdraws collateral from a specified Ticket contract and sends it to the target address
@@ -915,13 +913,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (_referrer != address(0)) referrals.setReferrer(_referrer, _recipient);
     }
 
-    function _exerciseTicket(
-        address _ticket,
-        address _exerciseCollateral,
-        bool _inEth,
-        bool _cancelTicket,
-        bool _markLost
-    ) internal {
+    function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _cancelTicket, bool _markLost) internal {
         Ticket ticket = Ticket(_ticket);
         uint userWonAmount;
         if (_markLost) {
@@ -946,17 +938,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
             if (ticketCollateral != defaultCollateral) revert OfframpOnlyDefaultCollateralAllowed();
 
-            if (_inEth) {
-                require(
-                    payable(ticketOwner).send(multiCollateralOnOffRamp.offrampIntoEth(userWonAmount)),
-                    "ETHSendingFailed"
-                );
-            } else {
-                IERC20(_exerciseCollateral).safeTransfer(
-                    ticketOwner,
-                    multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWonAmount)
-                );
-            }
+            IERC20(_exerciseCollateral).safeTransfer(
+                ticketOwner,
+                multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWonAmount)
+            );
         }
 
         // mark ticket as exercised in LiquidityPool and return any funds to the pool if ticket was lost or cancelled
