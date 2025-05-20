@@ -792,20 +792,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         return address(ticket);
     }
 
-    // Transform collateral to USD
-    function _transformToUSD(
-        uint _amountInCollateral,
-        uint _collateralPriceInUSD,
-        uint _collateralDecimals
-    ) internal view returns (uint amountInUSD) {
-        amountInUSD = _mulWithDecimals(_amountInCollateral, _collateralPriceInUSD);
-        if (_collateralDecimals < defaultCollateralDecimals) {
-            amountInUSD = amountInUSD * 10 ** (defaultCollateralDecimals - _collateralDecimals);
-        } else if (_collateralDecimals > defaultCollateralDecimals) {
-            amountInUSD = amountInUSD / 10 ** (_collateralDecimals - defaultCollateralDecimals);
-        }
-    }
-
     // Checks risk and updates Staking Volume
     function checkRisksLimits(
         ISportsAMMV2.TradeData[] memory _tradeData,
@@ -894,6 +880,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 );
                 emit SafeBoxFeePaid(safeBoxFee, safeBoxAmount, address(_collateral));
             }
+        }
+    }
+
+    // Transform collateral to USD
+    function _transformToUSD(
+        uint _amountInCollateral,
+        uint _collateralPriceInUSD,
+        uint _collateralDecimals
+    ) internal view returns (uint amountInUSD) {
+        amountInUSD = _mulWithDecimals(_amountInCollateral, _collateralPriceInUSD);
+        if (_collateralDecimals < defaultCollateralDecimals) {
+            amountInUSD = amountInUSD * 10 ** (defaultCollateralDecimals - _collateralDecimals);
+        } else if (_collateralDecimals > defaultCollateralDecimals) {
+            amountInUSD = amountInUSD / 10 ** (_collateralDecimals - defaultCollateralDecimals);
         }
     }
 
