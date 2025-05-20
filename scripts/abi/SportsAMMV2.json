@@ -760,36 +760,6 @@
         "internalType": "address",
         "name": "_owner",
         "type": "address"
-      },
-      {
-        "internalType": "contract IERC20",
-        "name": "_defaultCollateral",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ISportsAMMV2Manager",
-        "name": "_manager",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ISportsAMMV2RiskManager",
-        "name": "_riskManager",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ISportsAMMV2ResultManager",
-        "name": "_resultManager",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IReferrals",
-        "name": "_referrals",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_safeBox",
-        "type": "address"
       }
     ],
     "name": "initialize",

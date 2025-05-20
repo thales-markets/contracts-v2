@@ -280,15 +280,17 @@ async function deploySportsAMMV2Fixture() {
 	);
 
 	const SportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
-	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [
-		owner.address,
+	const sportsAMMV2 = await upgrades.deployProxy(SportsAMMV2, [owner.address]);
+
+	await sportsAMMV2.setAddresses(
 		collateralAddress,
 		sportsAMMV2ManagerAddress,
 		sportsAMMV2RiskManagerAddress,
 		sportsAMMV2ResultManagerAddress,
 		referralsAddress,
-		safeBox.address,
-	]);
+		safeBox.address
+	);
+
 	const sportsAMMV2Address = await sportsAMMV2.getAddress();
 
 	await sportsAMMV2.setAmounts(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);

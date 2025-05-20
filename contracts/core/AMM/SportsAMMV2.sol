@@ -163,31 +163,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /// @notice initialize the storage in the proxy contract with the parameters
     /// @param _owner owner for using the onlyOwner functions
-    /// @param _defaultCollateral the address of default token used for payment
-    /// @param _manager the address of manager
-    /// @param _riskManager the address of risk manager
-    /// @param _riskManager the address of result manager
-    /// @param _referrals the address of referrals
-    /// @param _safeBox the address of safe box
-    function initialize(
-        address _owner,
-        IERC20 _defaultCollateral,
-        ISportsAMMV2Manager _manager,
-        ISportsAMMV2RiskManager _riskManager,
-        ISportsAMMV2ResultManager _resultManager,
-        IReferrals _referrals,
-        address _safeBox
-    ) public initializer {
+    function initialize(address _owner) public initializer {
         setOwner(_owner);
         initNonReentrant();
-        _setAddresses(
-            _defaultCollateral,
-            address(_manager),
-            address(_riskManager),
-            address(_resultManager),
-            address(_referrals),
-            _safeBox
-        );
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -992,17 +970,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address _referrals,
         address _safeBox
     ) external onlyOwner {
-        _setAddresses(_defaultCollateral, _manager, _riskManager, _resultManager, _referrals, _safeBox);
-    }
-
-    function _setAddresses(
-        IERC20 _defaultCollateral,
-        address _manager,
-        address _riskManager,
-        address _resultManager,
-        address _referrals,
-        address _safeBox
-    ) internal {
         defaultCollateral = _defaultCollateral;
         defaultCollateralDecimals = ISportsAMMV2Manager(address(defaultCollateral)).decimals();
         manager = ISportsAMMV2Manager(_manager);
@@ -1010,7 +977,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         resultManager = ISportsAMMV2ResultManager(_resultManager);
         referrals = IReferrals(_referrals);
         safeBox = _safeBox;
-
         emit AddressesUpdated(_defaultCollateral, _manager, _riskManager, _resultManager, _referrals, _safeBox);
     }
 
