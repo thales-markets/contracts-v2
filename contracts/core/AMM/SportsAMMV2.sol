@@ -1065,7 +1065,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     modifier onlyWhitelistedAddresses() {
-        if (!(manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.ROOT_SETTING) || msg.sender == owner))
+        if (!manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.ROOT_SETTING) && msg.sender != owner)
             revert InvalidSender();
         _;
     }
