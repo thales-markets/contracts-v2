@@ -10,6 +10,12 @@ import "../interfaces/IFreeBetsHolder.sol";
 import "../interfaces/IStakingThalesBettingProxy.sol";
 
 interface ISportsAMMV2 {
+    enum TicketAction {
+        Exercise,
+        Cancel,
+        MarkLost
+    }
+
     struct CombinedPosition {
         uint16 typeId;
         uint8 position;
@@ -38,7 +44,7 @@ interface ISportsAMMV2 {
 
     function safeBoxFee() external view returns (uint);
 
-    function exerciseTicket(address _ticket) external;
+    function handleTicketResolving(address _ticket, ISportsAMMV2.TicketAction action) external;
 
     function riskManager() external view returns (ISportsAMMV2RiskManager);
 

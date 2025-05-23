@@ -645,7 +645,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 isSystemExercisable = true;
             }
             if (ticket.isTicketExercisable() && (!isWinner || isSystemExercisable)) {
-                sportsAMM.exerciseTicket(ticketAddress);
+                sportsAMM.handleTicketResolving(ticketAddress, ISportsAMMV2.TicketAction.Exercise);
             }
             if ((isWinner && !isSystem) || ticket.resolved()) {
                 ticketAlreadyExercisedInRound[_roundNumber][ticketAddress] = true;

@@ -106,7 +106,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 
 			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
 			expect(safeBoxTHALESBalance).greaterThan(0);
@@ -156,7 +156,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 
 			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
 			expect(safeBoxTHALESBalance).greaterThan(0);
@@ -211,7 +211,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 
 			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
 			expect(safeBoxTHALESBalance).greaterThan(0);
@@ -334,7 +334,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 
 			const safeBoxTHALESBalance = await collateralTHALES.balanceOf(safeBoxTHALESAddress);
 			expect(safeBoxTHALESBalance).eq(0);

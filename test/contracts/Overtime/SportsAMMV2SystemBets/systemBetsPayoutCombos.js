@@ -122,7 +122,7 @@ describe('SportsAMMV2 system bets', () => {
 
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
@@ -164,7 +164,7 @@ describe('SportsAMMV2 system bets', () => {
 			expect(systemBetPayout).to.be.equal('12820512820512820511');
 
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
@@ -206,7 +206,7 @@ describe('SportsAMMV2 system bets', () => {
 			expect(systemBetPayout).to.be.equal('7122507122507122506');
 
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
@@ -248,7 +248,7 @@ describe('SportsAMMV2 system bets', () => {
 			expect(systemBetPayout).to.be.equal('25897435897435897432');
 
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
@@ -290,7 +290,7 @@ describe('SportsAMMV2 system bets', () => {
 			expect(systemBetPayout).to.be.equal('16153846153846153843');
 
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
@@ -332,7 +332,7 @@ describe('SportsAMMV2 system bets', () => {
 			expect(systemBetPayout).to.be.equal(0);
 
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
@@ -367,7 +367,7 @@ describe('SportsAMMV2 system bets', () => {
 			expect(systemBetPayout).to.be.equal(0);
 
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));

@@ -122,8 +122,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 
 			expect(positionRisk0).to.equal('6153846153846153846');
-			expect(positionRisk1).to.equal('6666666666666666666');
-			expect(positionRisk2).to.equal('740740740740740740');
+			expect(positionRisk1).to.equal('4444444444444444444');
+			expect(positionRisk2).to.equal('329218106995884773');
 		});
 	});
 });

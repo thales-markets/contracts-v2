@@ -96,7 +96,7 @@ describe('markAsLost Integration with SportsAMMV2LiquidityPool', function () {
 		await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 2, true);
 
 		// Admin marks as lost
-		await expect(sportsAMMV2.connect(secondAccount).markAsLost(ticketAddress))
+		await expect(sportsAMMV2.connect(secondAccount).handleTicketResolving(ticketAddress, 2))
 			.to.emit(userTicket, 'Resolved')
 			.withArgs(false, false);
 

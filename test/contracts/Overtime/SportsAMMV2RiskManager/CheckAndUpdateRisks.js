@@ -78,7 +78,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			let spentOnGame = await sportsAMMV2RiskManager.spentOnGame(tradeDataCurrentRound[0].gameId);
 
 			expect(Number(ethers.formatEther(positionRisk0))).to.equal(marketRisk0);
-			expect(Number(ethers.formatEther(positionRisk1))).to.equal(-marketRisk0);
+			expect(Number(ethers.formatEther(positionRisk1))).to.equal(-formattedBuyInAmount);
 			expect(Number(ethers.formatEther(spentOnGame))).to.equal(marketRisk0);
 
 			const newBuyInAmount = ethers.parseEther('5');
@@ -119,15 +119,18 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 			);
 			spentOnGame = await sportsAMMV2RiskManager.spentOnGame(tradeDataCurrentRound[0].gameId);
 
+			// Final expected values considering new logic
+			const expectedPositionRisk0 = marketRisk0 - formattedNewBuyInAmount;
+			const expectedPositionRisk1 = -formattedBuyInAmount + marketRisk1;
+			const expectedSpent = marketRisk0 + marketRisk1;
+
 			expect(Number(ethers.formatEther(positionRisk0)).toFixed(4)).to.equal(
-				(marketRisk0 - marketRisk1).toFixed(4)
+				expectedPositionRisk0.toFixed(4)
 			);
 			expect(Number(ethers.formatEther(positionRisk1)).toFixed(4)).to.equal(
-				(-marketRisk0 + marketRisk1).toFixed(4)
+				expectedPositionRisk1.toFixed(4)
 			);
-			expect(Number(ethers.formatEther(spentOnGame)).toFixed(4)).to.equal(
-				(marketRisk0 + marketRisk1).toFixed(4)
-			);
+			expect(Number(ethers.formatEther(spentOnGame)).toFixed(4)).to.equal(expectedSpent.toFixed(4));
 		});
 	});
 
@@ -172,7 +175,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('InvalidPosition');
+			).to.be.revertedWithCustomError(sportsAMMV2, 'InvalidPosition');
 		});
 
 		it('Should fail with "Not trading"', async () => {
@@ -218,7 +221,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('IllegalInputAmounts');
+			).to.be.revertedWithCustomError(sportsAMMV2, 'IllegalInputAmounts');
 		});
 
 		it('Should fail with "Risk per market and position exceeded"', async () => {

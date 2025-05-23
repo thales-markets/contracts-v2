@@ -23,26 +23,31 @@ async function main() {
 	const safeBoxFee = ethers.parseEther('0.02');
 
 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
-	const sportsAMMV2Deployed = await upgrades.deployProxy(
-		sportsAMMV2,
-		[
-			owner.address,
-			defaultCollateralAddress,
-			sportsAMMV2ManagerAddress,
-			sportsAMMV2RiskManagerAddress,
-			sportsAMMV2ResultManagerAddress,
-			referralsAddress,
-			stakingThalesAddress,
-			safeBoxAddress,
-		],
-		{ initialOwner: protocolDAOAddress }
-	);
+	const sportsAMMV2Deployed = await upgrades.deployProxy(sportsAMMV2, [owner.address], {
+		initialOwner: protocolDAOAddress,
+	});
 	await sportsAMMV2Deployed.waitForDeployment();
 
 	const sportsAMMV2Address = await sportsAMMV2Deployed.getAddress();
 
 	console.log('SportsAMMV2 deployed on:', sportsAMMV2Address);
 	setTargetAddress('SportsAMMV2', network, sportsAMMV2Address);
+
+	await delay(5000);
+
+	await sportsAMMV2Deployed.setAddresses(
+		defaultCollateralAddress,
+		sportsAMMV2ManagerAddress,
+		sportsAMMV2RiskManagerAddress,
+		sportsAMMV2ResultManagerAddress,
+		referralsAddress,
+		stakingThalesAddress,
+		safeBoxAddress,
+		{
+			from: owner.address,
+		}
+	);
+
 	await delay(5000);
 
 	await sportsAMMV2Deployed.setAmounts(safeBoxFee, {

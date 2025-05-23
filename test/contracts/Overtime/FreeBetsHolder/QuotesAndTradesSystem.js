@@ -168,7 +168,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 			expect(firstTraderBalance).to.equal(ethers.parseEther('0'));
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const firstTraderBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
 				firstTrader,
 				collateralAddress

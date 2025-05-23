@@ -144,7 +144,7 @@ describe('Ticket Exercise and Expire', () => {
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
-			sportsAMMV2.exerciseTicket(ticketAddress);
+			sportsAMMV2.handleTicketResolving(ticketAddress, 0);
 		});
 
 		it('Exercise market', async () => {
@@ -202,7 +202,7 @@ describe('Ticket Exercise and Expire', () => {
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 			const phase = await userTicket.phase();
 			expect(phase).to.be.equal(1);
-			await sportsAMMV2.exerciseTicket(ticketAddress);
+			await sportsAMMV2.handleTicketResolving(ticketAddress, 0);
 			expect(await userTicket.resolved()).to.be.equal(true);
 		});
 
@@ -510,7 +510,7 @@ describe('Ticket Exercise and Expire', () => {
 			// Simulate admin canceling the ticket
 			await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 2, true);
 			await sportsAMMV2.connect(secondAccount).cancelTicket;
-			await expect(sportsAMMV2.connect(secondAccount).cancelTicket(ticketAddress))
+			await expect(sportsAMMV2.connect(secondAccount).handleTicketResolving(ticketAddress, 1))
 				.to.emit(userTicket, 'Resolved')
 				.withArgs(true, true); // Verify that the ticket is resolved and canceled
 
