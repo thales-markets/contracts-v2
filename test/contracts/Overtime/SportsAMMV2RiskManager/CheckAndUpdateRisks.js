@@ -175,7 +175,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('InvalidPosition');
+			).to.be.revertedWithCustomError(sportsAMMV2, 'InvalidPosition');
 		});
 
 		it('Should fail with "Not trading"', async () => {
@@ -221,7 +221,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('IllegalInputAmounts');
+			).to.be.revertedWithCustomError(sportsAMMV2, 'IllegalInputAmounts');
 		});
 
 		it('Should fail with "Risk per market and position exceeded"', async () => {

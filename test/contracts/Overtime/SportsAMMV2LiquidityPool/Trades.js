@@ -798,7 +798,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(currentRoundCumulativePnl).to.equal(ethers.parseEther('1'));
 			expect(cumulativePnLBetweenRounds).to.equal(ethers.parseEther('1'));
 
-			await sportsAMMV2.exerciseTicket(ticketAddress);
+			await sportsAMMV2.handleTicketResolving(ticketAddress, 0);
 
 			// check next round data
 			const nextRound = await sportsAMMV2LiquidityPool.round();

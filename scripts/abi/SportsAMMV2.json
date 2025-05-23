@@ -33,12 +33,77 @@
   },
   {
     "inputs": [],
+    "name": "IllegalInputAmounts",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsuffETHSent",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsuffReceived",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "InvalidLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPosition",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MultiCollatDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MultiCollateralDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OfframpOnlyDefaultCollateralAllowed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyDedicatedProcessor",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyTicketOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SBDOutOfRange",
     "type": "error"
   },
   {
@@ -50,6 +115,31 @@
       }
     ],
     "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UndefinedRecipient",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnknownTicket",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnsupportedSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroPriceForCollateral",
     "type": "error"
   },
   {
@@ -88,12 +178,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "stakingThales",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "safeBox",
         "type": "address"
       }
@@ -112,6 +196,37 @@
       }
     ],
     "name": "AmountsUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "liquidityPool",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "addedPayout",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "safeBox",
+        "type": "address"
+      }
+    ],
+    "name": "CollateralConfigured",
     "type": "event"
   },
   {
@@ -365,25 +480,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_addedPayout",
-        "type": "uint256"
-      }
-    ],
-    "name": "SetAddedPayoutPercentagePerCollateral",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "liveTradingProcessor",
         "type": "address"
       },
@@ -398,12 +494,6 @@
         "internalType": "address",
         "name": "freeBetsHolder",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "stakingThalesBettingProxy",
-        "type": "address"
       }
     ],
     "name": "SetBettingProcessors",
@@ -415,55 +505,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "liquidityPool",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      }
-    ],
-    "name": "SetLiquidityPoolForCollateral",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "onOffRamper",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "enabled",
-        "type": "bool"
       }
     ],
     "name": "SetMultiCollateralOnOffRamp",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_safeBox",
-        "type": "address"
-      }
-    ],
-    "name": "SetSafeBoxPerCollateral",
     "type": "event"
   },
   {
@@ -583,11 +629,26 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_ticket",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_liquidityPool",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_addedPayout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_safeBox",
         "type": "address"
       }
     ],
-    "name": "cancelTicket",
+    "name": "configureCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -611,29 +672,11 @@
         "internalType": "address",
         "name": "_ticket",
         "type": "address"
-      }
-    ],
-    "name": "exerciseTicket",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_ticket",
-        "type": "address"
       },
       {
         "internalType": "address",
         "name": "_exerciseCollateral",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_inEth",
-        "type": "bool"
       }
     ],
     "name": "exerciseTicketOffRamp",
@@ -687,6 +730,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "enum ISportsAMMV2.TicketAction",
+        "name": "action",
+        "type": "uint8"
+      }
+    ],
+    "name": "handleTicketResolving",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "initNonReentrant",
     "outputs": [],
@@ -698,41 +759,6 @@
       {
         "internalType": "address",
         "name": "_owner",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IERC20",
-        "name": "_defaultCollateral",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ISportsAMMV2Manager",
-        "name": "_manager",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ISportsAMMV2RiskManager",
-        "name": "_riskManager",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ISportsAMMV2ResultManager",
-        "name": "_resultManager",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IReferrals",
-        "name": "_referrals",
-        "type": "address"
-      },
-      {
-        "internalType": "contract IStakingThales",
-        "name": "_stakingThales",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_safeBox",
         "type": "address"
       }
     ],
@@ -800,19 +826,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_ticket",
-        "type": "address"
-      }
-    ],
-    "name": "markAsLost",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "multiCollateralOnOffRamp",
     "outputs": [
@@ -820,19 +833,6 @@
         "internalType": "contract IMultiCollateralOnOffRamp",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "multicollateralEnabled",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -996,24 +996,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_addedPayout",
-        "type": "uint256"
-      }
-    ],
-    "name": "setAddedPayoutPercentagePerCollateral",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "contract IERC20",
         "name": "_defaultCollateral",
         "type": "address"
@@ -1036,11 +1018,6 @@
       {
         "internalType": "address",
         "name": "_referrals",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_stakingThales",
         "type": "address"
       },
       {
@@ -1083,11 +1060,6 @@
         "internalType": "address",
         "name": "_freeBetsHolder",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_stakingThalesBettingProxy",
-        "type": "address"
       }
     ],
     "name": "setBettingProcessors",
@@ -1099,31 +1071,8 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_collateralAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_liquidityPool",
-        "type": "address"
-      }
-    ],
-    "name": "setLiquidityPoolForCollateral",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_onOffRamper",
         "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "_enabled",
-        "type": "bool"
       }
     ],
     "name": "setMultiCollateralOnOffRamp",
@@ -1197,24 +1146,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_safeBox",
-        "type": "address"
-      }
-    ],
-    "name": "setSafeBoxPerCollateral",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_ticketMastercopy",
         "type": "address"
       }
@@ -1230,19 +1161,6 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stakingThales",
-    "outputs": [
-      {
-        "internalType": "contract IStakingThales",
         "name": "",
         "type": "address"
       }

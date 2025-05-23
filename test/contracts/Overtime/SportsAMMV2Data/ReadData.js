@@ -193,7 +193,7 @@ describe('SportsAMMV2Data Read Data', () => {
 				[tradeDataTenMarketsCurrentRound[0].playerId],
 				[[1]]
 			);
-			await sportsAMMV2.exerciseTicket(ticketAddress);
+			await sportsAMMV2.handleTicketResolving(ticketAddress, 0);
 
 			const firstTraderAddress = await firstTrader.getAddress();
 			const [ticketsData, ,] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(

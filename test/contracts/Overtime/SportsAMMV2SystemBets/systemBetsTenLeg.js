@@ -179,7 +179,7 @@ describe('SportsAMMV2 system bets', () => {
 
 			expect(await userTicket.isUserTheWinner()).to.be.equal(true);
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 
 			const ticketBalanceAfter = await collateral.balanceOf(ticketAddress);
 			expect(ticketBalanceAfter).to.be.equal(0);
