@@ -152,7 +152,7 @@ describe('SportsAMMV2 system bets', () => {
 				defaultLiquidityProviderAddress
 			);
 
-			await sportsAMMV2.connect(firstTrader).exerciseTicket(ticketAddress);
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const userBalanceAfter = await collateralTHALES.balanceOf(firstTrader);
 
 			const defaultLiquidityProviderAddressAfter = await collateralTHALES.balanceOf(

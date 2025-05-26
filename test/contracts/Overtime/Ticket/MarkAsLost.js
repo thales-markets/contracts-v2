@@ -82,7 +82,7 @@ describe('Admin MarkAsLost Functionality', () => {
 		await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 2, true);
 
 		// Admin marks ticket as lost
-		await expect(sportsAMMV2.connect(secondAccount).markAsLost(ticketAddress))
+		await expect(sportsAMMV2.connect(secondAccount).handleTicketResolving(ticketAddress, 2))
 			.to.emit(userTicket, 'Resolved')
 			.withArgs(false, false);
 
@@ -127,8 +127,8 @@ describe('Admin MarkAsLost Functionality', () => {
 		const ticketAddress = activeTickets[0];
 
 		// Expect revert from unauthorized account
-		await expect(sportsAMMV2.connect(firstTrader).markAsLost(ticketAddress)).to.be.revertedWith(
-			'UnsupportedSender'
-		);
+		await expect(
+			sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 2)
+		).to.be.revertedWithCustomError(sportsAMMV2, 'UnsupportedSender');
 	});
 });
