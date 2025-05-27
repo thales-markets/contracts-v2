@@ -408,7 +408,6 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bool _isSGP
     ) external onlySportsAMM(msg.sender) {
         uint numOfMarkets = _tradeData.length;
-        bool isSystemBet = _systemBetDenominator > 1;
         for (uint i; i < numOfMarkets; ++i) {
             ISportsAMMV2.TradeData memory marketTradeData = _tradeData[i];
 
@@ -423,8 +422,10 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
             uint amountToBuy = odds[position] == 0 ? 0 : (ONE * _buyInAmount) / odds[position];
             if (amountToBuy > _buyInAmount) {
                 uint marketRiskAmount = amountToBuy - _buyInAmount;
-                if (isSystemBet) {
+                // for system bet
+                if (_systemBetDenominator > 1) {
                     marketRiskAmount = (marketRiskAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
+                    _buyInAmount = (_buyInAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
                 }
 
                 require(
@@ -433,7 +434,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 );
                 require(!_isRiskPerGameExceeded(marketTradeData, marketRiskAmount), "ExceededGameRisk");
                 require(_isSGP || !_isInvalidCombinationOnTicket(_tradeData, marketTradeData, i), "InvalidCombination");
-                _updateRisk(marketTradeData, marketRiskAmount);
+                _updateRisk(marketTradeData, marketRiskAmount, _buyInAmount);
             }
         }
         if (_isSGP) {
@@ -604,18 +605,23 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
-    function _updateRisk(ISportsAMMV2.TradeData memory _marketTradeData, uint marketRiskAmount) internal {
+    function _updateRisk(ISportsAMMV2.TradeData memory _marketTradeData, uint marketRiskAmount, uint _buyInAmount) internal {
         bytes32 gameId = _marketTradeData.gameId;
         uint16 typeId = _marketTradeData.typeId;
         uint24 playerId = _marketTradeData.playerId;
         uint8 position = _marketTradeData.position;
 
         for (uint j = 0; j < _marketTradeData.odds.length; j++) {
-            int currentRiskPerMarketTypeAndPosition = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
-            riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = (j == position)
-                ? currentRiskPerMarketTypeAndPosition + int(marketRiskAmount)
-                : currentRiskPerMarketTypeAndPosition - int(marketRiskAmount);
+            int currentRisk = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
+            if (j == position) {
+                // Add risk for selected position
+                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = currentRisk + int(marketRiskAmount);
+            } else {
+                // Reduce risk for unselected positions by buy-in amount
+                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = currentRisk - int(_buyInAmount);
+            }
         }
+
         spentOnGame[gameId] += marketRiskAmount;
     }
 
@@ -645,10 +651,16 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 cap = sportCap;
 
                 if (_typeId > 0) {
-                    cap = capPerSportAndType[_sportId][_typeId];
-                    if (cap == 0) {
-                        uint childCap = capPerSportChild[_sportId];
-                        cap = childCap > 0 ? childCap : sportCap / 2;
+                    // Check for explicitly set moneyline market cap
+                    uint moneylineMarketCap = capPerMarket[_gameId][0][0][0];
+                    if (moneylineMarketCap > 0) {
+                        cap = moneylineMarketCap / 2;
+                    } else {
+                        cap = capPerSportAndType[_sportId][_typeId];
+                        if (cap == 0) {
+                            uint childCap = capPerSportChild[_sportId];
+                            cap = childCap > 0 ? childCap : sportCap / 2;
+                        }
                     }
                 }
             }

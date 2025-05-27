@@ -522,7 +522,7 @@ contract SportsAMMV2ResultManager is Initializable, ProxyOwned, ProxyPausable, P
             }
             Ticket ticket = Ticket(_tickets[i]);
             if (ticket.isTicketExercisable() && !ticket.isUserTheWinner()) {
-                sportsAMM.exerciseTicket(address(ticket));
+                sportsAMM.handleTicketResolving(address(ticket), ISportsAMMV2.TicketAction.Exercise);
                 numOfTicketsToExercise--;
             }
         }

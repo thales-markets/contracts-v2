@@ -71,6 +71,8 @@ contract Ticket {
 
     bool public isSGP;
 
+    bool public isMarkedAsLost;
+
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice initialize the ticket contract
@@ -101,30 +103,34 @@ contract Ticket {
     /// @notice checks if the user lost the ticket
     /// @return isTicketLost true/false
     function isTicketLost() public view returns (bool) {
-        uint lostMarketsCount = 0;
-        for (uint i = 0; i < numOfMarkets; i++) {
-            (bool isMarketResolved, bool isWinningMarketPosition) = sportsAMM
-                .resultManager()
-                .isMarketResolvedAndPositionWinning(
-                    markets[i].gameId,
-                    markets[i].typeId,
-                    markets[i].playerId,
-                    markets[i].line,
-                    markets[i].position,
-                    markets[i].combinedPositions
-                );
-            if (isMarketResolved && !isWinningMarketPosition) {
-                if (!isSystem) {
-                    return true;
-                } else {
-                    lostMarketsCount++;
-                    if (lostMarketsCount > (numOfMarkets - systemBetDenominator)) {
+        if (isMarkedAsLost) {
+            return true;
+        } else {
+            uint lostMarketsCount = 0;
+            for (uint i = 0; i < numOfMarkets; i++) {
+                (bool isMarketResolved, bool isWinningMarketPosition) = sportsAMM
+                    .resultManager()
+                    .isMarketResolvedAndPositionWinning(
+                        markets[i].gameId,
+                        markets[i].typeId,
+                        markets[i].playerId,
+                        markets[i].line,
+                        markets[i].position,
+                        markets[i].combinedPositions
+                    );
+                if (isMarketResolved && !isWinningMarketPosition) {
+                    if (!isSystem) {
                         return true;
+                    } else {
+                        lostMarketsCount++;
+                        if (lostMarketsCount > (numOfMarkets - systemBetDenominator)) {
+                            return true;
+                        }
                     }
                 }
             }
+            return false;
         }
-        return false;
     }
 
     /// @notice checks are all markets of the ticket resolved
@@ -182,8 +188,7 @@ contract Ticket {
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
 
     /// @notice exercise ticket
-    function exercise(address _exerciseCollateral) external onlyAMM returns (uint) {
-        require(!paused, "Market paused");
+    function exercise(address _exerciseCollateral) external onlyAMM notPaused returns (uint) {
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
 
@@ -243,9 +248,7 @@ contract Ticket {
     }
 
     /// @notice cancel the ticket
-    function cancel() external onlyAMM returns (uint) {
-        require(!paused, "Market paused");
-
+    function cancel() external onlyAMM notPaused returns (uint) {
         finalPayout = buyInAmount;
         collateral.safeTransfer(address(ticketOwner), finalPayout);
 
@@ -256,6 +259,18 @@ contract Ticket {
 
         _resolve(true, true);
         return finalPayout;
+    }
+
+    /// @notice mark the ticket as lost
+    function markAsLost() external onlyAMM notPaused returns (uint) {
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
+        }
+
+        _resolve(false, false);
+        isMarkedAsLost = true;
+        return 0;
     }
 
     /// @notice withdraw collateral from the ticket
@@ -389,6 +404,11 @@ contract Ticket {
 
     modifier onlyAMM() {
         require(msg.sender == address(sportsAMM), "Only the AMM may perform these methods");
+        _;
+    }
+
+    modifier notPaused() {
+        require(!paused, "Market paused");
         _;
     }
 

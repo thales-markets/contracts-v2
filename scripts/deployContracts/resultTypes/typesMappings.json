@@ -1273,7 +1273,7 @@
 		"id": 13013,
 		"result_type": 1,
 		"name": "CHILD_SERIES_RESULT"
-	}
+	},
 	{
 		"id": 10133,
 		"result_type": 1,
@@ -1345,6 +1345,31 @@
 		"name": "CHILD_MOST_RUNS_OUTS"
 	},
 	{
+		"id": 10250,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_180"
+	},
+	{
+		"id": 10251,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_100_PLUS_CHECKOUTS"
+	},
+	{
+		"id": 10252,
+		"result_type": 1,
+		"name": "CHILD_MOST_180"
+	},
+	{
+		"id": 10253,
+		"result_type": 1,
+		"name": "CHILD_HIGHEST_MATCH_CHECKOUT"
+	},
+	{
+		"id": 10254,
+		"result_type": 2,
+		"name": "CHILD_HIGHEST_CHECKOUT_POINTS"
+	},
+	{
 		"id": 11245,
 		"result_type": 2,
 		"name": "PROP_BLOCKED_SHOTS"
@@ -1373,5 +1398,20 @@
 		"id": 11250,
 		"result_type": 2,
 		"name": "PROP_PLAYER_FOURS"
+	},
+	{
+		"id": 11251,
+		"result_type": 2,
+		"name": "PROP_PLAYER_3_DART_AVERAGE"
+	},
+	{
+		"id": 11252,
+		"result_type": 2,
+		"name": "PROP_PLAYER_180S"
+	},
+	{
+		"id": 11253,
+		"result_type": 2,
+		"name": "PROP_PLAYER_100_PLUS_CHECKOUTS"
 	}
 ]

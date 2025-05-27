@@ -29,7 +29,10 @@ describe('SportsAMMV2Data Read Data', () => {
 		firstTrader,
 		firstLiquidityProvider,
 		ticketAddress,
-		numberOfGamesOnTicket;
+		numberOfGamesOnTicket,
+		freeBetsHolder,
+		collateralAddress,
+		secondTrader;
 
 	beforeEach(async () => {
 		({
@@ -39,8 +42,11 @@ describe('SportsAMMV2Data Read Data', () => {
 			sportsAMMV2Manager,
 			sportsAMMV2ResultManager,
 			tradeDataTenMarketsCurrentRound,
+			collateralAddress,
+			freeBetsHolder,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstTrader, firstLiquidityProvider } = await loadFixture(deployAccountsFixture));
+		({ firstTrader, secondTrader, firstLiquidityProvider } =
+			await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
@@ -187,7 +193,7 @@ describe('SportsAMMV2Data Read Data', () => {
 				[tradeDataTenMarketsCurrentRound[0].playerId],
 				[[1]]
 			);
-			await sportsAMMV2.exerciseTicket(ticketAddress);
+			await sportsAMMV2.handleTicketResolving(ticketAddress, 0);
 
 			const firstTraderAddress = await firstTrader.getAddress();
 			const [ticketsData, ,] = await sportsAMMV2Data.getResolvedTicketsDataPerUser(
@@ -217,6 +223,101 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(ticketsData[0].marketsResult.length).to.be.equal(numberOfGamesOnTicket);
 			expect(ticketsData[0].resolved).to.be.equal(false);
 			expect(ticketsData[0].marketsData[0].gameId).to.be.equal(firstGameId);
+		});
+
+		it('Should return free bets data per user', async () => {
+			// Ensure the user has no free bets initially
+			const initialBalance = await freeBetsHolder.balancePerUserAndCollateral(
+				secondTrader,
+				collateralAddress
+			);
+			expect(initialBalance).to.equal(0);
+
+			// Set expiration period
+			const expirationPeriod = 7 * 24 * 60 * 60; // 7 days
+			await freeBetsHolder.setFreeBetExpirationPeriod(expirationPeriod, 0);
+
+			// Fund user with free bets
+			const fundAmount = ethers.parseEther('10');
+			await freeBetsHolder.fund(secondTrader, collateralAddress, fundAmount);
+
+			// Check the balance was updated
+			const balanceAfterFunding = await freeBetsHolder.balancePerUserAndCollateral(
+				secondTrader,
+				collateralAddress
+			);
+			expect(balanceAfterFunding).to.equal(fundAmount);
+
+			// Get free bets data via SportsAMMV2Data
+			const [freeBetsAmountPerCollateral, freeBetsExpiryPerCollateral] =
+				await sportsAMMV2Data.getFreeBetsDataPerUser(secondTrader, [collateralAddress]);
+
+			// Verify the data is correct
+			expect(freeBetsAmountPerCollateral.length).to.equal(1);
+			expect(freeBetsExpiryPerCollateral.length).to.equal(1);
+			expect(freeBetsAmountPerCollateral[0]).to.equal(fundAmount);
+
+			// Expiry should be approximately the expiration period (allowing for slight timestamp differences)
+			expect(freeBetsExpiryPerCollateral[0]).to.be.closeTo(expirationPeriod, 10);
+
+			// Test with multiple collaterals by adding a mock collateral
+			const MockERC20 = await ethers.getContractFactory('ExoticUSD');
+			const secondCollateral = await MockERC20.deploy();
+			await secondCollateral.mintForUser(secondTrader);
+			const secondCollateralAddress = await secondCollateral.getAddress();
+
+			// Add support for second collateral
+			await freeBetsHolder.addSupportedCollateral(secondCollateralAddress, true);
+
+			// User should have zero balance for the second collateral initially
+			const secondCollateralInitialBalance = await freeBetsHolder.balancePerUserAndCollateral(
+				secondTrader,
+				secondCollateralAddress
+			);
+			expect(secondCollateralInitialBalance).to.equal(0);
+
+			// Get data for both collaterals
+			const [amountsForBothCollaterals, expiriesForBothCollaterals] =
+				await sportsAMMV2Data.getFreeBetsDataPerUser(secondTrader, [
+					collateralAddress,
+					secondCollateralAddress,
+				]);
+
+			// Verify data for both collaterals
+			expect(amountsForBothCollaterals.length).to.equal(2);
+			expect(expiriesForBothCollaterals.length).to.equal(2);
+			expect(amountsForBothCollaterals[0]).to.equal(fundAmount);
+			expect(amountsForBothCollaterals[1]).to.equal(0);
+			expect(expiriesForBothCollaterals[0]).to.be.closeTo(expirationPeriod, 10);
+			expect(expiriesForBothCollaterals[1]).to.be.closeTo(expirationPeriod, 10); // Should use global expiration
+
+			await freeBetsHolder.setFreeBetExpirationPeriod(0, 0);
+			await freeBetsHolder.setUserFreeBetExpiration(secondTrader, collateralAddress, 0);
+			const [amountsForBothCollaterals2, expiriesForBothCollaterals2] =
+				await sportsAMMV2Data.getFreeBetsDataPerUser(secondTrader, [
+					collateralAddress,
+					secondCollateralAddress,
+				]);
+			expect(amountsForBothCollaterals2.length).to.equal(2);
+			expect(expiriesForBothCollaterals2.length).to.equal(2);
+			expect(amountsForBothCollaterals2[0]).to.equal(fundAmount);
+			expect(amountsForBothCollaterals2[1]).to.equal(0);
+			expect(expiriesForBothCollaterals2[0]).to.equal(0);
+			expect(expiriesForBothCollaterals2[1]).to.equal(0);
+
+			await freeBetsHolder.setFreeBetExpirationPeriod(0, 0);
+			await freeBetsHolder.setUserFreeBetExpiration(secondTrader, collateralAddress, 20);
+			const [amountsForBothCollaterals3, expiriesForBothCollaterals3] =
+				await sportsAMMV2Data.getFreeBetsDataPerUser(secondTrader, [
+					collateralAddress,
+					secondCollateralAddress,
+				]);
+			expect(amountsForBothCollaterals3.length).to.equal(2);
+			expect(expiriesForBothCollaterals3.length).to.equal(2);
+			expect(amountsForBothCollaterals3[0]).to.equal(fundAmount);
+			expect(amountsForBothCollaterals3[1]).to.equal(0);
+			expect(expiriesForBothCollaterals3[0]).to.equal(0);
+			expect(expiriesForBothCollaterals3[1]).to.equal(0);
 		});
 	});
 
