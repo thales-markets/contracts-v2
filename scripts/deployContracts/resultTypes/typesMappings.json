@@ -1370,6 +1370,36 @@
 		"name": "CHILD_HIGHEST_CHECKOUT_POINTS"
 	},
 	{
+		"id": 10268,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_STEALS"
+	},
+	{
+		"id": 10269,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_BLOCKS"
+	},
+	{
+		"id": 10270,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10271,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_MADE_THREES"
+	},
+	{
+		"id": 10272,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_MADE_THREES_HOME_TEAM"
+	},
+	{
+		"id": 10273,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_MADE_THREES_AWAY_TEAM"
+	},
+	{
 		"id": 11245,
 		"result_type": 2,
 		"name": "PROP_BLOCKED_SHOTS"
@@ -1413,5 +1443,50 @@
 		"id": 11253,
 		"result_type": 2,
 		"name": "PROP_PLAYER_100_PLUS_CHECKOUTS"
+	},
+	{
+		"id": 11254,
+		"result_type": 2,
+		"name": "PROP_PLAYER_HIGHEST_CHECKOUT"
+	},
+	{
+		"id": 11255,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FREE_THROWS_ATTEMPTED"
+	},
+	{
+		"id": 11256,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FREE_THROWS_MADE"
+	},
+	{
+		"id": 11257,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FIELD_GOALS_ATTEMPTED"
+	},
+	{
+		"id": 11258,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FIELD_GOALS_MADE"
+	},
+	{
+		"id": 11259,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FOULS"
+	},
+	{
+		"id": 11260,
+		"result_type": 2,
+		"name": "PROP_PLAYER_THREES_ATTEMPTED"
+	},
+	{
+		"id": 11261,
+		"result_type": 2,
+		"name": "PROP_PLAYER_TWO_POINTERS_ATTEMPTED"
+	},
+	{
+		"id": 11262,
+		"result_type": 2,
+		"name": "PROP_PLAYER_MADE_TWO_POINTERS"
 	}
 ]
