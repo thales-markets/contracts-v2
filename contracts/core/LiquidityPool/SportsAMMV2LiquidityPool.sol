@@ -233,7 +233,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         address _ticket,
         uint _newRound,
         uint _ticketIndexInRound
-    ) external onlyOwner roundClosingNotPrepared {
+    ) external onlyWhitelistedAddresses(msg.sender) roundClosingNotPrepared {
         uint ticketRound = getTicketRound(_ticket);
         require(ticketRound == round, "TicketNotInCurrentRound");
         _migrateTicketToNewRound(_ticket, _newRound == 0 ? round + 1 : _newRound, _ticketIndexInRound);
@@ -247,7 +247,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         address[] memory _tickets,
         uint _newRound,
         uint[] memory _ticketsIndexInRound
-    ) external onlyOwner roundClosingNotPrepared {
+    ) external onlyWhitelistedAddresses(msg.sender) roundClosingNotPrepared {
         _newRound = _newRound == 0 ? round + 1 : _newRound;
         if (_ticketsIndexInRound.length == 0) {
             for (uint i; i < _tickets.length; i++) {
@@ -881,6 +881,14 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     modifier roundClosingNotPrepared() {
         require(!roundClosingPrepared, "Not allowed during roundClosingPrepared");
+        _;
+    }
+
+    modifier onlyWhitelistedAddresses(address sender) {
+        require(
+            sender == owner || sportsAMM.manager().isWhitelistedAddress(sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING),
+            "Invalid sender"
+        );
         _;
     }
 
