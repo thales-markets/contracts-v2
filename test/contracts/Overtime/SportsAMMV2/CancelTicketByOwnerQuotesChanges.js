@@ -64,26 +64,27 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 	});
 
 	it('Should refund correctly when odds change after ticket purchase', async function () {
-		// Set initial implied odds (e.g. 66.6% chance of winning)
+		// Deep copy trade data to avoid mutation of shared fixture
+		const localTradeData = JSON.parse(JSON.stringify(tradeDataCurrentRound));
+
 		const oddsBefore = ethers.parseUnits('0.666', 18);
-		tradeDataCurrentRound[0].odds[0] = oddsBefore;
+		localTradeData[0].odds[0] = oddsBefore;
 
 		await collateral.connect(firstTrader).approve(await sportsAMMV2.getAddress(), BUY_IN_AMOUNT);
 
 		const quoteBefore = await sportsAMMV2.tradeQuote(
-			tradeDataCurrentRound,
+			localTradeData,
 			BUY_IN_AMOUNT,
 			ZERO_ADDRESS,
 			false
 		);
 
-		// Assert totalQuote is below 1 (100% implied probability)
 		expect(quoteBefore.totalQuote).to.be.below(ethers.parseUnits('1', 18));
 
 		await sportsAMMV2
 			.connect(firstTrader)
 			.trade(
-				tradeDataCurrentRound,
+				localTradeData,
 				BUY_IN_AMOUNT,
 				quoteBefore.totalQuote,
 				ADDITIONAL_SLIPPAGE,
@@ -96,21 +97,20 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 		expect(activeTickets.length).to.be.greaterThan(0);
 		const ticketAddress = activeTickets[0];
 
-		// Now update odds to a new (better for user) implied probability, e.g. 0.5 (50%)
+		// Update odds (better for user)
 		const oddsAfter = ethers.parseUnits('0.5', 18);
-		tradeDataCurrentRound[0].odds[0] = oddsAfter;
+		localTradeData[0].odds[0] = oddsAfter;
 
 		const quoteAfter = await sportsAMMV2.tradeQuote(
-			tradeDataCurrentRound,
+			localTradeData,
 			BUY_IN_AMOUNT,
 			ZERO_ADDRESS,
 			false
 		);
 
-		// Again, totalQuote should be < 1e18 (100%)
 		expect(quoteAfter.totalQuote).to.be.below(ethers.parseUnits('1', 18));
 
-		// Refund calculation based on change in implied odds / payouts
+		// Refund calculation
 		const originalExpectedPayout =
 			(BUY_IN_AMOUNT * ethers.parseEther('1')) / quoteBefore.totalQuote;
 		const newExpectedPayout = (BUY_IN_AMOUNT * ethers.parseEther('1')) / quoteAfter.totalQuote;
@@ -122,20 +122,16 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 			baseRefundAmount = BUY_IN_AMOUNT;
 		}
 
-		// Cancellation fee is 4% (twice the safeBoxFee of 2%)
-		const feeAmount = (baseRefundAmount * 4n) / 100n;
+		const feeAmount = (baseRefundAmount * 4n) / 100n; // 4% fee
 		const expectedRefund = baseRefundAmount - feeAmount;
 
 		const balanceBefore = await collateral.balanceOf(firstTrader.address);
 
-		await sportsAMMV2
-			.connect(firstTrader)
-			.cancelTicketByOwner(ticketAddress, tradeDataCurrentRound);
+		await sportsAMMV2.connect(firstTrader).cancelTicketByOwner(ticketAddress, localTradeData);
 
 		const balanceAfter = await collateral.balanceOf(firstTrader.address);
 		const actualRefund = balanceAfter - balanceBefore;
 
-		// Print a neat table with values (converted to ether strings for readability)
 		console.table([
 			{
 				'Buy-in (USDC)': ethers.formatEther(BUY_IN_AMOUNT),
@@ -152,7 +148,7 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 
 		expect(actualRefund).to.be.closeTo(
 			expectedRefund,
-			ethers.parseEther('0.1'), // increased tolerance
+			ethers.parseEther('0.1'),
 			'Refund amount mismatch'
 		);
 
@@ -162,13 +158,16 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 	});
 
 	it('Should refund correctly when odds worsen after ticket purchase', async function () {
-		const oddsBefore = ethers.parseUnits('0.5', 18); // better odds (50%)
-		tradeDataCurrentRound[0].odds[0] = oddsBefore;
+		// Deep copy trade data
+		const localTradeData = JSON.parse(JSON.stringify(tradeDataCurrentRound));
+
+		const oddsBefore = ethers.parseUnits('0.5', 18);
+		localTradeData[0].odds[0] = oddsBefore;
 
 		await collateral.connect(firstTrader).approve(await sportsAMMV2.getAddress(), BUY_IN_AMOUNT);
 
 		const quoteBefore = await sportsAMMV2.tradeQuote(
-			tradeDataCurrentRound,
+			localTradeData,
 			BUY_IN_AMOUNT,
 			ZERO_ADDRESS,
 			false
@@ -179,7 +178,7 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 		await sportsAMMV2
 			.connect(firstTrader)
 			.trade(
-				tradeDataCurrentRound,
+				localTradeData,
 				BUY_IN_AMOUNT,
 				quoteBefore.totalQuote,
 				ADDITIONAL_SLIPPAGE,
@@ -192,12 +191,12 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 		expect(activeTickets.length).to.be.greaterThan(0);
 		const ticketAddress = activeTickets[0];
 
-		// Now update odds to worse implied probability (e.g., 0.666)
+		// Update odds (worse for user)
 		const oddsAfter = ethers.parseUnits('0.666', 18);
-		tradeDataCurrentRound[0].odds[0] = oddsAfter;
+		localTradeData[0].odds[0] = oddsAfter;
 
 		const quoteAfter = await sportsAMMV2.tradeQuote(
-			tradeDataCurrentRound,
+			localTradeData,
 			BUY_IN_AMOUNT,
 			ZERO_ADDRESS,
 			false
@@ -213,23 +212,19 @@ describe('SportsAMMV2 - cancelTicketByOwner refund logic with MockRiskManager', 
 		if (newExpectedPayout >= originalExpectedPayout) {
 			baseRefundAmount = (BUY_IN_AMOUNT * originalExpectedPayout) / newExpectedPayout;
 		} else {
-			// Odds worsened - refund full buy-in
-			baseRefundAmount = BUY_IN_AMOUNT;
+			baseRefundAmount = BUY_IN_AMOUNT; // refund full buy-in if odds worsened
 		}
 
-		const feeAmount = (baseRefundAmount * 4n) / 100n; // 4% cancellation fee
+		const feeAmount = (baseRefundAmount * 4n) / 100n;
 		const expectedRefund = baseRefundAmount - feeAmount;
 
 		const balanceBefore = await collateral.balanceOf(firstTrader.address);
 
-		await sportsAMMV2
-			.connect(firstTrader)
-			.cancelTicketByOwner(ticketAddress, tradeDataCurrentRound);
+		await sportsAMMV2.connect(firstTrader).cancelTicketByOwner(ticketAddress, localTradeData);
 
 		const balanceAfter = await collateral.balanceOf(firstTrader.address);
 		const actualRefund = balanceAfter - balanceBefore;
 
-		// Convert odds from BigNumber to decimal numbers for printing
 		const oddsBeforeNum = Number(ethers.formatUnits(oddsBefore, 18));
 		const oddsAfterNum = Number(ethers.formatUnits(oddsAfter, 18));
 		const oddsDiff = oddsAfterNum - oddsBeforeNum;
