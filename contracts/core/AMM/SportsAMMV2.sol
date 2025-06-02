@@ -541,8 +541,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint newExpectedPayout = _divWithDecimals(buyInAmount, totalQuote);
 
         uint baseRefundAmount = newExpectedPayout >= originalExpectedPayout
-            ? buyInAmount
-            : (buyInAmount * newExpectedPayout) / originalExpectedPayout;
+            ? (buyInAmount * originalExpectedPayout) / newExpectedPayout
+            : buyInAmount;
 
         // cancelation fee is double of SafeBoxFee
         uint feeAmount = _handleFees(buyInAmount, ticketOwner, collateral, 2);
