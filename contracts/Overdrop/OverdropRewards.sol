@@ -27,8 +27,8 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     // Total amount of rewards that have been claimed
     uint256 public totalClaimed;
     
-    // Mapping to track if an address has claimed their rewards
-    mapping(address => bool) public hasClaimed;
+    // Mapping to track if an address has claimed their rewards per season
+    mapping(address => mapping(uint256 => bool)) public hasClaimed;
     
     // Flag to enable/disable claims
     bool public claimsEnabled;
@@ -68,12 +68,22 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     /* ========== VIEW FUNCTIONS ========== */
 
     /**
-     * @notice Check if an address has claimed their rewards
+     * @notice Check if an address has claimed their rewards in the current season
      * @param account The address to check
      * @return Whether the address has claimed
      */
     function hasClaimedRewards(address account) external view returns (bool) {
-        return hasClaimed[account];
+        return hasClaimed[account][currentSeason];
+    }
+    
+    /**
+     * @notice Check if an address has claimed their rewards
+     * @param account The address to check
+     * @param season The season to check
+     * @return Whether the address has claimed in the given season
+     */
+    function hasClaimedRewardsInSeason(address account, uint256 season) external view returns (bool) {
+        return hasClaimed[account][season];
     }
 
     /**
@@ -111,9 +121,9 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     function claimRewards(
         uint256 amount,
         bytes32[] calldata merkleProof
-    ) external {
+    ) external nonReentrant {
         require(claimsEnabled, "Claims are disabled");
-        require(!hasClaimed[msg.sender], "Already claimed");
+        require(!hasClaimed[msg.sender][currentSeason], "Already claimed");
         require(amount > 0, "Amount must be greater than 0");
         
         // Verify the merkle proof
@@ -124,7 +134,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
         );
         
         // Mark as claimed
-        hasClaimed[msg.sender] = true;
+        hasClaimed[msg.sender][currentSeason] = true;
         totalClaimed += amount;
         
         // Transfer rewards
@@ -137,11 +147,11 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @notice Deposit additional reward tokens
      * @param amount Amount of tokens to deposit
      */
-    function depositRewards(uint256 amount) external {
+    function depositRewards(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
         
         collateral.safeTransferFrom(msg.sender, address(this), amount);
-        
+        totalRewards += amount;
         emit RewardsDeposited(amount, msg.sender);
     }
 
@@ -179,6 +189,14 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
         }
         
         emit MerkleRootUpdated(oldRoot, newMerkleRoot, currentSeason, newTotalRewards);
+    }
+
+    /**
+     * @notice Set the collateral token
+     * @param _collateral The new collateral token
+     */
+    function setCollateral(address _collateral) external onlyOwner {
+        collateral = IERC20(_collateral);
     }
 
     /**
