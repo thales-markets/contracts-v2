@@ -644,7 +644,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         bool _isLive
     ) internal view returns (uint cap) {
         if (_maturity > block.timestamp) {
-            cap = capPerMarket[_gameId][_typeId][_playerId][_line];
+            cap = capPerMarket[_gameId][_typeId][_playerId][_line] > 0
+                ? capPerMarket[_gameId][_typeId][_playerId][_line]
+                : capPerMarket[_gameId][_typeId][0][0];
             if (cap == 0) {
                 uint sportCap = capPerSport[_sportId];
                 sportCap = sportCap > 0 ? sportCap : defaultCap;
