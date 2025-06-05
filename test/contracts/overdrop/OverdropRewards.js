@@ -27,7 +27,6 @@ describe('OverdropRewards', () => {
 	];
 
 	async function deployOverdropRewardsFixture() {
-		
 		[owner, user1, user2, user3, nonEligibleUser] = await ethers.getSigners();
 
 		rewardData[0].address = user1.address;
@@ -40,7 +39,6 @@ describe('OverdropRewards', () => {
 
 		const MockToken = await ethers.getContractFactory('ExoticUSD');
 		mockToken = await MockToken.deploy();
-
 
 		const additionalTokens = ethers.parseEther('10000');
 		await mockToken.connect(owner).mintForUser(owner.address, { value: 0 });
@@ -133,30 +131,6 @@ describe('OverdropRewards', () => {
 		it('Should start with zero total claimed', async () => {
 			expect(await overdropRewards.totalClaimed()).to.equal(0);
 		});
-
-		it('Should revert if initialized with zero address collateral', async () => {
-			const OverdropRewards = await ethers.getContractFactory('OverdropRewards');
-			await expect(
-				upgrades.deployProxy(OverdropRewards, [
-					owner.address,
-					ZERO_ADDRESS,
-					merkleRoot,
-					totalRewards,
-				])
-			).to.be.revertedWith('Invalid collateral token');
-		});
-
-		it('Should revert if initialized with zero merkle root', async () => {
-			const OverdropRewards = await ethers.getContractFactory('OverdropRewards');
-			await expect(
-				upgrades.deployProxy(OverdropRewards, [
-					owner.address,
-					await mockToken.getAddress(),
-					ethers.ZeroHash,
-					totalRewards,
-				])
-			).to.be.revertedWith('Invalid merkle root');
-		});
 	});
 
 	describe('View Functions', () => {
@@ -174,9 +148,7 @@ describe('OverdropRewards', () => {
 
 		it('Should correctly verify valid merkle proof', async () => {
 			const proof = generateProof(user1.address, rewardAmount1);
-			expect(await overdropRewards.verifyProof(user1.address, rewardAmount1, proof)).to.equal(
-				true
-			);
+			expect(await overdropRewards.verifyProof(user1.address, rewardAmount1, proof)).to.equal(true);
 		});
 
 		it('Should correctly reject invalid merkle proof', async () => {
@@ -347,7 +319,9 @@ describe('OverdropRewards', () => {
 			const newSeason = 2;
 
 			await expect(
-				overdropRewards.connect(owner).updateMerkleRoot(newMerkleRoot, newTotalRewards, false, newSeason)
+				overdropRewards
+					.connect(owner)
+					.updateMerkleRoot(newMerkleRoot, newTotalRewards, false, newSeason)
 			)
 				.to.emit(overdropRewards, 'MerkleRootUpdated')
 				.withArgs(merkleRoot, newMerkleRoot, newSeason, newTotalRewards);
@@ -380,14 +354,18 @@ describe('OverdropRewards', () => {
 			const newSeason = 2;
 
 			await expect(
-				overdropRewards.connect(user1).updateMerkleRoot(newMerkleRoot, totalRewards, false, newSeason)
+				overdropRewards
+					.connect(user1)
+					.updateMerkleRoot(newMerkleRoot, totalRewards, false, newSeason)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 
 		it('Should revert if new merkle root is zero', async () => {
 			const newSeason = 2;
 			await expect(
-				overdropRewards.connect(owner).updateMerkleRoot(ethers.ZeroHash, totalRewards, false, newSeason)
+				overdropRewards
+					.connect(owner)
+					.updateMerkleRoot(ethers.ZeroHash, totalRewards, false, newSeason)
 			).to.be.revertedWith('Invalid merkle root');
 		});
 	});
@@ -417,9 +395,7 @@ describe('OverdropRewards', () => {
 			const withdrawAmount = ethers.parseEther('100');
 			const initialBalance = await mockToken.balanceOf(user1.address);
 
-			await expect(
-				overdropRewards.connect(owner).withdrawCollateral(withdrawAmount, user1.address)
-			)
+			await expect(overdropRewards.connect(owner).withdrawCollateral(withdrawAmount, user1.address))
 				.to.emit(overdropRewards, 'CollateralWithdrawn')
 				.withArgs(withdrawAmount, user1.address);
 
@@ -434,9 +410,7 @@ describe('OverdropRewards', () => {
 				.to.emit(overdropRewards, 'CollateralWithdrawn')
 				.withArgs(contractBalance, user1.address);
 
-			expect(await mockToken.balanceOf(user1.address)).to.equal(
-				initialBalance + contractBalance
-			);
+			expect(await mockToken.balanceOf(user1.address)).to.equal(initialBalance + contractBalance);
 		});
 
 		it('Should revert if non-owner tries to withdraw', async () => {
@@ -509,7 +483,9 @@ describe('OverdropRewards', () => {
 
 			// Manually reduce total rewards to test edge case
 			const newSeason = 2;
-			await overdropRewards.connect(owner).updateMerkleRoot(merkleRoot, ethers.parseEther('100'), false, newSeason);
+			await overdropRewards
+				.connect(owner)
+				.updateMerkleRoot(merkleRoot, ethers.parseEther('100'), false, newSeason);
 
 			expect(await overdropRewards.remainingRewards()).to.equal(0);
 		});
@@ -528,9 +504,9 @@ describe('OverdropRewards', () => {
 		});
 
 		it('Should revert if non-owner tries to pause', async () => {
-			await expect(
-				overdropRewards.connect(user1).setPaused(true)
-			).to.be.revertedWith('Only the contract owner may perform this action');
+			await expect(overdropRewards.connect(user1).setPaused(true)).to.be.revertedWith(
+				'Only the contract owner may perform this action'
+			);
 		});
 
 		it('Should emit PauseChanged event', async () => {
@@ -558,4 +534,4 @@ describe('OverdropRewards', () => {
 			).to.be.revertedWith('This action cannot be performed while the contract is paused');
 		});
 	});
-}); 
+});

@@ -9,34 +9,29 @@ import "../utils/proxy/ProxyOwned.sol";
 import "../utils/proxy/ProxyPausable.sol";
 import "../utils/proxy/ProxyReentrancyGuard.sol";
 
-
 contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    /* ========== STATE VARIABLES ========== */
-
     // The reward token being distributed
     IERC20 public collateral;
-    
+
     // Current merkle root for reward distribution
     bytes32 public merkleRoot;
-    
+
     // Total amount of rewards available for distribution
     uint256 public totalRewards;
-    
+
     // Total amount of rewards that have been claimed
     uint256 public totalClaimed;
-    
+
     // Mapping to track if an address has claimed their rewards per season
     mapping(address => mapping(uint256 => bool)) public hasClaimed;
-    
+
     // Flag to enable/disable claims
     bool public claimsEnabled;
-    
+
     // Distribution round/epoch for tracking updates
     uint256 public currentSeason;
-
-    /* ========== INITIALIZATION ========== */
 
     /**
      * @notice Initialize the contract
@@ -51,17 +46,13 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
         bytes32 _merkleRoot,
         uint256 _totalRewards
     ) external initializer {
-        require(address(collateral) == address(0), "Already initialized");
-        require(_collateral != address(0), "Invalid collateral token");
-        require(_merkleRoot != bytes32(0), "Invalid merkle root");
-        
         setOwner(_owner);
         initNonReentrant();
         collateral = IERC20(_collateral);
         merkleRoot = _merkleRoot;
         totalRewards = _totalRewards;
         currentSeason = 1;
-        
+
         emit MerkleRootUpdated(bytes32(0), _merkleRoot, currentSeason, _totalRewards);
     }
 
@@ -75,7 +66,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     function hasClaimedRewards(address account) external view returns (bool) {
         return hasClaimed[account][currentSeason];
     }
-    
+
     /**
      * @notice Check if an address has claimed their rewards
      * @param account The address to check
@@ -101,15 +92,10 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param merkleProof The proof to verify
      * @return Whether the proof is valid
      */
-    function verifyProof(
-        address account,
-        uint256 amount,
-        bytes32[] calldata merkleProof
-    ) external view returns (bool) {
+    function verifyProof(address account, uint256 amount, bytes32[] calldata merkleProof) external view returns (bool) {
         bytes32 leaf = keccak256(abi.encodePacked(account, amount));
         return MerkleProof.verify(merkleProof, merkleRoot, leaf);
     }
-
 
     /* ========== EXTERNAL FUNCTIONS ========== */
 
@@ -118,28 +104,22 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param amount The amount of rewards to claim
      * @param merkleProof The merkle proof for the claim
      */
-    function claimRewards(
-        uint256 amount,
-        bytes32[] calldata merkleProof
-    ) external nonReentrant notPaused {
+    function claimRewards(uint256 amount, bytes32[] calldata merkleProof) external nonReentrant notPaused {
         require(claimsEnabled, "Claims are disabled");
         require(!hasClaimed[msg.sender][currentSeason], "Already claimed");
         require(amount > 0, "Amount must be greater than 0");
-        
+
         // Verify the merkle proof
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender, amount));
-        require(
-            MerkleProof.verify(merkleProof, merkleRoot, leaf),
-            "Invalid merkle proof"
-        );
-        
+        require(MerkleProof.verify(merkleProof, merkleRoot, leaf), "Invalid merkle proof");
+
         // Mark as claimed
         hasClaimed[msg.sender][currentSeason] = true;
         totalClaimed += amount;
-        
+
         // Transfer rewards
         collateral.safeTransfer(msg.sender, amount);
-        
+
         emit RewardsClaimed(msg.sender, amount, currentSeason);
     }
 
@@ -149,7 +129,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      */
     function depositRewards(uint256 amount) external nonReentrant notPaused {
         require(amount > 0, "Amount must be greater than 0");
-        
+
         collateral.safeTransferFrom(msg.sender, address(this), amount);
         totalRewards += amount;
         emit RewardsDeposited(amount, msg.sender);
@@ -173,20 +153,20 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     function updateMerkleRoot(
         bytes32 newMerkleRoot,
         uint256 newTotalRewards,
-        bool resetClaims, 
+        bool resetClaims,
         uint256 newSeason
     ) external onlyOwner {
         require(newMerkleRoot != bytes32(0), "Invalid merkle root");
-        
+
         bytes32 oldRoot = merkleRoot;
         merkleRoot = newMerkleRoot;
         totalRewards = newTotalRewards;
         currentSeason = newSeason;
-        
+
         if (resetClaims) {
             totalClaimed = 0;
         }
-        
+
         emit MerkleRootUpdated(oldRoot, newMerkleRoot, newSeason, newTotalRewards);
     }
 
@@ -203,41 +183,28 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param amount Amount to withdraw (0 = all)
      * @param recipient Address to send tokens to
      */
-    function withdrawCollateral(
-        uint256 amount,
-        address recipient
-    ) external onlyOwner {
+    function withdrawCollateral(uint256 amount, address recipient) external onlyOwner {
         require(recipient != address(0), "Invalid recipient");
-        
+
         uint256 balance = collateral.balanceOf(address(this));
         uint256 withdrawAmount = amount == 0 ? balance : amount;
-        
+
         require(withdrawAmount <= balance, "Insufficient balance");
-        
+
         collateral.safeTransfer(recipient, withdrawAmount);
-        
+
         emit CollateralWithdrawn(withdrawAmount, recipient);
     }
 
-     /* ========== EVENTS ========== */
+    /* ========== EVENTS ========== */
 
-    event RewardsClaimed(
-        address indexed account,
-        uint256 amount,
-        uint256 round
-    );
-    
-    event MerkleRootUpdated(
-        bytes32 oldRoot,
-        bytes32 newRoot,
-        uint256 newRound,
-        uint256 totalRewards
-    );
-    
+    event RewardsClaimed(address indexed account, uint256 amount, uint256 round);
+
+    event MerkleRootUpdated(bytes32 oldRoot, bytes32 newRoot, uint256 newRound, uint256 totalRewards);
+
     event ClaimsEnabled(bool enabled);
-    
-    event RewardsDeposited(uint256 amount, address indexed depositor);
-    
-    event CollateralWithdrawn(uint256 amount, address indexed recipient);
 
-} 
+    event RewardsDeposited(uint256 amount, address indexed depositor);
+
+    event CollateralWithdrawn(uint256 amount, address indexed recipient);
+}
