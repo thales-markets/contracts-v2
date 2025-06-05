@@ -67,7 +67,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			tradeDataNextRound,
 			tradeDataCrossRounds,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader, secondAccount, thirdAccount, owner } = await loadFixture(deployAccountsFixture));
+		({ firstLiquidityProvider, firstTrader, secondAccount, thirdAccount, owner } =
+			await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
 			[0, TYPE_ID_TOTAL, TYPE_ID_SPREAD, TYPE_ID_WINNER_TOTAL],
@@ -486,32 +487,35 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			).to.be.revertedWith('Invalid sender');
 
 			await sportsAMMV2Manager.setWhitelistedAddresses(
-				[secondAccount.address], 
+				[secondAccount.address],
 				2, // ISportsAMMV2Manager.Role.MARKET_RESOLVING
 				true
 			);
 
-			expect(
-				await sportsAMMV2Manager.isWhitelistedAddress(secondAccount.address, 2)
-			).to.equal(true);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount.address, 2)).to.equal(
+				true
+			);
 
 			//  Whitelisted address should be able to migrate ticket
-			const numOfTicketsBefore = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
-			
+			const numOfTicketsBefore =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+
 			await sportsAMMV2LiquidityPool
 				.connect(secondAccount)
 				.migrateTicketToAnotherRound(ticketAddress, 0, 0);
 
-			const numOfTicketsAfter = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			const numOfTicketsAfter =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 			expect(Number(numOfTicketsAfter)).to.equal(Number(numOfTicketsBefore) - 1);
 
 			// Verify ticket was migrated to next round
-			const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
+			const ticketRoundAfterMigration =
+				await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
 			expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
 
 			// Owner should always be able to migrate tickets (test with another ticket)
 			const secondTicketAddress = activeTickets[1];
-			
+
 			// Owner should be able to migrate without explicit whitelisting
 			await sportsAMMV2LiquidityPool
 				.connect(owner)
@@ -519,15 +523,15 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			// Test 5: Remove whitelist and verify access is revoked
 			await sportsAMMV2Manager.setWhitelistedAddresses(
-				[secondAccount.address], 
+				[secondAccount.address],
 				2, // ISportsAMMV2Manager.Role.MARKET_RESOLVING
 				false
 			);
 
 			// Verify the address is no longer whitelisted
-			expect(
-				await sportsAMMV2Manager.isWhitelistedAddress(secondAccount.address, 2)
-			).to.equal(false);
+			expect(await sportsAMMV2Manager.isWhitelistedAddress(secondAccount.address, 2)).to.equal(
+				false
+			);
 
 			// Should be rejected again
 			const thirdTicketAddress = activeTickets[2];
@@ -581,24 +585,29 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			// Whitelist thirdAccount with MARKET_RESOLVING role (role = 2)
 			await sportsAMMV2Manager.setWhitelistedAddresses(
-				[thirdAccount.address], 
+				[thirdAccount.address],
 				2, // ISportsAMMV2Manager.Role.MARKET_RESOLVING
 				true
 			);
 
 			// Whitelisted address should be able to migrate batch of tickets
-			const numOfTicketsBefore = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
-			
+			const numOfTicketsBefore =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+
 			await sportsAMMV2LiquidityPool
 				.connect(thirdAccount)
 				.migrateBatchOfTicketsToAnotherRound(ticketAddresses, 0, []);
 
-			const numOfTicketsAfter = await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
-			expect(Number(numOfTicketsAfter)).to.equal(Number(numOfTicketsBefore) - ticketAddresses.length);
+			const numOfTicketsAfter =
+				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
+			expect(Number(numOfTicketsAfter)).to.equal(
+				Number(numOfTicketsBefore) - ticketAddresses.length
+			);
 
 			// Verify all tickets were migrated to next round
 			for (const ticketAddress of ticketAddresses) {
-				const ticketRoundAfterMigration = await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
+				const ticketRoundAfterMigration =
+					await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress);
 				expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
 			}
 		});

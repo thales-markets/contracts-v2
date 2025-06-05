@@ -1,12 +1,127 @@
 [
   {
     "inputs": [],
+    "name": "BadRangeForK",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CantParlayFutures",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CapTooHigh",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DividerOutOfRange",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EmptyArrays",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededGameRisk",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededMarketPositionRisk",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededMaxAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededMaxCombinations",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededMaxOdds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededMaxSize",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededSGPRisk",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCap",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCombination",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "InvalidInput",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidOdds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPosition",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LowBuyIn",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MarketNotTrading",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MismatchedInputs",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MultiplierTooHigh",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SlippageTooHigh",
     "type": "error"
   },
   {
@@ -65,6 +180,31 @@
       }
     ],
     "name": "PauseChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_manager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_resultManager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "SetAddresses",
     "type": "event"
   },
   {
@@ -330,19 +470,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "resultManager",
-        "type": "address"
-      }
-    ],
-    "name": "SetResultManager",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "bytes32",
         "name": "gameId",
         "type": "bytes32"
@@ -406,32 +533,6 @@
       }
     ],
     "name": "SetSGPEnabledOnSport",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "sportsAMM",
-        "type": "address"
-      }
-    ],
-    "name": "SetSportsAMM",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "manager",
-        "type": "address"
-      }
-    ],
-    "name": "SetSportsManager",
     "type": "event"
   },
   {
@@ -1940,6 +2041,29 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_manager",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_resultManager",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "setAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256[]",
         "name": "_sportIds",
         "type": "uint256[]"
@@ -2273,19 +2397,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_resultManager",
-        "type": "address"
-      }
-    ],
-    "name": "setResultManager",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32[]",
         "name": "_gameIds",
         "type": "bytes32[]"
@@ -2346,32 +2457,6 @@
       }
     ],
     "name": "setSGPEnabledOnSportIds",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sportsAMM",
-        "type": "address"
-      }
-    ],
-    "name": "setSportsAMM",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_manager",
-        "type": "address"
-      }
-    ],
-    "name": "setSportsManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
