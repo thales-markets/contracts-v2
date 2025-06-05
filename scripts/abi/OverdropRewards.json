@@ -308,6 +308,11 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "name": "hasClaimed",
@@ -330,6 +335,30 @@
       }
     ],
     "name": "hasClaimedRewards",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "season",
+        "type": "uint256"
+      }
+    ],
+    "name": "hasClaimedRewardsInSeason",
     "outputs": [
       {
         "internalType": "bool",
@@ -470,6 +499,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      }
+    ],
+    "name": "setCollateral",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_owner",
         "type": "address"
       }
@@ -547,6 +589,11 @@
         "internalType": "bool",
         "name": "resetClaims",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newSeason",
+        "type": "uint256"
       }
     ],
     "name": "updateMerkleRoot",

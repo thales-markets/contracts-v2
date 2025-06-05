@@ -121,7 +121,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     function claimRewards(
         uint256 amount,
         bytes32[] calldata merkleProof
-    ) external nonReentrant {
+    ) external nonReentrant notPaused {
         require(claimsEnabled, "Claims are disabled");
         require(!hasClaimed[msg.sender][currentSeason], "Already claimed");
         require(amount > 0, "Amount must be greater than 0");
@@ -147,7 +147,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @notice Deposit additional reward tokens
      * @param amount Amount of tokens to deposit
      */
-    function depositRewards(uint256 amount) external nonReentrant {
+    function depositRewards(uint256 amount) external nonReentrant notPaused {
         require(amount > 0, "Amount must be greater than 0");
         
         collateral.safeTransferFrom(msg.sender, address(this), amount);
@@ -173,22 +173,21 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     function updateMerkleRoot(
         bytes32 newMerkleRoot,
         uint256 newTotalRewards,
-        bool resetClaims
+        bool resetClaims, 
+        uint256 newSeason
     ) external onlyOwner {
         require(newMerkleRoot != bytes32(0), "Invalid merkle root");
         
         bytes32 oldRoot = merkleRoot;
         merkleRoot = newMerkleRoot;
         totalRewards = newTotalRewards;
-        currentSeason++;
+        currentSeason = newSeason;
         
         if (resetClaims) {
-            // Note: This is expensive for large numbers of users
-            // Consider using a round-based approach instead
             totalClaimed = 0;
         }
         
-        emit MerkleRootUpdated(oldRoot, newMerkleRoot, currentSeason, newTotalRewards);
+        emit MerkleRootUpdated(oldRoot, newMerkleRoot, newSeason, newTotalRewards);
     }
 
     /**
