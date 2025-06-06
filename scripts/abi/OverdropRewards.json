@@ -112,12 +112,6 @@
         "internalType": "uint256",
         "name": "newRound",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "totalRewards",
-        "type": "uint256"
       }
     ],
     "name": "MerkleRootUpdated",
@@ -392,11 +386,6 @@
         "internalType": "bytes32",
         "name": "_merkleRoot",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_totalRewards",
-        "type": "uint256"
       }
     ],
     "name": "initialize",
@@ -579,11 +568,6 @@
         "internalType": "bytes32",
         "name": "newMerkleRoot",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newTotalRewards",
-        "type": "uint256"
       },
       {
         "internalType": "bool",

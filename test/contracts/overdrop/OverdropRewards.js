@@ -57,8 +57,7 @@ describe('OverdropRewards', () => {
 		overdropRewards = await upgrades.deployProxy(OverdropRewards, [
 			owner.address,
 			await mockToken.getAddress(),
-			merkleRoot,
-			totalRewards,
+			merkleRoot
 		]);
 
 		await mockToken.connect(owner).transfer(await overdropRewards.getAddress(), totalRewards);
@@ -115,11 +114,6 @@ describe('OverdropRewards', () => {
 		it('Should set the right merkle root', async () => {
 			expect(await overdropRewards.merkleRoot()).to.equal(merkleRoot);
 		});
-
-		it('Should set the right total rewards', async () => {
-			expect(await overdropRewards.totalRewards()).to.equal(totalRewards);
-		});
-
 		it('Should start with season 1', async () => {
 			expect(await overdropRewards.currentSeason()).to.equal(1);
 		});
@@ -321,13 +315,12 @@ describe('OverdropRewards', () => {
 			await expect(
 				overdropRewards
 					.connect(owner)
-					.updateMerkleRoot(newMerkleRoot, newTotalRewards, false, newSeason)
+					.updateMerkleRoot(newMerkleRoot, false, newSeason)
 			)
 				.to.emit(overdropRewards, 'MerkleRootUpdated')
-				.withArgs(merkleRoot, newMerkleRoot, newSeason, newTotalRewards);
+				.withArgs(merkleRoot, newMerkleRoot, newSeason);
 
 			expect(await overdropRewards.merkleRoot()).to.equal(newMerkleRoot);
-			expect(await overdropRewards.totalRewards()).to.equal(newTotalRewards);
 			expect(await overdropRewards.currentSeason()).to.equal(newSeason);
 		});
 
@@ -343,7 +336,7 @@ describe('OverdropRewards', () => {
 			const newSeason = 2;
 			await overdropRewards
 				.connect(owner)
-				.updateMerkleRoot(newMerkleRoot, totalRewards, true, newSeason);
+				.updateMerkleRoot(newMerkleRoot, true, newSeason);
 
 			expect(await overdropRewards.totalClaimed()).to.equal(0);
 			expect(await overdropRewards.currentSeason()).to.equal(newSeason);
@@ -356,7 +349,7 @@ describe('OverdropRewards', () => {
 			await expect(
 				overdropRewards
 					.connect(user1)
-					.updateMerkleRoot(newMerkleRoot, totalRewards, false, newSeason)
+					.updateMerkleRoot(newMerkleRoot, false, newSeason)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 
@@ -365,7 +358,7 @@ describe('OverdropRewards', () => {
 			await expect(
 				overdropRewards
 					.connect(owner)
-					.updateMerkleRoot(ethers.ZeroHash, totalRewards, false, newSeason)
+					.updateMerkleRoot(ethers.ZeroHash, false, newSeason)
 			).to.be.revertedWith('Invalid merkle root');
 		});
 	});
@@ -450,7 +443,7 @@ describe('OverdropRewards', () => {
 			const newSeason = 2;
 			await overdropRewards
 				.connect(owner)
-				.updateMerkleRoot(newMerkleRoot, totalRewards, false, newSeason);
+				.updateMerkleRoot(newMerkleRoot, false, newSeason);
 
 			expect(await overdropRewards.currentSeason()).to.equal(newSeason);
 			expect(await overdropRewards.hasClaimedRewardsInSeason(user1.address, 1)).to.equal(true);
@@ -485,7 +478,7 @@ describe('OverdropRewards', () => {
 			const newSeason = 2;
 			await overdropRewards
 				.connect(owner)
-				.updateMerkleRoot(merkleRoot, ethers.parseEther('100'), false, newSeason);
+				.updateMerkleRoot(merkleRoot, false, newSeason);
 
 			expect(await overdropRewards.remainingRewards()).to.equal(0);
 		});

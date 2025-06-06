@@ -38,22 +38,19 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param _owner The contract owner
      * @param _collateral The ERC20 token to distribute as collateral
      * @param _merkleRoot Initial merkle root
-     * @param _totalRewards Total rewards for initial distribution
      */
     function initialize(
         address _owner,
         address _collateral,
-        bytes32 _merkleRoot,
-        uint256 _totalRewards
+        bytes32 _merkleRoot
     ) external initializer {
         setOwner(_owner);
         initNonReentrant();
         collateral = IERC20(_collateral);
         merkleRoot = _merkleRoot;
-        totalRewards = _totalRewards;
         currentSeason = 1;
 
-        emit MerkleRootUpdated(bytes32(0), _merkleRoot, currentSeason, _totalRewards);
+        emit MerkleRootUpdated(bytes32(0), _merkleRoot, currentSeason);
     }
 
     /* ========== VIEW FUNCTIONS ========== */
@@ -82,7 +79,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @return Amount of unclaimed rewards
      */
     function remainingRewards() external view returns (uint256) {
-        return totalRewards > totalClaimed ? totalRewards - totalClaimed : 0;
+        return collateral.balanceOf(address(this));
     }
 
     /**
@@ -147,12 +144,10 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     /**
      * @notice Update the merkle root (upgradeable functionality)
      * @param newMerkleRoot The new merkle root
-     * @param newTotalRewards Total rewards for the new distribution
      * @param resetClaims Whether to reset all claim states
      */
     function updateMerkleRoot(
         bytes32 newMerkleRoot,
-        uint256 newTotalRewards,
         bool resetClaims,
         uint256 newSeason
     ) external onlyOwner {
@@ -160,14 +155,13 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
 
         bytes32 oldRoot = merkleRoot;
         merkleRoot = newMerkleRoot;
-        totalRewards = newTotalRewards;
         currentSeason = newSeason;
 
         if (resetClaims) {
             totalClaimed = 0;
         }
 
-        emit MerkleRootUpdated(oldRoot, newMerkleRoot, newSeason, newTotalRewards);
+        emit MerkleRootUpdated(oldRoot, newMerkleRoot, newSeason);
     }
 
     /**
@@ -200,7 +194,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
 
     event RewardsClaimed(address indexed account, uint256 amount, uint256 round);
 
-    event MerkleRootUpdated(bytes32 oldRoot, bytes32 newRoot, uint256 newRound, uint256 totalRewards);
+    event MerkleRootUpdated(bytes32 oldRoot, bytes32 newRoot, uint256 newRound);
 
     event ClaimsEnabled(bool enabled);
 
