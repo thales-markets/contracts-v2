@@ -187,7 +187,7 @@ describe('SportsAMMV2 system bets', () => {
 					BUY_IN_AMOUNT,
 					0
 				)
-			).to.be.revertedWith('ExceededMaxCombinations');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'ExceededMaxCombinations');
 		});
 	});
 });

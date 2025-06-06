@@ -137,7 +137,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			await expect(
 				mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote)
-			).to.be.revertedWith('ExceededSGPRisk');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'ExceededSGPRisk');
 		});
 
 		it('Check that risk per SGP combo is properly calculated', async () => {
@@ -208,7 +208,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 
 			await expect(
 				mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote)
-			).to.be.revertedWith('ExceededSGPRisk');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'ExceededSGPRisk');
 		});
 
 		it('Ensure same SGP hashes for different order on SGP', async () => {
