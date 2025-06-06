@@ -638,7 +638,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint24 playerId = _marketTradeData.playerId;
         uint8 position = _marketTradeData.position;
 
-        for (uint j = 0; j < _marketTradeData.odds.length; j++) {
+        for (uint j; j < _marketTradeData.odds.length; ++j) {
             int currentRisk = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
             if (j == position) {
                 // Add risk for selected position
@@ -732,9 +732,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     ) internal view returns (uint totalRisk, uint capToBeUsed) {
         // get cap for parent market
         capToBeUsed = _calculateCapToBeUsed(_gameId, _sportId, 0, 0, 0, _maturity, false);
-        uint riskMultiplier = _calculateRiskMultiplier(_gameId, _sportId);
-
-        totalRisk = (capToBeUsed * riskMultiplier);
+        totalRisk = (capToBeUsed * _calculateRiskMultiplier(_gameId, _sportId));
     }
 
     /* ========== SETTERS ========== */
@@ -980,16 +978,16 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit TimesUpdated(_minimalTimeLeftToMaturity, _expiryDuration);
     }
 
-    /// @notice sets divider to reduce prematch cap for type by
-    /// @param _divider to reduce prematch cap for type by
+    /// @notice sets divider to reduce live cap for sport by
+    /// @param _divider to reduce live cap for sport by
     function setLiveCapDivider(uint _sportId, uint _divider) external onlyWhitelistedAddresses(msg.sender) {
         if (_divider == 0 || _divider > 10) revert DividerOutOfRange();
         liveCapDividerPerSport[_sportId] = _divider;
         emit SetLiveCapDivider(_sportId, _divider);
     }
 
-    /// @notice sets divider to reduce prematch cap for type by
-    /// @param _divider to reduce prematch cap for type by
+    /// @notice sets divider to reduce live cap for sport by
+    /// @param _divider to reduce live cap for sport by
     function setDefaultLiveCapDivider(uint _divider) external onlyWhitelistedAddresses(msg.sender) {
         if (_divider == 0 || _divider > 10) revert DividerOutOfRange();
         defaultLiveCapDivider = _divider;
@@ -999,10 +997,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice sets divider to reduce prematch sgp cap for
     /// @param _divider to reduce prematch sgp cap for
     function setSGPCapDivider(uint _divider) external onlyWhitelistedAddresses(msg.sender) {
-        if (_divider == 0 || _divider > 10) {
-            revert DividerOutOfRange();
-        }
-
+        if (_divider == 0 || _divider > 10) revert DividerOutOfRange();
         sgpCapDivider = _divider;
         emit SetSGPCapDivider(_divider);
     }
