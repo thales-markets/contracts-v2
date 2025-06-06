@@ -1,0 +1,52 @@
+{
+  "merkleRoot": "0xd5bfa8770f3fb18da5fc30bb2a551bad29dd0fa87c1afd43ffa8c089dc1097c0",
+  "proofs": {
+    "0xE36Ea790bc9d7AB70C55260C66D52b1eca985f84": {
+      "amount": "500000000000000000",
+      "proof": [
+        "0xa09b8458ebabd6fa8095608524f14bc4f36f4d8fa96c4a4cb286ee182ad835d5",
+        "0x52f2b7a9a50e3dae7737acb9f8080478d8de20e5061aceb71d92f6650c181380",
+        "0x2a24e307601c5a7a4f8abe854c52db789b4048843e4ad5da0fa19984fe647517"
+      ]
+    },
+    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045": {
+      "amount": "750000000000000000",
+      "proof": [
+        "0x5d03eff08e875d471b84f68221f56f8144ab007a4912b912e603afb02703dee7",
+        "0x52f2b7a9a50e3dae7737acb9f8080478d8de20e5061aceb71d92f6650c181380",
+        "0x2a24e307601c5a7a4f8abe854c52db789b4048843e4ad5da0fa19984fe647517"
+      ]
+    },
+    "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed": {
+      "amount": "3000000000000000000",
+      "proof": [
+        "0x1d651452f5bc6ada607e48388a1a25e38103f07cb0de8b957f1b3a41caf1ae48",
+        "0x86dfd6ffa21c121153e7548d7aa20792761cb3fa521b435f1d8e02afc64cbe77",
+        "0x2a24e307601c5a7a4f8abe854c52db789b4048843e4ad5da0fa19984fe647517"
+      ]
+    },
+    "0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359": {
+      "amount": "1250000000000000000",
+      "proof": [
+        "0xa69bb575664498ca165f730dd83d953dbfbb67b26e37841a4deebb496cab60b5",
+        "0x86dfd6ffa21c121153e7548d7aa20792761cb3fa521b435f1d8e02afc64cbe77",
+        "0x2a24e307601c5a7a4f8abe854c52db789b4048843e4ad5da0fa19984fe647517"
+      ]
+    },
+    "0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41": {
+      "amount": "800000000000000000",
+      "proof": [
+        "0x608201a8d59d582c8f51f71f84883d6399367eac78f2ba87660482661f2ac4dd",
+        "0x0095c31cb8b9f5ca217ea11a2fefa302c1788a5fdbe2e8fa9756d3566e3dd399"
+      ]
+    },
+    "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984": {
+      "amount": "2250000000000000000",
+      "proof": [
+        "0x7a837aeed09ef6a77017c15511e91ec5e9d47e59038542d21d26b0cc3f19af7b",
+        "0x0095c31cb8b9f5ca217ea11a2fefa302c1788a5fdbe2e8fa9756d3566e3dd399"
+      ]
+    }
+  },
+  "generatedAt": "2025-06-06T06:34:36.927Z"
+}
