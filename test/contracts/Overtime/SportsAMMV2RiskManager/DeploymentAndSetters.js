@@ -368,7 +368,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[TYPE_ID_TOTAL],
 					[invalidCap]
 				)
-			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'CapTooHigh');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'InvalidCap');
 
 			await sportsAMMV2RiskManagerWithSecondAccount.setCapsPerSportAndType(
 				[SPORT_ID_NBA],
@@ -425,7 +425,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[PLAYER_PROPS_LINE_1],
 					[invalidCap]
 				)
-			).to.be.revertedWithCustomError(sportsAMMV2RiskManagerWithSecondAccount, 'CapTooHigh');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManagerWithSecondAccount, 'InvalidCap');
 
 			await sportsAMMV2RiskManagerWithSecondAccount.setCapsPerMarket(
 				[GAME_ID_1],
@@ -497,7 +497,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 					[newCapForSportAndType, newCapForSportAndType]
 				)
-			).to.be.revertedWithCustomError(sportsAMMV2RiskManagerWithSecondAccount, 'CapTooHigh');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManagerWithSecondAccount, 'InvalidCap');
 			await expect(
 				sportsAMMV2RiskManagerWithSecondAccount.setCaps(
 					[SPORT_ID_NBA, SPORT_ID_EPL],
@@ -519,7 +519,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 					[TYPE_ID_TOTAL, TYPE_ID_TOTAL],
 					[invalidCap, newCapForSportAndType]
 				)
-			).to.be.revertedWithCustomError(sportsAMMV2RiskManagerWithSecondAccount, 'CapTooHigh');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManagerWithSecondAccount, 'InvalidCap');
 
 			await sportsAMMV2RiskManagerWithSecondAccount.setCaps(
 				[SPORT_ID_NBA, SPORT_ID_EPL],

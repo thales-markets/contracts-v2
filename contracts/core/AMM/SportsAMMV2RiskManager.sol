@@ -23,7 +23,6 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     uint private constant ONE = 1e18;
 
     /* ========== ERRORS ========== */
-    error CapTooHigh();
     error InvalidCap();
     error InvalidOdds();
     error InvalidPosition();
@@ -119,7 +118,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // the period of time in seconds before a market is matured and begins to be restricted for AMM trading
     uint public minimalTimeLeftToMaturity;
 
-    // the period of time in seconds after mauturity when ticket expires
+    // the period of time in seconds after maturity when ticket expires
     uint public expiryDuration;
 
     // divider on how much of cap should be used on live betting
@@ -454,24 +453,19 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                     _buyInAmount = (_buyInAmount * ONE * _systemBetDenominator) / (numOfMarkets * ONE);
                 }
 
-                if (_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive)) {
+                if (_isRiskPerMarketAndPositionExceeded(marketTradeData, marketRiskAmount, _isLive))
                     revert ExceededMarketPositionRisk();
-                }
-                if (_isRiskPerGameExceeded(marketTradeData, marketRiskAmount)) {
-                    revert ExceededGameRisk();
-                }
-                if (!_isSGP && _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) {
-                    revert InvalidCombination();
-                }
+
+                if (_isRiskPerGameExceeded(marketTradeData, marketRiskAmount)) revert ExceededGameRisk();
+
+                if (!_isSGP && _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) revert InvalidCombination();
 
                 _updateRisk(marketTradeData, marketRiskAmount, _buyInAmount);
             }
         }
         if (_isSGP) {
             uint marketRiskAmount = _payout - _buyInAmount;
-            if (_isSGPRiskExceeded(_tradeData, marketRiskAmount)) {
-                revert ExceededSGPRisk();
-            }
+            if (_isSGPRiskExceeded(_tradeData, marketRiskAmount)) revert ExceededSGPRisk();
 
             sgpSpentOnGame[_tradeData[0].gameId] += marketRiskAmount;
             sgpRiskPerCombination[getSGPHash(_tradeData)] += marketRiskAmount;
@@ -492,9 +486,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         ISportsAMMV2.TradeData[] memory _marketTradeData,
         bytes32[] memory _rootPerGame
     ) external pure {
-        if (_marketTradeData.length != _rootPerGame.length) {
-            revert MismatchedInputs();
-        }
+        if (_marketTradeData.length != _rootPerGame.length) revert MismatchedInputs();
 
         for (uint i; i < _marketTradeData.length; ++i) {
             _verifyMerkleTree(_marketTradeData[i], _rootPerGame[i]);
@@ -759,9 +751,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _maxCap max cap
     /// @param _maxRiskMultiplier max risk multiplier
     function setMaxCapAndMaxRiskMultiplier(uint _maxCap, uint _maxRiskMultiplier) external onlyOwner {
-        if (_maxCap <= defaultCap || _maxRiskMultiplier <= defaultRiskMultiplier) {
-            revert InvalidInput();
-        }
+        if (_maxCap <= defaultCap || _maxRiskMultiplier <= defaultRiskMultiplier) revert InvalidInput();
 
         maxCap = _maxCap;
         maxRiskMultiplier = _maxRiskMultiplier;
@@ -772,9 +762,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _defaultCap default cap
     /// @param _defaultRiskMultiplier default risk multiplier
     function setDefaultCapAndDefaultRiskMultiplier(uint _defaultCap, uint _defaultRiskMultiplier) external onlyOwner {
-        if (_defaultCap > maxCap || _defaultRiskMultiplier > maxRiskMultiplier) {
-            revert InvalidInput();
-        }
+        if (_defaultCap > maxCap || _defaultRiskMultiplier > maxRiskMultiplier) revert InvalidInput();
 
         defaultCap = _defaultCap;
         defaultRiskMultiplier = _defaultRiskMultiplier;
@@ -833,9 +821,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _capsPerMarket
     ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; ++i) {
-            if (_capsPerMarket[i] > maxCap) {
-                revert CapTooHigh();
-            }
+            if (_capsPerMarket[i] > maxCap) revert InvalidCap();
 
             capPerMarket[_gameIds[i]][_typeIds[i]][_playerIds[i]][_lines[i]] = _capsPerMarket[i];
             emit SetCapPerMarket(_gameIds[i], _typeIds[i], _playerIds[i], _lines[i], _capsPerMarket[i]);
@@ -878,9 +864,8 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _riskMultipliersPerSport
     ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _sportIds.length; ++i) {
-            if (_riskMultipliersPerSport[i] > maxRiskMultiplier) {
-                revert MultiplierTooHigh();
-            }
+            if (_riskMultipliersPerSport[i] > maxRiskMultiplier) revert MultiplierTooHigh();
+
             riskMultiplierPerSport[_sportIds[i]] = _riskMultipliersPerSport[i];
             emit SetRiskMultiplierPerSport(_sportIds[i], _riskMultipliersPerSport[i]);
         }
@@ -894,9 +879,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint[] memory _riskMultipliersPerGame
     ) external onlyWhitelistedAddresses(msg.sender) {
         for (uint i; i < _gameIds.length; ++i) {
-            if (_riskMultipliersPerGame[i] > maxRiskMultiplier) {
-                revert MultiplierTooHigh();
-            }
+            if (_riskMultipliersPerGame[i] > maxRiskMultiplier) revert MultiplierTooHigh();
 
             riskMultiplierPerGame[_gameIds[i]] = _riskMultipliersPerGame[i];
             emit SetRiskMultiplierPerGame(_gameIds[i], _riskMultipliersPerGame[i]);
@@ -922,9 +905,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _resultManager The address of the SportsAMMV2ResultManager contract
     /// @param _sportsAMM The address of the SportsAMMV2 contract
     function setAddresses(address _manager, address _resultManager, address _sportsAMM) external onlyOwner {
-        if (_manager == address(0) || _resultManager == address(0) || _sportsAMM == address(0)) {
-            revert InvalidAddress();
-        }
+        if (_manager == address(0) || _resultManager == address(0) || _sportsAMM == address(0)) revert InvalidAddress();
 
         manager = ISportsAMMV2Manager(_manager);
         resultManager = ISportsAMMV2ResultManager(_resultManager);
@@ -1048,7 +1029,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /* ========== INTERNAL SETTERS ========== */
 
     function _setCapPerSport(uint _sportId, uint _capPerSport) internal {
-        if (_capPerSport > maxCap) revert CapTooHigh();
+        if (_capPerSport > maxCap) revert InvalidCap();
         capPerSport[_sportId] = _capPerSport;
         emit SetCapPerSport(_sportId, _capPerSport);
     }
@@ -1062,9 +1043,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     function _setCapPerSportAndType(uint _sportId, uint _typeId, uint _capPerType) internal {
         uint currentCapPerSport = capPerSport[_sportId] > 0 ? capPerSport[_sportId] : defaultCap;
-        if (_capPerType > currentCapPerSport) {
-            revert CapTooHigh();
-        }
+        if (_capPerType > currentCapPerSport) revert InvalidCap();
 
         capPerSportAndType[_sportId][_typeId] = _capPerType;
         emit SetCapPerSportAndType(_sportId, _typeId, _capPerType);
