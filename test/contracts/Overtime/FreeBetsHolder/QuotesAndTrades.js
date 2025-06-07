@@ -231,13 +231,29 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 			const ticketAddress = activeTickets[0];
 
+			// Get owner and collateral balances before resolution
+			const freeBetsOwner = await freeBetsHolder.owner();
+			const MockCollateral = await ethers.getContractFactory('ExoticUSD');
+			const collateral = await MockCollateral.attach(collateralAddress);
+			const ownerBalanceBefore = await collateral.balanceOf(freeBetsOwner);
+			const userBalanceBefore = await collateral.balanceOf(firstTrader);
+
 			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 
+			// After resolution, user's free bet balance should remain 0
 			const firstTraderBalanceAfterClaim = await freeBetsHolder.balancePerUserAndCollateral(
 				firstTrader,
 				collateralAddress
 			);
-			expect(firstTraderBalanceAfterClaim).to.equal(ethers.parseEther('10'));
+			expect(firstTraderBalanceAfterClaim).to.equal(ethers.parseEther('0'));
+
+			// Owner should receive the buy-in amount (10 ETH)
+			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
+			expect(ownerBalanceAfter).to.equal(ownerBalanceBefore + ethers.parseEther('10'));
+
+			// User should receive only the net winnings (20 - 10 = 10 ETH)
+			const userBalanceAfter = await collateral.balanceOf(firstTrader);
+			expect(userBalanceAfter).to.equal(userBalanceBefore + ethers.parseEther('10'));
 		});
 
 		it('Fund batch', async () => {

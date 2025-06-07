@@ -168,12 +168,25 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 			expect(firstTraderBalance).to.equal(ethers.parseEther('0'));
 
+			// Get owner and collateral balances before resolution
+			const freeBetsOwner = await freeBetsHolder.owner();
+			const MockCollateral = await ethers.getContractFactory('ExoticUSD');
+			const collateral = await MockCollateral.attach(collateralAddress);
+			const ownerBalanceBefore = await collateral.balanceOf(freeBetsOwner);
+
 			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 			const firstTraderBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
 				firstTrader,
 				collateralAddress
 			);
-			expect(firstTraderBalanceAfter).to.equal(ethers.parseEther('4.000914494741655190'));
+			// User's free bet balance should remain 0
+			expect(firstTraderBalanceAfter).to.equal(ethers.parseEther('0'));
+
+			// Owner should receive the payout amount (4.000914494741655190 ETH)
+			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
+			expect(ownerBalanceAfter).to.equal(
+				ownerBalanceBefore + ethers.parseEther('4.000914494741655190')
+			);
 		});
 	});
 });
