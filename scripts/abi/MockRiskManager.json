@@ -1,0 +1,828 @@
+[
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "batchVerifyMerkleTree",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint24",
+        "name": "",
+        "type": "uint24"
+      },
+      {
+        "internalType": "int24",
+        "name": "",
+        "type": "int24"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "name": "calculateCapToBeUsed",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "name": "checkAndUpdateRisks",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkLimits",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "_tradeData",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "name": "checkRisks",
+    "outputs": [
+      {
+        "internalType": "enum ISportsAMMV2RiskManager.RiskStatus",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "",
+        "type": "bool[]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "expiryDuration",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "n",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "k",
+        "type": "uint8"
+      }
+    ],
+    "name": "generateCombinations",
+    "outputs": [
+      {
+        "internalType": "uint8[][]",
+        "name": "",
+        "type": "uint8[][]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData[]",
+        "name": "",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMaxSystemBetPayout",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "name": "isSportIdFuture",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "liveTradingPerSportAndTypeEnabled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxAllowedSystemCombinations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxSupportedAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxSupportedOdds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxTicketSize",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minBuyInAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "riskPerMarketTypeAndPosition",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "name": "sgpOnSportIdEnabled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "spentOnGame",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "odds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "merkleProof",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              }
+            ],
+            "internalType": "struct ISportsAMMV2.CombinedPosition[][]",
+            "name": "combinedPositions",
+            "type": "tuple[][]"
+          }
+        ],
+        "internalType": "struct ISportsAMMV2.TradeData",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verifyMerkleTree",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]
