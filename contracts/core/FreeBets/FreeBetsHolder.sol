@@ -280,14 +280,15 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (_exercized > 0) {
             IERC20 _collateral = Ticket(_resolvedTicket).collateral();
             uint buyInAmount = Ticket(_resolvedTicket).buyInAmount();
-            if (_exercized >= buyInAmount) {
+            if (_exercized > buyInAmount) {
                 _collateral.safeTransfer(owner, buyInAmount);
                 _earned = _exercized - buyInAmount;
                 if (_earned > 0) {
                     _collateral.safeTransfer(_user, _earned);
                 }
             } else {
-                _collateral.safeTransfer(owner, _exercized);
+                balancePerUserAndCollateral[_user][address(_collateral)] += _exercized;
+                _collateral.safeTransfer(_user, _exercized);
             }
         }
         emit FreeBetTicketResolved(_resolvedTicket, _user, _earned);
