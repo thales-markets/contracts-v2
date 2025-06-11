@@ -59,17 +59,17 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 		});
 
 		it('Should revert if systemBetDenominator is not a proper value)', async () => {
-			await expect(sportsAMMV2RiskManager.generateCombinations(10, 10)).to.be.revertedWith(
-				'BadRangeForK'
-			);
+			await expect(
+				sportsAMMV2RiskManager.generateCombinations(10, 10)
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'BadRangeForK');
 
-			await expect(sportsAMMV2RiskManager.generateCombinations(10, 11)).to.be.revertedWith(
-				'BadRangeForK'
-			);
+			await expect(
+				sportsAMMV2RiskManager.generateCombinations(10, 11)
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'BadRangeForK');
 
-			await expect(sportsAMMV2RiskManager.generateCombinations(10, 1)).to.be.revertedWith(
-				'BadRangeForK'
-			);
+			await expect(
+				sportsAMMV2RiskManager.generateCombinations(10, 1)
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'BadRangeForK');
 		});
 	});
 });

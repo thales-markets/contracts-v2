@@ -294,7 +294,11 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2Address = await sportsAMMV2.getAddress();
 
 	await sportsAMMV2.setAmounts(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);
-	await sportsAMMV2RiskManager.setSportsAMM(sportsAMMV2Address);
+	await sportsAMMV2RiskManager.setAddresses(
+		sportsAMMV2ManagerAddress,
+		sportsAMMV2ResultManagerAddress,
+		sportsAMMV2Address
+	);
 	await sportsAMMV2Manager.setSportsAMM(sportsAMMV2Address);
 
 	await sportsAMMV2.setMultiCollateralOnOffRamp(multiCollateralAddress);
