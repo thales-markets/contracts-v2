@@ -26,7 +26,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		sportsAMMV2RiskManager,
 		mockChainlinkOracle,
 		liveTradingProcessor,
-		sportsAMMV2ResultManager;
+		sportsAMMV2ResultManager,
+		collateral;
 
 	beforeEach(async () => {
 		({
@@ -42,6 +43,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			mockChainlinkOracle,
 			liveTradingProcessor,
 			sportsAMMV2ResultManager,
+			collateral,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
@@ -49,7 +51,11 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			.connect(firstLiquidityProvider)
 			.deposit(ethers.parseEther('1000'));
 		await sportsAMMV2LiquidityPool.start();
+
+		await collateral.mintForUser(firstLiquidityProvider);
+		await collateral.connect(firstLiquidityProvider).approve(freeBetsHolder.target, ethers.parseEther('1000'));
 	});
+
 
 	describe('Trade with free bet', () => {
 		it('Should fail with unsupported collateral', async () => {
@@ -318,6 +324,76 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				100
 			);
 			expect(resolvedFreeBets.length).to.be.equal(0);
+		});
+
+		it('Should return full amount to user when ticket is cancelled', async () => {
+			// Create a regular ticket with free bet
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await freeBetsHolder
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					collateralAddress
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// Cancel the market/game
+			const ticketMarket = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.cancelMarkets(
+				[ticketMarket.gameId],
+				[ticketMarket.typeId],
+				[ticketMarket.playerId],
+				[ticketMarket.line]
+			);
+
+			// Get balances before exercise
+			const freeBetsOwner = await freeBetsHolder.owner();
+			const userBalanceBefore = await collateral.balanceOf(firstTrader);
+			const ownerBalanceBefore = await collateral.balanceOf(freeBetsOwner);
+			const freeBetBalanceBefore = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
+			
+			// Check ticket state before exercise
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.attach(ticketAddress);
+			
+			// Exercise the cancelled ticket
+			await sportsAMMV2.handleTicketResolving(ticketAddress, 0);
+
+			// Check ticket state after exercise
+			const finalPayout = await ticket.finalPayout();
+			const buyInAmountFromTicket = await ticket.buyInAmount();
+			const isCancelled = await ticket.cancelled();
+			
+			expect(isCancelled).to.equal(true);
+			expect(finalPayout).to.equal(BUY_IN_AMOUNT);
+			expect(buyInAmountFromTicket).to.equal(BUY_IN_AMOUNT);
+
+			const userBalanceAfter = await collateral.balanceOf(firstTrader);
+			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
+			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
+
+			expect(userBalanceAfter - userBalanceBefore).to.equal(BUY_IN_AMOUNT);
+			expect(ownerBalanceAfter).to.equal(ownerBalanceBefore);
+
+			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0);
+			expect(freeBetBalanceAfter - freeBetBalanceBefore).to.equal(BUY_IN_AMOUNT);
+
+			const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader);
+			const numResolvedTickets = await freeBetsHolder.numOfResolvedTicketsPerUser(firstTrader);
+			expect(numActiveTickets).to.equal(0);
+			expect(numResolvedTickets).to.equal(1);
 		});
 	});
 });
