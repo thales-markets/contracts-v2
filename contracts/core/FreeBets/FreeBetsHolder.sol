@@ -122,8 +122,11 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     function _removeUserFunding(address _user, address _collateral, address _receiver) internal {
         require(supportedCollateral[_collateral], "Unsupported collateral");
-        IERC20(_collateral).safeTransfer(_receiver, balancePerUserAndCollateral[_user][_collateral]);
         uint _amountRemoved = balancePerUserAndCollateral[_user][_collateral];
+        uint currentBalance = IERC20(_collateral).balanceOf(address(this));
+        if (_amountRemoved > 0 && currentBalance >= _amountRemoved) {
+            IERC20(_collateral).safeTransfer(_receiver, _amountRemoved);
+        }
         balancePerUserAndCollateral[_user][_collateral] = 0;
         if (usersWithFreeBetPerCollateral[_collateral].contains(_user)) {
             usersWithFreeBetPerCollateral[_collateral].remove(_user);
