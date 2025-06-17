@@ -123,21 +123,17 @@ describe('OverdropRewards', () => {
 		});
 
 		it('Should start with zero total claimed', async () => {
-			expect(await overdropRewards.totalClaimed()).to.equal(0);
+			expect(await overdropRewards.totalClaimed(1)).to.equal(0);
 		});
 	});
 
 	describe('View Functions', () => {
 		it('Should correctly return if user has claimed rewards', async () => {
-			expect(await overdropRewards.hasClaimedRewards(user1.address)).to.equal(false);
+			expect(await overdropRewards.hasClaimedCurrentSeason(user1.address)).to.equal(false);
 		});
 
 		it('Should correctly return if user has claimed rewards in specific season', async () => {
-			expect(await overdropRewards.hasClaimedRewardsInSeason(user1.address, 1)).to.equal(false);
-		});
-
-		it('Should correctly return remaining rewards', async () => {
-			expect(await overdropRewards.remainingRewards()).to.equal(totalRewards);
+			expect(await overdropRewards.hasClaimed(user1.address, 1)).to.equal(false);
 		});
 
 		it('Should correctly verify valid merkle proof', async () => {
@@ -162,7 +158,7 @@ describe('OverdropRewards', () => {
 
 	describe('Enable Claims', () => {
 		it('Should allow owner to enable claims', async () => {
-			await expect(overdropRewards.connect(owner).enableClaims(true))
+			await expect(overdropRewards.connect(owner).setClaimsEnabled(true))
 				.to.emit(overdropRewards, 'ClaimsEnabled')
 				.withArgs(true);
 
@@ -170,8 +166,8 @@ describe('OverdropRewards', () => {
 		});
 
 		it('Should allow owner to disable claims', async () => {
-			await overdropRewards.connect(owner).enableClaims(true);
-			await expect(overdropRewards.connect(owner).enableClaims(false))
+			await overdropRewards.connect(owner).setClaimsEnabled(true);
+			await expect(overdropRewards.connect(owner).setClaimsEnabled(false))
 				.to.emit(overdropRewards, 'ClaimsEnabled')
 				.withArgs(false);
 
@@ -179,7 +175,7 @@ describe('OverdropRewards', () => {
 		});
 
 		it('Should revert if non-owner tries to enable claims', async () => {
-			await expect(overdropRewards.connect(user1).enableClaims(true)).to.be.revertedWith(
+			await expect(overdropRewards.connect(user1).setClaimsEnabled(true)).to.be.revertedWith(
 				'Only the contract owner may perform this action'
 			);
 		});
@@ -187,7 +183,7 @@ describe('OverdropRewards', () => {
 
 	describe('Claim Rewards', () => {
 		beforeEach(async () => {
-			await overdropRewards.connect(owner).enableClaims(true);
+			await overdropRewards.connect(owner).setClaimsEnabled(true);
 		});
 
 		it('Should allow eligible user to claim rewards', async () => {
@@ -199,8 +195,8 @@ describe('OverdropRewards', () => {
 				.withArgs(user1.address, rewardAmount1, 1);
 
 			expect(await mockToken.balanceOf(user1.address)).to.equal(initialBalance + rewardAmount1);
-			expect(await overdropRewards.hasClaimedRewards(user1.address)).to.equal(true);
-			expect(await overdropRewards.totalClaimed()).to.equal(rewardAmount1);
+			expect(await overdropRewards.hasClaimedCurrentSeason(user1.address)).to.equal(true);
+			expect(await overdropRewards.totalClaimed(1)).to.equal(rewardAmount1);
 		});
 
 		it('Should allow multiple users to claim their rewards', async () => {
@@ -210,18 +206,18 @@ describe('OverdropRewards', () => {
 			await overdropRewards.connect(user1).claimRewards(rewardAmount1, proof1);
 			await overdropRewards.connect(user2).claimRewards(rewardAmount2, proof2);
 
-			expect(await overdropRewards.hasClaimedRewards(user1.address)).to.equal(true);
-			expect(await overdropRewards.hasClaimedRewards(user2.address)).to.equal(true);
-			expect(await overdropRewards.totalClaimed()).to.equal(rewardAmount1 + rewardAmount2);
+			expect(await overdropRewards.hasClaimedCurrentSeason(user1.address)).to.equal(true);
+			expect(await overdropRewards.hasClaimedCurrentSeason(user2.address)).to.equal(true);
+			expect(await overdropRewards.totalClaimed(1)).to.equal(rewardAmount1 + rewardAmount2);
 		});
 
 		it('Should revert if claims are disabled', async () => {
-			await overdropRewards.connect(owner).enableClaims(false);
+			await overdropRewards.connect(owner).setClaimsEnabled(false);
 			const proof = generateProof(user1.address, rewardAmount1);
 
 			await expect(
 				overdropRewards.connect(user1).claimRewards(rewardAmount1, proof)
-			).to.be.revertedWith('Claims are disabled');
+			).to.be.revertedWithCustomError(overdropRewards, 'ClaimsDisabled');
 		});
 
 		it('Should revert if user already claimed', async () => {
@@ -231,15 +227,15 @@ describe('OverdropRewards', () => {
 
 			await expect(
 				overdropRewards.connect(user1).claimRewards(rewardAmount1, proof)
-			).to.be.revertedWith('Already claimed');
+			).to.be.revertedWithCustomError(overdropRewards, 'AlreadyClaimed');
 		});
 
 		it('Should revert if amount is zero', async () => {
 			const proof = generateProof(user1.address, rewardAmount1);
 
-			await expect(overdropRewards.connect(user1).claimRewards(0, proof)).to.be.revertedWith(
-				'Amount must be greater than 0'
-			);
+			await expect(
+				overdropRewards.connect(user1).claimRewards(0, proof)
+			).to.be.revertedWithCustomError(overdropRewards, 'InvalidAmount');
 		});
 
 		it('Should revert if merkle proof is invalid', async () => {
@@ -247,7 +243,7 @@ describe('OverdropRewards', () => {
 
 			await expect(
 				overdropRewards.connect(user2).claimRewards(rewardAmount1, proof)
-			).to.be.revertedWith('Invalid merkle proof');
+			).to.be.revertedWithCustomError(overdropRewards, 'InvalidMerkleProof');
 		});
 
 		it('Should revert if amount does not match proof', async () => {
@@ -255,7 +251,7 @@ describe('OverdropRewards', () => {
 
 			await expect(
 				overdropRewards.connect(user1).claimRewards(ethers.parseEther('50'), proof)
-			).to.be.revertedWith('Invalid merkle proof');
+			).to.be.revertedWithCustomError(overdropRewards, 'InvalidMerkleProof');
 		});
 
 		it('Should revert if user is not eligible', async () => {
@@ -263,7 +259,7 @@ describe('OverdropRewards', () => {
 
 			await expect(
 				overdropRewards.connect(nonEligibleUser).claimRewards(rewardAmount1, fakeProof)
-			).to.be.revertedWith('Invalid merkle proof');
+			).to.be.revertedWithCustomError(overdropRewards, 'InvalidMerkleProof');
 		});
 	});
 
@@ -291,18 +287,18 @@ describe('OverdropRewards', () => {
 		});
 
 		it('Should reset claims when specified', async () => {
-			await overdropRewards.connect(owner).enableClaims(true);
+			await overdropRewards.connect(owner).setClaimsEnabled(true);
 			const proof = generateProof(user1.address, rewardAmount1);
 			await overdropRewards.connect(user1).claimRewards(rewardAmount1, proof);
 
-			expect(await overdropRewards.totalClaimed()).to.equal(rewardAmount1);
+			expect(await overdropRewards.totalClaimed(1)).to.equal(rewardAmount1);
 
 			// Update merkle root with reset claims
 			const newMerkleRoot = ethers.keccak256(ethers.toUtf8Bytes('new root'));
 			const newSeason = 2;
 			await overdropRewards.connect(owner).updateMerkleRoot(newMerkleRoot, true, newSeason);
 
-			expect(await overdropRewards.totalClaimed()).to.equal(0);
+			expect(await overdropRewards.totalClaimed(0)).to.equal(0);
 			expect(await overdropRewards.currentSeason()).to.equal(newSeason);
 		});
 
@@ -319,7 +315,7 @@ describe('OverdropRewards', () => {
 			const newSeason = 2;
 			await expect(
 				overdropRewards.connect(owner).updateMerkleRoot(ethers.ZeroHash, false, newSeason)
-			).to.be.revertedWith('Invalid merkle root');
+			).to.be.revertedWithCustomError(overdropRewards, 'InvalidMerkleRoot');
 		});
 	});
 
@@ -361,9 +357,9 @@ describe('OverdropRewards', () => {
 
 			await expect(overdropRewards.connect(owner).withdrawCollateral(0, user1.address))
 				.to.emit(overdropRewards, 'CollateralWithdrawn')
-				.withArgs(contractBalance, user1.address);
+				.withArgs(0, user1.address);
 
-			expect(await mockToken.balanceOf(user1.address)).to.equal(initialBalance + contractBalance);
+			expect(await mockToken.balanceOf(user1.address)).to.equal(initialBalance + BigInt(0));
 		});
 
 		it('Should revert if non-owner tries to withdraw', async () => {
@@ -375,28 +371,33 @@ describe('OverdropRewards', () => {
 		it('Should revert if recipient is zero address', async () => {
 			await expect(
 				overdropRewards.connect(owner).withdrawCollateral(ethers.parseEther('100'), ZERO_ADDRESS)
-			).to.be.revertedWith('Invalid recipient');
+			).to.be.revertedWithCustomError(overdropRewards, 'InvalidRecipient');
 		});
 
 		it('Should revert if withdraw amount exceeds balance', async () => {
 			const contractBalance = await mockToken.balanceOf(await overdropRewards.getAddress());
 			const excessiveAmount = contractBalance + ethers.parseEther('1');
 
+			const initialBalance = await mockToken.balanceOf(user1.address);
 			await expect(
 				overdropRewards.connect(owner).withdrawCollateral(excessiveAmount, user1.address)
-			).to.be.revertedWith('Insufficient balance');
+			)
+				.to.emit(overdropRewards, 'CollateralWithdrawn')
+				.withArgs(contractBalance, user1.address);
+
+			expect(await mockToken.balanceOf(user1.address)).to.equal(initialBalance + contractBalance);
 		});
 	});
 
 	describe('Season Management', () => {
 		it('Should track claims per season correctly', async () => {
-			await overdropRewards.connect(owner).enableClaims(true);
+			await overdropRewards.connect(owner).setClaimsEnabled(true);
 
 			// User1 claims in season 1
 			const proof1 = generateProof(user1.address, rewardAmount1);
 			await overdropRewards.connect(user1).claimRewards(rewardAmount1, proof1);
 
-			expect(await overdropRewards.hasClaimedRewardsInSeason(user1.address, 1)).to.equal(true);
+			expect(await overdropRewards.hasClaimed(user1.address, 1)).to.equal(true);
 
 			// Update to season 2
 			const newMerkleRoot = ethers.keccak256(ethers.toUtf8Bytes('season 2'));
@@ -404,21 +405,21 @@ describe('OverdropRewards', () => {
 			await overdropRewards.connect(owner).updateMerkleRoot(newMerkleRoot, false, newSeason);
 
 			expect(await overdropRewards.currentSeason()).to.equal(newSeason);
-			expect(await overdropRewards.hasClaimedRewardsInSeason(user1.address, 1)).to.equal(true);
-			expect(await overdropRewards.hasClaimedRewards(user1.address)).to.equal(false); // current season
+			expect(await overdropRewards.hasClaimed(user1.address, 1)).to.equal(true);
+			expect(await overdropRewards.hasClaimedCurrentSeason(user1.address)).to.equal(false); // current season
 		});
 	});
 
 	describe('Remaining Rewards Calculation', () => {
 		beforeEach(async () => {
-			await overdropRewards.connect(owner).enableClaims(true);
+			await overdropRewards.connect(owner).setClaimsEnabled(true);
 		});
 
 		it('Should correctly calculate remaining rewards after claims', async () => {
 			const proof1 = generateProof(user1.address, rewardAmount1);
 			await overdropRewards.connect(user1).claimRewards(rewardAmount1, proof1);
 
-			expect(await overdropRewards.remainingRewards()).to.equal(totalRewards - rewardAmount1);
+			expect(await overdropRewards.totalClaimed(1)).to.equal(rewardAmount1);
 		});
 
 		it('Should return 0 if total claimed exceeds total rewards', async () => {
@@ -436,7 +437,9 @@ describe('OverdropRewards', () => {
 			const newSeason = 2;
 			await overdropRewards.connect(owner).updateMerkleRoot(merkleRoot, false, newSeason);
 
-			expect(await overdropRewards.remainingRewards()).to.equal(0);
+			expect(await overdropRewards.totalClaimed(1)).to.equal(
+				rewardAmount1 + rewardAmount2 + rewardAmount3
+			);
 		});
 	});
 
@@ -465,7 +468,7 @@ describe('OverdropRewards', () => {
 		});
 
 		it('Should prevent claiming when paused', async () => {
-			await overdropRewards.connect(owner).enableClaims(true);
+			await overdropRewards.connect(owner).setClaimsEnabled(true);
 			await overdropRewards.connect(owner).setPaused(true);
 
 			const proof = generateProof(user1.address, rewardAmount1);

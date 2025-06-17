@@ -12,6 +12,13 @@ import "../utils/proxy/ProxyReentrancyGuard.sol";
 contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
 
+    error InvalidMerkleRoot();
+    error InvalidAmount();
+    error AlreadyClaimed();
+    error ClaimsDisabled();
+    error InvalidRecipient();
+    error InvalidMerkleProof();
+    error InvalidSeason();
     // The reward token being distributed
     IERC20 public collateral;
 
@@ -19,7 +26,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     bytes32 public merkleRoot;
 
     // Total amount of rewards that have been claimed
-    uint256 public totalClaimed;
+    mapping(uint256 => uint256) public totalClaimed;
 
     // Mapping to track if an address has claimed their rewards per season
     mapping(address => mapping(uint256 => bool)) public hasClaimed;
@@ -53,26 +60,8 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param account The address to check
      * @return Whether the address has claimed
      */
-    function hasClaimedRewards(address account) external view returns (bool) {
+    function hasClaimedCurrentSeason(address account) external view returns (bool) {
         return hasClaimed[account][currentSeason];
-    }
-
-    /**
-     * @notice Check if an address has claimed their rewards
-     * @param account The address to check
-     * @param season The season to check
-     * @return Whether the address has claimed in the given season
-     */
-    function hasClaimedRewardsInSeason(address account, uint256 season) external view returns (bool) {
-        return hasClaimed[account][season];
-    }
-
-    /**
-     * @notice Get remaining rewards available for distribution
-     * @return Amount of unclaimed rewards
-     */
-    function remainingRewards() external view returns (uint256) {
-        return collateral.balanceOf(address(this));
     }
 
     /**
@@ -95,17 +84,17 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param merkleProof The merkle proof for the claim
      */
     function claimRewards(uint256 amount, bytes32[] calldata merkleProof) external nonReentrant notPaused {
-        require(claimsEnabled, "Claims are disabled");
-        require(!hasClaimed[msg.sender][currentSeason], "Already claimed");
-        require(amount > 0, "Amount must be greater than 0");
+        if (!claimsEnabled) revert ClaimsDisabled();
+        if (hasClaimed[msg.sender][currentSeason]) revert AlreadyClaimed();
+        if (amount == 0) revert InvalidAmount();
 
         // Verify the merkle proof
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender, amount));
-        require(MerkleProof.verify(merkleProof, merkleRoot, leaf), "Invalid merkle proof");
+        if (!MerkleProof.verify(merkleProof, merkleRoot, leaf)) revert InvalidMerkleProof();
 
         // Mark as claimed
         hasClaimed[msg.sender][currentSeason] = true;
-        totalClaimed += amount;
+        totalClaimed[currentSeason] += amount;
 
         // Transfer rewards
         collateral.safeTransfer(msg.sender, amount);
@@ -117,7 +106,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @notice Toggle claims on/off
      * @param enabled Whether claims should be enabled
      */
-    function enableClaims(bool enabled) external onlyOwner {
+    function setClaimsEnabled(bool enabled) external onlyOwner {
         claimsEnabled = enabled;
         emit ClaimsEnabled(enabled);
     }
@@ -128,14 +117,15 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param resetClaims Whether to reset all claim states
      */
     function updateMerkleRoot(bytes32 newMerkleRoot, bool resetClaims, uint256 newSeason) external onlyOwner {
-        require(newMerkleRoot != bytes32(0), "Invalid merkle root");
+        if (newMerkleRoot == bytes32(0)) revert InvalidMerkleRoot();
+        if (newSeason == 0) revert InvalidSeason();
 
         bytes32 oldRoot = merkleRoot;
         merkleRoot = newMerkleRoot;
         currentSeason = newSeason;
 
         if (resetClaims) {
-            totalClaimed = 0;
+            totalClaimed[newSeason] = 0;
         }
 
         emit MerkleRootUpdated(oldRoot, newMerkleRoot, newSeason);
@@ -147,6 +137,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      */
     function setCollateral(address _collateral) external onlyOwner {
         collateral = IERC20(_collateral);
+        emit RewardsCollateralUpdated(_collateral);
     }
 
     /**
@@ -155,12 +146,10 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param recipient Address to send tokens to
      */
     function withdrawCollateral(uint256 amount, address recipient) external onlyOwner {
-        require(recipient != address(0), "Invalid recipient");
+        if (recipient == address(0)) revert InvalidRecipient();
 
         uint256 balance = collateral.balanceOf(address(this));
-        uint256 withdrawAmount = amount == 0 ? balance : amount;
-
-        require(withdrawAmount <= balance, "Insufficient balance");
+        uint256 withdrawAmount = amount > balance ? balance : amount;
 
         collateral.safeTransfer(recipient, withdrawAmount);
 
@@ -175,7 +164,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
 
     event ClaimsEnabled(bool enabled);
 
-    event RewardsDeposited(uint256 amount, address indexed depositor);
+    event RewardsCollateralUpdated(address indexed collateral);
 
     event CollateralWithdrawn(uint256 amount, address indexed recipient);
 }
