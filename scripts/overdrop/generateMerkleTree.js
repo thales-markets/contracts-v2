@@ -97,10 +97,16 @@ function saveTreeData(treeData, outputDir) {
 
 	fs.writeFileSync(path.join(outputDir, 'merkleRoot.json'), JSON.stringify(rootData, null, 2));
 
-	// Save proofs for all addresses
+	// Save proofs for all addresses - convert to array format
+	const proofsArray = Object.entries(treeData.proofs).map(([address, data]) => ({
+		address: address,
+		amount: data.amount,
+		proof: data.proof
+	}));
+
 	const proofsData = {
 		merkleRoot: treeData.root,
-		proofs: treeData.proofs,
+		proofs: proofsArray,
 		generatedAt: new Date().toISOString(),
 	};
 
