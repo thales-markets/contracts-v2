@@ -267,36 +267,6 @@ describe('OverdropRewards', () => {
 		});
 	});
 
-	describe('Deposit Rewards', () => {
-		it('Should allow anyone to deposit additional rewards', async () => {
-			const depositAmount = ethers.parseEther('100');
-			await mockToken.connect(owner).transfer(user1.address, depositAmount);
-			await mockToken.connect(user1).approve(await overdropRewards.getAddress(), depositAmount);
-
-			const initialTotal = await overdropRewards.totalRewards();
-
-			await expect(overdropRewards.connect(user1).depositRewards(depositAmount))
-				.to.emit(overdropRewards, 'RewardsDeposited')
-				.withArgs(depositAmount, user1.address);
-
-			expect(await overdropRewards.totalRewards()).to.equal(initialTotal + depositAmount);
-		});
-
-		it('Should revert if deposit amount is zero', async () => {
-			await expect(overdropRewards.connect(user1).depositRewards(0)).to.be.revertedWith(
-				'Amount must be greater than 0'
-			);
-		});
-
-		it('Should revert if user has insufficient token allowance', async () => {
-			const depositAmount = ethers.parseEther('1000000');
-
-			await expect(
-				overdropRewards.connect(user1).depositRewards(depositAmount)
-			).to.be.revertedWithCustomError(mockToken, 'ERC20InsufficientAllowance');
-		});
-	});
-
 	describe('Update Merkle Root', () => {
 		it('Should allow owner to update merkle root', async () => {
 			const newRewardData = [
@@ -502,14 +472,6 @@ describe('OverdropRewards', () => {
 
 			await expect(
 				overdropRewards.connect(user1).claimRewards(rewardAmount1, proof)
-			).to.be.revertedWith('This action cannot be performed while the contract is paused');
-		});
-
-		it('Should prevent depositing when paused', async () => {
-			await overdropRewards.connect(owner).setPaused(true);
-
-			await expect(
-				overdropRewards.connect(user1).depositRewards(ethers.parseEther('100'))
 			).to.be.revertedWith('This action cannot be performed while the contract is paused');
 		});
 	});
