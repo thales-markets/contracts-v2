@@ -198,7 +198,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('Not trading');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'MarketNotTrading');
 
 			await time.increase((await time.latest()) + ONE_WEEK_IN_SECS);
 
@@ -251,7 +251,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('ExceededMarketPositionRisk');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'ExceededMarketPositionRisk');
 		});
 
 		it('Should fail with "Risk per game exceeded"', async () => {
@@ -303,7 +303,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('ExceededGameRisk');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'ExceededGameRisk');
 		});
 
 		it('Should fail with "Invalid combination detected"', async () => {
@@ -330,7 +330,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWith('InvalidCombination');
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'InvalidCombination');
 		});
 	});
 });
