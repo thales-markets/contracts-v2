@@ -18,9 +18,6 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     // Current merkle root for reward distribution
     bytes32 public merkleRoot;
 
-    // Total amount of rewards available for distribution
-    uint256 public totalRewards;
-
     // Total amount of rewards that have been claimed
     uint256 public totalClaimed;
 
@@ -39,11 +36,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param _collateral The ERC20 token to distribute as collateral
      * @param _merkleRoot Initial merkle root
      */
-    function initialize(
-        address _owner,
-        address _collateral,
-        bytes32 _merkleRoot
-    ) external initializer {
+    function initialize(address _owner, address _collateral, bytes32 _merkleRoot) external initializer {
         setOwner(_owner);
         initNonReentrant();
         collateral = IERC20(_collateral);
@@ -121,18 +114,6 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
     }
 
     /**
-     * @notice Deposit additional reward tokens
-     * @param amount Amount of tokens to deposit
-     */
-    function depositRewards(uint256 amount) external nonReentrant notPaused {
-        require(amount > 0, "Amount must be greater than 0");
-
-        collateral.safeTransferFrom(msg.sender, address(this), amount);
-        totalRewards += amount;
-        emit RewardsDeposited(amount, msg.sender);
-    }
-
-    /**
      * @notice Toggle claims on/off
      * @param enabled Whether claims should be enabled
      */
@@ -146,11 +127,7 @@ contract OverdropRewards is Initializable, ProxyOwned, ProxyPausable, ProxyReent
      * @param newMerkleRoot The new merkle root
      * @param resetClaims Whether to reset all claim states
      */
-    function updateMerkleRoot(
-        bytes32 newMerkleRoot,
-        bool resetClaims,
-        uint256 newSeason
-    ) external onlyOwner {
+    function updateMerkleRoot(bytes32 newMerkleRoot, bool resetClaims, uint256 newSeason) external onlyOwner {
         require(newMerkleRoot != bytes32(0), "Invalid merkle root");
 
         bytes32 oldRoot = merkleRoot;
