@@ -175,11 +175,11 @@ function saveTreeData(treeData, outputDir, collateralInfo = null) {
 			proof: data.proof,
 		};
 
-		// Add collateral info if provided
-		if (collateralInfo) {
-			proofData.collateral = collateralInfo.collateral;
-			proofData.collateralAddress = collateralInfo.collateralAddress;
-		}
+		// // Add collateral info if provided
+		// if (collateralInfo) {
+		// 	proofData.collateral = collateralInfo.collateral;
+		// 	proofData.collateralAddress = collateralInfo.collateralAddress;
+		// }
 
 		return proofData;
 	});
