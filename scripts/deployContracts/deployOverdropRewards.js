@@ -15,7 +15,7 @@ async function main() {
 	const defaultCollateralAddress = getTargetAddress('DefaultCollateral', network);
 
 	// Merkle root generated from sample CSV data
-	const merkleRoot = '0x4b2131fe055023cee4fa2cb73f25962fe7b6b32f282b4e80ab18517417e18c05';
+	const merkleRoot = '0x6e83bc24af0dc27dcb5692e54bf3e477a048acee41e66b7e775c5eb48ae63841';
 
 	console.log('Using merkle root:', merkleRoot);
 	console.log('Using collateral address:', defaultCollateralAddress);
@@ -38,7 +38,7 @@ async function main() {
 	await delay(5000);
 
 	// Enable claims by default
-	await overdropRewardsDeployed.enableClaims(true, {
+	await overdropRewardsDeployed.setClaimsEnabled(true, {
 		from: owner.address,
 	});
 	console.log('Claims enabled in OverdropRewards');

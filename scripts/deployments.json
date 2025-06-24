@@ -79,9 +79,9 @@
 		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
 		"LiveTradingProcessorDataImplementation": "0xA613bcac2A57382A17922D5158946B2d87A3CC14",
 		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2",
-		"OverdropRewards": "0xc97B63eF4a10D6875A07530fD182ea9A7Fb1a9DA",
-		"OverdropRewardsImplementation": "0xd68C8950A8145627c2c4C234FC64810FAb7Ce109",
-		"OverdropRewardsProxyAdmin": "0xf81C11b3154CAD2CefD692296Cc8f62B16017Df6"
+		"OverdropRewards": "0xa4505687368a044931C96dad55BEe2c3e4Ae2516",
+		"OverdropRewardsImplementation": "0x4D4CC84fAF3d5DDB1e6df533E767b81f439E9846",
+		"OverdropRewardsProxyAdmin": "0x900Af2133d9c636ed65BDF89AB1E99b9f54fCd20"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
