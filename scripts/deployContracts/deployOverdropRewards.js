@@ -12,10 +12,10 @@ async function main() {
 	console.log('Network:', network);
 
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
-	const defaultCollateralAddress = "0x912CE59144191C1204E64559FE8253a0e49E6548";
+	const defaultCollateralAddress = "0x4200000000000000000000000000000000000042";
 
 	// Merkle root generated from sample CSV data
-	const merkleRoot = '0xcd862d6107676eddbf57a2f77e21d6821572e55f23ffa959a87f69eaf4c11df9';
+	const merkleRoot = '0x2770653d666a5a5269c86e55a1a0137280b49972471f321d6ec71b2d5a29d915';
 
 	console.log('Using merkle root:', merkleRoot);
 	console.log('Using collateral address:', defaultCollateralAddress);
