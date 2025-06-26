@@ -175,6 +175,16 @@
       "address": "0xb8bA5ad0FAA8463ea991505AC13a2f609E14dDff",
       "txHash": "0xbd13b9e1845d74712a57fdda1a7c45ef1c88f7d11ca6ee0a72a6f23af31503f0",
       "kind": "transparent"
+    },
+    {
+      "address": "0x0E40078a6dEA8EdA64C6daaB7Abc8Cc3A757C9C8",
+      "txHash": "0x2b05241d574f074609927b7514ac9d5c35d7a0fbc72e097d6ab6b6e0ecdad501",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x563c5bc1686E1284d58e3af13d60305eE8B8d3E7",
+      "txHash": "0x4bd0ebff981db40bfee3caa9748db83d1f3f82176d6471609d047b204134e45c",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -23291,6 +23301,203 @@
               "label": "_initializing",
               "type": "t_bool",
               "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "d962563b31da53941eafb319cf9a6c72569acd2e119add0a8f2d220570d2c155": {
+      "address": "0x105Eb070BDE5a2396021c9eCba3FC1562D7cff10",
+      "txHash": "0x00e694b98b32f2b4f914a657d7ff6a905a012a5b34e28f02f8cdbe68a3d5110e",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "collateral",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(IERC20)331",
+            "contract": "OverdropRewards",
+            "src": "contracts/Overdrop/OverdropRewards.sol:23"
+          },
+          {
+            "label": "merkleRoot",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32",
+            "contract": "OverdropRewards",
+            "src": "contracts/Overdrop/OverdropRewards.sol:26"
+          },
+          {
+            "label": "totalClaimed",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "OverdropRewards",
+            "src": "contracts/Overdrop/OverdropRewards.sol:29"
+          },
+          {
+            "label": "hasClaimed",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_bool))",
+            "contract": "OverdropRewards",
+            "src": "contracts/Overdrop/OverdropRewards.sol:32"
+          },
+          {
+            "label": "claimsEnabled",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bool",
+            "contract": "OverdropRewards",
+            "src": "contracts/Overdrop/OverdropRewards.sol:35"
+          },
+          {
+            "label": "currentSeason",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256",
+            "contract": "OverdropRewards",
+            "src": "contracts/Overdrop/OverdropRewards.sol:38"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IERC20)331": {
+            "label": "contract IERC20",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_bool))": {
+            "label": "mapping(address => mapping(uint256 => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }

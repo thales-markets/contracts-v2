@@ -78,7 +78,10 @@
 		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD",
 		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
 		"LiveTradingProcessorDataImplementation": "0xA613bcac2A57382A17922D5158946B2d87A3CC14",
-		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2"
+		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2",
+		"OverdropRewards": "0xa4505687368a044931C96dad55BEe2c3e4Ae2516",
+		"OverdropRewardsImplementation": "0x4D4CC84fAF3d5DDB1e6df533E767b81f439E9846",
+		"OverdropRewardsProxyAdmin": "0x900Af2133d9c636ed65BDF89AB1E99b9f54fCd20"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
@@ -160,7 +163,10 @@
 		"SessionValidationModuleProxyAdmin": "0xf697D759829A60c150b13666F6319Ee70eC338d7",
 		"LiveTradingProcessorData": "0x5DC5D8619DA3d8b1Cadc2D7d2B1AaaE05c524B85",
 		"LiveTradingProcessorDataImplementation": "0x992c8C04DF85761c2EF9Cd9CC7426BA272b736ab",
-		"LiveTradingProcessorDataProxyAdmin": "0x95b95Df0Db79F186C9d2b76466cd5A3633f1f7aB"
+		"LiveTradingProcessorDataProxyAdmin": "0x95b95Df0Db79F186C9d2b76466cd5A3633f1f7aB",
+		"OverdropRewards": "0x74f6742e62c65Bf5d3D15477cBA1db78C8769CB5",
+		"OverdropRewardsImplementation": "0xCD6e942131D269F7d9D8526a461Fc019937a3580",
+		"OverdropRewardsProxyAdmin": "0xA4E5e3E3AC9509bc3707c22a64B29E8939bF324c"
 	},
 	"arbitrumOne": {
 		"ProtocolDAO": "0x0089282AC624BbBDA7eC472d63ee99643d7eDf4a",
@@ -250,7 +256,10 @@
 		"SessionValidationModuleProxyAdmin": "0x02005dFD09619306Bd736fBc14D1c312CA62DEE8",
 		"LiveTradingProcessorData": "0xb8bA5ad0FAA8463ea991505AC13a2f609E14dDff",
 		"LiveTradingProcessorDataImplementation": "0x4c98C6fAc5d26fDBcB1108EAcfEb2D1aF65aaE39",
-		"LiveTradingProcessorDataProxyAdmin": "0x71609d254e6569C537D3a2d050eD05A4C74190eA"
+		"LiveTradingProcessorDataProxyAdmin": "0x71609d254e6569C537D3a2d050eD05A4C74190eA",
+		"OverdropRewards": "0x563c5bc1686E1284d58e3af13d60305eE8B8d3E7",
+		"OverdropRewardsImplementation": "0x105Eb070BDE5a2396021c9eCba3FC1562D7cff10",
+		"OverdropRewardsProxyAdmin": "0xfA8fF0AeBfa7D82b29A5aDD160Db3F8166b59031"
 	},
 	"baseMainnet": {
 		"ProtocolDAO": "0xf334412B96FE4a9Fc0a93D6297574a3b30217E64",
