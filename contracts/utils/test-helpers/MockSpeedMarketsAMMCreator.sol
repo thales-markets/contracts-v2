@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IFreeBetsHolder {
-    function confirmSpeedOrChainedSpeedMarketTrade(
-        bytes32 _requestId,
-        address _speedMarketAddress,
-        address _collateral,
-        uint _buyinAmount,
-        bool _isChained
-    ) external;
-}
+import {IFreeBetsHolder} from "../../interfaces/IFreeBetsHolder.sol";
 
 /// @title Mock speed/chained markets creator for testing freeBetsHolder interactions
 contract MockSpeedMarketsAMMCreator {
