@@ -175,7 +175,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			// Try to remove unexpired free bets
 			await expect(
 				freeBetsHolder.removeExpiredUserFunding([firstTrader, secondTrader], collateralAddress)
-			).to.be.revertedWith('Free bet not expired');
+			).to.be.revertedWithCustomError(freeBetsHolder, 'FreeBetNotExpired');
 		});
 
 		it('Should allow removeExpiredUserFunding after free bet expires', async () => {
