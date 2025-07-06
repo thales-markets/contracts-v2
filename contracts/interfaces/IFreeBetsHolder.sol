@@ -11,4 +11,11 @@ interface IFreeBetsHolder is IProxyBetting {
     function freeBetExpiration(address user, address collateral) external view returns (uint);
     function freeBetExpirationUpgrade() external view returns (uint);
     function freeBetExpirationPeriod() external view returns (uint);
+    function confirmSpeedOrChainedSpeedMarketTrade(
+        bytes32 _requestId,
+        address _speedMarketAddress,
+        address _collateral,
+        uint _buyinAmount,
+        bool _isChained
+    ) external;
 }
