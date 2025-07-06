@@ -384,10 +384,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
 			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
 
-			expect(userBalanceAfter - userBalanceBefore).to.equal(BUY_IN_AMOUNT);
-			expect(ownerBalanceAfter).to.equal(ownerBalanceBefore);
-
 			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0);
+			expect(userBalanceAfter - userBalanceBefore).to.equal(0);
 			expect(freeBetBalanceAfter - freeBetBalanceBefore).to.equal(BUY_IN_AMOUNT);
 
 			const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader);
