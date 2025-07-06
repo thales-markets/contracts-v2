@@ -71,5 +71,7 @@ interface ISpeedMarketsAMMCreator {
     function addPendingSpeedMarket(SpeedMarketParams calldata _params) external returns (bytes32);
 
     function addPendingChainedSpeedMarket(ChainedSpeedMarketParams calldata _params) external returns (bytes32);
+    
+    function getChainedAndSpeedMarketsAMMAddresses() external view returns (address chainedAMM, address speedAMM);
 
 }

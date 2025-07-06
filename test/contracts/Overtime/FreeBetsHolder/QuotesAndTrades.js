@@ -53,9 +53,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		await sportsAMMV2LiquidityPool.start();
 
 		await collateral.mintForUser(firstLiquidityProvider);
-		await collateral.connect(firstLiquidityProvider).approve(freeBetsHolder.target, ethers.parseEther('1000'));
+		await collateral
+			.connect(firstLiquidityProvider)
+			.approve(freeBetsHolder.target, ethers.parseEther('1000'));
 	});
-
 
 	describe('Trade with free bet', () => {
 		it('Should fail with unsupported collateral', async () => {
@@ -362,12 +363,15 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const freeBetsOwner = await freeBetsHolder.owner();
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
 			const ownerBalanceBefore = await collateral.balanceOf(freeBetsOwner);
-			const freeBetBalanceBefore = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
-			
+			const freeBetBalanceBefore = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+
 			// Check ticket state before exercise
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const ticket = await TicketContract.attach(ticketAddress);
-			
+
 			// Exercise the cancelled ticket
 			await sportsAMMV2.handleTicketResolving(ticketAddress, 0);
 
@@ -375,14 +379,17 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const finalPayout = await ticket.finalPayout();
 			const buyInAmountFromTicket = await ticket.buyInAmount();
 			const isCancelled = await ticket.cancelled();
-			
+
 			expect(isCancelled).to.equal(true);
 			expect(finalPayout).to.equal(BUY_IN_AMOUNT);
 			expect(buyInAmountFromTicket).to.equal(BUY_IN_AMOUNT);
 
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
-			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
+			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
 
 			expect(userBalanceAfter - userBalanceBefore).to.equal(BUY_IN_AMOUNT);
 			expect(ownerBalanceAfter).to.equal(ownerBalanceBefore);

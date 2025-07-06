@@ -38,6 +38,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     error FreeBetNotExpired();
     error UnknownSpeedMarketTicketOwner();
     error OnlyCallableFromSpeedMarketsAMMCreator();
+    error InvalidTicketType();
 
     enum TicketType {
         SPORTS,
@@ -381,18 +382,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes to the contract owner
     /// @param _resolvedTicket the address of the resolved ticket
     function confirmTicketResolved(address _resolvedTicket) external {
-        if (msg.sender != address(sportsAMM) && msg.sender != address(speedMarketsAMMCreator)) revert CallerNotAllowed();
-
+        if (msg.sender != address(sportsAMM)) revert CallerNotAllowed();
         address _user = ticketToUser[_resolvedTicket];
         if (_user == address(0)) revert UnknownTicket();
         if (!activeTicketsPerUser[_user].contains(_resolvedTicket)) revert UnknownActiveTicket();
-        
+
         uint _earned;
-        if (ticketType[_resolvedTicket] != TicketType.SPORTS) {
-            _earned = _resolveChainedOrSpeedMarketTicket(_resolvedTicket, _user);
-        } else {
-            _earned = _resolveSportTicket(_resolvedTicket, _user);
-        }
+        _earned = _resolveSportTicket(_resolvedTicket, _user);
 
         activeTicketsPerUser[_user].remove(_resolvedTicket);
         resolvedTicketsPerUser[_user].add(_resolvedTicket);
@@ -400,7 +396,37 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit FreeBetTicketResolved(_resolvedTicket, _user, _earned);
     }
 
-    
+    function confirmSpeedMarketResolved(
+        address _resolvedTicket,
+        uint _exercized,
+        uint _buyInAmount,
+        address _collateral,
+        bool _isChained
+    ) external {
+        (address speedAMM, address chainedAMM) = speedMarketsAMMCreator.getChainedAndSpeedMarketsAMMAddresses();
+        if (msg.sender != address(speedAMM) && msg.sender != address(chainedAMM)) revert CallerNotAllowed();
+        address _user = ticketToUser[_resolvedTicket];
+        if (_user == address(0)) revert UnknownTicket();
+        if (!activeTicketsPerUser[_user].contains(_resolvedTicket)) revert UnknownActiveTicket();
+        uint earned;
+        if (_exercized > 0) {
+            IERC20 collateral = IERC20(_collateral);
+            if (_exercized > _buyInAmount) {
+                collateral.safeTransfer(owner, _buyInAmount);
+                earned = _exercized - _buyInAmount;
+                if (earned > 0) {
+                    collateral.safeTransfer(_user, earned);
+                }
+            } else {
+                balancePerUserAndCollateral[_user][_collateral] += _exercized;
+            }
+        }
+
+        activeTicketsPerUser[_user].remove(_resolvedTicket);
+        resolvedTicketsPerUser[_user].add(_resolvedTicket);
+
+        emit FreeBetTicketResolved(_resolvedTicket, _user, earned);
+    }
 
     /// @notice admin method to retrieve stuck funds if needed
     function retrieveFunds(IERC20 _collateral, uint _amount) external onlyOwner {
@@ -580,14 +606,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
-
-    function _resolveChainedOrSpeedMarketTicket(address _resolvedTicket, address _user) internal returns (uint _earned) {
-        if (ticketType[_resolvedTicket] == TicketType.CHAINED_SPEED_MARKET) {
-            // TODO: implement chained speed market exercize
-        } else if(ticketType[_resolvedTicket] == TicketType.SPEED_MARKET) {
-            // TODO: implement speed market exercize
-        }
-    }
 
     function _resolveSportTicket(address _resolvedTicket, address _user) internal returns (uint _earned) {
         uint _exercized = Ticket(_resolvedTicket).finalPayout();

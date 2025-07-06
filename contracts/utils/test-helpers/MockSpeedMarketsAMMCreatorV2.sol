@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IFreeBetsHolder} from "../../interfaces/IFreeBetsHolder.sol";
 
 /// @title Mock speed/chained markets creator for testing freeBetsHolder interactions
-contract MockSpeedMarketsAMMCreator {
+contract MockSpeedMarketsAMMCreatorV2 {
     uint private constant ONE = 1e18;
 
     enum Direction {
@@ -38,6 +38,7 @@ contract MockSpeedMarketsAMMCreator {
         address referrer;
         uint skewImpact;
         uint256 createdAt;
+        bytes32 requestId; // Store requestId
     }
 
     struct ChainedSpeedMarketParams {
@@ -62,6 +63,7 @@ contract MockSpeedMarketsAMMCreator {
         uint buyinAmount;
         address referrer;
         uint256 createdAt;
+        bytes32 requestId; // Store requestId
     }
 
     uint64 public maxCreationDelay;
@@ -76,8 +78,6 @@ contract MockSpeedMarketsAMMCreator {
     mapping(bytes32 => address) public requestToSender;
 
     address public owner;
-    address public speedMarketsAMM;
-    address public chainedSpeedMarketsAMM;
 
     constructor(address _owner, address _freeBetsHolder) {
         owner = _owner;
@@ -92,6 +92,11 @@ contract MockSpeedMarketsAMMCreator {
     }
 
     function _addPendingSpeedMarket(SpeedMarketParams calldata _params) internal returns (bytes32 requestId) {
+        // Generate dummy requestId
+        requestCounter++;
+        requestId = keccak256(abi.encodePacked("MOCK_REQUEST_", requestCounter, block.timestamp));
+        requestToSender[requestId] = msg.sender;
+        
         PendingSpeedMarket memory pendingSpeedMarket = PendingSpeedMarket(
             msg.sender,
             _params.asset,
@@ -104,17 +109,13 @@ contract MockSpeedMarketsAMMCreator {
             _params.buyinAmount,
             _params.referrer,
             _params.skewImpact,
-            block.timestamp
+            block.timestamp,
+            requestId // Store the requestId
         );
 
         pendingSpeedMarkets.push(pendingSpeedMarket);
 
         emit AddSpeedMarket(pendingSpeedMarket);
-
-        // Generate dummy requestId
-        requestCounter++;
-        requestId = keccak256(abi.encodePacked("MOCK_REQUEST_", requestCounter, block.timestamp));
-        requestToSender[requestId] = msg.sender;
     }
 
     /// @notice create all speed markets from pending and call freeBetsHolder
@@ -140,11 +141,9 @@ contract MockSpeedMarketsAMMCreator {
 
             // Mock successful creation
             if (pendingSpeedMarket.user == freeBetsHolder) {
-                bytes32 requestId = keccak256(abi.encode(pendingSpeedMarket));
-
-                // Call freeBetsHolder to confirm the trade
+                // Use the stored requestId
                 IFreeBetsHolder(freeBetsHolder).confirmSpeedOrChainedSpeedMarketTrade(
-                    requestId,
+                    pendingSpeedMarket.requestId,
                     mockSpeedMarketAddress,
                     pendingSpeedMarket.collateral,
                     pendingSpeedMarket.buyinAmount,
@@ -180,6 +179,11 @@ contract MockSpeedMarketsAMMCreator {
     }
 
     function _addPendingChainedSpeedMarket(ChainedSpeedMarketParams calldata _params) internal returns (bytes32 requestId) {
+        // Generate dummy requestId
+        requestCounter++;
+        requestId = keccak256(abi.encodePacked("MOCK_CHAINED_REQUEST_", requestCounter, block.timestamp));
+        requestToSender[requestId] = msg.sender;
+        
         PendingChainedSpeedMarket memory pendingChainedSpeedMarket = PendingChainedSpeedMarket(
             msg.sender,
             _params.asset,
@@ -190,17 +194,13 @@ contract MockSpeedMarketsAMMCreator {
             _params.collateral,
             _params.buyinAmount,
             _params.referrer,
-            block.timestamp
+            block.timestamp,
+            requestId // Store the requestId
         );
 
         pendingChainedSpeedMarkets.push(pendingChainedSpeedMarket);
 
         emit AddChainedSpeedMarket(pendingChainedSpeedMarket);
-
-        // Generate dummy requestId
-        requestCounter++;
-        requestId = keccak256(abi.encodePacked("MOCK_CHAINED_REQUEST_", requestCounter, block.timestamp));
-        requestToSender[requestId] = msg.sender;
     }
 
     /// @notice create all chained speed markets from pending and call freeBetsHolder
@@ -226,11 +226,9 @@ contract MockSpeedMarketsAMMCreator {
 
             // Mock successful creation
             if (pendingChainedSpeedMarket.user == freeBetsHolder) {
-                bytes32 requestId = keccak256(abi.encode(pendingChainedSpeedMarket));
-
-                // Call freeBetsHolder to confirm the trade
+                // Use the stored requestId
                 IFreeBetsHolder(freeBetsHolder).confirmSpeedOrChainedSpeedMarketTrade(
-                    requestId,
+                    pendingChainedSpeedMarket.requestId,
                     mockChainedSpeedMarketAddress,
                     pendingChainedSpeedMarket.collateral,
                     pendingChainedSpeedMarket.buyinAmount,
@@ -257,70 +255,51 @@ contract MockSpeedMarketsAMMCreator {
         emit MockChainedSpeedMarketCreated(msg.sender, _chainedMarketParams.asset, _chainedMarketParams.buyinAmount);
     }
 
-    //////////////////getters/////////////////
+    ////////////////////////////////////setters/////////////////////////////////////
 
-    /// @notice get length of pending speed markets
-    function getPendingSpeedMarketsSize() external view returns (uint) {
+    function getPendingSpeedMarketsSize() external view returns (uint256) {
         return pendingSpeedMarkets.length;
     }
 
-    /// @notice get length of pending chained speed markets
-    function getPendingChainedSpeedMarketsSize() external view returns (uint) {
+    function getPendingChainedSpeedMarketsSize() external view returns (uint256) {
         return pendingChainedSpeedMarkets.length;
     }
 
-    function getChainedAndSpeedMarketsAMMAddresses() external view returns (address chainedAMM, address speedAMM) {
-        chainedAMM = chainedSpeedMarketsAMM;
-        speedAMM = speedMarketsAMM;
+    function addToWhitelist(address _whitelistAddress, bool _flag) external onlyOwner {
+        whitelistedAddresses[_whitelistAddress] = _flag;
+        emit AddedIntoWhitelist(_whitelistAddress, _flag);
     }
 
-    //////////////////setters/////////////////
-
-    /// @notice Set free bets holder address
-    /// @param _freeBetsHolder address of the free bets holder contract
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
-        require(_freeBetsHolder != address(0), "Invalid address");
         freeBetsHolder = _freeBetsHolder;
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
-    /// @notice Set max creation delay
     function setMaxCreationDelay(uint64 _maxCreationDelay) external onlyOwner {
         maxCreationDelay = _maxCreationDelay;
         emit SetMaxCreationDelay(_maxCreationDelay);
     }
 
-    /// @notice adding/removing whitelist address depending on a flag
-    /// @param _whitelistAddress address that needed to be whitelisted or removed from WL
-    /// @param _flag adding or removing from whitelist (true: add, false: remove)
-    function addToWhitelist(address _whitelistAddress, bool _flag) external onlyOwner {
-        require(_whitelistAddress != address(0));
-        whitelistedAddresses[_whitelistAddress] = _flag;
-        emit AddedIntoWhitelist(_whitelistAddress, _flag);
-    }
+    /* ========== MODIFIERS ========== */
 
-    //////////////////modifiers/////////////////
+    modifier isAddressWhitelisted() {
+        require(whitelistedAddresses[msg.sender], "Whitelist: not whitelisted");
+        _;
+    }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner");
         _;
     }
 
-    modifier isAddressWhitelisted() {
-        require(whitelistedAddresses[msg.sender], "Creator not whitelisted");
-        _;
-    }
+    /* ========== EVENTS ========== */
 
-    //////////////////events/////////////////
-
-    event AddSpeedMarket(PendingSpeedMarket _pendingSpeedMarket);
-    event AddChainedSpeedMarket(PendingChainedSpeedMarket _pendingChainedSpeedMarket);
-    event CreateSpeedMarkets(uint _pendingSize, uint8 _createdSize);
-
-    event SetFreeBetsHolder(address _freeBetsHolder);
     event SetMaxCreationDelay(uint64 _maxCreationDelay);
     event AddedIntoWhitelist(address _whitelistAddress, bool _flag);
-
-    event MockSpeedMarketCreated(address user, bytes32 asset, uint buyinAmount);
-    event MockChainedSpeedMarketCreated(address user, bytes32 asset, uint buyinAmount);
+    event SetFreeBetsHolder(address _freeBetsHolder);
+    event AddSpeedMarket(PendingSpeedMarket _pendingSpeedMarket);
+    event AddChainedSpeedMarket(PendingChainedSpeedMarket _pendingChainedSpeedMarket);
+    event CreateSpeedMarkets(uint256 _pendingSize, uint8 _createdSize);
+    event MockSpeedMarketCreated(address user, bytes32 asset, uint256 buyinAmount);
+    event MockChainedSpeedMarketCreated(address user, bytes32 asset, uint256 buyinAmount);
 }

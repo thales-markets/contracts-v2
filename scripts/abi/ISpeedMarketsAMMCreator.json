@@ -133,6 +133,24 @@
   },
   {
     "inputs": [],
+    "name": "getChainedAndSpeedMarketsAMMAddresses",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "chainedAMM",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "speedAMM",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getPendingChainedSpeedMarketsSize",
     "outputs": [
       {
