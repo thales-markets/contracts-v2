@@ -388,7 +388,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (!activeTicketsPerUser[_user].contains(_resolvedTicket)) revert UnknownActiveTicket();
 
         uint _earned;
-        _earned = _resolveSportTicket(_resolvedTicket, _user);
+        uint _exercized = Ticket(_resolvedTicket).finalPayout();
+        IERC20 _collateral = Ticket(_resolvedTicket).collateral();
+        uint buyInAmount = Ticket(_resolvedTicket).buyInAmount();
+        _earned = _resolveMarket(_user, _collateral, _exercized, buyInAmount);
 
         activeTicketsPerUser[_user].remove(_resolvedTicket);
         resolvedTicketsPerUser[_user].add(_resolvedTicket);
@@ -400,27 +403,14 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _resolvedTicket,
         uint _exercized,
         uint _buyInAmount,
-        address _collateral,
-        bool _isChained
+        address _collateral
     ) external {
         (address speedAMM, address chainedAMM) = speedMarketsAMMCreator.getChainedAndSpeedMarketsAMMAddresses();
         if (msg.sender != address(speedAMM) && msg.sender != address(chainedAMM)) revert CallerNotAllowed();
         address _user = ticketToUser[_resolvedTicket];
         if (_user == address(0)) revert UnknownTicket();
         if (!activeTicketsPerUser[_user].contains(_resolvedTicket)) revert UnknownActiveTicket();
-        uint earned;
-        if (_exercized > 0) {
-            IERC20 collateral = IERC20(_collateral);
-            if (_exercized > _buyInAmount) {
-                collateral.safeTransfer(owner, _buyInAmount);
-                earned = _exercized - _buyInAmount;
-                if (earned > 0) {
-                    collateral.safeTransfer(_user, earned);
-                }
-            } else {
-                balancePerUserAndCollateral[_user][_collateral] += _exercized;
-            }
-        }
+        uint earned = _resolveMarket(_user, IERC20(_collateral), _exercized, _buyInAmount);
 
         activeTicketsPerUser[_user].remove(_resolvedTicket);
         resolvedTicketsPerUser[_user].add(_resolvedTicket);
@@ -607,16 +597,18 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     /* ========== INTERNAL FUNCTIONS ========== */
 
-    function _resolveSportTicket(address _resolvedTicket, address _user) internal returns (uint _earned) {
-        uint _exercized = Ticket(_resolvedTicket).finalPayout();
+    function _resolveMarket(
+        address _user,
+        IERC20 _collateral,
+        uint _exercized,
+        uint _buyInAmount
+    ) internal returns (uint earned) {
         if (_exercized > 0) {
-            IERC20 _collateral = Ticket(_resolvedTicket).collateral();
-            uint buyInAmount = Ticket(_resolvedTicket).buyInAmount();
-            if (_exercized > buyInAmount) {
-                _collateral.safeTransfer(owner, buyInAmount);
-                _earned = _exercized - buyInAmount;
-                if (_earned > 0) {
-                    _collateral.safeTransfer(_user, _earned);
+            if (_exercized > _buyInAmount) {
+                _collateral.safeTransfer(owner, _buyInAmount);
+                earned = _exercized - _buyInAmount;
+                if (earned > 0) {
+                    _collateral.safeTransfer(_user, earned);
                 }
             } else {
                 balancePerUserAndCollateral[_user][address(_collateral)] += _exercized;

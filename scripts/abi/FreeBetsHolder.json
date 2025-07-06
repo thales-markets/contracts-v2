@@ -63,6 +63,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidTicketType",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotInitializing",
     "type": "error"
   },
@@ -630,6 +635,34 @@
       }
     ],
     "name": "confirmSGPTrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_resolvedTicket",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_exercized",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      }
+    ],
+    "name": "confirmSpeedMarketResolved",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

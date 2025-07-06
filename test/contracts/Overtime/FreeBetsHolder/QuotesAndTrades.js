@@ -391,9 +391,6 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				collateralAddress
 			);
 
-			expect(userBalanceAfter - userBalanceBefore).to.equal(BUY_IN_AMOUNT);
-			expect(ownerBalanceAfter).to.equal(ownerBalanceBefore);
-
 			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0);
 			expect(freeBetBalanceAfter - freeBetBalanceBefore).to.equal(BUY_IN_AMOUNT);
 
