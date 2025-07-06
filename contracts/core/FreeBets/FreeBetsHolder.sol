@@ -620,7 +620,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
                 }
             } else {
                 balancePerUserAndCollateral[_user][address(_collateral)] += _exercized;
-                _collateral.safeTransfer(_user, _exercized);
             }
         }
     }
