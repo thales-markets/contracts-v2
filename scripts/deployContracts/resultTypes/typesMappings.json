@@ -1488,5 +1488,160 @@
 		"id": 11262,
 		"result_type": 2,
 		"name": "PROP_PLAYER_MADE_TWO_POINTERS"
+	},
+	{
+		"id": 11263,
+		"result_type": 2,
+		"name": "PROP_PLAYER_KILLS"
+	},
+	{
+		"id": 11264,
+		"result_type": 2,
+		"name": "PROP_FIRST_MAP_PLAYER_KILLS"
+	},
+	{
+		"id": 11265,
+		"result_type": 2,
+		"name": "PROP_SECOND_MAP_PLAYER_KILLS"
+	},
+	{
+		"id": 11266,
+		"result_type": 2,
+		"name": "PROP_THIRD_MAP_PLAYER_KILLS"
+	},
+	{
+		"id": 11267,
+		"result_type": 2,
+		"name": "PROP_FOURTH_MAP_PLAYER_KILLS"
+	},
+	{
+		"id": 11268,
+		"result_type": 2,
+		"name": "PROP_FIFTH_MAP_PLAYER_KILLS"
+	},
+	{
+		"id": 11269,
+		"result_type": 2,
+		"name": "PROP_FIRST_TWO_MAPS_PLAYER_KILLS"
+	},
+	{
+		"id": 11270,
+		"result_type": 2,
+		"name": "PROP_FIRST_THREE_MAPS_PLAYER_KILLS"
+	},
+	{
+		"id": 11271,
+		"result_type": 2,
+		"name": "PROP_FIRST_MAP_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11272,
+		"result_type": 2,
+		"name": "PROP_SECOND_MAP_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11273,
+		"result_type": 2,
+		"name": "PROP_THIRD_MAP_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11274,
+		"result_type": 2,
+		"name": "PROP_FOURTH_MAP_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11275,
+		"result_type": 2,
+		"name": "PROP_FIFTH_MAP_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11276,
+		"result_type": 2,
+		"name": "PROP_FIRST_TWO_MAPS_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11277,
+		"result_type": 2,
+		"name": "PROP_FIRST_THREE_MAPS_PLAYER_ASSISTS"
+	},
+	{
+		"id": 11278,
+		"result_type": 2,
+		"name": "PROP_PLAYER_DEATHS"
+	},
+	{
+		"id": 11279,
+		"result_type": 2,
+		"name": "PROP_FIRST_MAP_PLAYER_DEATHS"
+	},
+	{
+		"id": 11280,
+		"result_type": 2,
+		"name": "PROP_SECOND_MAP_PLAYER_DEATHS"
+	},
+	{
+		"id": 11281,
+		"result_type": 2,
+		"name": "PROP_THIRD_MAP_PLAYER_DEATHS"
+	},
+	{
+		"id": 11282,
+		"result_type": 2,
+		"name": "PROP_FOURTH_MAP_PLAYER_DEATHS"
+	},
+	{
+		"id": 11283,
+		"result_type": 2,
+		"name": "PROP_FIFTH_MAP_PLAYER_DEATHS"
+	},
+	{
+		"id": 11284,
+		"result_type": 2,
+		"name": "PROP_FIRST_TWO_MAPS_PLAYER_DEATHS"
+	},
+	{
+		"id": 11285,
+		"result_type": 2,
+		"name": "PROP_FIRST_THREE_MAPS_PLAYER_DEATHS"
+	},
+	{
+		"id": 11286,
+		"result_type": 2,
+		"name": "PROP_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11287,
+		"result_type": 2,
+		"name": "PROP_FIRST_MAP_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11288,
+		"result_type": 2,
+		"name": "PROP_SECOND_MAP_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11289,
+		"result_type": 2,
+		"name": "PROP_THIRD_MAP_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11290,
+		"result_type": 2,
+		"name": "PROP_FOURTH_MAP_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11291,
+		"result_type": 2,
+		"name": "PROP_FIFTH_MAP_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11292,
+		"result_type": 2,
+		"name": "PROP_FIRST_TWO_MAPS_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11293,
+		"result_type": 2,
+		"name": "PROP_FIRST_THREE_MAPS_PLAYER_HEADSHOTS"
 	}
 ]
