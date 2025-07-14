@@ -72,6 +72,18 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         int24 line;
     }
 
+    struct MarketStakeCalculationInput {
+        bytes32 gameId;
+        uint16 sportId;
+        uint16 typeId;
+        uint24 playerId;
+        int24 line;
+        uint maturity;
+        bool isLive;
+        uint8 position;
+        uint odds; // implied odds in 18 decimals
+    }
+
     enum ResultType {
         Unassigned,
         ExactPosition,
@@ -427,6 +439,53 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 _playerIds[i],
                 _positions[i]
             );
+        }
+    }
+
+    /**
+     * @notice Calculates max stake and available liquidity for each market+position input.
+     * @dev Returns two arrays: maxStake and availableLiquidity, both 18 decimals.
+     * @param inputs Array of market definitions and odds.
+     * @return maxStakes Array of maximum stake values (18 decimals).
+     * @return availableLiquidity Array of available risk the house is willing to take (18 decimals).
+     */
+    function getMaxStakeAndLiquidityBatch(
+        MarketStakeCalculationInput[] calldata inputs
+    ) external view returns (uint[] memory maxStakes, uint[] memory availableLiquidity) {
+        uint len = inputs.length;
+        maxStakes = new uint[](len);
+        availableLiquidity = new uint[](len);
+
+        for (uint i = 0; i < len; i++) {
+            MarketStakeCalculationInput calldata input = inputs[i];
+
+            // Get cap and risk
+            uint cap = riskManager.calculateCapToBeUsed(
+                input.gameId,
+                input.sportId,
+                input.typeId,
+                input.playerId,
+                input.line,
+                input.maturity,
+                input.isLive
+            );
+
+            int risk = riskManager.riskPerMarketTypeAndPosition(input.gameId, input.typeId, input.playerId, input.position);
+
+            // Calculate available liquidity (make sure it's not negative)
+            int available = int(cap) - risk;
+            uint availableRisk = available > 0 ? uint(available) : 0;
+            availableLiquidity[i] = availableRisk;
+
+            // Calculate max stake: maxStake = availableRisk * odds / (1 - odds)
+            // Prevent division by zero when odds == 1e18 (100% probability)
+            if (input.odds > 0 && input.odds < 1e18) {
+                uint numerator = availableRisk * input.odds;
+                uint denominator = 1e18 - input.odds;
+                maxStakes[i] = numerator / denominator;
+            } else {
+                maxStakes[i] = 0;
+            }
         }
     }
 
