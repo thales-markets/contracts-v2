@@ -457,35 +457,50 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         availableLiquidity = new uint[](len);
 
         for (uint i = 0; i < len; i++) {
-            MarketStakeCalculationInput calldata input = inputs[i];
+            maxStakes[i] = _calculateMaxStakeAndLiquidity(inputs[i], availableLiquidity, i);
+        }
+    }
 
-            // Get cap and risk
-            uint cap = riskManager.calculateCapToBeUsed(
-                input.gameId,
-                input.sportId,
-                input.typeId,
-                input.playerId,
-                input.line,
-                input.maturity,
-                input.isLive
-            );
+    function _calculateMaxStakeAndLiquidity(
+        MarketStakeCalculationInput calldata input,
+        uint[] memory availableLiquidity,
+        uint index
+    ) internal view returns (uint) {
+        // Fetch position-level cap and risk
+        uint cap = riskManager.calculateCapToBeUsed(
+            input.gameId,
+            input.sportId,
+            input.typeId,
+            input.playerId,
+            input.line,
+            input.maturity,
+            input.isLive
+        );
 
-            int risk = riskManager.riskPerMarketTypeAndPosition(input.gameId, input.typeId, input.playerId, input.position);
+        int positionRisk = riskManager.riskPerMarketTypeAndPosition(
+            input.gameId,
+            input.typeId,
+            input.playerId,
+            input.position
+        );
 
-            // Calculate available liquidity (make sure it's not negative)
-            int available = int(cap) - risk;
-            uint availableRisk = available > 0 ? uint(available) : 0;
-            availableLiquidity[i] = availableRisk;
+        int availablePosRisk = int(cap) - positionRisk;
+        uint availablePerPosition = availablePosRisk > 0 ? uint(availablePosRisk) : 0;
+        availableLiquidity[index] = availablePerPosition;
 
-            // Calculate max stake: maxStake = availableRisk * odds / (1 - odds)
-            // Prevent division by zero when odds == 1e18 (100% probability)
-            if (input.odds > 0 && input.odds < 1e18) {
-                uint numerator = availableRisk * input.odds;
-                uint denominator = 1e18 - input.odds;
-                maxStakes[i] = numerator / denominator;
-            } else {
-                maxStakes[i] = 0;
-            }
+        // Fetch game-level cap and spent
+        uint totalGameCap = riskManager.calculateTotalRiskOnGame(input.gameId, input.sportId, input.maturity);
+
+        uint spent = riskManager.spentOnGame(input.gameId);
+        uint availablePerGame = totalGameCap > spent ? totalGameCap - spent : 0;
+
+        if (input.odds > 0 && input.odds < 1e18) {
+            uint denominator = 1e18 - input.odds;
+            uint maxStakePos = (availablePerPosition * input.odds) / denominator;
+            uint maxStakeGame = (availablePerGame * input.odds) / denominator;
+            return maxStakePos < maxStakeGame ? maxStakePos : maxStakeGame;
+        } else {
+            return 0;
         }
     }
 
