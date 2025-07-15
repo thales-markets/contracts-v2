@@ -405,8 +405,8 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         uint _buyInAmount,
         address _collateral
     ) external {
-        (address speedAMM, address chainedAMM) = speedMarketsAMMCreator.getChainedAndSpeedMarketsAMMAddresses();
-        if (msg.sender != address(speedAMM) && msg.sender != address(chainedAMM)) revert CallerNotAllowed();
+        address speedMarketsAMMResolver = speedMarketsAMMCreator.getSpeedMarketsAMMResolver();
+        if (msg.sender != speedMarketsAMMResolver) revert CallerNotAllowed();
         address _user = ticketToUser[_resolvedTicket];
         if (_user == address(0)) revert UnknownTicket();
         if (!activeTicketsPerUser[_user].contains(_resolvedTicket)) revert UnknownActiveTicket();

@@ -79,9 +79,12 @@ contract MockSpeedMarketsAMMCreator {
     address public speedMarketsAMM;
     address public chainedSpeedMarketsAMM;
 
-    constructor(address _owner, address _freeBetsHolder) {
+    address public speedMarketsAMMResolver;
+
+    constructor(address _owner, address _freeBetsHolder, address _speedMarketsAMMResolver) {
         owner = _owner;
         freeBetsHolder = _freeBetsHolder;
+        speedMarketsAMMResolver = _speedMarketsAMMResolver;
         maxCreationDelay = 300; // default 5 minutes
     }
 
@@ -113,7 +116,7 @@ contract MockSpeedMarketsAMMCreator {
 
         // Generate dummy requestId
         requestCounter++;
-        requestId = keccak256(abi.encodePacked("MOCK_REQUEST_", requestCounter, block.timestamp));
+        requestId = keccak256(abi.encode(pendingSpeedMarket));
         requestToSender[requestId] = msg.sender;
     }
 
@@ -199,7 +202,7 @@ contract MockSpeedMarketsAMMCreator {
 
         // Generate dummy requestId
         requestCounter++;
-        requestId = keccak256(abi.encodePacked("MOCK_CHAINED_REQUEST_", requestCounter, block.timestamp));
+        requestId = keccak256(abi.encode(pendingChainedSpeedMarket));
         requestToSender[requestId] = msg.sender;
     }
 
@@ -269,9 +272,8 @@ contract MockSpeedMarketsAMMCreator {
         return pendingChainedSpeedMarkets.length;
     }
 
-    function getChainedAndSpeedMarketsAMMAddresses() external view returns (address chainedAMM, address speedAMM) {
-        chainedAMM = chainedSpeedMarketsAMM;
-        speedAMM = speedMarketsAMM;
+    function getSpeedMarketsAMMResolver() external view returns (address) {
+        return speedMarketsAMMResolver;
     }
 
     //////////////////setters/////////////////

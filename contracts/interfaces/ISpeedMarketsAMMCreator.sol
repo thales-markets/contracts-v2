@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface ISpeedMarketsAMMCreator {
-
     enum Direction {
         Up,
         Down
@@ -67,11 +66,10 @@ interface ISpeedMarketsAMMCreator {
     function getPendingSpeedMarketsSize() external view returns (uint256);
 
     function getPendingChainedSpeedMarketsSize() external view returns (uint256);
-    
+
     function addPendingSpeedMarket(SpeedMarketParams calldata _params) external returns (bytes32);
 
     function addPendingChainedSpeedMarket(ChainedSpeedMarketParams calldata _params) external returns (bytes32);
-    
-    function getChainedAndSpeedMarketsAMMAddresses() external view returns (address chainedAMM, address speedAMM);
 
+    function getSpeedMarketsAMMResolver() external view returns (address);
 }

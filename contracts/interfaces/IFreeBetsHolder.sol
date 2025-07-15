@@ -18,4 +18,11 @@ interface IFreeBetsHolder is IProxyBetting {
         uint _buyinAmount,
         bool _isChained
     ) external;
+
+    function confirmSpeedMarketResolved(
+        address _resolvedTicket,
+        uint _exercized,
+        uint _buyInAmount,
+        address _collateral
+    ) external;
 }

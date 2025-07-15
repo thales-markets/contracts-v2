@@ -30,10 +30,11 @@ describe('FreeBetsHolder Speed Markets', function () {
 
 		// Deploy MockSpeedMarketsAMMCreatorV2
 		const MockSpeedMarketsAMMCreatorV2 = await ethers.getContractFactory(
-			'MockSpeedMarketsAMMCreatorV2'
+			'MockSpeedMarketsAMMCreator'
 		);
 		mockSpeedMarketsAMMCreator = await MockSpeedMarketsAMMCreatorV2.deploy(
 			owner.address,
+			await freeBetsHolder.getAddress(),
 			await freeBetsHolder.getAddress()
 		);
 
@@ -318,9 +319,10 @@ describe('FreeBetsHolder Speed Markets', function () {
 
 		it('Should revert confirmation with unknown request', async function () {
 			// Deploy new mock creator and set it
-			const MockCreatorV2 = await ethers.getContractFactory('MockSpeedMarketsAMMCreatorV2');
+			const MockCreatorV2 = await ethers.getContractFactory('MockSpeedMarketsAMMCreator');
 			const newMockCreator = await MockCreatorV2.deploy(
 				owner.address,
+				await freeBetsHolder.getAddress(),
 				await freeBetsHolder.getAddress()
 			);
 			await freeBetsHolder.setSpeedMarketsAMMCreator(await newMockCreator.getAddress());
@@ -549,9 +551,10 @@ describe('FreeBetsHolder Speed Markets', function () {
 
 		it('Should handle zero collateral address (default collateral)', async function () {
 			// Set up a new mock creator that can trigger confirmations with zero address
-			const MockCreatorV2 = await ethers.getContractFactory('MockSpeedMarketsAMMCreatorV2');
+			const MockCreatorV2 = await ethers.getContractFactory('MockSpeedMarketsAMMCreator');
 			const customMockCreator = await MockCreatorV2.deploy(
 				owner.address,
+				await freeBetsHolder.getAddress(),
 				await freeBetsHolder.getAddress()
 			);
 			await freeBetsHolder.setSpeedMarketsAMMCreator(await customMockCreator.getAddress());
