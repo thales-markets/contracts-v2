@@ -444,10 +444,10 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     /**
      * @notice Calculates max stake and available liquidity for each market+position input.
-     * @dev Returns two arrays: maxStake and availableLiquidity, both 18 decimals.
+     * @dev Returns two arrays: maxStake and availableLiquidity, both on decimals matching the default collateral.
      * @param inputs Array of market definitions and odds.
-     * @return maxStakes Array of maximum stake values (18 decimals).
-     * @return availableLiquidity Array of available risk the house is willing to take (18 decimals).
+     * @return maxStakes Array of maximum stake values.
+     * @return availableLiquidity Array of available risk the house is willing to take.
      */
     function getMaxStakeAndLiquidityBatch(
         MarketStakeCalculationInput[] calldata inputs
