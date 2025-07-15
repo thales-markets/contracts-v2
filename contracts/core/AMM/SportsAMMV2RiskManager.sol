@@ -680,16 +680,14 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
                 cap = sportCap;
 
                 if (_typeId > 0) {
+                    cap = capPerSportAndType[_sportId][_typeId];
                     // Check for explicitly set moneyline market cap
                     uint moneylineMarketCap = capPerMarket[_gameId][0][0][0];
                     if (moneylineMarketCap > 0) {
-                        cap = moneylineMarketCap / 2;
-                    } else {
-                        cap = capPerSportAndType[_sportId][_typeId];
-                        if (cap == 0) {
-                            uint childCap = capPerSportChild[_sportId];
-                            cap = childCap > 0 ? childCap : sportCap / 2;
-                        }
+                        cap = moneylineMarketCap / 2 < cap ? moneylineMarketCap / 2 : cap;
+                    } else if (cap == 0) {
+                        uint childCap = capPerSportChild[_sportId];
+                        cap = childCap > 0 ? childCap : sportCap / 2;
                     }
                 }
             }
