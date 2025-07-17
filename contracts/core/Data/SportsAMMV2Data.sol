@@ -72,6 +72,18 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         int24 line;
     }
 
+    struct MarketStakeCalculationInput {
+        bytes32 gameId;
+        uint16 sportId;
+        uint16 typeId;
+        uint24 playerId;
+        int24 line;
+        uint maturity;
+        bool isLive;
+        uint8 position;
+        uint odds; // implied odds in 18 decimals
+    }
+
     enum ResultType {
         Unassigned,
         ExactPosition,
@@ -427,6 +439,68 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 _playerIds[i],
                 _positions[i]
             );
+        }
+    }
+
+    /**
+     * @notice Calculates max stake and available liquidity for each market+position input.
+     * @dev Returns two arrays: maxStake and availableLiquidity, both on decimals matching the default collateral.
+     * @param inputs Array of market definitions and odds.
+     * @return maxStakes Array of maximum stake values.
+     * @return availableLiquidity Array of available risk the house is willing to take.
+     */
+    function getMaxStakeAndLiquidityBatch(
+        MarketStakeCalculationInput[] calldata inputs
+    ) external view returns (uint[] memory maxStakes, uint[] memory availableLiquidity) {
+        uint len = inputs.length;
+        maxStakes = new uint[](len);
+        availableLiquidity = new uint[](len);
+
+        for (uint i = 0; i < len; i++) {
+            maxStakes[i] = _calculateMaxStakeAndLiquidity(inputs[i], availableLiquidity, i);
+        }
+    }
+
+    function _calculateMaxStakeAndLiquidity(
+        MarketStakeCalculationInput calldata input,
+        uint[] memory availableLiquidity,
+        uint index
+    ) internal view returns (uint) {
+        // Fetch position-level cap and risk
+        uint cap = riskManager.calculateCapToBeUsed(
+            input.gameId,
+            input.sportId,
+            input.typeId,
+            input.playerId,
+            input.line,
+            input.maturity,
+            input.isLive
+        );
+
+        int positionRisk = riskManager.riskPerMarketTypeAndPosition(
+            input.gameId,
+            input.typeId,
+            input.playerId,
+            input.position
+        );
+
+        int availablePosRisk = int(cap) - positionRisk;
+        uint availablePerPosition = availablePosRisk > 0 ? uint(availablePosRisk) : 0;
+        availableLiquidity[index] = availablePerPosition;
+
+        // Fetch game-level cap and spent
+        uint totalGameCap = riskManager.calculateTotalRiskOnGame(input.gameId, input.sportId, input.maturity);
+
+        uint spent = riskManager.spentOnGame(input.gameId);
+        uint availablePerGame = totalGameCap > spent ? totalGameCap - spent : 0;
+
+        if (input.odds > 0 && input.odds < 1e18) {
+            uint denominator = 1e18 - input.odds;
+            uint maxStakePos = (availablePerPosition * input.odds) / denominator;
+            uint maxStakeGame = (availablePerGame * input.odds) / denominator;
+            return maxStakePos < maxStakeGame ? maxStakePos : maxStakeGame;
+        } else {
+            return 0;
         }
     }
 

@@ -854,6 +854,77 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLive",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "odds",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SportsAMMV2Data.MarketStakeCalculationInput[]",
+        "name": "inputs",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "getMaxStakeAndLiquidityBatch",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "maxStakes",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "availableLiquidity",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32[]",
         "name": "_gameIds",
         "type": "bytes32[]"
