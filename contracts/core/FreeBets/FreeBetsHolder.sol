@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
 import "../../interfaces/ISpeedMarketsAMMCreator.sol";
 
@@ -80,7 +81,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     mapping(address => AddressSetLib.AddressSet) internal usersWithFreeBetPerCollateral;
 
-    ISpeedMarketsAMMCreator public speedMarketsAMMCreator;
+    IAddressManager public addressManager;
 
     mapping(address => TicketType) public ticketType;
 
@@ -308,9 +309,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function tradeSpeedMarket(
         ISpeedMarketsAMMCreator.SpeedMarketParams calldata _params
     ) external notPaused nonReentrant canTrade(msg.sender, _params.collateral, _params.buyinAmount) {
-        if (address(speedMarketsAMMCreator) == address(0)) revert SpeedMarketsAMMCreatorNotSet();
+        address speedMarketsAMMCreator = addressManager.getAddress("SpeedMarketsAMMCreator");
+        if (speedMarketsAMMCreator == address(0)) revert SpeedMarketsAMMCreatorNotSet();
 
-        bytes32 _requestId = speedMarketsAMMCreator.addPendingSpeedMarket(_params);
+        bytes32 _requestId = ISpeedMarketsAMMCreator(speedMarketsAMMCreator).addPendingSpeedMarket(_params);
         speedMarketRequestToUser[_requestId] = msg.sender;
         emit FreeBetSpeedMarketTradeRequested(
             msg.sender,
@@ -326,12 +328,11 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     function tradeChainedSpeedMarket(
         ISpeedMarketsAMMCreator.ChainedSpeedMarketParams calldata _params
     ) external notPaused nonReentrant canTrade(msg.sender, _params.collateral, _params.buyinAmount) {
-        if (address(speedMarketsAMMCreator) == address(0)) revert SpeedMarketsAMMCreatorNotSet();
+        address speedMarketsAMMCreator = addressManager.getAddress("SpeedMarketsAMMCreator");
+        if (speedMarketsAMMCreator == address(0)) revert SpeedMarketsAMMCreatorNotSet();
         if (_params.directions.length == 0) revert DirectionsCannotBeEmpty();
 
-        balancePerUserAndCollateral[msg.sender][_params.collateral] -= _params.buyinAmount;
-
-        bytes32 _requestId = speedMarketsAMMCreator.addPendingChainedSpeedMarket(_params);
+        bytes32 _requestId = ISpeedMarketsAMMCreator(speedMarketsAMMCreator).addPendingChainedSpeedMarket(_params);
         speedMarketRequestToUser[_requestId] = msg.sender;
         emit FreeBetChainedSpeedMarketTradeRequested(
             msg.sender,
@@ -360,7 +361,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         uint _buyInAmount,
         bool _isChainedSpeedMarket
     ) internal {
-        if (msg.sender != address(speedMarketsAMMCreator)) revert OnlyCallableFromSpeedMarketsAMMCreator();
+        address speedMarketsAMMCreator = addressManager.getAddress("SpeedMarketsAMMCreator");
+        if (speedMarketsAMMCreator == address(0)) revert SpeedMarketsAMMCreatorNotSet();
+        if (msg.sender != speedMarketsAMMCreator) revert OnlyCallableFromSpeedMarketsAMMCreator();
         if (_collateral == address(0)) {
             _collateral = address(sportsAMM.defaultCollateral());
         }
@@ -405,7 +408,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         uint _buyInAmount,
         address _collateral
     ) external {
-        address speedMarketsAMMResolver = speedMarketsAMMCreator.getSpeedMarketsAMMResolver();
+        address speedMarketsAMMResolver = addressManager.getAddress("SpeedMarketsAMMResolver");
         if (msg.sender != speedMarketsAMMResolver) revert CallerNotAllowed();
         address _user = ticketToUser[_resolvedTicket];
         if (_user == address(0)) revert UnknownTicket();
@@ -587,12 +590,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         }
     }
 
-    /// @notice sets the Speed Markets AMM Creator contract address
-    /// @param _speedMarketsAMMCreator the address of Speed Markets AMM Creator contract
-    function setSpeedMarketsAMMCreator(address _speedMarketsAMMCreator) external onlyOwner {
-        if (_speedMarketsAMMCreator == address(0)) revert InvalidAddress();
-        speedMarketsAMMCreator = ISpeedMarketsAMMCreator(_speedMarketsAMMCreator);
-        emit SetSpeedMarketsAMMCreator(_speedMarketsAMMCreator);
+    /// @notice sets the Address Manager contract address
+    /// @param _addressManager the address of Address Manager contract
+    function setAddressManager(address _addressManager) external onlyOwner {
+        if (_addressManager == address(0)) revert InvalidAddress();
+        addressManager = IAddressManager(_addressManager);
+        emit SetAddressManager(_addressManager);
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -659,7 +662,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event SetSportsAMM(address sportsAMM);
     event SetLiveTradingProcessor(address liveTradingProcessor);
     event SetSGPTradingProcessor(address sgpTradingProcessor);
-    event SetSpeedMarketsAMMCreator(address speedMarketsAMMCreator);
+    event SetAddressManager(address addressManager);
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event CollateralSupportChanged(address collateral, bool supported);

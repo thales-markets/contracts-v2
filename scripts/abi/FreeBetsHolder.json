@@ -406,6 +406,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "addressManager",
+        "type": "address"
+      }
+    ],
+    "name": "SetAddressManager",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "freeBetExpirationPeriod",
         "type": "uint256"
@@ -444,19 +457,6 @@
       }
     ],
     "name": "SetSGPTradingProcessor",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "speedMarketsAMMCreator",
-        "type": "address"
-      }
-    ],
-    "name": "SetSpeedMarketsAMMCreator",
     "type": "event"
   },
   {
@@ -557,6 +557,19 @@
     "name": "addSupportedCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "addressManager",
+    "outputs": [
+      {
+        "internalType": "contract IAddressManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1257,6 +1270,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_addressManager",
+        "type": "address"
+      }
+    ],
+    "name": "setAddressManager",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_freeBetExpirationPeriod",
         "type": "uint256"
@@ -1320,19 +1346,6 @@
       }
     ],
     "name": "setSGPTradingProcessor",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_speedMarketsAMMCreator",
-        "type": "address"
-      }
-    ],
-    "name": "setSpeedMarketsAMMCreator",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1435,19 +1448,6 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "speedMarketsAMMCreator",
-    "outputs": [
-      {
-        "internalType": "contract ISpeedMarketsAMMCreator",
         "name": "",
         "type": "address"
       }
