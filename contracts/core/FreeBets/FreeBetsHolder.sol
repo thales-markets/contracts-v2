@@ -379,7 +379,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         activeTicketsPerUser[_user].add(_createdTicket);
         delete speedMarketRequestToUser[requestId];
 
-        emit FreeBetTrade(_createdTicket, _buyInAmount, _user, true);
+        emit FreeBetTrade(_createdTicket, _buyInAmount, _user, false);
     }
 
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes to the contract owner
@@ -598,6 +598,18 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit SetAddressManager(_addressManager);
     }
 
+    function updateMaxApprovalSpeedMarketsAMM(address _collateral) external onlyOwner {
+        address speedMarketsAMM = addressManager.getAddress("SpeedMarketsAMM");
+        address chainSpeedMarketsAMM = addressManager.getAddress("ChainedSpeedMarketsAMM");
+        if (speedMarketsAMM != address(0)) {
+            IERC20(_collateral).approve(speedMarketsAMM, MAX_APPROVAL);
+        }
+        if (chainSpeedMarketsAMM != address(0)) {
+            IERC20(_collateral).approve(chainSpeedMarketsAMM, MAX_APPROVAL);
+        }
+        emit UpdateMaxApprovalSpeedMarketsAMM(_collateral);
+    }
+
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _resolveMarket(
@@ -687,4 +699,5 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     );
     event UserFundingRemoved(address _user, address _collateral, address _receiver, uint _amount);
     event SetFreeBetExpirationPeriod(uint freeBetExpirationPeriod, uint freeBetExpirationUpgrade);
+    event UpdateMaxApprovalSpeedMarketsAMM(address collateral);
 }

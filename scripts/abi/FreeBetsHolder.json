@@ -478,6 +478,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateMaxApprovalSpeedMarketsAMM",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "user",
         "type": "address"
       },
@@ -2067,6 +2080,19 @@
       }
     ],
     "name": "transferOwnershipAtInit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      }
+    ],
+    "name": "updateMaxApprovalSpeedMarketsAMM",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
