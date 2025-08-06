@@ -392,6 +392,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			);
 
 			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0);
+			expect(userBalanceAfter - userBalanceBefore).to.equal(0);
 			expect(freeBetBalanceAfter - freeBetBalanceBefore).to.equal(BUY_IN_AMOUNT);
 
 			const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader);
