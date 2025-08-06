@@ -718,6 +718,61 @@ describe('FreeBetsHolder Speed Markets', function () {
 		});
 	});
 
+	describe('Approval Management', function () {
+		it('Should update approval for SpeedMarketsAMM and ChainedSpeedMarketsAMM', async function () {
+			// Deploy dummy signer addresses for SpeedMarketsAMM and ChainedSpeedMarketsAMM
+			const dummySpeedMarketsAMM = ethers.Wallet.createRandom();
+			const dummyChainedSpeedMarketsAMM = ethers.Wallet.createRandom();
+
+			// Set the dummy addresses in AddressManager
+			await addressManager.setAddressInAddressBook('SpeedMarketsAMM', dummySpeedMarketsAMM.address);
+			await addressManager.setAddressInAddressBook(
+				'ChainedSpeedMarketsAMM',
+				dummyChainedSpeedMarketsAMM.address
+			);
+
+			// Check initial allowance (should be 0)
+			const initialAllowanceSpeed = await collateral.allowance(
+				await freeBetsHolder.getAddress(),
+				dummySpeedMarketsAMM.address
+			);
+			const initialAllowanceChained = await collateral.allowance(
+				await freeBetsHolder.getAddress(),
+				dummyChainedSpeedMarketsAMM.address
+			);
+			expect(initialAllowanceSpeed).to.equal(0);
+			expect(initialAllowanceChained).to.equal(0);
+
+			// Call updateApprovalForSpeedMarketsAMM
+			const tx = await freeBetsHolder.updateApprovalForSpeedMarketsAMM(collateralAddress);
+
+			// Check event emission
+			await expect(tx)
+				.to.emit(freeBetsHolder, 'UpdateMaxApprovalSpeedMarketsAMM')
+				.withArgs(collateralAddress);
+
+			// Check that approvals are set to MAX_APPROVAL
+			const MAX_APPROVAL = ethers.MaxUint256;
+			const finalAllowanceSpeed = await collateral.allowance(
+				await freeBetsHolder.getAddress(),
+				dummySpeedMarketsAMM.address
+			);
+			const finalAllowanceChained = await collateral.allowance(
+				await freeBetsHolder.getAddress(),
+				dummyChainedSpeedMarketsAMM.address
+			);
+			expect(finalAllowanceSpeed).to.equal(MAX_APPROVAL);
+			expect(finalAllowanceChained).to.equal(MAX_APPROVAL);
+		});
+
+		it('Should only allow owner to update approval for SpeedMarketsAMM', async function () {
+			// Try to call updateApprovalForSpeedMarketsAMM as non-owner
+			await expect(
+				freeBetsHolder.connect(firstTrader).updateApprovalForSpeedMarketsAMM(collateralAddress)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+		});
+	});
+
 	describe('Edge Cases', function () {
 		it('Should handle maximum creation delay timeout', async function () {
 			const speedMarketParams = {

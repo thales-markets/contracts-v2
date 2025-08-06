@@ -598,7 +598,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit SetAddressManager(_addressManager);
     }
 
-    function updateMaxApprovalSpeedMarketsAMM(address _collateral) external onlyOwner {
+    function updateApprovalForSpeedMarketsAMM(address _collateral) external onlyOwner {
         address speedMarketsAMM = addressManager.getAddress("SpeedMarketsAMM");
         address chainSpeedMarketsAMM = addressManager.getAddress("ChainedSpeedMarketsAMM");
         if (speedMarketsAMM != address(0)) {

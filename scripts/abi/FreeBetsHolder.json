@@ -2092,7 +2092,7 @@
         "type": "address"
       }
     ],
-    "name": "updateMaxApprovalSpeedMarketsAMM",
+    "name": "updateApprovalForSpeedMarketsAMM",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
