@@ -87,6 +87,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     mapping(bytes32 => address) public speedMarketRequestToUser;
 
+    // stores active tickets per user
+    mapping(address => AddressSetLib.AddressSet) internal activeSpeedMarketsPerUser;
+
+    // stores resolved tickets per user
+    mapping(address => AddressSetLib.AddressSet) internal resolvedSpeedMarketsPerUser;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner, address _sportsAMMV2, address _liveTradingProcessor) external initializer {
@@ -356,7 +362,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     function _confirmSpeedOrChainedSpeedMarketTrade(
         bytes32 requestId,
-        address _createdTicket,
+        address _createdSpeedMarket,
         address _collateral,
         uint _buyInAmount,
         bool _isChainedSpeedMarket
@@ -374,12 +380,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (balancePerUserAndCollateral[_user][_collateral] < _buyInAmount) revert InsufficientBalance();
 
         balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
-        ticketToUser[_createdTicket] = _user;
-        ticketType[_createdTicket] = _isChainedSpeedMarket ? TicketType.CHAINED_SPEED_MARKET : TicketType.SPEED_MARKET;
-        activeTicketsPerUser[_user].add(_createdTicket);
+        ticketToUser[_createdSpeedMarket] = _user;
+        ticketType[_createdSpeedMarket] = _isChainedSpeedMarket ? TicketType.CHAINED_SPEED_MARKET : TicketType.SPEED_MARKET;
+        activeSpeedMarketsPerUser[_user].add(_createdSpeedMarket);
         delete speedMarketRequestToUser[requestId];
 
-        emit FreeBetTrade(_createdTicket, _buyInAmount, _user, false);
+        emit FreeBetSpeedTrade(_createdSpeedMarket, _buyInAmount, _user);
     }
 
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes to the contract owner
@@ -403,22 +409,22 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     function confirmSpeedMarketResolved(
-        address _resolvedTicket,
+        address _resolvedSpeedMarket,
         uint _exercized,
         uint _buyInAmount,
         address _collateral
     ) external {
         address speedMarketsAMMResolver = addressManager.getAddress("SpeedMarketsAMMResolver");
         if (msg.sender != speedMarketsAMMResolver) revert CallerNotAllowed();
-        address _user = ticketToUser[_resolvedTicket];
+        address _user = ticketToUser[_resolvedSpeedMarket];
         if (_user == address(0)) revert UnknownTicket();
-        if (!activeTicketsPerUser[_user].contains(_resolvedTicket)) revert UnknownActiveTicket();
+        if (!activeSpeedMarketsPerUser[_user].contains(_resolvedSpeedMarket)) revert UnknownActiveTicket();
         uint earned = _resolveMarket(_user, IERC20(_collateral), _exercized, _buyInAmount);
 
-        activeTicketsPerUser[_user].remove(_resolvedTicket);
-        resolvedTicketsPerUser[_user].add(_resolvedTicket);
+        activeSpeedMarketsPerUser[_user].remove(_resolvedSpeedMarket);
+        resolvedSpeedMarketsPerUser[_user].add(_resolvedSpeedMarket);
 
-        emit FreeBetTicketResolved(_resolvedTicket, _user, earned);
+        emit FreeBetSpeedMarketResolved(_resolvedSpeedMarket, _user, earned);
     }
 
     /// @notice admin method to retrieve stuck funds if needed
@@ -448,11 +454,31 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         return activeTicketsPerUser[_user].getPage(_index, _pageSize);
     }
 
+    /// @notice gets batch of active speed markets per user
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _user to get active speed markets for
+    /// @return activeSpeedMarkets
+    function getActiveSpeedMarketsPerUser(
+        uint _index,
+        uint _pageSize,
+        address _user
+    ) external view returns (address[] memory) {
+        return activeSpeedMarketsPerUser[_user].getPage(_index, _pageSize);
+    }
+
     /// @notice gets number of active tickets per user
     /// @param _user to get number of active tickets for
     /// @return numOfActiveTickets
     function numOfActiveTicketsPerUser(address _user) external view returns (uint) {
         return activeTicketsPerUser[_user].elements.length;
+    }
+
+    /// @notice gets number of active speed markets per user
+    /// @param _user to get number of active speed markets for
+    /// @return numOfActiveSpeedMarkets
+    function numOfActiveSpeedMarketsPerUser(address _user) external view returns (uint) {
+        return activeSpeedMarketsPerUser[_user].elements.length;
     }
 
     /// @notice gets batch of resolved tickets per user
@@ -464,11 +490,31 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         return resolvedTicketsPerUser[_user].getPage(_index, _pageSize);
     }
 
+    /// @notice gets batch of resolved speed markets per user
+    /// @param _index start index
+    /// @param _pageSize batch size
+    /// @param _user to get resolved speed markets for
+    /// @return resolvedSpeedMarkets
+    function getResolvedSpeedMarketsPerUser(
+        uint _index,
+        uint _pageSize,
+        address _user
+    ) external view returns (address[] memory) {
+        return resolvedSpeedMarketsPerUser[_user].getPage(_index, _pageSize);
+    }
+
     /// @notice gets number of resolved tickets per user
     /// @param _user to get number of resolved tickets for
     /// @return numOfResolvedTickets
     function numOfResolvedTicketsPerUser(address _user) external view returns (uint) {
         return resolvedTicketsPerUser[_user].elements.length;
+    }
+
+    /// @notice gets number of resolved speed markets per user
+    /// @param _user to get number of resolved speed markets for
+    /// @return numOfResolvedSpeedMarkets
+    function numOfResolvedSpeedMarketsPerUser(address _user) external view returns (uint) {
+        return resolvedSpeedMarketsPerUser[_user].elements.length;
     }
 
     /// @notice checks if a free bet is valid
@@ -677,8 +723,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event SetAddressManager(address addressManager);
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
+    event FreeBetSpeedTrade(address createdSpeedMarket, uint buyInAmount, address user);
     event CollateralSupportChanged(address collateral, bool supported);
     event FreeBetTicketResolved(address ticket, address user, uint earned);
+    event FreeBetSpeedMarketResolved(address speedMarket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event FreeBetSGPTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event FreeBetSpeedMarketTradeRequested(

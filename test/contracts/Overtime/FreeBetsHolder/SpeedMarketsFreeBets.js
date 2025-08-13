@@ -135,9 +135,11 @@ describe('FreeBetsHolder Speed Markets', function () {
 			);
 			expect(balanceAfterConfirm).to.equal(initialBalance - BUY_IN_AMOUNT);
 
-			// Check active tickets
-			const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader.address);
-			expect(numActiveTickets).to.equal(1);
+			// Check active speed markets
+			const numActiveSpeedMarkets = await freeBetsHolder.numOfActiveSpeedMarketsPerUser(
+				firstTrader.address
+			);
+			expect(numActiveSpeedMarkets).to.equal(1);
 		});
 
 		it('Should revert if speed markets AMM creator not set', async function () {
@@ -252,17 +254,19 @@ describe('FreeBetsHolder Speed Markets', function () {
 			);
 			expect(balanceAfterConfirm).to.equal(initialBalance - BUY_IN_AMOUNT);
 
-			// Check active tickets
-			const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader.address);
-			expect(numActiveTickets).to.equal(1);
+			// Check active speed markets
+			const numActiveSpeedMarkets = await freeBetsHolder.numOfActiveSpeedMarketsPerUser(
+				firstTrader.address
+			);
+			expect(numActiveSpeedMarkets).to.equal(1);
 
-			// Verify ticket type is CHAINED_SPEED_MARKET
-			const activeTickets = await freeBetsHolder.getActiveTicketsPerUser(
+			// Verify speed market type is CHAINED_SPEED_MARKET
+			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
-			const ticketType = await freeBetsHolder.ticketType(activeTickets[0]);
+			const ticketType = await freeBetsHolder.ticketType(activeSpeedMarkets[0]);
 			expect(ticketType).to.equal(2); // CHAINED_SPEED_MARKET
 		});
 
@@ -419,9 +423,9 @@ describe('FreeBetsHolder Speed Markets', function () {
 			// Create all markets
 			await mockSpeedMarketsAMMCreator.createFromPendingSpeedMarkets([]);
 
-			// Check both users have active tickets
-			expect(await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader.address)).to.equal(1);
-			expect(await freeBetsHolder.numOfActiveTicketsPerUser(secondTrader.address)).to.equal(1);
+			// Check both users have active speed markets
+			expect(await freeBetsHolder.numOfActiveSpeedMarketsPerUser(firstTrader.address)).to.equal(1);
+			expect(await freeBetsHolder.numOfActiveSpeedMarketsPerUser(secondTrader.address)).to.equal(1);
 		});
 
 		it('Should handle mixed speed and chained speed markets', async function () {
@@ -466,25 +470,25 @@ describe('FreeBetsHolder Speed Markets', function () {
 			await mockSpeedMarketsAMMCreator.createFromPendingSpeedMarkets([]);
 			await mockSpeedMarketsAMMCreator.createFromPendingChainedSpeedMarkets([]);
 
-			// Verify tickets
-			const firstTraderTickets = await freeBetsHolder.getActiveTicketsPerUser(
+			// Verify speed markets
+			const firstTraderSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
-			const secondTraderTickets = await freeBetsHolder.getActiveTicketsPerUser(
+			const secondTraderSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
 				0,
 				10,
 				secondTrader.address
 			);
 
-			expect(await freeBetsHolder.ticketType(firstTraderTickets[0])).to.equal(1); // SPEED_MARKET
-			expect(await freeBetsHolder.ticketType(secondTraderTickets[0])).to.equal(2); // CHAINED_SPEED_MARKET
+			expect(await freeBetsHolder.ticketType(firstTraderSpeedMarkets[0])).to.equal(1); // SPEED_MARKET
+			expect(await freeBetsHolder.ticketType(secondTraderSpeedMarkets[0])).to.equal(2); // CHAINED_SPEED_MARKET
 		});
 	});
 
-	describe('Ticket Resolution', function () {
-		it('Should handle speed market ticket resolution', async function () {
+	describe('Speed Market Resolution', function () {
+		it('Should handle speed market speed market resolution', async function () {
 			// Create speed market
 			const speedMarketParams = {
 				asset: ethers.encodeBytes32String('ETH'),
@@ -502,23 +506,23 @@ describe('FreeBetsHolder Speed Markets', function () {
 			await freeBetsHolder.connect(firstTrader).tradeSpeedMarket(speedMarketParams);
 			await mockSpeedMarketsAMMCreator.createFromPendingSpeedMarkets([]);
 
-			// Get created ticket address
-			const activeTickets = await freeBetsHolder.getActiveTicketsPerUser(
+			// Get created speed markets address
+			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
-			const ticketAddress = activeTickets[0];
+			const speedMarketsAddress = activeSpeedMarkets[0];
 
-			// Mock ticket resolution (would normally be done by speed markets AMM)
-			// Note: This would require additional mock setup for the ticket contract
-			// For now, we verify the ticket exists and has correct type
-			const ticketType = await freeBetsHolder.ticketType(ticketAddress);
+			// Mock speed market resolution (would normally be done by speed markets AMM)
+			// Note: This would require additional mock setup for the speed market contract
+			// For now, we verify the speed market exists and has correct type
+			const ticketType = await freeBetsHolder.ticketType(speedMarketsAddress);
 			expect(ticketType).to.equal(1); // SPEED_MARKET
 
-			// Verify ticket ownership
-			const ticketOwner = await freeBetsHolder.ticketToUser(ticketAddress);
-			expect(ticketOwner).to.equal(firstTrader.address);
+			// Verify speed market ownership
+			const speedMarketOwner = await freeBetsHolder.ticketToUser(speedMarketsAddress);
+			expect(speedMarketOwner).to.equal(firstTrader.address);
 		});
 
 		it('Should handle speed market resolution through confirmSpeedMarketResolved', async function () {
@@ -539,40 +543,42 @@ describe('FreeBetsHolder Speed Markets', function () {
 			await freeBetsHolder.connect(firstTrader).tradeSpeedMarket(speedMarketParams);
 			await mockSpeedMarketsAMMCreator.createFromPendingSpeedMarkets([]);
 
-			// Get created ticket address
-			const activeTickets = await freeBetsHolder.getActiveTicketsPerUser(
+			// Get created speed market address
+			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
-			const ticketAddress = activeTickets[0];
+			const speedMarketAddress = activeSpeedMarkets[0];
 
 			// Use the mock resolver from beforeEach
 			const mockResolver = mockSpeedMarketsAMMResolver;
 
 			// Set up the free bets holder mapping and dummy values
 			await mockResolver.setMarketUserAsFreeBetsHolder(
-				ticketAddress,
+				speedMarketAddress,
 				await freeBetsHolder.getAddress()
 			);
 			await mockResolver.setDummyValues(BUY_IN_AMOUNT, collateralAddress, BUY_IN_AMOUNT * 2n);
 
 			// Resolve the market
-			await mockResolver.resolveMarket(ticketAddress, []);
+			await mockResolver.resolveMarket(speedMarketAddress, []);
 
-			// Check ticket moved from active to resolved
-			const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader.address);
-			expect(numActiveTickets).to.equal(0);
-
-			const numResolvedTickets = await freeBetsHolder.numOfResolvedTicketsPerUser(
+			// Check speed market moved from active to resolved
+			const numActiveSpeedMarkets = await freeBetsHolder.numOfActiveSpeedMarketsPerUser(
 				firstTrader.address
 			);
-			expect(numResolvedTickets).to.equal(1);
+			expect(numActiveSpeedMarkets).to.equal(0);
+
+			const numResolvedSpeedMarkets = await freeBetsHolder.numOfResolvedSpeedMarketsPerUser(
+				firstTrader.address
+			);
+			expect(numResolvedSpeedMarkets).to.equal(1);
 
 			// Test revert if not called by resolver
 			await expect(
 				freeBetsHolder.confirmSpeedMarketResolved(
-					firstTrader.address, // invalid ticket
+					firstTrader.address, // invalid speed market
 					BUY_IN_AMOUNT,
 					BUY_IN_AMOUNT,
 					collateralAddress
@@ -580,7 +586,7 @@ describe('FreeBetsHolder Speed Markets', function () {
 			).to.be.revertedWithCustomError(freeBetsHolder, 'CallerNotAllowed');
 		});
 
-		it('Should emit FreeBetTicketResolved event when speed market is resolved', async function () {
+		it('Should emit FreeBetSpeedMarketResolved event when speed market is resolved', async function () {
 			// Create speed market
 			const speedMarketParams = {
 				asset: ethers.encodeBytes32String('ETH'),
@@ -598,35 +604,35 @@ describe('FreeBetsHolder Speed Markets', function () {
 			await freeBetsHolder.connect(firstTrader).tradeSpeedMarket(speedMarketParams);
 			await mockSpeedMarketsAMMCreator.createFromPendingSpeedMarkets([]);
 
-			// Get created ticket address
-			const activeTickets = await freeBetsHolder.getActiveTicketsPerUser(
+			// Get created speed market address
+			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
-			const ticketAddress = activeTickets[0];
+			const speedMarketAddress = activeSpeedMarkets[0];
 
 			// Use the mock resolver from beforeEach
 			const mockResolver = mockSpeedMarketsAMMResolver;
 
 			// Set up the free bets holder mapping and dummy values for a winning market
 			await mockResolver.setMarketUserAsFreeBetsHolder(
-				ticketAddress,
+				speedMarketAddress,
 				await freeBetsHolder.getAddress()
 			);
 			const winAmount = BUY_IN_AMOUNT * 2n; // 2x payout (profit)
 			await mockResolver.setDummyValues(BUY_IN_AMOUNT, collateralAddress, winAmount);
 
 			// Resolve the market and check event
-			const tx = await mockResolver.resolveMarket(ticketAddress, []);
+			const tx = await mockResolver.resolveMarket(speedMarketAddress, []);
 
-			// Check that FreeBetTicketResolved event was emitted with correct parameters
+			// Check that FreeBetSpeedMarketResolved event was emitted with correct parameters
 			await expect(tx)
-				.to.emit(freeBetsHolder, 'FreeBetTicketResolved')
-				.withArgs(ticketAddress, firstTrader.address, winAmount - BUY_IN_AMOUNT); // earned = payout - buyInAmount
+				.to.emit(freeBetsHolder, 'FreeBetSpeedMarketResolved')
+				.withArgs(speedMarketAddress, firstTrader.address, winAmount - BUY_IN_AMOUNT); // earned = payout - buyInAmount
 		});
 
-		it('Should emit FreeBetTicketResolved event when chained speed market is resolved', async function () {
+		it('Should emit FreeBetSpeedMarketResolved event when chained speed market is resolved', async function () {
 			// Create chained speed market
 			const chainedMarketParams = {
 				asset: ethers.encodeBytes32String('BTC'),
@@ -642,21 +648,21 @@ describe('FreeBetsHolder Speed Markets', function () {
 			await freeBetsHolder.connect(firstTrader).tradeChainedSpeedMarket(chainedMarketParams);
 			await mockSpeedMarketsAMMCreator.createFromPendingChainedSpeedMarkets([]);
 
-			// Get created ticket address
-			const activeTickets = await freeBetsHolder.getActiveTicketsPerUser(
+			// Get created speed market address
+			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
-			const ticketAddress = activeTickets[0];
+			const speedMarketAddress = activeSpeedMarkets[0];
 
 			// Verify it's a chained speed market
-			const ticketType = await freeBetsHolder.ticketType(ticketAddress);
+			const ticketType = await freeBetsHolder.ticketType(speedMarketAddress);
 			expect(ticketType).to.equal(2); // CHAINED_SPEED_MARKET
 
 			// Set up the free bets holder mapping and dummy values for a losing market
 			await mockSpeedMarketsAMMResolver.setMarketUserAsFreeBetsHolder(
-				ticketAddress,
+				speedMarketAddress,
 				await freeBetsHolder.getAddress()
 			);
 			const loseAmount = 0n; // No payout for losing
@@ -667,12 +673,12 @@ describe('FreeBetsHolder Speed Markets', function () {
 			);
 
 			// Resolve the market and check event
-			const tx = await mockSpeedMarketsAMMResolver.resolveChainedMarket(ticketAddress, [[]]);
+			const tx = await mockSpeedMarketsAMMResolver.resolveChainedMarket(speedMarketAddress, [[]]);
 
-			// Check that FreeBetTicketResolved event was emitted with 0 earned for losing bet
+			// Check that FreeBetSpeedMarketResolved event was emitted with 0 earned for losing bet
 			await expect(tx)
-				.to.emit(freeBetsHolder, 'FreeBetTicketResolved')
-				.withArgs(ticketAddress, firstTrader.address, 0);
+				.to.emit(freeBetsHolder, 'FreeBetSpeedMarketResolved')
+				.withArgs(speedMarketAddress, firstTrader.address, 0);
 		});
 
 		it('Should track request to user mapping correctly', async function () {
@@ -804,9 +810,11 @@ describe('FreeBetsHolder Speed Markets', function () {
 			// The fixture has already funded the user, just check balance didn't change
 			expect(balance).to.be.gte(BUY_IN_AMOUNT * 2n);
 
-			// No active tickets should exist
-			const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader.address);
-			expect(numActiveTickets).to.equal(0);
+			// No active speed markets should exist
+			const numActiveSpeedMarkets = await freeBetsHolder.numOfActiveSpeedMarketsPerUser(
+				firstTrader.address
+			);
+			expect(numActiveSpeedMarkets).to.equal(0);
 		});
 
 		it('Should handle zero collateral address (default collateral)', async function () {
