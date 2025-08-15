@@ -87,10 +87,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     mapping(bytes32 => address) public speedMarketRequestToUser;
 
-    // stores active tickets per user
+    // stores active speed markets per user
     mapping(address => AddressSetLib.AddressSet) internal activeSpeedMarketsPerUser;
 
-    // stores resolved tickets per user
+    // stores resolved speed markets per user
     mapping(address => AddressSetLib.AddressSet) internal resolvedSpeedMarketsPerUser;
 
     /* ========== CONSTRUCTOR ========== */
