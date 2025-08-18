@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../utils/proxy/ProxyOwned.sol";
 import "../../utils/proxy/ProxyPausable.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
+import "../../interfaces/IFreeBetsHolder.sol";
 
 contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
     /* ========== STRUCT VARIABLES ========== */
@@ -32,6 +33,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
     /* ========== STATE VARIABLES ========== */
 
     ILiveTradingProcessor public liveTradingProcessor;
+    IFreeBetsHolder public freeBetsHolder;
 
     function initialize(address _owner, ILiveTradingProcessor _liveTradingProcessor) external initializer {
         setOwner(_owner);
@@ -103,6 +105,9 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
             bytes32 requestId = liveTradingProcessor.counterToRequestId(i - 1);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
             address ticketId = liveTradingProcessor.requestIdToTicketId(requestId);
+            if (requester == address(freeBetsHolder)) {
+                requester = freeBetsHolder.ticketToUser(ticketId);
+            }
             if (requester != user) continue;
 
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
@@ -137,5 +142,11 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         emit LiveTradingProcessorChanged(address(_liveTradingProcessor));
     }
 
+    function setFreeBetsHolder(IFreeBetsHolder _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+        emit LiveTradingProcessorChanged(address(_freeBetsHolder));
+    }
+
     event LiveTradingProcessorChanged(address liveTradingProcessor);
+    event FreeBetsHolderChanged(address freeBetsHolder);
 }
