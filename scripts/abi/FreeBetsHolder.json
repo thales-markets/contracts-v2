@@ -736,6 +736,11 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isChained",
+        "type": "bool"
       }
     ],
     "name": "confirmSpeedMarketResolved",
@@ -903,6 +908,35 @@
         "type": "address"
       }
     ],
+    "name": "getActiveChainedSpeedMarketsPerUser",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
+      }
+    ],
     "name": "getActiveSpeedMarketsPerUser",
     "outputs": [
       {
@@ -933,6 +967,35 @@
       }
     ],
     "name": "getActiveTicketsPerUser",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
+      }
+    ],
+    "name": "getResolvedChainedSpeedMarketsPerUser",
     "outputs": [
       {
         "internalType": "address[]",
@@ -1212,6 +1275,25 @@
         "type": "address"
       }
     ],
+    "name": "numOfActiveChainedSpeedMarketsPerUser",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
+      }
+    ],
     "name": "numOfActiveSpeedMarketsPerUser",
     "outputs": [
       {
@@ -1232,6 +1314,25 @@
       }
     ],
     "name": "numOfActiveTicketsPerUser",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
+      }
+    ],
+    "name": "numOfResolvedChainedSpeedMarketsPerUser",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1660,25 +1761,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "ticketType",
-    "outputs": [
-      {
-        "internalType": "enum FreeBetsHolder.TicketType",
-        "name": "",
-        "type": "uint8"
       }
     ],
     "stateMutability": "view",

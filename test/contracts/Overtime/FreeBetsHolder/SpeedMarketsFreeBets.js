@@ -255,19 +255,17 @@ describe('FreeBetsHolder Speed Markets', function () {
 			expect(balanceAfterConfirm).to.equal(initialBalance - BUY_IN_AMOUNT);
 
 			// Check active speed markets
-			const numActiveSpeedMarkets = await freeBetsHolder.numOfActiveSpeedMarketsPerUser(
+			const numActiveSpeedMarkets = await freeBetsHolder.numOfActiveChainedSpeedMarketsPerUser(
 				firstTrader.address
 			);
 			expect(numActiveSpeedMarkets).to.equal(1);
 
 			// Verify speed market type is CHAINED_SPEED_MARKET
-			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
+			const activeSpeedMarkets = await freeBetsHolder.getActiveChainedSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
-			const ticketType = await freeBetsHolder.ticketType(activeSpeedMarkets[0]);
-			expect(ticketType).to.equal(2); // CHAINED_SPEED_MARKET
 		});
 
 		it('Should revert if directions array is empty', async function () {
@@ -481,9 +479,6 @@ describe('FreeBetsHolder Speed Markets', function () {
 				10,
 				secondTrader.address
 			);
-
-			expect(await freeBetsHolder.ticketType(firstTraderSpeedMarkets[0])).to.equal(1); // SPEED_MARKET
-			expect(await freeBetsHolder.ticketType(secondTraderSpeedMarkets[0])).to.equal(2); // CHAINED_SPEED_MARKET
 		});
 	});
 
@@ -513,12 +508,6 @@ describe('FreeBetsHolder Speed Markets', function () {
 				firstTrader.address
 			);
 			const speedMarketsAddress = activeSpeedMarkets[0];
-
-			// Mock speed market resolution (would normally be done by speed markets AMM)
-			// Note: This would require additional mock setup for the speed market contract
-			// For now, we verify the speed market exists and has correct type
-			const ticketType = await freeBetsHolder.ticketType(speedMarketsAddress);
-			expect(ticketType).to.equal(1); // SPEED_MARKET
 
 			// Verify speed market ownership
 			const speedMarketOwner = await freeBetsHolder.ticketToUser(speedMarketsAddress);
@@ -581,7 +570,8 @@ describe('FreeBetsHolder Speed Markets', function () {
 					firstTrader.address, // invalid speed market
 					BUY_IN_AMOUNT,
 					BUY_IN_AMOUNT,
-					collateralAddress
+					collateralAddress,
+					false
 				)
 			).to.be.revertedWithCustomError(freeBetsHolder, 'CallerNotAllowed');
 		});
@@ -649,16 +639,12 @@ describe('FreeBetsHolder Speed Markets', function () {
 			await mockSpeedMarketsAMMCreator.createFromPendingChainedSpeedMarkets([]);
 
 			// Get created speed market address
-			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
+			const activeSpeedMarkets = await freeBetsHolder.getActiveChainedSpeedMarketsPerUser(
 				0,
 				10,
 				firstTrader.address
 			);
 			const speedMarketAddress = activeSpeedMarkets[0];
-
-			// Verify it's a chained speed market
-			const ticketType = await freeBetsHolder.ticketType(speedMarketAddress);
-			expect(ticketType).to.equal(2); // CHAINED_SPEED_MARKET
 
 			// Set up the free bets holder mapping and dummy values for a losing market
 			await mockSpeedMarketsAMMResolver.setMarketUserAsFreeBetsHolder(

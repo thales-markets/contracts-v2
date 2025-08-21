@@ -25,6 +25,7 @@ interface IFreeBetsHolder is IProxyBetting {
         address _resolvedTicket,
         uint _exercized,
         uint _buyInAmount,
-        address _collateral
+        address _collateral,
+        bool isChained
     ) external;
 }

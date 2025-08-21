@@ -3,16 +3,15 @@ pragma solidity ^0.8.0;
 
 import "../../interfaces/IFreeBetsHolder.sol";
 
-
 contract MockSpeedMarketsAMMResolver {
     address public addressManager;
     address public speedMarketsAMM;
     address public chainedSpeedMarketsAMM;
-    
+
     mapping(address => address) public marketToFreeBetsHolder;
-    
+
     uint private constant ONE = 1e18;
-    
+
     // Dummy variables for testing
     uint public dummyBuyInAmount = 100e18;
     address public dummyCollateral = 0x0000000000000000000000000000000000000001;
@@ -20,19 +19,15 @@ contract MockSpeedMarketsAMMResolver {
 
     receive() external payable {}
 
-    function initialize(
-        address _owner,
-        address _speedMarketsAMM,
-        address _addressManager
-    ) external {
+    function initialize(address _owner, address _speedMarketsAMM, address _addressManager) external {
         speedMarketsAMM = _speedMarketsAMM;
         addressManager = _addressManager;
     }
-    
+
     function setMarketUserAsFreeBetsHolder(address _market, address _freeBetsHolder) external {
         marketToFreeBetsHolder[_market] = _freeBetsHolder;
     }
-    
+
     function setDummyValues(uint _buyInAmount, address _collateral, uint _payout) external {
         dummyBuyInAmount = _buyInAmount;
         dummyCollateral = _collateral;
@@ -52,10 +47,7 @@ contract MockSpeedMarketsAMMResolver {
         _checkAndCallFreeBetsHolder(market, false);
     }
 
-    function resolveMarketsBatch(address[] calldata markets, bytes[] calldata priceUpdateData)
-        external
-        payable
-    {
+    function resolveMarketsBatch(address[] calldata markets, bytes[] calldata priceUpdateData) external payable {
         for (uint i = 0; i < markets.length; i++) {
             _checkAndCallFreeBetsHolder(markets[i], false);
         }
@@ -82,10 +74,7 @@ contract MockSpeedMarketsAMMResolver {
         }
     }
 
-    function resolveChainedMarket(address market, bytes[][] calldata priceUpdateData)
-        external
-        payable
-    {
+    function resolveChainedMarket(address market, bytes[][] calldata priceUpdateData) external payable {
         _checkAndCallFreeBetsHolder(market, true);
     }
 
@@ -98,10 +87,7 @@ contract MockSpeedMarketsAMMResolver {
         _checkAndCallFreeBetsHolder(market, true);
     }
 
-    function resolveChainedMarketsBatch(address[] calldata markets, bytes[][][] calldata priceUpdateData)
-        external
-        payable
-    {
+    function resolveChainedMarketsBatch(address[] calldata markets, bytes[][][] calldata priceUpdateData) external payable {
         for (uint i = 0; i < markets.length; i++) {
             _checkAndCallFreeBetsHolder(markets[i], true);
         }
@@ -135,15 +121,16 @@ contract MockSpeedMarketsAMMResolver {
     function setChainedSpeedMarketsAMM(address _chainedSpeedMarketsAMM) external {
         chainedSpeedMarketsAMM = _chainedSpeedMarketsAMM;
     }
-    
-    function _checkAndCallFreeBetsHolder(address market, bool) internal {
+
+    function _checkAndCallFreeBetsHolder(address market, bool _isChained) internal {
         address freeBetsHolder = marketToFreeBetsHolder[market];
         if (freeBetsHolder != address(0)) {
             IFreeBetsHolder(freeBetsHolder).confirmSpeedMarketResolved(
                 market,
                 dummyPayout,
                 dummyBuyInAmount,
-                dummyCollateral
+                dummyCollateral,
+                _isChained
             );
         }
     }

@@ -78,7 +78,7 @@ async function main() {
 		asset: '0x4254430000000000000000000000000000000000000000000000000000000000', // BTC asset
 		strikeTime: 0, // 0 for current time
 		delta: 60, // 60 seconds
-		strikePrice: '11382614999349',
+		strikePrice: '11692314999349',
 		strikePriceSlippage: '5000000000000000', // 0.5% slippage (0.005 * 1e18)
 		direction: 0, // 0 for UP
 		collateral: '0xff6535c1f971245435429a915ab9eb1713bec1c1', // Use default collateral
