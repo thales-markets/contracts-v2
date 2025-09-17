@@ -1648,5 +1648,35 @@
 		"id": 11297,
 		"result_type": 2,
 		"name": "PROP_PLAYER_LONGEST_PASSING_COMPLETION"
+	},
+	{
+		"id": 11298,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FOULS_DRAWN"
+	},
+	{
+		"id": 11299,
+		"result_type": 2,
+		"name": "PROP_PLAYER_GOALS_PLUS_ASSISTS"
+	},
+	{
+		"id": 11300,
+		"result_type": 2,
+		"name": "PROP_PLAYER_OFFSIDES"
+	},
+	{
+		"id": 11301,
+		"result_type": 2,
+		"name": "PROP_PLAYER_SAVES"
+	},
+	{
+		"id": 11302,
+		"result_type": 2,
+		"name": "PROP_PLAYER_TO_SCORE_AND_ASSIST"
+	},
+	{
+		"id": 11303,
+		"result_type": 2,
+		"name": "PROP_PLAYER_TO_SCORE_OR_ASSIST"
 	}
 ]
