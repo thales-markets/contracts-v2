@@ -1643,5 +1643,10 @@
 		"id": 11293,
 		"result_type": 2,
 		"name": "PROP_FIRST_THREE_MAPS_PLAYER_HEADSHOTS"
+	},
+	{
+		"id": 11297,
+		"result_type": 2,
+		"name": "PROP_PLAYER_LONGEST_PASSING_COMPLETION"
 	}
 ]
