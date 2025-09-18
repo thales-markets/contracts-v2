@@ -1645,8 +1645,93 @@
 		"name": "PROP_FIRST_THREE_MAPS_PLAYER_HEADSHOTS"
 	},
 	{
+		"id": 10417,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_FIELD_GOALS_SECONDARY"
+	},
+	{
+		"id": 10418,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_TOUCHDOWNS_SECONDARY"
+	},
+	{
+		"id": 10419,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TEAM_TOTAL_TOUCHDOWNS_HOME_TEAM_SECONDARY"
+	},
+	{
+		"id": 10420,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TEAM_TOTAL_TOUCHDOWNS_AWAY_TEAM_SECONDARY"
+	},
+	{
+		"id": 10135,
+		"result_type": 1,
+		"name": "CHILD_WILL_THERE_BE_SAFETY"
+	},
+	{
+		"id": 10192,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_FIELD_GOALS"
+	},
+	{
+		"id": 10193,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_PUNTS"
+	},
+	{
+		"id": 10194,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_TOUCHDOWNS"
+	},
+	{
+		"id": 10195,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_TOUCHDOWNS_HOME_TEAM"
+	},
+	{
+		"id": 10196,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_TOUCHDOWNS_AWAY_TEAM"
+	},
+	{
+		"id": 11296,
+		"result_type": 2,
+		"name": "PROP_PLAYER_RUSHING_ATTEMPTS"
+	},
+	{
 		"id": 11297,
 		"result_type": 2,
 		"name": "PROP_PLAYER_LONGEST_PASSING_COMPLETION"
+	},
+	{
+		"id": 11298,
+		"result_type": 2,
+		"name": "PROP_PLAYER_FOULS_DRAWN"
+	},
+	{
+		"id": 11299,
+		"result_type": 2,
+		"name": "PROP_PLAYER_GOALS_PLUS_ASSISTS"
+	},
+	{
+		"id": 11300,
+		"result_type": 2,
+		"name": "PROP_PLAYER_OFFSIDES"
+	},
+	{
+		"id": 11301,
+		"result_type": 2,
+		"name": "PROP_PLAYER_SAVES"
+	},
+	{
+		"id": 11302,
+		"result_type": 2,
+		"name": "PROP_PLAYER_TO_SCORE_AND_ASSIST"
+	},
+	{
+		"id": 11303,
+		"result_type": 2,
+		"name": "PROP_PLAYER_TO_SCORE_OR_ASSIST"
 	}
 ]
