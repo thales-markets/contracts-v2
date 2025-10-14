@@ -1734,10 +1734,11 @@
 		"result_type": 2,
 		"name": "PROP_PLAYER_TO_SCORE_OR_ASSIST"
 	},
+	{
 		"id": 10163,
 		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_CORRECT_SCORE"
-	},
+    },
 	{
 		"id": 10164,
 		"result_type": 1,
