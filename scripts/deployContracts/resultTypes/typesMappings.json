@@ -1733,5 +1733,69 @@
 		"id": 11303,
 		"result_type": 2,
 		"name": "PROP_PLAYER_TO_SCORE_OR_ASSIST"
+	},
+		"id": 10163,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10164,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10165,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10166,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10167,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10168,
+		"result_type": 1,
+		"name": "CHILD_SIXTH_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10169,
+		"result_type": 1,
+		"name": "CHILD_SEVENTH_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10197,
+		"result_type": 1,
+		"name": "CHILD_EIGHTH_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10198,
+		"result_type": 1,
+		"name": "CHILD_NINTH_PERIOD_CORRECT_SCORE"
+	},
+	{
+		"id": 10200,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_FIRST_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10201,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_SECOND_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10202,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_THIRD_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10203,
+		"result_type": 1,
+		"name": "CHILD_CORRECT_SCORE_FOURTH_PERIOD_SECONDARY"
 	}
 ]
