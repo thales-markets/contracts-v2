@@ -1779,16 +1779,6 @@
 		"name": "CHILD_NINTH_PERIOD_CORRECT_SCORE"
 	},
 	{
-		"id": 10200,
-		"result_type": 1,
-		"name": "CHILD_CORRECT_SCORE_FIRST_PERIOD_SECONDARY"
-	},
-	{
-		"id": 10201,
-		"result_type": 1,
-		"name": "CHILD_CORRECT_SCORE_SECOND_PERIOD_SECONDARY"
-	},
-	{
 		"id": 10202,
 		"result_type": 1,
 		"name": "CHILD_CORRECT_SCORE_THIRD_PERIOD_SECONDARY"
