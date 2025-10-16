@@ -214,6 +214,7 @@ contract Ticket {
     function exercise(address _exerciseCollateral) external onlyAMM notPaused returns (uint) {
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
+        require(expectedFinalPayout > 0, "Expected final payout not set");
 
         uint payoutWithFees = expectedFinalPayout;
         uint payout = payoutWithFees - fees;
