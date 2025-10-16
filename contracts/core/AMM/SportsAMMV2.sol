@@ -844,7 +844,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address referrer = referrals.sportReferrals(_tickerOwner);
         uint ammBalance = _collateral.balanceOf(address(this));
 
-        if (referrer != address(0)) {
+        if (referrer != address(0) && _tickerOwner != address(freeBetsHolder)) {
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = _mulWithDecimals(_buyInAmount, referrerFeeByTier);
