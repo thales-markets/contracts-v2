@@ -73,7 +73,9 @@ contract Ticket {
 
     bool public isMarkedAsLost;
 
-    /* ========== CONSTRUCTOR ========== */
+    uint public expectedFinalPayout;
+
+    /* ========== CONSTRUCTOR and INITIALIZERS========== */
 
     /// @notice initialize the ticket contract
     /// @param params all parameters for Init
@@ -96,6 +98,27 @@ contract Ticket {
         systemBetDenominator = params._systemBetDenominator;
         isSystem = systemBetDenominator > 0;
         isSGP = params._isSGP;
+    }
+
+    /**
+     * @notice Sets the expected final payout amount for this ticket.
+     * @dev
+     * - Can only be called by the SportsAMM contract.
+     * - This value represents the total amount of collateral (including fees)
+     *   that was initially funded to the ticket upon creation.
+     * - Used later in `exercise()` to prevent manipulation or overfunding attacks,
+     *   ensuring payout calculations rely only on the original committed collateral
+     *   and not on the current token balance of the contract.
+     * - Once set, this value should remain constant throughout the ticket lifecycle.
+     *
+     * @param amount The total expected collateral amount that should be held by this ticket.
+     *               Must include both user buy-in and fees.
+     *
+     * Emits a {ExpectedFinalPayoutSet} event.
+     */
+    function setExpectedFinalPayout(uint amount) external onlyAMM {
+        expectedFinalPayout = amount;
+        emit ExpectedFinalPayoutSet(amount);
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -192,7 +215,7 @@ contract Ticket {
         bool isExercisable = isTicketExercisable();
         require(isExercisable, "Ticket not exercisable yet");
 
-        uint payoutWithFees = collateral.balanceOf(address(this));
+        uint payoutWithFees = expectedFinalPayout;
         uint payout = payoutWithFees - fees;
         bool isCancelled = false;
 
@@ -401,4 +424,5 @@ contract Ticket {
     event Resolved(bool isUserTheWinner, bool cancelled);
     event Expired(address beneficiary);
     event PauseUpdated(bool paused);
+    event ExpectedFinalPayoutSet(uint amount);
 }
