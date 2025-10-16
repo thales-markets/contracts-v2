@@ -896,7 +896,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     function _setReferrer(address _referrer, address _recipient) internal {
-        if (_referrer != address(0)) referrals.setReferrer(_referrer, _recipient);
+        if (_referrer != address(0) && _recipient != address(freeBetsHolder)) referrals.setReferrer(_referrer, _recipient);
     }
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _cancelTicket, bool _markLost) internal {
