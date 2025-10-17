@@ -726,6 +726,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData, processingParams._addedPayoutPercentage);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
+        // 1) Initialize the ticket (unchanged)
         ticket.initialize(
             Ticket.TicketInit(
                 markets,
@@ -742,13 +743,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             )
         );
 
+        // 2) Track ticket on the manager (unchanged)
         manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._recipient);
 
+        // 3) Commit trade to LP (unchanged)
         ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
             address(ticket),
             processingParams._payoutWithFees - _tradeDataInternal._buyInAmount
         );
+
+        // 4) Fund the ticket with the full expected amount (unchanged)
         IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), processingParams._payoutWithFees);
+
+        // 5) Lock the accounting: tell the Ticket what the authoritative funded amount is
+        ticket.setExpectedFinalPayout(processingParams._payoutWithFees);
 
         emit NewTicket(
             markets,
@@ -836,7 +844,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address referrer = referrals.sportReferrals(_tickerOwner);
         uint ammBalance = _collateral.balanceOf(address(this));
 
-        if (referrer != address(0)) {
+        if (referrer != address(0) && _tickerOwner != address(freeBetsHolder)) {
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = _mulWithDecimals(_buyInAmount, referrerFeeByTier);
@@ -888,7 +896,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     function _setReferrer(address _referrer, address _recipient) internal {
-        if (_referrer != address(0)) referrals.setReferrer(_referrer, _recipient);
+        if (_referrer != address(0) && _recipient != address(freeBetsHolder)) referrals.setReferrer(_referrer, _recipient);
     }
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _cancelTicket, bool _markLost) internal {
