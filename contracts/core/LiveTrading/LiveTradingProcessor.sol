@@ -134,7 +134,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 stringToBytes32(lTradeData._gameId),
                 lTradeData._sportId,
                 lTradeData._typeId, //type
-                block.timestamp + 60, //maturity, hardcode to timestamp with buffer
+                block.timestamp + 60, //maturity, hardcode to timestamp with buffer.
                 0, //status
                 lTradeData._line, //line
                 0, //playerId
