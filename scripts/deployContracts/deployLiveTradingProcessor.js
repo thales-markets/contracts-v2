@@ -35,23 +35,23 @@ async function main() {
 	setTargetAddress('LiveTradingProcessor', network, liveTradingProcessorAddress);
 	await delay(5000);
 
-	if (isTestNetwork(networkObj.chainId)) {
-		const mockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
-		const mockChainlinkOracleDeployed = mockChainlinkOracle.attach(mockChainlinkOracleAddress);
-		await mockChainlinkOracleDeployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
-			from: owner.address,
-		});
-		console.log('LiveTradingProcessor set in MockChainlinkOracle');
+	// if (isTestNetwork(networkObj.chainId)) {
+	// 	const mockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
+	// 	const mockChainlinkOracleDeployed = mockChainlinkOracle.attach(mockChainlinkOracleAddress);
+	// 	await mockChainlinkOracleDeployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
+	// 		from: owner.address,
+	// 	});
+	// 	console.log('LiveTradingProcessor set in MockChainlinkOracle');
+	//
+	// 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
+	// 	const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
+	// 	await sportsAMMV2Deployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
+	// 		from: owner.address,
+	// 	});
+	// 	console.log('LiveTradingProcessor set in SportsAMMV2');
+	// }
 
-		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
-		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
-		await sportsAMMV2Deployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
-			from: owner.address,
-		});
-		console.log('LiveTradingProcessor set in SportsAMMV2');
-	}
-
-	await delay(5000);
+	//await delay(5000);
 
 	try {
 		await hre.run('verify:verify', {

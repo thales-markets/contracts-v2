@@ -34,7 +34,7 @@
 		"MockChainlinkOracle": "0x13De488552594aAbC5dE42f77A3Ed61f745411BA",
 		"ChainlinkOracle": "0x41C1AFac7C03D7eEC6532EdFbb55d9F637Eefc14",
 		"OvertimePaymentToken": "0xE4aB69C077896252FAFBD49EFD26B5D171A32410",
-		"LiveTradingProcessor": "0xf01554725ad81a5FD959a696642299fA341B67E7",
+		"LiveTradingProcessor": "0x85218bd1c761c016b73cb24B092293fDFc6528E7",
 		"ChainlinkResolver": "0x2cbE8F5f9AdceDFc0D366e9226d319068673411a",
 		"SportsAMMV2LiquidityPoolData": "0xd61FA46d4e3CD47584a56fC20856Fdd197135756",
 		"SportsAMMV2LiquidityPoolDataImplementation": "0x8Dd6A779c0CAaF74F2f2A97FB7d51bB9c3f24Caa",
