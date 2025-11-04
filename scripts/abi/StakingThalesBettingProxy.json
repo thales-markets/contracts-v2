@@ -846,6 +846,11 @@
             "internalType": "address",
             "name": "_collateral",
             "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "_playerId",
+            "type": "uint24"
           }
         ],
         "internalType": "struct ILiveTradingProcessor.LiveTradeData",

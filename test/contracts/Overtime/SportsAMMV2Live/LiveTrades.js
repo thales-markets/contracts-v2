@@ -81,6 +81,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -117,6 +118,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: secondAccount,
 				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -142,6 +144,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: weth,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -163,6 +166,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_playerId: 0,
 				})
 			).to.be.revertedWith('Live trading not enabled on _sportId');
 		});
@@ -181,6 +185,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -207,6 +212,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -234,6 +240,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -270,6 +277,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -368,6 +376,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
 			});
 
 			const requestId = await liveTradingProcessor.counterToRequestId(0);
@@ -398,6 +407,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_playerId: 0,
 				});
 			}
 
@@ -438,6 +448,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_playerId: 0,
 				});
 			}
 
@@ -483,6 +494,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_playerId: 0,
 				});
 			}
 
@@ -532,6 +544,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_playerId: 0,
 				});
 			}
 
