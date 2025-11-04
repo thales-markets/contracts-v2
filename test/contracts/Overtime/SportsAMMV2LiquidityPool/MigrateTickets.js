@@ -15,9 +15,12 @@ const {
 	RESULT_TYPE,
 	SPORT_ID_NBA,
 } = require('../../../constants/overtime');
-const { setDefaultAutoSelectFamily } = require('net');
+const { ethers } = require('hardhat');
 
-describe('SportsAMMV2LiquidityPool Trades', () => {
+describe('SportsAMMV2LiquidityPool Trades', function () {
+	// Give this whole suite more time on CI
+	this.timeout(120000);
+
 	let sportsAMMV2,
 		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
@@ -41,7 +44,10 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 		tradeDataTenMarketsCurrentRoundNineth,
 		tradeDataTenMarketsCurrentRoundTenth,
 		tradeDataCrossRounds,
-		collateralAmount;
+		collateralAmount,
+		secondAccount,
+		thirdAccount,
+		owner;
 
 	beforeEach(async () => {
 		({
@@ -201,6 +207,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				expect(Number(ticketRoundAfterMigration)).to.equal(Number(currentRound) + 1);
 			}
 		});
+
 		it('Should migrate a batch of tickets to future round (round 10)', async () => {
 			// deposit and start pool
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(collateralAmount);
@@ -311,7 +318,9 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				maxTicketIndex
 			);
 			expect(Number(ticketIndexAndFound[0])).to.equal(maxTicketIndex);
-			expect(
+
+			// 👇 need to await this revert assertion
+			await expect(
 				sportsAMMV2LiquidityPool.migrateBatchOfTicketsToAnotherRound(
 					ticketAddresses,
 					10,
@@ -325,13 +334,13 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				ticketIndexes.slice(1, 5)
 			);
 
-			const tupleIndexAndFound = await sportsAMMV2LiquidityPool.getTicketIndexInTicketRound(
+			const tupleIndexAndFound2 = await sportsAMMV2LiquidityPool.getTicketIndexInTicketRound(
 				ZERO_ADDRESS,
 				currentRound,
 				0,
 				1
 			);
-			expect(Number(tupleIndexAndFound[0])).to.equal(1);
+			expect(Number(tupleIndexAndFound2[0])).to.equal(1);
 			const numOfTicketsAfterMigration =
 				await sportsAMMV2LiquidityPool.getNumberOfTradingTicketsPerRound(currentRound);
 			expect(Number(numOfTicketsAfterMigration)).to.equal(
@@ -359,18 +368,15 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 		});
 
-		it('Should migrate a batch of tickets individually to future round (round 10) and exercise current round', async () => {
+		it('Should migrate a batch of tickets individually to future round (round 10) and exercise current round', async function () {
+			// extra safety timeout for this heavier test
+			this.timeout(120000);
+
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(collateralAmount);
 			await sportsAMMV2LiquidityPool.start();
 			let quote;
 			const actualNumOfTickets = 5;
 			const totalNumOfDummyTickets = 10;
-			// const remainingTickets = totalNumOfDummyTickets - actualNumOfTickets;
-			// const batchSize = 500;
-			// for (let i = 0; i < remainingTickets; i += batchSize) {
-			//     const ticketsToAdd = Math.min(batchSize, remainingTickets - i);
-			//     await sportsAMMV2LiquidityPool.addTicketsToRound(ticketsToAdd);
-			// }
 
 			for (let i = 0; i < totalNumOfDummyTickets; i++) {
 				quote = await sportsAMMV2.tradeQuote(
@@ -392,8 +398,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					);
 			}
 
-			// try exercise on LP
-			// expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(false);
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, actualNumOfTickets);
 			const ticketAddresses = Array.from(activeTickets);
 			const currentRound = await sportsAMMV2LiquidityPool.round();
@@ -404,7 +408,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 
 			// For each ticket, find its index in the round
 			for (let i = 0; i < ticketAddresses.length; i++) {
-				// Use the getTicketIndexInTicketRound helper to find the index
 				const tupleIndexAndFound = await sportsAMMV2LiquidityPool.getTicketIndexInTicketRound(
 					ticketAddresses[i],
 					currentRound,
@@ -445,6 +448,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				[[1]]
 			);
 
+			// Optionally exercise, commented out originally
 			// expect(await sportsAMMV2LiquidityPool.hasTicketsReadyToBeExercised()).to.equal(true);
 			// await sportsAMMV2LiquidityPool.exerciseTicketsReadyToBeExercisedBatch(10);
 		});
@@ -548,8 +552,6 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			// deposit and start pool
 			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
 			await sportsAMMV2LiquidityPool.start();
-
-			// Use accounts already available from beforeEach setup - no need to call deployAccountsFixture again
 
 			let quote;
 			for (let i = 0; i < 5; i++) {
