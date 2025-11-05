@@ -7,6 +7,7 @@ import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
@@ -78,6 +79,9 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         req.addUint("buyInAmount", _liveTradeData._buyInAmount);
         req.addUint("expectedQuote", _liveTradeData._expectedQuote);
         req.addUint("additionalSlippage", _liveTradeData._additionalSlippage);
+        req.addUint("playerId", _liveTradeData._playerId); // 🆕
+        // 👇 Add msg.sender as a hex string
+        req.add("requester", Strings.toHexString(msg.sender));
 
         requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;
@@ -137,7 +141,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 block.timestamp + 60, //maturity, hardcode to timestamp with buffer.
                 0, //status
                 lTradeData._line, //line
-                0, //playerId
+                lTradeData._playerId, //playerId
                 odds, //odds[]
                 merkleProofs, //merkleProof[]
                 lTradeData._position,

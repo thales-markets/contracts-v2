@@ -276,6 +276,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: collateralTHALESAddress,
+				_playerId: 0,
 			});
 
 			let requestId = await liveTradingProcessor.counterToRequestId(0);
