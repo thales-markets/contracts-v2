@@ -454,6 +454,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "adminPrepareClosing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
