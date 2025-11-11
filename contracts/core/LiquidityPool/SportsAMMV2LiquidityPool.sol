@@ -313,6 +313,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice prepare round closing - exercise tickets and ensure there are no tickets left unresolved, handle SB profit and calculate PnL
     function prepareRoundClosing() external nonReentrant whenNotPaused roundClosingNotPrepared {
         // standard path: we also exercise tickets on-chain
+        require(canCloseCurrentRound(), "Can't close current round");
         exerciseTicketsReadyToBeExercised();
         _prepareRoundClosingInternal();
     }
@@ -331,8 +332,6 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     ///      - computes PnL
     ///      - sets roundClosingPrepared and emits event
     function _prepareRoundClosingInternal() internal {
-        require(canCloseCurrentRound(), "Can't close current round");
-
         address roundPool = roundPools[round];
         // final balance is the final amount of collateral in the round pool
         uint currentBalance = collateral.balanceOf(roundPool);
