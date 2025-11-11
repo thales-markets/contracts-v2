@@ -179,8 +179,8 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @param ticket to trade
     /// @param amount amount to get
     function commitTrade(address ticket, uint amount) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
-        require(started, "Pool has not started");
-        require(amount > 0, "Can't commit a zero trade");
+        require(started, "PoolNotStarted");
+        require(amount > 0, "ZeroAmount");
         uint ticketRound = getTicketRound(ticket);
         roundPerTicket[ticket] = ticketRound;
         address liquidityPoolRound = _getOrCreateRoundPool(ticketRound);
@@ -955,7 +955,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         require(started, "PoolNotStarted");
         require(!withdrawalRequested[msg.sender], "WithdrawalAlreadyRequested");
         require(balancesPerRound[round][msg.sender] > 0, "NothingToWithdraw");
-        require(balancesPerRound[round + 1][msg.sender] == 0, "Can't withdraw as you already deposited for next round");
+        require(balancesPerRound[round + 1][msg.sender] == 0, "CantWithdrawWhenDepositedForNextRound");
         _;
     }
 

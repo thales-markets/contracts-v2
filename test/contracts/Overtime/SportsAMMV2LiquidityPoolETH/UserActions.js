@@ -335,13 +335,13 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()
-			).to.be.revertedWith("Can't withdraw as you already deposited for next round");
+			).to.be.revertedWith('CantWithdrawWhenDepositedForNextRound');
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.partialWithdrawalRequest(
 					ethers.parseEther('0.2')
 				)
-			).to.be.revertedWith("Can't withdraw as you already deposited for next round");
+			).to.be.revertedWith('CantWithdrawWhenDepositedForNextRound');
 		});
 
 		it('Should fail with "Withdrawal already requested"', async () => {
