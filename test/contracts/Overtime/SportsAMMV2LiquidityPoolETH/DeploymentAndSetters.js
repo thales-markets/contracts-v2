@@ -132,7 +132,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(ZERO_ADDRESS)
-			).to.be.revertedWith('Can not set a zero address!');
+			).to.be.revertedWith('ZeroAddress');
 
 			await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(dummyAddress1);
 			expect(await sportsAMMV2LiquidityPool.defaultLiquidityProvider()).to.equal(dummyAddress1);
@@ -149,7 +149,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPool.setPoolRoundMastercopy(ZERO_ADDRESS)
-			).to.be.revertedWith('Can not set a zero address!');
+			).to.be.revertedWith('ZeroAddress');
 
 			await sportsAMMV2LiquidityPool.setPoolRoundMastercopy(dummyAddress1);
 			expect(await sportsAMMV2LiquidityPool.poolRoundMastercopy()).to.equal(dummyAddress1);
@@ -171,7 +171,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
 			await expect(sportsAMMV2LiquidityPool.setSportsAMM(ZERO_ADDRESS)).to.be.revertedWith(
-				'Can not set a zero address!'
+				'ZeroAddress'
 			);
 
 			await sportsAMMV2LiquidityPool.setSportsAMM(dummyAddress1);
@@ -260,7 +260,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 			await sportsAMMV2LiquidityPool.start();
 
 			await expect(sportsAMMV2LiquidityPool.setRoundLength(newRoundLength)).to.be.revertedWith(
-				"Can't change round length after start"
+				'CantChangeAfterPoolStart'
 			);
 		});
 
