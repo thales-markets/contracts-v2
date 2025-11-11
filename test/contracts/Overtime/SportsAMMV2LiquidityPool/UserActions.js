@@ -837,5 +837,39 @@ describe('SportsAMMV2LiquidityPool User Actions', () => {
 
 			expect(await sportsAMMV2LiquidityPool.round()).to.equal(4);
 		});
+
+		it('Should fail with "Only the contract owner may perform this action" when non-owner calls adminPrepareClosing', async () => {
+			// round must be closable first
+			await time.increaseTo(currentRoundCloseTime);
+			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(true);
+
+			// secondLiquidityProvider is not owner
+			await expect(
+				sportsAMMV2LiquidityPoolWithSecondLiquidityProvider.adminPrepareClosing()
+			).to.be.revertedWith('Only the contract owner may perform this action');
+		});
+
+		it('Owner should be able to close round via adminPrepareClosing', async () => {
+			// initially cannot close (time not passed yet in beforeEach)
+			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(false);
+
+			// move to round end
+			await time.increaseTo(currentRoundCloseTime);
+
+			// now closable
+			expect(await sportsAMMV2LiquidityPool.canCloseCurrentRound()).to.equal(true);
+			expect(await sportsAMMV2LiquidityPool.roundClosingPrepared()).to.equal(false);
+
+			// call adminPrepareClosing as owner
+			await sportsAMMV2LiquidityPool.adminPrepareClosing();
+			expect(await sportsAMMV2LiquidityPool.roundClosingPrepared()).to.equal(true);
+
+			// same processing flow as normal prepareRoundClosing()
+			await sportsAMMV2LiquidityPool.processRoundClosingBatch(10);
+			expect(await sportsAMMV2LiquidityPool.usersProcessedInRound()).to.equal(2);
+
+			await sportsAMMV2LiquidityPool.closeRound();
+			expect(await sportsAMMV2LiquidityPool.round()).to.equal(3);
+		});
 	});
 });
