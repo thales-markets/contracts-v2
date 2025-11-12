@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../utils/proxy/ProxyReentrancyGuard.sol";
 import "../../utils/proxy/ProxyOwned.sol";
 
-import "@thales-dao/contracts/contracts/interfaces/IStakingThales.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
