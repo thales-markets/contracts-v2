@@ -643,27 +643,16 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
         for (uint256 j; j < len; ++j) {
             int256 currentRisk = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
-            int256 newRisk;
 
             if (j == position) {
                 // Selected position – always add risk
-                newRisk = currentRisk + int256(marketRiskAmount);
+                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = currentRisk + int256(marketRiskAmount);
             } else {
-                if (!isBigMarket) {
-                    // Small markets – keep old behavior (hedge on all positions)
-                    newRisk = currentRisk - int256(_buyInAmount);
-                } else {
-                    // Big markets – only adjust if there was already some risk
-                    if (currentRisk == 0) {
-                        // No prior exposure → skip SSTORE to save gas
-                        continue;
-                    }
-                    newRisk = currentRisk - int256(_buyInAmount);
+                // Small markets – keep old behavior (hedge on all positions) OR
+                // Big markets – only adjust if there was already some risk
+                if (!isBigMarket || currentRisk > 0) {
+                    riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = currentRisk - int256(_buyInAmount);
                 }
-            }
-
-            if (newRisk != currentRisk) {
-                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = newRisk;
             }
         }
 
