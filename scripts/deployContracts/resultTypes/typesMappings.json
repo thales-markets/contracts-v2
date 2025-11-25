@@ -1738,7 +1738,7 @@
 		"id": 10163,
 		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_CORRECT_SCORE"
-    },
+	},
 	{
 		"id": 10164,
 		"result_type": 1,
@@ -1788,5 +1788,745 @@
 		"id": 10203,
 		"result_type": 1,
 		"name": "CHILD_CORRECT_SCORE_FOURTH_PERIOD_SECONDARY"
+	},
+	{
+		"id": 10030,
+		"result_type": 1,
+		"name": "CHILD_DOUBLE_CHANCE_THIRD_PERIOD"
+	},
+	{
+		"id": 10204,
+		"result_type": 1,
+		"name": "CHILD_HOME_TEAM_TO_SCORE"
+	},
+	{
+		"id": 10205,
+		"result_type": 1,
+		"name": "CHILD_AWAY_TEAM_TO_SCORE"
+	},
+	{
+		"id": 10206,
+		"result_type": 1,
+		"name": "CHILD_HOME_TEAM_TO_WIN_TO_NIL"
+	},
+	{
+		"id": 10207,
+		"result_type": 1,
+		"name": "CHILD_AWAY_TEAM_TO_WIN_TO_NIL"
+	},
+	{
+		"id": 10320,
+		"result_type": 4,
+		"name": "CHILD_SPREAD_KILLS"
+	},
+	{
+		"id": 10321,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_KILLS"
+	},
+	{
+		"id": 10322,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_HOME_TEAM_KILLS"
+	},
+	{
+		"id": 10323,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_AWAY_TEAM_KILLS"
+	},
+	{
+		"id": 10324,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_KILLS_ODD_EVEN"
+	},
+	{
+		"id": 10325,
+		"result_type": 4,
+		"name": "CHILD_FIRST_PERIOD_SPREAD_KILLS"
+	},
+	{
+		"id": 10326,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_KILLS"
+	},
+	{
+		"id": 10327,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_HOME_TEAM_KILLS"
+	},
+	{
+		"id": 10328,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_AWAY_TEAM_KILLS"
+	},
+	{
+		"id": 10329,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_KILLS_ODD_EVEN"
+	},
+	{
+		"id": 10330,
+		"result_type": 4,
+		"name": "CHILD_SECOND_PERIOD_SPREAD_KILLS"
+	},
+	{
+		"id": 10331,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_KILLS"
+	},
+	{
+		"id": 10332,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_HOME_TEAM_KILLS"
+	},
+	{
+		"id": 10333,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_AWAY_TEAM_KILLS"
+	},
+	{
+		"id": 10334,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_KILLS_ODD_EVEN"
+	},
+	{
+		"id": 10335,
+		"result_type": 4,
+		"name": "CHILD_THIRD_PERIOD_SPREAD_KILLS"
+	},
+	{
+		"id": 10336,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_KILLS"
+	},
+	{
+		"id": 10337,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_HOME_TEAM_KILLS"
+	},
+	{
+		"id": 10338,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_AWAY_TEAM_KILLS"
+	},
+	{
+		"id": 10339,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_KILLS_ODD_EVEN"
+	},
+	{
+		"id": 10340,
+		"result_type": 4,
+		"name": "CHILD_FOURTH_PERIOD_SPREAD_KILLS"
+	},
+	{
+		"id": 10341,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_KILLS"
+	},
+	{
+		"id": 10342,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_HOME_TEAM_KILLS"
+	},
+	{
+		"id": 10343,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_AWAY_TEAM_KILLS"
+	},
+	{
+		"id": 10344,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_KILLS_ODD_EVEN"
+	},
+	{
+		"id": 10345,
+		"result_type": 4,
+		"name": "CHILD_FIFTH_PERIOD_SPREAD_KILLS"
+	},
+	{
+		"id": 10346,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_KILLS"
+	},
+	{
+		"id": 10347,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_HOME_TEAM_KILLS"
+	},
+	{
+		"id": 10348,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_AWAY_TEAM_KILLS"
+	},
+	{
+		"id": 10349,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_KILLS_ODD_EVEN"
+	},
+	{
+		"id": 10350,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_TOWERS_DESTROYED"
+	},
+	{
+		"id": 10351,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_TOWERS_HOME_TEAM_DESTROYED"
+	},
+	{
+		"id": 10352,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_TOWERS_AWAY_TEAM_DESTROYED"
+	},
+	{
+		"id": 10353,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MOST_TOWERS_DESTROYED_2_WAY"
+	},
+	{
+		"id": 10354,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MOST_TOWERS_DESTROYED_3_WAY"
+	},
+	{
+		"id": 10355,
+		"result_type": 4,
+		"name": "CHILD_FIRST_PERIOD_TOWERS_DESTROYED_HANDICAP"
+	},
+	{
+		"id": 10356,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_FIRST_TOWER_TEAM_DESTROYED"
+	},
+	{
+		"id": 10357,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_TOWERS_DESTROYED"
+	},
+	{
+		"id": 10358,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_TOWERS_HOME_TEAM_DESTROYED"
+	},
+	{
+		"id": 10359,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_TOWERS_AWAY_TEAM_DESTROYED"
+	},
+	{
+		"id": 10360,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MOST_TOWERS_DESTROYED_2_WAY"
+	},
+	{
+		"id": 10361,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MOST_TOWERS_DESTROYED_3_WAY"
+	},
+	{
+		"id": 10362,
+		"result_type": 4,
+		"name": "CHILD_SECOND_PERIOD_TOWERS_DESTROYED_HANDICAP"
+	},
+	{
+		"id": 10363,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_FIRST_TOWER_TEAM_DESTROYED"
+	},
+	{
+		"id": 10364,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_TOWERS_DESTROYED"
+	},
+	{
+		"id": 10365,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_TOWERS_HOME_TEAM_DESTROYED"
+	},
+	{
+		"id": 10366,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_TOWERS_AWAY_TEAM_DESTROYED"
+	},
+	{
+		"id": 10367,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MOST_TOWERS_DESTROYED_2_WAY"
+	},
+	{
+		"id": 10368,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MOST_TOWERS_DESTROYED_3_WAY"
+	},
+	{
+		"id": 10369,
+		"result_type": 4,
+		"name": "CHILD_THIRD_PERIOD_TOWERS_DESTROYED_HANDICAP"
+	},
+	{
+		"id": 10370,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_FIRST_TOWER_TEAM_DESTROYED"
+	},
+	{
+		"id": 10371,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_TOWERS_DESTROYED"
+	},
+	{
+		"id": 10372,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_TOWERS_HOME_TEAM_DESTROYED"
+	},
+	{
+		"id": 10373,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_TOWERS_AWAY_TEAM_DESTROYED"
+	},
+	{
+		"id": 10374,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MOST_TOWERS_DESTROYED_2_WAY"
+	},
+	{
+		"id": 10375,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MOST_TOWERS_DESTROYED_3_WAY"
+	},
+	{
+		"id": 10376,
+		"result_type": 4,
+		"name": "CHILD_FOURTH_PERIOD_TOWERS_DESTROYED_HANDICAP"
+	},
+	{
+		"id": 10377,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_FIRST_TOWER_TEAM_DESTROYED"
+	},
+	{
+		"id": 10378,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_TOWERS_DESTROYED"
+	},
+	{
+		"id": 10379,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_TOWERS_HOME_TEAM_DESTROYED"
+	},
+	{
+		"id": 10380,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_TOWERS_AWAY_TEAM_DESTROYED"
+	},
+	{
+		"id": 10381,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MOST_TOWERS_DESTROYED_2_WAY"
+	},
+	{
+		"id": 10382,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MOST_TOWERS_DESTROYED_3_WAY"
+	},
+	{
+		"id": 10383,
+		"result_type": 4,
+		"name": "CHILD_FIFTH_PERIOD_TOWERS_DESTROYED_HANDICAP"
+	},
+	{
+		"id": 10385,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_WILL_THERE_BE_OVERTIME"
+	},
+	{
+		"id": 10386,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_WILL_THERE_BE_OVERTIME"
+	},
+	{
+		"id": 10387,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_WILL_THERE_BE_OVERTIME"
+	},
+	{
+		"id": 10388,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_WILL_THERE_BE_OVERTIME"
+	},
+	{
+		"id": 10389,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_WILL_THERE_BE_OVERTIME"
+	},
+	{
+		"id": 10390,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MOST_KILLS_3_WAY"
+	},
+	{
+		"id": 10391,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MOST_KILLS_3_WAY"
+	},
+	{
+		"id": 10392,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MOST_KILLS_3_WAY"
+	},
+	{
+		"id": 10393,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MOST_KILLS_3_WAY"
+	},
+	{
+		"id": 10394,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MOST_KILLS_3_WAY"
+	},
+	{
+		"id": 10395,
+		"result_type": 1,
+		"name": "CHILD_MOST_KILLS_3_WAY"
+	},
+	{
+		"id": 10396,
+		"result_type": 4,
+		"name": "CHILD_ROUND_HANDICAP"
+	},
+	{
+		"id": 10397,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_ROUNDS"
+	},
+	{
+		"id": 10398,
+		"result_type": 1,
+		"name": "CHILD_MOST_ASSISTS_3_WAY"
+	},
+	{
+		"id": 10440,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_ROSHANS_SLAIN"
+	},
+	{
+		"id": 10441,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MOST_ROSHANS_SLAIN_2_WAY"
+	},
+	{
+		"id": 10442,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MOST_ROSHANS_SLAIN_3_WAY"
+	},
+	{
+		"id": 10443,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TEAM_FIRST_ROSHAN"
+	},
+	{
+		"id": 10444,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_BOTH_TEAMS_TO_SLAIN_ROSHAN"
+	},
+	{
+		"id": 10445,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_ROSHANS_SLAIN"
+	},
+	{
+		"id": 10446,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MOST_ROSHANS_SLAIN_2_WAY"
+	},
+	{
+		"id": 10447,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MOST_ROSHANS_SLAIN_3_WAY"
+	},
+	{
+		"id": 10448,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TEAM_FIRST_ROSHAN"
+	},
+	{
+		"id": 10449,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_BOTH_TEAMS_TO_SLAIN_ROSHAN"
+	},
+	{
+		"id": 10450,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_ROSHANS_SLAIN"
+	},
+	{
+		"id": 10451,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MOST_ROSHANS_SLAIN_2_WAY"
+	},
+	{
+		"id": 10452,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MOST_ROSHANS_SLAIN_3_WAY"
+	},
+	{
+		"id": 10453,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_TEAM_FIRST_ROSHAN"
+	},
+	{
+		"id": 10454,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_BOTH_TEAMS_TO_SLAIN_ROSHAN"
+	},
+	{
+		"id": 10455,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_ROSHANS_SLAIN"
+	},
+	{
+		"id": 10456,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MOST_ROSHANS_SLAIN_2_WAY"
+	},
+	{
+		"id": 10457,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MOST_ROSHANS_SLAIN_3_WAY"
+	},
+	{
+		"id": 10458,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_TEAM_FIRST_ROSHAN"
+	},
+	{
+		"id": 10459,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_BOTH_TEAMS_TO_SLAIN_ROSHAN"
+	},
+	{
+		"id": 10460,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_ROSHANS_SLAIN"
+	},
+	{
+		"id": 10461,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MOST_ROSHANS_SLAIN_2_WAY"
+	},
+	{
+		"id": 10462,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MOST_ROSHANS_SLAIN_3_WAY"
+	},
+	{
+		"id": 10463,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_TEAM_FIRST_ROSHAN"
+	},
+	{
+		"id": 10464,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_BOTH_TEAMS_TO_SLAIN_ROSHAN"
+	},
+	{
+		"id": 10465,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TEAM_FIRST_BARRACKS"
+	},
+	{
+		"id": 10466,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_BOTH_TEAMS_TO_DESTROY_BARRACKS"
+	},
+	{
+		"id": 10467,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TEAM_FIRST_BARRACKS"
+	},
+	{
+		"id": 10468,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_BOTH_TEAMS_TO_DESTROY_BARRACKS"
+	},
+	{
+		"id": 10469,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_TEAM_FIRST_BARRACKS"
+	},
+	{
+		"id": 10470,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_BOTH_TEAMS_TO_DESTROY_BARRACKS"
+	},
+	{
+		"id": 10471,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_TEAM_FIRST_BARRACKS"
+	},
+	{
+		"id": 10472,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_BOTH_TEAMS_TO_DESTROY_BARRACKS"
+	},
+	{
+		"id": 10473,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_TEAM_FIRST_BARRACKS"
+	},
+	{
+		"id": 10474,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_BOTH_TEAMS_TO_DESTROY_BARRACKS"
+	},
+	{
+		"id": 10475,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TEAM_FIRST_BLOOD"
+	},
+	{
+		"id": 10476,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TEAM_FIRST_BLOOD"
+	},
+	{
+		"id": 10477,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_TEAM_FIRST_BLOOD"
+	},
+	{
+		"id": 10478,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_TEAM_FIRST_BLOOD"
+	},
+	{
+		"id": 10479,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_TEAM_FIRST_BLOOD"
+	},
+	{
+		"id": 10480,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10481,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_HOME_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10482,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_AWAY_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10483,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MOST_ASSISTS_3_WAY"
+	},
+	{
+		"id": 10484,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10485,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_HOME_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10486,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_AWAY_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10487,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_MOST_ASSISTS_3_WAY"
+	},
+	{
+		"id": 10488,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10489,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_HOME_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10490,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_AWAY_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10491,
+		"result_type": 1,
+		"name": "CHILD_THIRD_PERIOD_MOST_ASSISTS_3_WAY"
+	},
+	{
+		"id": 10492,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10493,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_HOME_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10494,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_AWAY_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10495,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_PERIOD_MOST_ASSISTS_3_WAY"
+	},
+	{
+		"id": 10496,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10497,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_HOME_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10498,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_AWAY_TEAM_TOTAL_ASSISTS"
+	},
+	{
+		"id": 10499,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_PERIOD_MOST_ASSISTS_3_WAY"
+	},
+	{
+		"id": 10500,
+		"result_type": 2,
+		"name": "CHILD_FIRST_PERIOD_DURATION"
+	},
+	{
+		"id": 10501,
+		"result_type": 2,
+		"name": "CHILD_SECOND_PERIOD_DURATION"
+	},
+	{
+		"id": 10502,
+		"result_type": 2,
+		"name": "CHILD_THIRD_PERIOD_DURATION"
+	},
+	{
+		"id": 10503,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_PERIOD_DURATION"
+	},
+	{
+		"id": 10504,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_PERIOD_DURATION"
 	}
 ]
