@@ -488,7 +488,7 @@ describe('SportsAMMV2LiquidityPool Trades', function () {
 				sportsAMMV2LiquidityPool
 					.connect(secondAccount)
 					.migrateTicketToAnotherRound(ticketAddress, 0, 0)
-			).to.be.revertedWith('Invalid sender');
+			).to.be.revertedWith('InvalidSender');
 
 			await sportsAMMV2Manager.setWhitelistedAddresses(
 				[secondAccount.address],
@@ -543,7 +543,7 @@ describe('SportsAMMV2LiquidityPool Trades', function () {
 				sportsAMMV2LiquidityPool
 					.connect(secondAccount)
 					.migrateTicketToAnotherRound(thirdTicketAddress, 0, 0)
-			).to.be.revertedWith('Invalid sender');
+			).to.be.revertedWith('InvalidSender');
 		});
 
 		it('Should allow whitelisted address to migrate batch of tickets and reject non-whitelisted address', async () => {
@@ -583,7 +583,7 @@ describe('SportsAMMV2LiquidityPool Trades', function () {
 				sportsAMMV2LiquidityPool
 					.connect(thirdAccount)
 					.migrateBatchOfTicketsToAnotherRound(ticketAddresses, 0, [])
-			).to.be.revertedWith('Invalid sender');
+			).to.be.revertedWith('InvalidSender');
 
 			// Whitelist thirdAccount with MARKET_RESOLVING role (role = 2)
 			await sportsAMMV2Manager.setWhitelistedAddresses(
