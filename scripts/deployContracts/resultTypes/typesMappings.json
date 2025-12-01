@@ -2528,5 +2528,130 @@
 		"id": 10504,
 		"result_type": 2,
 		"name": "CHILD_FIFTH_PERIOD_DURATION"
+	},
+	{
+		"id": 10136,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_TOTAL_EXACT"
+	},
+	{
+		"id": 10137,
+		"result_type": 1,
+		"name": "CHILD_SECOND_PERIOD_TOTAL_EXACT"
+	},
+	{
+		"id": 10138,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_EXACT"
+	},
+	{
+		"id": 10139,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_HOME_TEAM_ODD_EVEN"
+	},
+	{
+		"id": 10140,
+		"result_type": 1,
+		"name": "CHILD_TOTAL_AWAY_TEAM_ODD_EVEN"
+	},
+	{
+		"id": 10274,
+		"result_type": 1,
+		"name": "CHILD_FIRST_MAP_CORRECT_PISTOL_ROUND_SCORE"
+	},
+	{
+		"id": 10275,
+		"result_type": 1,
+		"name": "CHILD_FIRST_MAP_PISTOL_ROUND_1_ML"
+	},
+	{
+		"id": 10276,
+		"result_type": 1,
+		"name": "CHILD_FIRST_MAP_PISTOL_ROUND_2_ML"
+	},
+	{
+		"id": 10277,
+		"result_type": 1,
+		"name": "CHILD_SECOND_MAP_CORRECT_PISTOL_ROUND_SCORE"
+	},
+	{
+		"id": 10278,
+		"result_type": 1,
+		"name": "CHILD_SECOND_MAP_PISTOL_ROUND_1_ML"
+	},
+	{
+		"id": 10279,
+		"result_type": 1,
+		"name": "CHILD_SECOND_MAP_PISTOL_ROUND_2_ML"
+	},
+	{
+		"id": 10280,
+		"result_type": 1,
+		"name": "CHILD_THIRD_MAP_CORRECT_PISTOL_ROUND_SCORE"
+	},
+	{
+		"id": 10281,
+		"result_type": 1,
+		"name": "CHILD_THIRD_MAP_PISTOL_ROUND_1_ML"
+	},
+	{
+		"id": 10282,
+		"result_type": 1,
+		"name": "CHILD_THIRD_MAP_PISTOL_ROUND_2_ML"
+	},
+	{
+		"id": 10283,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_MAP_CORRECT_PISTOL_ROUND_SCORE"
+	},
+	{
+		"id": 10284,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_MAP_PISTOL_ROUND_1_ML"
+	},
+	{
+		"id": 10285,
+		"result_type": 1,
+		"name": "CHILD_FOURTH_MAP_PISTOL_ROUND_2_ML"
+	},
+	{
+		"id": 10286,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_MAP_CORRECT_PISTOL_ROUND_SCORE"
+	},
+	{
+		"id": 10287,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_MAP_PISTOL_ROUND_1_ML"
+	},
+	{
+		"id": 10288,
+		"result_type": 1,
+		"name": "CHILD_FIFTH_MAP_PISTOL_ROUND_2_ML"
+	},
+	{
+		"id": 10289,
+		"result_type": 2,
+		"name": "CHILD_FIRST_MAP_TOTAL_BOMBS_DEFUSED"
+	},
+	{
+		"id": 10290,
+		"result_type": 2,
+		"name": "CHILD_SECOND_MAP_TOTAL_BOMBS_DEFUSED"
+	},
+	{
+		"id": 10291,
+		"result_type": 2,
+		"name": "CHILD_THIRD_MAP_TOTAL_BOMBS_DEFUSED"
+	},
+	{
+		"id": 10292,
+		"result_type": 2,
+		"name": "CHILD_FOURTH_MAP_TOTAL_BOMBS_DEFUSED"
+	},
+	{
+		"id": 10293,
+		"result_type": 2,
+		"name": "CHILD_FIFTH_MAP_TOTAL_BOMBS_DEFUSED"
 	}
 ]
