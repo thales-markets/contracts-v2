@@ -14,6 +14,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "FreeBetsHolderChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -85,6 +98,19 @@
     "name": "acceptOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "freeBetsHolder",
+    "outputs": [
+      {
+        "internalType": "contract IFreeBetsHolder",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -188,6 +214,11 @@
             "internalType": "address",
             "name": "collateral",
             "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",
@@ -294,6 +325,11 @@
             "internalType": "address",
             "name": "collateral",
             "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",
@@ -398,6 +434,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IFreeBetsHolder",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "setFreeBetsHolder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
