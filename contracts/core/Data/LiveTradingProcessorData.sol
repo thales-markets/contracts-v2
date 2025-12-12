@@ -147,7 +147,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
 
     function setFreeBetsHolder(IFreeBetsHolder _freeBetsHolder) external onlyOwner {
         freeBetsHolder = _freeBetsHolder;
-        emit LiveTradingProcessorChanged(address(_freeBetsHolder));
+        emit FreeBetsHolderChanged(address(_freeBetsHolder));
     }
 
     event LiveTradingProcessorChanged(address liveTradingProcessor);
