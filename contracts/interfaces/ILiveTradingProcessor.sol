@@ -16,6 +16,8 @@ interface ILiveTradingProcessor {
         uint24 _playerId; // 🆕 added for player props
     }
 
+    function freeBetsHolder() external view returns (address);
+
     function maxAllowedExecutionDelay() external view returns (uint);
 
     function requestCounter() external view returns (uint);

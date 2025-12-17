@@ -85,6 +85,72 @@
         "internalType": "address",
         "name": "_resolvedTicket",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_exercized",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isChained",
+        "type": "bool"
+      }
+    ],
+    "name": "confirmSpeedMarketResolved",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "_speedMarketAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyinAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isChained",
+        "type": "bool"
+      }
+    ],
+    "name": "confirmSpeedOrChainedSpeedMarketTrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_resolvedTicket",
+        "type": "address"
       }
     ],
     "name": "confirmTicketResolved",

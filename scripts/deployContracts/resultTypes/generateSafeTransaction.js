@@ -9,16 +9,11 @@ async function main() {
 
 	// Market type IDs and result types from user input
 	const marketTypeIds = [
-		10136, 10137, 10138, 10139, 10140, 10274, 10275, 10276, 10277, 10278,
-		10279, 10280, 10281, 10282, 10283, 10284, 10285, 10286, 10287, 10288,
-		10289, 10290, 10291, 10292, 10293
+		10136, 10137, 10138, 10139, 10140, 10274, 10275, 10276, 10277, 10278, 10279, 10280, 10281,
+		10282, 10283, 10284, 10285, 10286, 10287, 10288, 10289, 10290, 10291, 10292, 10293,
 	];
 
-	const resultTypes = [
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		2, 2, 2, 2, 2
-	];
+	const resultTypes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2];
 
 	console.log('Generating Safe transaction for Arbitrum...');
 	console.log(`Market Type IDs: ${marketTypeIds.length}`);
@@ -31,7 +26,7 @@ async function main() {
 	const iface = SportsAMMV2ResultManager.interface;
 	const encodedData = iface.encodeFunctionData('setResultTypesPerMarketTypes', [
 		marketTypeIds,
-		resultTypes
+		resultTypes,
 	]);
 
 	console.log('\nEncoded data:', encodedData);
@@ -43,9 +38,9 @@ async function main() {
 			{
 				to: RESULT_MANAGER_ADDRESS,
 				value: '0',
-				data: encodedData
-			}
-		]
+				data: encodedData,
+			},
+		],
 	};
 
 	// Write to file
