@@ -638,14 +638,21 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint24 playerId = _marketTradeData.playerId;
         uint8 position = _marketTradeData.position;
 
-        for (uint j; j < _marketTradeData.odds.length; ++j) {
+        uint256 len = _marketTradeData.odds.length;
+        bool isBigMarket = len > 32;
+
+        for (uint256 j; j < len; ++j) {
             int currentRisk = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
+
             if (j == position) {
-                // Add risk for selected position
+                // Selected position – always add risk
                 riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = currentRisk + int(marketRiskAmount);
             } else {
-                // Reduce risk for unselected positions by buy-in amount
-                riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = currentRisk - int(_buyInAmount);
+                // Small markets – keep old behavior (hedge on all positions) OR
+                // Big markets – only adjust if there was already some risk
+                if (!isBigMarket || currentRisk > 0) {
+                    riskPerMarketTypeAndPosition[gameId][typeId][playerId][j] = currentRisk - int(_buyInAmount);
+                }
             }
         }
 
@@ -681,11 +688,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
                 if (_typeId > 0) {
                     // Check for explicitly set moneyline market cap
+                    uint typeCap = capPerSportAndType[_sportId][_typeId];
                     uint moneylineMarketCap = capPerMarket[_gameId][0][0][0];
                     if (moneylineMarketCap > 0) {
-                        cap = moneylineMarketCap / 2;
+                        cap = (moneylineMarketCap / 2 < typeCap || typeCap == 0) ? moneylineMarketCap / 2 : typeCap;
                     } else {
-                        cap = capPerSportAndType[_sportId][_typeId];
+                        cap = typeCap;
                         if (cap == 0) {
                             uint childCap = capPerSportChild[_sportId];
                             cap = childCap > 0 ? childCap : sportCap / 2;

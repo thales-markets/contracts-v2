@@ -214,6 +214,11 @@
             "internalType": "address",
             "name": "collateral",
             "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",
@@ -320,6 +325,11 @@
             "internalType": "address",
             "name": "collateral",
             "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",

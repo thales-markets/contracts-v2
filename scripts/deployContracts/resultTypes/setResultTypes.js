@@ -19,6 +19,12 @@ async function main() {
 
 	const types = require(`./typesMappings`);
 
+	// Collect all missing types
+	let missingTypes = [];
+	let missingResultTypes = [];
+
+	console.log('Checking which types need to be set...\n');
+
 	for (let i = 0; i < types.length; i++) {
 		let type = types[i];
 		console.log(
@@ -30,17 +36,41 @@ async function main() {
 		console.log('result type on contract: ' + typeSet);
 
 		if (typeSet != type.result_type) {
-			await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(
-				[type.id],
-				[type.result_type],
-				{
-					from: owner.address,
-				}
-			);
-			console.log('type set');
+			missingTypes.push(type.id);
+			missingResultTypes.push(type.result_type);
+			console.log('type needs to be set');
 		} else {
 			console.log('type already set');
 		}
+	}
+
+	// If there are missing types, set them all in one transaction
+	if (missingTypes.length > 0) {
+		console.log('\n=====================================');
+		console.log(`Setting ${missingTypes.length} result types in a single transaction...`);
+		console.log('=====================================\n');
+
+		const tx = await sportsAMMV2ResultManagerDeployed.setResultTypesPerMarketTypes(
+			missingTypes,
+			missingResultTypes,
+			{
+				from: owner.address,
+			}
+		);
+
+		console.log('Transaction sent:', tx.hash);
+		console.log('Waiting for confirmation...');
+
+		await tx.wait();
+
+		console.log('Transaction confirmed!');
+		console.log(`Successfully set ${missingTypes.length} result types.`);
+
+		await delay(1000); // 1 second delay after transaction
+	} else {
+		console.log('\n=====================================');
+		console.log('All types are already correctly set!');
+		console.log('=====================================');
 	}
 }
 

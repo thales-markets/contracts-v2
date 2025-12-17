@@ -28,6 +28,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         uint additionalSlippage;
         address referrer;
         address collateral;
+        uint24 playerId;
     }
 
     /* ========== STATE VARIABLES ========== */
@@ -76,7 +77,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
                 expectedQuote: liveTradeData._expectedQuote,
                 additionalSlippage: liveTradeData._additionalSlippage,
                 referrer: liveTradeData._referrer,
-                collateral: liveTradeData._collateral
+                collateral: liveTradeData._collateral,
+                playerId: liveTradeData._playerId
             });
         }
     }
@@ -129,7 +131,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
                 expectedQuote: liveTradeData._expectedQuote,
                 additionalSlippage: liveTradeData._additionalSlippage,
                 referrer: liveTradeData._referrer,
-                collateral: liveTradeData._collateral
+                collateral: liveTradeData._collateral,
+                playerId: liveTradeData._playerId
             });
 
             count++;
@@ -144,7 +147,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
 
     function setFreeBetsHolder(IFreeBetsHolder _freeBetsHolder) external onlyOwner {
         freeBetsHolder = _freeBetsHolder;
-        emit LiveTradingProcessorChanged(address(_freeBetsHolder));
+        emit FreeBetsHolderChanged(address(_freeBetsHolder));
     }
 
     event LiveTradingProcessorChanged(address liveTradingProcessor);
