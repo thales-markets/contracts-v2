@@ -2653,5 +2653,122 @@
 		"id": 10293,
 		"result_type": 2,
 		"name": "CHILD_FIFTH_MAP_TOTAL_BOMBS_DEFUSED"
-	}
+	},
+	[
+		{
+			"id": 10208,
+			"result_type": 1,
+			"name": "CHILD_HOME_TEAM_TO_WIN_BOTH_HALVES"
+		},
+		{
+			"id": 10209,
+			"result_type": 1,
+			"name": "CHILD_AWAY_TEAM_TO_WIN_BOTH_HALVES"
+		},
+		{
+			"id": 10210,
+			"result_type": 2,
+			"name": "CHILD_TOTAL_OFFSIDES"
+		},
+		{
+			"id": 10213,
+			"result_type": 1,
+			"name": "CHILD_HOME_TEAM_TO_WIN_EITHER_HALF"
+		},
+		{
+			"id": 10214,
+			"result_type": 1,
+			"name": "CHILD_AWAY_TEAM_TO_WIN_EITHER_HALF"
+		},
+		{
+			"id": 10215,
+			"result_type": 1,
+			"name": "CHILD_GOAL_BOTH_HALVES"
+		},
+		{
+			"id": 10216,
+			"result_type": 1,
+			"name": "CHILD_HOME_TEAM_TO_SCORE_BOTH_HALVES"
+		},
+		{
+			"id": 10217,
+			"result_type": 1,
+			"name": "CHILD_AWAY_TEAM_TO_SCORE_BOTH_HALVES"
+		},
+		{
+			"id": 10220,
+			"result_type": 2,
+			"name": "CHILD_TOTAL_SHOTS"
+		},
+		{
+			"id": 10237,
+			"result_type": 2,
+			"name": "CHILD_TOTAL_SHOTS_ON_TARGET"
+		},
+		{
+			"id": 10238,
+			"result_type": 2,
+			"name": "CHILD_HOME_TEAM_TOTAL_SHOTS"
+		},
+		{
+			"id": 10239,
+			"result_type": 2,
+			"name": "CHILD_AWAY_TEAM_TOTAL_SHOTS"
+		},
+		{
+			"id": 10255,
+			"result_type": 2,
+			"name": "CHILD_HOME_TEAM_TOTAL_SHOTS_ON_TARGET"
+		},
+		{
+			"id": 10256,
+			"result_type": 2,
+			"name": "CHILD_AWAY_TEAM_TOTAL_SHOTS_ON_TARGET"
+		},
+		{
+			"id": 10240,
+			"result_type": 2,
+			"name": "CHILD_TOTAL_FAULS"
+		},
+		{
+			"id": 10257,
+			"result_type": 2,
+			"name": "CHILD_HOME_TEAM_TOTAL_BLOCKS"
+		},
+		{
+			"id": 10258,
+			"result_type": 2,
+			"name": "CHILD_AWAY_TEAM_TOTAL_BLOCKS"
+		},
+		{
+			"id": 10259,
+			"result_type": 2,
+			"name": "CHILD_HOME_TEAM_TOTAL_STEALS"
+		},
+		{
+			"id": 10260,
+			"result_type": 2,
+			"name": "CHILD_AWAY_TEAM_TOTAL_STEALS"
+		},
+		{
+			"id": 10261,
+			"result_type": 2,
+			"name": "CHILD_HOME_TEAM_TOTAL_ASSISTS"
+		},
+		{
+			"id": 10262,
+			"result_type": 2,
+			"name": "CHILD_AWAY_TEAM_TOTAL_ASSISTS"
+		},
+		{
+			"id": 10263,
+			"result_type": 2,
+			"name": "CHILD_HOME_TEAM_TOTAL_FAULS"
+		},
+		{
+			"id": 10264,
+			"result_type": 2,
+			"name": "CHILD_AWAY_TEAM_TOTAL_FAULS"
+		}
+	]
 ]
