@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.20;
 
 import "../../interfaces/ILiveTradingProcessor.sol";
@@ -25,9 +24,33 @@ contract MockChainlinkOracle {
         chainlinkResolver = _chainlinkResolver;
     }
 
-    function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedAmount) external {
-        ILiveTradingProcessor(liveTradingProcessor).fulfillLiveTrade(_requestId, allow, approvedAmount);
+    // =========================
+    // LiveTradingProcessor fulfill mocks
+    // =========================
+
+    // SINGLE (backwards-compatible)
+    function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedQuote) external {
+        ILiveTradingProcessor(liveTradingProcessor).fulfillLiveTrade(_requestId, allow, approvedQuote);
     }
+
+    // PARLAY (new)
+    function fulfillLiveTradeParlay(
+        bytes32 _requestId,
+        bool allow,
+        uint approvedQuote,
+        uint[] calldata approvedLegOdds
+    ) external {
+        ILiveTradingProcessor(liveTradingProcessor).fulfillLiveTradeParlay(
+            _requestId,
+            allow,
+            approvedQuote,
+            approvedLegOdds
+        );
+    }
+
+    // =========================
+    // Other mocks
+    // =========================
 
     function fulfillMarketResolve(bytes32 _requestId, int24[][] calldata _results) external {
         IChainlinkResolver(chainlinkResolver).fulfillMarketResolve(_requestId, _results);

@@ -26,6 +26,7 @@ describe('SportsAMMV2Live Deployment and Setters', () => {
 				collateralAddress, //_oracle
 				collateralAddress, // _sportsAMM
 				mockSpecId, // _specId
+				mockSpecId, // _parlaySpecId
 				0 // payment
 			);
 		});
