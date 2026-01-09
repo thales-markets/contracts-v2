@@ -667,6 +667,110 @@ describe('FreeBetsHolder Speed Markets', function () {
 				.withArgs(speedMarketAddress, firstTrader.address, 0);
 		});
 
+		it('Should return resolved speed markets via getResolvedSpeedMarketsPerUser', async function () {
+			// Create speed market
+			const speedMarketParams = {
+				asset: ethers.encodeBytes32String('ETH'),
+				strikeTime: Math.floor(Date.now() / 1000) + 300,
+				delta: 60,
+				strikePrice: ethers.parseEther('2000'),
+				strikePriceSlippage: ethers.parseEther('20'),
+				direction: 0,
+				collateral: collateralAddress,
+				buyinAmount: BUY_IN_AMOUNT,
+				referrer: ZERO_ADDRESS,
+				skewImpact: 0,
+			};
+
+			await freeBetsHolder.connect(firstTrader).tradeSpeedMarket(speedMarketParams);
+			await mockSpeedMarketsAMMCreator.createFromPendingSpeedMarkets([]);
+
+			// Get created speed market address
+			const activeSpeedMarkets = await freeBetsHolder.getActiveSpeedMarketsPerUser(
+				0,
+				10,
+				firstTrader.address
+			);
+			const speedMarketAddress = activeSpeedMarkets[0];
+
+			// Set up resolution
+			await mockSpeedMarketsAMMResolver.setMarketUserAsFreeBetsHolder(
+				speedMarketAddress,
+				await freeBetsHolder.getAddress()
+			);
+			await mockSpeedMarketsAMMResolver.setDummyValues(
+				BUY_IN_AMOUNT,
+				collateralAddress,
+				BUY_IN_AMOUNT * 2n
+			);
+
+			// Resolve the market
+			await mockSpeedMarketsAMMResolver.resolveMarket(speedMarketAddress, []);
+
+			// Check getResolvedSpeedMarketsPerUser returns the resolved market
+			const resolvedSpeedMarkets = await freeBetsHolder.getResolvedSpeedMarketsPerUser(
+				0,
+				10,
+				firstTrader.address
+			);
+			expect(resolvedSpeedMarkets.length).to.equal(1);
+			expect(resolvedSpeedMarkets[0]).to.equal(speedMarketAddress);
+		});
+
+		it('Should return resolved chained speed markets via getResolvedChainedSpeedMarketsPerUser', async function () {
+			// Create chained speed market
+			const chainedMarketParams = {
+				asset: ethers.encodeBytes32String('BTC'),
+				timeFrame: 300,
+				strikePrice: ethers.parseEther('30000'),
+				strikePriceSlippage: ethers.parseEther('300'),
+				directions: [0, 1, 0],
+				collateral: collateralAddress,
+				buyinAmount: BUY_IN_AMOUNT,
+				referrer: ZERO_ADDRESS,
+			};
+
+			await freeBetsHolder.connect(firstTrader).tradeChainedSpeedMarket(chainedMarketParams);
+			await mockSpeedMarketsAMMCreator.createFromPendingChainedSpeedMarkets([]);
+
+			// Get created chained speed market address
+			const activeChainedMarkets = await freeBetsHolder.getActiveChainedSpeedMarketsPerUser(
+				0,
+				10,
+				firstTrader.address
+			);
+			const chainedMarketAddress = activeChainedMarkets[0];
+
+			// Set up resolution
+			await mockSpeedMarketsAMMResolver.setMarketUserAsFreeBetsHolder(
+				chainedMarketAddress,
+				await freeBetsHolder.getAddress()
+			);
+			await mockSpeedMarketsAMMResolver.setDummyValues(
+				BUY_IN_AMOUNT,
+				collateralAddress,
+				BUY_IN_AMOUNT * 2n
+			);
+
+			// Resolve the chained market
+			await mockSpeedMarketsAMMResolver.resolveChainedMarket(chainedMarketAddress, [[]]);
+
+			// Check getResolvedChainedSpeedMarketsPerUser returns the resolved market
+			const resolvedChainedMarkets = await freeBetsHolder.getResolvedChainedSpeedMarketsPerUser(
+				0,
+				10,
+				firstTrader.address
+			);
+			expect(resolvedChainedMarkets.length).to.equal(1);
+			expect(resolvedChainedMarkets[0]).to.equal(chainedMarketAddress);
+
+			// Also verify numOfResolvedChainedSpeedMarketsPerUser
+			const numResolved = await freeBetsHolder.numOfResolvedChainedSpeedMarketsPerUser(
+				firstTrader.address
+			);
+			expect(numResolved).to.equal(1);
+		});
+
 		it('Should track request to user mapping correctly', async function () {
 			const speedMarketParams = {
 				asset: ethers.encodeBytes32String('ETH'),
