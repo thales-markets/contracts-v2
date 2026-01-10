@@ -77,7 +77,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             "Live trading not enabled on _sportId"
         );
 
-        // BACKWARDS COMPAT: same selector + same jobSpecId + same response shape
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
         req.add("mode", "single");
