@@ -1,5 +1,6 @@
 const { ethers } = require('hardhat');
 const { getTargetAddress } = require('../helpers');
+require('dotenv').config();
 
 async function main() {
 	let networkObj = await ethers.provider.getNetwork();
@@ -77,14 +78,14 @@ async function main() {
 	const params = {
 		asset: '0x4254430000000000000000000000000000000000000000000000000000000000', // BTC asset
 		strikeTime: 0, // 0 for current time
-		delta: 60, // 60 seconds
-		strikePrice: '11692314999349',
+		delta: 180, // 180 seconds (3 minutes)
+		strikePrice: '9060304700649',
 		strikePriceSlippage: '5000000000000000', // 0.5% slippage (0.005 * 1e18)
 		direction: 0, // 0 for UP
-		collateral: '0xff6535c1f971245435429a915ab9eb1713bec1c1', // Use default collateral
-		buyinAmount: '3820000', // 1 USDC (1e6)
+		collateral: defaultCollateralAddress, // Use default collateral
+		buyinAmount: '2638986', // ~2.64 USDC (6 decimals)
 		referrer: '0x0000000000000000000000000000000000000000', // No referrer
-		skewImpact: 0, // No skew impact
+		skewImpact: '500000000000000', // 0.0005 * 1e18
 	};
 
 	console.log('\nCreating speed market with free bets:');
@@ -146,10 +147,32 @@ async function main() {
 	const numActiveTickets = await freeBetsHolder.numOfActiveTicketsPerUser(owner.address);
 	console.log('Number of active tickets:', numActiveTickets.toString());
 
+	// Call API to create pending speed market
+	const adminApiKey = process.env.adminApiKey;
+	if (!adminApiKey) {
+		console.log('\nWarning: adminApiKey not found in .env, skipping API call');
+	} else {
+		console.log('\nCalling API to create pending speed market...');
+		const apiUrl = `https://api.overtime.io/speed-markets/networks/${networkObj.chainId}/create-pending`;
+
+		try {
+			const response = await fetch(`${apiUrl}?adminApiKey=${adminApiKey}`, {
+				method: 'POST',
+			});
+
+			const responseText = await response.text();
+			if (response.ok) {
+				console.log('API Response:', responseText);
+			} else {
+				console.log('API Error:', response.status, response.statusText);
+				console.log('Error details:', responseText);
+			}
+		} catch (error) {
+			console.log('API call failed:', error.message);
+		}
+	}
+
 	console.log('\nScript completed successfully!');
-	console.log(
-		'Note: The speed market will be created by the SpeedMarketsAMMCreator and confirmed via confirmSpeedOrChainedSpeedMarketTrade callback.'
-	);
 }
 
 main()
