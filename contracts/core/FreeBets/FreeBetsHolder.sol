@@ -714,20 +714,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit UpdateMaxApprovalSpeedMarketsAMM(_collateral);
     }
 
-    /// @notice admin method to clear active speed markets for a user
-    /// @param _user the address of the user
-    function clearAllActiveSpeedMarketsPerUser(address _user) external onlyOwner {
-        delete activeSpeedMarketsPerUser[_user];
-        emit AllActiveSpeedMarketsCleared(_user, false);
-    }
-
-    /// @notice admin method to clear active chained speed markets for a user
-    /// @param _user the address of the user
-    function clearAllActiveChainedSpeedMarketsPerUser(address _user) external onlyOwner {
-        delete activeChainedSpeedMarketsPerUser[_user];
-        emit AllActiveSpeedMarketsCleared(_user, true);
-    }
-
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _resolveMarket(
@@ -820,5 +806,4 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event UserFundingRemoved(address _user, address _collateral, address _receiver, uint _amount);
     event SetFreeBetExpirationPeriod(uint freeBetExpirationPeriod, uint freeBetExpirationUpgrade);
     event UpdateMaxApprovalSpeedMarketsAMM(address collateral);
-    event AllActiveSpeedMarketsCleared(address user, bool isChained);
 }
