@@ -28,12 +28,12 @@ contract MockChainlinkOracle {
     // LiveTradingProcessor fulfill mocks
     // =========================
 
-    // SINGLE (backwards-compatible)
+    // SINGLE
     function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedQuote) external {
         ILiveTradingProcessor(liveTradingProcessor).fulfillLiveTrade(_requestId, allow, approvedQuote);
     }
 
-    // PARLAY (new)
+    // PARLAY
     function fulfillLiveTradeParlay(
         bytes32 _requestId,
         bool allow,

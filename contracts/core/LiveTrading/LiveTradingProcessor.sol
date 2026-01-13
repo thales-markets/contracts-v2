@@ -440,7 +440,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         _setPausing ? _pause() : _unpause();
     }
 
-    /// @notice Backwards-compatible setter + parlay config added
+    /// @notice Configuration setter
     /// @dev Updates Chainlink and SportsAMM configuration, including both single and parlay job spec ids.
     /// @param _link LINK token address used for Chainlink payments
     /// @param _oracle Chainlink oracle address
