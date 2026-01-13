@@ -23,11 +23,9 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     address public freeBetsHolder;
 
-    // ===== Singles (BACKWARDS COMPAT) =====
     bytes32 public jobSpecId; // single job
     uint public paymentAmount;
 
-    // ===== Parlays (NEW) =====
     bytes32 public parlayJobSpecId; // parlay job
 
     uint public maxAllowedExecutionDelay = 60;
