@@ -48,6 +48,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     mapping(bytes32 => address) public requestIdToTicketId;
 
+    /// @notice Constructor for LiveTradingProcessor.
+    /// @dev Sets Chainlink token/oracle, SportsAMM reference, job specs and payment amount.
+    /// @param _link LINK token address used for Chainlink payments
+    /// @param _oracle Chainlink oracle address
+    /// @param _sportsAMM SportsAMMV2 contract address
+    /// @param _jobSpecId Job spec id for SINGLE live verification requests
+    /// @param _parlayJobSpecId Job spec id for PARLAY live verification requests
+    /// @param _paymentAmount LINK payment amount per request
     constructor(
         address _link,
         address _oracle,
@@ -67,6 +75,10 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     /// @notice requestLiveTrade (SINGLE)
+    /// @dev Sends a Chainlink request for live trade verification for a single market.
+    ///      Stores request metadata for later fulfillment and emits LiveTradeRequested.
+    /// @param _liveTradeData LiveTradeData describing the trade to be verified/executed
+    /// @return requestId Chainlink request id
     function requestLiveTrade(
         ILiveTradingProcessor.LiveTradeData calldata _liveTradeData
     ) external whenNotPaused returns (bytes32 requestId) {
@@ -89,6 +101,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         req.addUint("additionalSlippage", _liveTradeData._additionalSlippage);
         req.addUint("playerId", _liveTradeData._playerId);
 
+        // requester & collateral included for adapter-side logging/validation
         req.add("requester", Strings.toHexString(msg.sender));
         req.add("collateral", Strings.toHexString(_liveTradeData._collateral));
 
@@ -118,6 +131,13 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     /// @notice requestLiveParlayTrade (PARLAY)
+    /// @dev Sends a Chainlink request for live trade verification for a parlay (multi-leg) trade.
+    ///      Validates that:
+    ///        - parlay has > 1 leg
+    ///        - live trading is enabled for each leg's (sportId, typeId)
+    ///      Stores request metadata for later fulfillment and emits LiveParlayTradeRequested.
+    /// @param _parlay LiveParlayTradeData describing the parlay to be verified/executed
+    /// @return requestId Chainlink request id
     function requestLiveParlayTrade(
         ILiveTradingProcessor.LiveParlayTradeData calldata _parlay
     ) external whenNotPaused returns (bytes32 requestId) {
@@ -140,6 +160,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         req.add("mode", "parlay");
 
+        // Chainlink request payload: arrays are provided as string arrays to be adapter-friendly.
         string[] memory gameIds = new string[](legsLen);
         string[] memory sportIds = new string[](legsLen);
         string[] memory typeIds = new string[](legsLen);
@@ -191,7 +212,17 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     // Fulfill methods
     // ============================
 
-    /// @notice fulfillLiveTrade - (singles only)
+    /// @notice fulfillLiveTrade (SINGLE)
+    /// @dev Chainlink callback for single live trade verification.
+    ///      Requirements:
+    ///        - request not already fulfilled
+    ///        - request not timed out (timestampPerRequest + maxAllowedExecutionDelay)
+    ///        - request must not be a parlay
+    ///        - slippage constraint satisfied
+    ///      If `_allow` is true, executes `sportsAMM.tradeLive(...)` for a single TradeData entry.
+    /// @param _requestId Chainlink request id being fulfilled
+    /// @param _allow Whether the trade is allowed after verification
+    /// @param _approvedQuote Approved quote (odds) for the selected position
     function fulfillLiveTrade(
         bytes32 _requestId,
         bool _allow,
@@ -204,6 +235,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         ILiveTradingProcessor.LiveTradeData memory lTradeData = requestIdToTradeData[_requestId];
         address requester = requestIdToRequester[_requestId];
 
+        // Ensure approved quote respects additional slippage bound relative to expected quote.
         require(
             ((ONE * _approvedQuote) / lTradeData._expectedQuote) <= (ONE + lTradeData._additionalSlippage),
             "Slippage too high"
@@ -211,7 +243,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
         if (_allow) {
             ISportsAMMV2.TradeData[] memory tradeData = new ISportsAMMV2.TradeData[](1);
-
             tradeData[0] = _buildTradeDataSingle(lTradeData, _approvedQuote);
 
             _executeTrade(
@@ -244,7 +275,19 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         );
     }
 
-    /// @notice fulfillLiveTradeParlay - (parlays)
+    /// @notice fulfillLiveTradeParlay (PARLAY)
+    /// @dev Chainlink callback for parlay live trade verification.
+    ///      Requirements:
+    ///        - request not already fulfilled
+    ///        - request not timed out (timestampPerRequest + maxAllowedExecutionDelay)
+    ///        - request must be a parlay
+    ///        - legsLen > 1 and approvedLegOdds length must match legsLen
+    ///        - slippage constraint satisfied vs expectedPayout
+    ///      If `_allow` is true, executes `sportsAMM.tradeLive(...)` for TradeData[] of length legsLen.
+    /// @param _requestId Chainlink request id being fulfilled
+    /// @param _allow Whether the trade is allowed after verification
+    /// @param _approvedQuote Approved quote for the overall parlay payout
+    /// @param _approvedLegOdds Approved odds per leg (must match legs length)
     function fulfillLiveTradeParlay(
         bytes32 _requestId,
         bool _allow,
@@ -262,6 +305,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         require(legsLen > 1, "Parlay must have > 1 leg");
         require(_approvedLegOdds.length == legsLen, "Bad leg odds length");
 
+        // Ensure approved quote respects additional slippage bound relative to expected payout.
         require(((ONE * _approvedQuote) / pTrade.expectedPayout) <= (ONE + pTrade.additionalSlippage), "Slippage too high");
 
         if (_allow) {
@@ -291,6 +335,15 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     // Internal helpers
     // ============================
 
+    /// @notice Executes a verified live trade via SportsAMM and performs post-trade confirmation if required.
+    /// @dev Stores the created ticket address for the request id and optionally confirms via FreeBetsHolder.
+    /// @param _requestId Chainlink request id associated with the trade
+    /// @param requester Original requester that initiated the trade request
+    /// @param tradeData TradeData array to pass to SportsAMMV2.tradeLive (len=1 for singles, len>1 for parlays)
+    /// @param buyInAmount Buy-in amount for the trade
+    /// @param approvedQuote Approved quote (overall payout) returned by the verifier
+    /// @param referrer Referrer address (if any)
+    /// @param collateral Collateral token used for the trade
     function _executeTrade(
         bytes32 _requestId,
         address requester,
@@ -308,6 +361,11 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         }
     }
 
+    /// @notice Builds TradeData for a single-leg live trade.
+    /// @dev Creates ODDS_LEN-sized odds array with only selected position set to approvedLegOdd.
+    /// @param lTradeData Original live trade data requested by the user
+    /// @param approvedLegOdd Approved odd for the selected position
+    /// @return td TradeData struct to be passed to SportsAMMV2.tradeLive
     function _buildTradeDataSingle(
         ILiveTradingProcessor.LiveTradeData memory lTradeData,
         uint approvedLegOdd
@@ -334,6 +392,11 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         );
     }
 
+    /// @notice Builds TradeData for a single parlay leg.
+    /// @dev Creates ODDS_LEN-sized odds array with only leg.position set to approvedLegOdd.
+    /// @param leg Parlay leg parameters
+    /// @param approvedLegOdd Approved odd for this specific leg/position
+    /// @return td TradeData struct to be passed to SportsAMMV2.tradeLive
     function _buildTradeDataParlayLeg(
         ILiveTradingProcessor.LiveParlayLeg memory leg,
         uint approvedLegOdd
@@ -361,17 +424,30 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     /// @notice withdraw collateral in the contract
+    /// @dev Transfers the full balance of `collateral` held by this contract to `recipient`.
+    /// @param collateral ERC20 token address to withdraw
+    /// @param recipient Address receiving withdrawn collateral
     function withdrawCollateral(address collateral, address recipient) external onlyOwner {
         IERC20(collateral).safeTransfer(recipient, IERC20(collateral).balanceOf(address(this)));
     }
 
     //////////// SETTERS
 
+    /// @notice pause live trading
+    /// @dev Pauses or unpauses contract functions protected by whenNotPaused.
+    /// @param _setPausing whether to pause or unpause
     function setPaused(bool _setPausing) external onlyOwner {
         _setPausing ? _pause() : _unpause();
     }
 
     /// @notice Backwards-compatible setter + parlay config added
+    /// @dev Updates Chainlink and SportsAMM configuration, including both single and parlay job spec ids.
+    /// @param _link LINK token address used for Chainlink payments
+    /// @param _oracle Chainlink oracle address
+    /// @param _sportsAMM SportsAMMV2 contract address
+    /// @param _jobSpecId Job spec id for SINGLE live verification requests
+    /// @param _parlayJobSpecId Job spec id for PARLAY live verification requests
+    /// @param _paymentAmount LINK payment amount per request
     function setConfiguration(
         address _link,
         address _oracle,
@@ -391,11 +467,16 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         emit ContextReset(_link, _oracle, _sportsAMM, _jobSpecId, _parlayJobSpecId, _paymentAmount);
     }
 
+    /// @notice sets the FreeBetsHolder address, required for handling ticket claiming via FreeBetsHolder
+    /// @param _freeBetsHolder FreeBetsHolder contract address
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
         freeBetsHolder = _freeBetsHolder;
         emit SetFreeBetsHolder(_freeBetsHolder);
     }
 
+    /// @notice setMaxAllowedExecutionDelay
+    /// @dev Sets maximum allowed buffer for the Chainlink request to be executed.
+    /// @param _maxAllowedExecutionDelay maximum allowed buffer in seconds
     function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
         maxAllowedExecutionDelay = _maxAllowedExecutionDelay;
         emit SetMaxAllowedExecutionDelay(_maxAllowedExecutionDelay);
@@ -403,16 +484,24 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     //// GETTERS
 
+    /// @notice gets trade data struct for specified request ID (singles)
+    /// @param requestId request ID
+    /// @return liveTradeData Stored LiveTradeData for requestId
     function getTradeData(bytes32 requestId) external view returns (ILiveTradingProcessor.LiveTradeData memory) {
         return requestIdToTradeData[requestId];
     }
 
+    /// @notice gets parlay trade data struct for specified request ID (parlays)
+    /// @param requestId request ID
+    /// @return parlayTradeData Stored LiveParlayTradeData for requestId
     function getParlayTradeData(bytes32 requestId) external view returns (ILiveTradingProcessor.LiveParlayTradeData memory) {
         return requestIdToParlayTradeData[requestId];
     }
 
     //// UTILITY
 
+    /// @notice Converts a string into bytes32 by taking the first 32 bytes.
+    /// @dev Returns 0x0 for empty strings. Used for gameId conversions.
     function stringToBytes32(string memory source) internal pure returns (bytes32 result) {
         bytes memory tempEmptyStringTest = bytes(source);
         if (tempEmptyStringTest.length == 0) {
@@ -423,6 +512,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         }
     }
 
+    /// @notice Converts signed integer into string representation.
+    /// @dev Used for encoding negative lines in Chainlink request arrays.
     function _intToString(int256 value) internal pure returns (string memory) {
         if (value >= 0) {
             return Strings.toString(uint256(value));
