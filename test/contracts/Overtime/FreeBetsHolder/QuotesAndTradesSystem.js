@@ -55,7 +55,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 		await sportsAMMV2LiquidityPool.start();
 
 		await collateral.mintForUser(firstLiquidityProvider);
-		await collateral.connect(firstLiquidityProvider).approve(freeBetsHolder.target, ethers.parseEther('1000'));
+		await collateral
+			.connect(firstLiquidityProvider)
+			.approve(freeBetsHolder.target, ethers.parseEther('1000'));
 	});
 
 	describe('Trade with free bet', () => {
@@ -190,9 +192,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 			// Owner should receive the payout amount (4.000914494741655190 ETH)
 			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
-			expect(ownerBalanceAfter).to.equal(
-				ownerBalanceBefore
-			);
+			expect(ownerBalanceAfter).to.equal(ownerBalanceBefore);
 		});
 		it('Should handle winning system bet correctly', async () => {
 			// Set result types for the markets
@@ -259,14 +259,14 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			// Check ticket before exercise
 			const TicketContract = await ethers.getContractFactory('Ticket');
 			const ticket = await TicketContract.attach(ticketAddress);
-			
+
 			// Exercise the system bet ticket
 			await sportsAMMV2.handleTicketResolving(ticketAddress, 0);
 
 			// Check ticket state after exercise
 			const finalPayout = await ticket.finalPayout();
 			const buyInAmountFromTicket = await ticket.buyInAmount();
-			
+
 			// Get balances after exercise
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
@@ -276,7 +276,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			// If payout <= buyInAmount: all goes to user
 			const ownerReceived = ownerBalanceAfter - ownerBalanceBefore;
 			const userReceived = userBalanceAfter - userBalanceBefore;
-			
+
 			if (finalPayout >= buyInAmountFromTicket) {
 				// Owner should receive the buyInAmount
 				expect(ownerReceived).to.equal(BUY_IN_AMOUNT);
@@ -286,7 +286,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				// If payout < buyInAmount, all goes to user
 				expect(ownerReceived).to.equal(0);
 				expect(userReceived).to.equal(0);
-				const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
+				const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
+					firstTrader,
+					collateralAddress
+				);
 				expect(freeBetBalanceAfter).to.equal(finalPayout);
 			}
 		});
@@ -335,7 +338,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 			// Get balances after exercise
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
-			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
+			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
 			// For cancelled system bet, full buyInAmount should go to user
 			expect(userBalanceAfter - userBalanceBefore).to.equal(0);
 			expect(freeBetBalanceAfter).to.equal(BUY_IN_AMOUNT);
@@ -412,7 +418,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const freeBetsOwner = await freeBetsHolder.owner();
 			const userBalanceBefore = await collateral.balanceOf(firstTrader);
 			const ownerBalanceBefore = await collateral.balanceOf(freeBetsOwner);
-			const freeBetBalanceBefore = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
+			const freeBetBalanceBefore = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
 
 			// Check ticket before exercise
 			const TicketContract = await ethers.getContractFactory('Ticket');
@@ -429,7 +438,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			// Get balances after exercise
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
 			const ownerBalanceAfter = await collateral.balanceOf(freeBetsOwner);
-			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(firstTrader, collateralAddress);
+			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
 
 			// The ticket should not be fully cancelled (isCancelled = false)
 			expect(isCancelled).to.equal(false);

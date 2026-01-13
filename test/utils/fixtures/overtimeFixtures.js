@@ -739,6 +739,7 @@ async function deploySportsAMMV2Fixture() {
 		mockChainlinkOracleAddress, //_oracle
 		sportsAMMV2Address, // _sportsAMM
 		mockSpecId, // _specId
+		mockSpecId, // _parlaySpecId
 		0 // payment
 	);
 	const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
@@ -778,7 +779,6 @@ async function deploySportsAMMV2Fixture() {
 		.connect(firstTrader)
 		.approve(stakingThalesBettingProxyAddress, DEFAULT_AMOUNT);
 	await stakingThales.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
-	await liveTradingProcessor.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await mockChainlinkOracle.setSGPTradingProcessor(sgpTradingProcessorAddress);
 
