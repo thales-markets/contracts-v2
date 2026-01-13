@@ -68,7 +68,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         parlayJobSpecId = _parlayJobSpecId;
     }
 
-    /// @notice requestLiveTrade (SINGLE) - unchanged signature
+    /// @notice requestLiveTrade (SINGLE)
     function requestLiveTrade(
         ILiveTradingProcessor.LiveTradeData calldata _liveTradeData
     ) external whenNotPaused returns (bytes32 requestId) {
@@ -193,8 +193,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     // Fulfill methods
     // ============================
 
-    /// @notice fulfillLiveTrade - BACKWARDS COMPAT (singles only)
-    /// @dev Keep EXACT signature of production version
+    /// @notice fulfillLiveTrade - (singles only)
     function fulfillLiveTrade(
         bytes32 _requestId,
         bool _allow,
@@ -247,7 +246,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         );
     }
 
-    /// @notice fulfillLiveTradeParlay - NEW (parlays)
+    /// @notice fulfillLiveTradeParlay - (parlays)
     function fulfillLiveTradeParlay(
         bytes32 _requestId,
         bool _allow,
