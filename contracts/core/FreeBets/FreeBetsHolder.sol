@@ -39,13 +39,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     error FreeBetNotExpired();
     error UnknownSpeedMarketTicketOwner();
     error OnlyCallableFromSpeedMarketsAMMCreator();
-    error InvalidTicketType();
-
-    enum TicketType {
-        SPORTS,
-        SPEED_MARKET,
-        CHAINED_SPEED_MARKET
-    }
 
     uint private constant MAX_APPROVAL = type(uint256).max;
 
@@ -82,8 +75,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     mapping(address => AddressSetLib.AddressSet) internal usersWithFreeBetPerCollateral;
 
     IAddressManager public addressManager;
-
-    mapping(address => TicketType) private ticketType;
 
     mapping(bytes32 => address) public speedMarketRequestToUser;
 
@@ -374,7 +365,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         bool _isChainedSpeedMarket
     ) internal {
         address speedMarketsAMMCreator = addressManager.getAddress("SpeedMarketsAMMCreator");
-        if (speedMarketsAMMCreator == address(0)) revert SpeedMarketsAMMCreatorNotSet();
         if (msg.sender != speedMarketsAMMCreator) revert OnlyCallableFromSpeedMarketsAMMCreator();
         if (_collateral == address(0)) {
             _collateral = address(sportsAMM.defaultCollateral());
