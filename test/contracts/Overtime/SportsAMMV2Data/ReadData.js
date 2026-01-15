@@ -265,9 +265,13 @@ describe('SportsAMMV2Data Read Data', () => {
 			const secondCollateral = await MockERC20.deploy();
 			await secondCollateral.mintForUser(secondTrader);
 			const secondCollateralAddress = await secondCollateral.getAddress();
-
+			const sportsAMMV2Address = await sportsAMMV2.getAddress();
 			// Add support for second collateral
-			await freeBetsHolder.addSupportedCollateral(secondCollateralAddress, true);
+			await freeBetsHolder.addSupportedCollateral(
+				secondCollateralAddress,
+				true,
+				sportsAMMV2Address
+			);
 
 			// User should have zero balance for the second collateral initially
 			const secondCollateralInitialBalance = await freeBetsHolder.balancePerUserAndCollateral(

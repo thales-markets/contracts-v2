@@ -282,8 +282,11 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				liveTradingProcessor.target
 			);
 
+			const sportsAMMV2Address = await sportsAMMV2.getAddress();
 			// Add collateral support
-			await newFreeBetHolder.connect(firstTrader).addSupportedCollateral(collateralAddress, true);
+			await newFreeBetHolder
+				.connect(firstTrader)
+				.addSupportedCollateral(collateralAddress, true, sportsAMMV2Address);
 
 			// Send some collateral to the contract
 			await collateral.connect(firstTrader).approve(newFreeBetHolder.target, BUY_IN_AMOUNT);
@@ -605,9 +608,9 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const newCollateralFactory = await ethers.getContractFactory('ExoticUSD');
 			const newCollateral = await newCollateralFactory.deploy();
 			const newCollateralAddress = await newCollateral.getAddress();
-
+			const sportsAMMV2Address = await sportsAMMV2.getAddress();
 			// Add support for new collateral
-			await freeBetsHolder.addSupportedCollateral(newCollateralAddress, true);
+			await freeBetsHolder.addSupportedCollateral(newCollateralAddress, true, sportsAMMV2Address);
 
 			// Prepare test accounts
 			const testAccounts = await ethers.getSigners();

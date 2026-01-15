@@ -151,7 +151,7 @@ describe('FreeBetsHolder Speed Markets', function () {
 				owner.address,
 			]);
 
-			await newFreeBetsHolder.addSupportedCollateral(collateralAddress, true);
+			await newFreeBetsHolder.addSupportedCollateral(collateralAddress, true, owner.address);
 			await newFreeBetsHolder.setFreeBetExpirationPeriod(40 * 24 * 60 * 60, 0);
 
 			// Deploy mock AddressManager
@@ -808,63 +808,57 @@ describe('FreeBetsHolder Speed Markets', function () {
 			// Create markets from pending
 			await mockSpeedMarketsAMMCreator.createFromPendingSpeedMarkets([]);
 
-			// After confirmation, mapping should be cleared
+			// After confirmation, mapping should still contain the user (not cleared)
 			const mappedUserAfter = await freeBetsHolder.speedMarketRequestToUser(requestId);
-			expect(mappedUserAfter).to.equal(ZERO_ADDRESS);
+			expect(mappedUserAfter).to.equal(firstTrader.address);
 		});
 	});
 
 	describe('Approval Management', function () {
-		it('Should update approval for SpeedMarketsAMM and ChainedSpeedMarketsAMM', async function () {
-			// Deploy dummy signer addresses for SpeedMarketsAMM and ChainedSpeedMarketsAMM
-			const dummySpeedMarketsAMM = ethers.Wallet.createRandom();
-			const dummyChainedSpeedMarketsAMM = ethers.Wallet.createRandom();
+		it('Should set approval when adding supported collateral', async function () {
+			// Deploy dummy address for approval target
+			const dummyApprovalTarget = ethers.Wallet.createRandom();
 
-			// Set the dummy addresses in AddressManager
-			await addressManager.setAddressInAddressBook('SpeedMarketsAMM', dummySpeedMarketsAMM.address);
-			await addressManager.setAddressInAddressBook(
-				'ChainedSpeedMarketsAMM',
-				dummyChainedSpeedMarketsAMM.address
-			);
+			// Deploy new collateral for testing
+			const ExoticUSD = await ethers.getContractFactory('ExoticUSD');
+			const newCollateral = await ExoticUSD.deploy();
+			const newCollateralAddress = await newCollateral.getAddress();
 
 			// Check initial allowance (should be 0)
-			const initialAllowanceSpeed = await collateral.allowance(
+			const initialAllowance = await newCollateral.allowance(
 				await freeBetsHolder.getAddress(),
-				dummySpeedMarketsAMM.address
+				dummyApprovalTarget.address
 			);
-			const initialAllowanceChained = await collateral.allowance(
-				await freeBetsHolder.getAddress(),
-				dummyChainedSpeedMarketsAMM.address
-			);
-			expect(initialAllowanceSpeed).to.equal(0);
-			expect(initialAllowanceChained).to.equal(0);
+			expect(initialAllowance).to.equal(0);
 
-			// Call updateApprovalForSpeedMarketsAMM
-			const tx = await freeBetsHolder.updateApprovalForSpeedMarketsAMM(collateralAddress);
+			// Add supported collateral with approval target
+			const tx = await freeBetsHolder.addSupportedCollateral(
+				newCollateralAddress,
+				true,
+				dummyApprovalTarget.address
+			);
 
 			// Check event emission
 			await expect(tx)
-				.to.emit(freeBetsHolder, 'UpdateMaxApprovalSpeedMarketsAMM')
-				.withArgs(collateralAddress);
+				.to.emit(freeBetsHolder, 'CollateralSupportChanged')
+				.withArgs(newCollateralAddress, true, dummyApprovalTarget.address);
 
-			// Check that approvals are set to MAX_APPROVAL
+			// Check that approval is set to MAX_APPROVAL
 			const MAX_APPROVAL = ethers.MaxUint256;
-			const finalAllowanceSpeed = await collateral.allowance(
+			const finalAllowance = await newCollateral.allowance(
 				await freeBetsHolder.getAddress(),
-				dummySpeedMarketsAMM.address
+				dummyApprovalTarget.address
 			);
-			const finalAllowanceChained = await collateral.allowance(
-				await freeBetsHolder.getAddress(),
-				dummyChainedSpeedMarketsAMM.address
-			);
-			expect(finalAllowanceSpeed).to.equal(MAX_APPROVAL);
-			expect(finalAllowanceChained).to.equal(MAX_APPROVAL);
+			expect(finalAllowance).to.equal(MAX_APPROVAL);
 		});
 
-		it('Should only allow owner to update approval for SpeedMarketsAMM', async function () {
-			// Try to call updateApprovalForSpeedMarketsAMM as non-owner
+		it('Should only allow owner to add supported collateral', async function () {
+			const dummyApprovalTarget = ethers.Wallet.createRandom();
+			// Try to call addSupportedCollateral as non-owner
 			await expect(
-				freeBetsHolder.connect(firstTrader).updateApprovalForSpeedMarketsAMM(collateralAddress)
+				freeBetsHolder
+					.connect(firstTrader)
+					.addSupportedCollateral(collateralAddress, true, dummyApprovalTarget.address)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 	});

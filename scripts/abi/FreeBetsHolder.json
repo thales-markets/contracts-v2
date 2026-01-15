@@ -141,6 +141,12 @@
         "internalType": "bool",
         "name": "supported",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "addressToApprove",
+        "type": "address"
       }
     ],
     "name": "CollateralSupportChanged",
@@ -610,6 +616,11 @@
         "internalType": "bool",
         "name": "_supported",
         "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "addressToApprove",
+        "type": "address"
       }
     ],
     "name": "addSupportedCollateral",
@@ -2308,19 +2319,6 @@
       }
     ],
     "name": "transferOwnershipAtInit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_collateral",
-        "type": "address"
-      }
-    ],
-    "name": "updateApprovalForSpeedMarketsAMM",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

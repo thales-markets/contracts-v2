@@ -347,6 +347,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         );
     }
 
+    /// @notice confirm a speed or chained speed market trade. Called by SpeedMarketsAMMCreator as callback
+    /// @param requestId the request id of the pending speed market
+    /// @param _createdTicket the address of the created speed market
+    /// @param _collateral the address of the collateral
+    /// @param _buyInAmount the buy in amount
+    /// @param _isChainedSpeedMarket true if this is a chained speed market
     function confirmSpeedOrChainedSpeedMarketTrade(
         bytes32 requestId,
         address _createdTicket,
@@ -374,7 +380,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         } else {
             activeSpeedMarketsPerUser[_user].add(_createdTicket);
         }
-        delete speedMarketRequestToUser[requestId];
 
         emit FreeBetSpeedTrade(_createdTicket, _buyInAmount, _user);
     }
@@ -399,6 +404,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit FreeBetTicketResolved(_resolvedTicket, _user, _earned);
     }
 
+    /// @notice callback from SpeedMarketsAMMResolver on speed market resolution. Net winnings are sent to users while the freebet amount goes to the contract owner
+    /// @param _resolvedSpeedMarket the address of the resolved speed market
+    /// @param _exercized the amount exercised from the speed market
+    /// @param _buyInAmount the original buy in amount
+    /// @param _collateral the address of the collateral
+    /// @param isChained true if this is a chained speed market
     function confirmSpeedMarketResolved(
         address _resolvedSpeedMarket,
         uint _exercized,
@@ -433,15 +444,18 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     }
 
     /* ========== SETTERS ========== */
-    /// @notice add or remove a supported collateral
-    function addSupportedCollateral(address _collateral, bool _supported) external onlyOwner {
+    /// @notice add or remove a supported collateral for address
+    /// @param _collateral the address of the collateral
+    /// @param _supported true if the collateral is supported, false otherwise
+    /// @param addressToApprove the address to approve
+    function addSupportedCollateral(address _collateral, bool _supported, address addressToApprove) external onlyOwner {
         supportedCollateral[_collateral] = _supported;
         if (_supported) {
-            IERC20(_collateral).approve(address(sportsAMM), MAX_APPROVAL);
+            IERC20(_collateral).approve(addressToApprove, MAX_APPROVAL);
         } else {
-            IERC20(_collateral).approve(address(sportsAMM), 0);
+            IERC20(_collateral).approve(addressToApprove, 0);
         }
-        emit CollateralSupportChanged(_collateral, _supported);
+        emit CollateralSupportChanged(_collateral, _supported, addressToApprove);
     }
 
     /* ========== GETTERS ========== */
@@ -684,18 +698,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit SetAddressManager(_addressManager);
     }
 
-    function updateApprovalForSpeedMarketsAMM(address _collateral) external onlyOwner {
-        address speedMarketsAMM = addressManager.getAddress("SpeedMarketsAMM");
-        address chainSpeedMarketsAMM = addressManager.getAddress("ChainedSpeedMarketsAMM");
-        if (speedMarketsAMM != address(0)) {
-            IERC20(_collateral).approve(speedMarketsAMM, MAX_APPROVAL);
-        }
-        if (chainSpeedMarketsAMM != address(0)) {
-            IERC20(_collateral).approve(chainSpeedMarketsAMM, MAX_APPROVAL);
-        }
-        emit UpdateMaxApprovalSpeedMarketsAMM(_collateral);
-    }
-
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _resolveMarket(
@@ -764,7 +766,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event UserFunded(address user, address collateral, uint amount, address funder);
     event FreeBetTrade(address createdTicket, uint buyInAmount, address user, bool isLive);
     event FreeBetSpeedTrade(address createdSpeedMarket, uint buyInAmount, address user);
-    event CollateralSupportChanged(address collateral, bool supported);
+    event CollateralSupportChanged(address collateral, bool supported, address addressToApprove);
     event FreeBetTicketResolved(address ticket, address user, uint earned);
     event FreeBetSpeedMarketResolved(address speedMarket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
