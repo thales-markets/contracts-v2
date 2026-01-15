@@ -59,7 +59,7 @@
 		"DefaultLiquidityProviderWETH": "0x001464DF99f368780c3b6cc68A809A748e8bb64e",
 		"DefaultLiquidityProviderWETHImplementation": "0x8280270f70f8Ef0CB22800cF21Fd6f83B38FDAF6",
 		"DefaultLiquidityProviderWETHProxyAdmin": "0x30d092DCDe10E2c89C4b7a3b18289Ffab195F09C",
-		"FreeBetsHolder": "0xAeDB908b82626F031E31140527b45c7C89d4bb53",
+		"FreeBetsHolder": "0x592dEDa33Aa41b540E1821eCed7D635D344c21B6",
 		"MockMultiCollateralOnOffRampV1": "0xF10c6f46e18a7e6AD9b13c9cE1FF063D3E45D510",
 		"MockMultiCollateralOnOffRampV1Implementation": "0x384aB342620513b48064Ec0e53e464d63C238d98",
 		"MockUniswap": "0xb0d70493ECD2E4753a4bB91fA6be159597F4d1F5",
@@ -73,7 +73,7 @@
 		"ResolveBlockerImplementation": "0xd62f3Cc9a9414Fe1303386a511307b94cB57F124",
 		"ResolveBlockerProxyAdmin": "0x74e781ADdfC588aFf25c1A724b963E8A75f9a631",
 		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x4CfB5F92b34528f046Cf4A6023F14378307c8037",
-		"FreeBetsHolderImplementation": "0x1E4CeAebff71AaCeA9e9737EeFC7f7dAcb8c5775",
+		"FreeBetsHolderImplementation": "0xE6572732026256213d7d468Eb3Ab0AB8E8D18B03",
 		"OVER": "0xdDEDfAF154a0228cD15b2FDAaEc9F0ADA5fae2a2",
 		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD",
 		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
@@ -81,7 +81,8 @@
 		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2",
 		"OverdropRewards": "0xa4505687368a044931C96dad55BEe2c3e4Ae2516",
 		"OverdropRewardsImplementation": "0x4D4CC84fAF3d5DDB1e6df533E767b81f439E9846",
-		"OverdropRewardsProxyAdmin": "0x900Af2133d9c636ed65BDF89AB1E99b9f54fCd20"
+		"OverdropRewardsProxyAdmin": "0x900Af2133d9c636ed65BDF89AB1E99b9f54fCd20",
+		"FreeBetsHolderProxyAdmin": "0x0429ed7CBD1B32f130E2ef42FAD99f63A471A3cB"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
