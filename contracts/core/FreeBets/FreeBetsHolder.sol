@@ -349,13 +349,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
 
     /// @notice confirm a speed or chained speed market trade. Called by SpeedMarketsAMMCreator as callback
     /// @param requestId the request id of the pending speed market
-    /// @param _createdTicket the address of the created speed market
+    /// @param _createdMarket the address of the created speed market
     /// @param _collateral the address of the collateral
     /// @param _buyInAmount the buy in amount
     /// @param _isChainedSpeedMarket true if this is a chained speed market
     function confirmSpeedOrChainedSpeedMarketTrade(
         bytes32 requestId,
-        address _createdTicket,
+        address _createdMarket,
         address _collateral,
         uint _buyInAmount,
         bool _isChainedSpeedMarket
@@ -374,14 +374,14 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (balancePerUserAndCollateral[_user][_collateral] < _buyInAmount) revert InsufficientBalance();
 
         balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
-        ticketToUser[_createdTicket] = _user;
+        ticketToUser[_createdMarket] = _user;
         if (_isChainedSpeedMarket) {
-            activeChainedSpeedMarketsPerUser[_user].add(_createdTicket);
+            activeChainedSpeedMarketsPerUser[_user].add(_createdMarket);
         } else {
-            activeSpeedMarketsPerUser[_user].add(_createdTicket);
+            activeSpeedMarketsPerUser[_user].add(_createdMarket);
         }
 
-        emit FreeBetSpeedTrade(_createdTicket, _buyInAmount, _user);
+        emit FreeBetSpeedTrade(_createdMarket, _buyInAmount, _user);
     }
 
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes to the contract owner
