@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@thales-dao/contracts/contracts/interfaces/IAddressManager.sol";
 
 import "../../interfaces/ISpeedMarketsAMMCreator.sol";
-
+import "../../interfaces/ISpeedMarketsAMM.sol";
 import "../../utils/proxy/ProxyOwned.sol";
 import "../../utils/proxy/ProxyPausable.sol";
 import "../../utils/proxy/ProxyReentrancyGuard.sol";
@@ -354,21 +354,13 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         uint _buyInAmount,
         bool _isChainedSpeedMarket
     ) external notPaused nonReentrant {
-        _confirmSpeedOrChainedSpeedMarketTrade(requestId, _createdTicket, _collateral, _buyInAmount, _isChainedSpeedMarket);
-    }
-
-    function _confirmSpeedOrChainedSpeedMarketTrade(
-        bytes32 requestId,
-        address _createdSpeedMarket,
-        address _collateral,
-        uint _buyInAmount,
-        bool _isChainedSpeedMarket
-    ) internal {
         address speedMarketsAMMCreator = addressManager.getAddress("SpeedMarketsAMMCreator");
         if (msg.sender != speedMarketsAMMCreator) revert OnlyCallableFromSpeedMarketsAMMCreator();
         if (_collateral == address(0)) {
-            _collateral = address(sportsAMM.defaultCollateral());
+            ISpeedMarketsAMM speedMarketsAMM = ISpeedMarketsAMM(addressManager.getAddress("SpeedMarketsAMM"));
+            _collateral = speedMarketsAMM.sUSD();
         }
+        if (!supportedCollateral[_collateral]) revert UnsupportedCollateral();
 
         address _user = speedMarketRequestToUser[requestId];
         if (_user == address(0)) revert UnknownSpeedMarketTicketOwner();
@@ -376,15 +368,15 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (balancePerUserAndCollateral[_user][_collateral] < _buyInAmount) revert InsufficientBalance();
 
         balancePerUserAndCollateral[_user][_collateral] -= _buyInAmount;
-        ticketToUser[_createdSpeedMarket] = _user;
+        ticketToUser[_createdTicket] = _user;
         if (_isChainedSpeedMarket) {
-            activeChainedSpeedMarketsPerUser[_user].add(_createdSpeedMarket);
+            activeChainedSpeedMarketsPerUser[_user].add(_createdTicket);
         } else {
-            activeSpeedMarketsPerUser[_user].add(_createdSpeedMarket);
+            activeSpeedMarketsPerUser[_user].add(_createdTicket);
         }
         delete speedMarketRequestToUser[requestId];
 
-        emit FreeBetSpeedTrade(_createdSpeedMarket, _buyInAmount, _user);
+        emit FreeBetSpeedTrade(_createdTicket, _buyInAmount, _user);
     }
 
     /// @notice callback from sportsAMM on ticket exercize if owner is this contract. The net winnings are sent to users while the freebet amount goes to the contract owner
