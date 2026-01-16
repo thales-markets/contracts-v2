@@ -14,6 +14,7 @@ async function main() {
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 	const liveTradingProcessorAddress = getTargetAddress('LiveTradingProcessor', network);
+	const sgpTradingProcessorAddress = getTargetAddress('SGPTradingProcessor', network);
 
 	const FreeBetsHolder = await ethers.getContractFactory('FreeBetsHolder');
 	const freeBetsHolderDeployed = await upgrades.deployProxy(
@@ -47,10 +48,13 @@ async function main() {
 	if (isTestNetwork(networkObj.chainId)) {
 		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
 		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
-		await sportsAMMV2Deployed.setFreeBetsHolder(freeBetsHolderAddress, {
-			from: owner.address,
-		});
-		console.log('FreeBetsHolder set in SportsAMMV2');
+		const tx = await sportsAMMV2Deployed.setBettingProcessors(
+			liveTradingProcessorAddress,
+			sgpTradingProcessorAddress,
+			freeBetsHolderAddress
+		);
+		await tx.wait();
+		console.log('setBettingProcessors called on SportsAMMV2');
 	}
 
 	await delay(5000);

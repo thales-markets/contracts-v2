@@ -60,7 +60,8 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 	describe('Trade with free bet', () => {
 		it('Should fail with unsupported collateral', async () => {
-			await freeBetsHolder.addSupportedCollateral(collateralAddress, false);
+			const sportsAMMV2Address = await sportsAMMV2.getAddress();
+			await freeBetsHolder.addSupportedCollateral(collateralAddress, false, sportsAMMV2Address);
 
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,

@@ -340,6 +340,11 @@
       "address": "0xa4505687368a044931C96dad55BEe2c3e4Ae2516",
       "txHash": "0x4323ed85db8571afa040592830565b510f2511d3996156b1083a021674b1c6e8",
       "kind": "transparent"
+    },
+    {
+      "address": "0x592dEDa33Aa41b540E1821eCed7D635D344c21B6",
+      "txHash": "0x5e1a7b42277ef34e9fedcba15176e92bcc3ef33541782dfb41ea308a2bcbf20d",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -51575,7 +51580,7 @@
             "label": "defaultCollateral",
             "offset": 0,
             "slot": "7",
-            "type": "t_contract(IERC20)2955",
+            "type": "t_contract(IERC20)3607",
             "contract": "SportsAMMV2",
             "src": "contracts\\core\\AMM\\SportsAMMV2.sol:79"
           },
@@ -51599,7 +51604,7 @@
             "label": "manager",
             "offset": 0,
             "slot": "10",
-            "type": "t_contract(ISportsAMMV2Manager)28407",
+            "type": "t_contract(ISportsAMMV2Manager)31800",
             "contract": "SportsAMMV2",
             "src": "contracts\\core\\AMM\\SportsAMMV2.sol:88"
           },
@@ -51607,7 +51612,7 @@
             "label": "riskManager",
             "offset": 0,
             "slot": "11",
-            "type": "t_contract(ISportsAMMV2RiskManager)28830",
+            "type": "t_contract(ISportsAMMV2RiskManager)32212",
             "contract": "SportsAMMV2",
             "src": "contracts\\core\\AMM\\SportsAMMV2.sol:91"
           },
@@ -51615,7 +51620,7 @@
             "label": "resultManager",
             "offset": 0,
             "slot": "12",
-            "type": "t_contract(ISportsAMMV2ResultManager)28592",
+            "type": "t_contract(ISportsAMMV2ResultManager)31985",
             "contract": "SportsAMMV2",
             "src": "contracts\\core\\AMM\\SportsAMMV2.sol:94"
           },
@@ -51623,7 +51628,7 @@
             "label": "referrals",
             "offset": 0,
             "slot": "13",
-            "type": "t_contract(IReferrals)5861",
+            "type": "t_contract(IReferrals)7389",
             "contract": "SportsAMMV2",
             "src": "contracts\\core\\AMM\\SportsAMMV2.sol:97"
           },
@@ -51655,7 +51660,7 @@
             "label": "multiCollateralOnOffRamp",
             "offset": 0,
             "slot": "17",
-            "type": "t_contract(IMultiCollateralOnOffRamp)5782",
+            "type": "t_contract(IMultiCollateralOnOffRamp)7293",
             "contract": "SportsAMMV2",
             "src": "contracts\\core\\AMM\\SportsAMMV2.sol:109"
           },
@@ -51671,7 +51676,7 @@
             "label": "stakingThales",
             "offset": 0,
             "slot": "18",
-            "type": "t_contract(IStakingThales)5970",
+            "type": "t_contract(IStakingThales)7498",
             "contract": "SportsAMMV2",
             "src": "contracts\\core\\AMM\\SportsAMMV2.sol:115"
           },
@@ -51759,31 +51764,31 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(IERC20)2955": {
+          "t_contract(IERC20)3607": {
             "label": "contract IERC20",
             "numberOfBytes": "20"
           },
-          "t_contract(IMultiCollateralOnOffRamp)5782": {
+          "t_contract(IMultiCollateralOnOffRamp)7293": {
             "label": "contract IMultiCollateralOnOffRamp",
             "numberOfBytes": "20"
           },
-          "t_contract(IReferrals)5861": {
+          "t_contract(IReferrals)7389": {
             "label": "contract IReferrals",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2Manager)28407": {
+          "t_contract(ISportsAMMV2Manager)31800": {
             "label": "contract ISportsAMMV2Manager",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2ResultManager)28592": {
+          "t_contract(ISportsAMMV2ResultManager)31985": {
             "label": "contract ISportsAMMV2ResultManager",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2RiskManager)28830": {
+          "t_contract(ISportsAMMV2RiskManager)32212": {
             "label": "contract ISportsAMMV2RiskManager",
             "numberOfBytes": "20"
           },
-          "t_contract(IStakingThales)5970": {
+          "t_contract(IStakingThales)7498": {
             "label": "contract IStakingThales",
             "numberOfBytes": "20"
           },
@@ -53403,7 +53408,7 @@
             "label": "manager",
             "offset": 1,
             "slot": "5",
-            "type": "t_contract(ISportsAMMV2Manager)28407",
+            "type": "t_contract(ISportsAMMV2Manager)5021",
             "contract": "SportsAMMV2RiskManager",
             "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:52"
           },
@@ -53411,7 +53416,7 @@
             "label": "resultManager",
             "offset": 0,
             "slot": "6",
-            "type": "t_contract(ISportsAMMV2ResultManager)28592",
+            "type": "t_contract(ISportsAMMV2ResultManager)5206",
             "contract": "SportsAMMV2RiskManager",
             "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:55"
           },
@@ -53419,7 +53424,7 @@
             "label": "sportsAMM",
             "offset": 0,
             "slot": "7",
-            "type": "t_contract(ISportsAMMV2)28099",
+            "type": "t_contract(ISportsAMMV2)4835",
             "contract": "SportsAMMV2RiskManager",
             "src": "contracts\\core\\AMM\\SportsAMMV2RiskManager.sol:58"
           },
@@ -53669,7 +53674,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_struct(InitializableStorage)371_storage": {
+          "t_struct(InitializableStorage)10_storage": {
             "label": "struct Initializable.InitializableStorage",
             "members": [
               {
@@ -53699,15 +53704,15 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(ISportsAMMV2)28099": {
+          "t_contract(ISportsAMMV2)4835": {
             "label": "contract ISportsAMMV2",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2Manager)28407": {
+          "t_contract(ISportsAMMV2Manager)5021": {
             "label": "contract ISportsAMMV2Manager",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2ResultManager)28592": {
+          "t_contract(ISportsAMMV2ResultManager)5206": {
             "label": "contract ISportsAMMV2ResultManager",
             "numberOfBytes": "20"
           },
@@ -54164,6 +54169,4095 @@
           "t_mapping(t_uint256,t_uint256)": {
             "label": "mapping(uint256 => uint256)",
             "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "874c6324254c03652c44f7a2648b419ecb77e7413b4e27d9d697829456d3a76f": {
+      "address": "0x0cA786203Ab2446Bf5Cd216166d2155eA36fE24A",
+      "txHash": "0x7fcf7b9b1fd41c9c5c2727fbf68efea8fa29d2c9a2318270a82d543ff2b574eb",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5164",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4743",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5810_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5810_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)4825",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5810_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4743": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)4825": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5164": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)5810_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)5810_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "7b34d40d720e62e1520ab43763865f95ff7a0f7d537e75668b39dd1c084f3294": {
+      "address": "0x9b45FAc71e0caF609a8C613e4fD9422f59a76AAa",
+      "txHash": "0x4a1e29fbc5d4b105a2dafca06b1fa576d3062a5a29708b3ecd27bcb822a47fb9",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5210",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4789",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5856_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5856_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)4871",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5856_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4789": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)4871": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5210": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)5856_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)5856_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "456cdafecdd85892c1c7883901eb45b3bc8836e28d13410072cc054fc76723ad": {
+      "address": "0xCB0002Dd328819Dc28ecFDead7b4ac1fd8fDE999",
+      "txHash": "0xe223b969f9a0372a5025f772fb2aadf2520ce0e62337ba737cb1bd0a26275382",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5226",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4805",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)4887",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4805": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)4887": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5226": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)5872_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)5872_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "6ef28ef8d64e08a91d8b7bee90acaa9c8fd6de99b61310794dd33fffdb4a7c27": {
+      "address": "0xd725323bd50A84357d8498C1e57DF885F2f668a9",
+      "txHash": "0x1d7a667b170d99d96df6652522c922b276407a6ababedf6a31797b4fffa3d150",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5226",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4805",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)4887",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4805": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)4887": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5226": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)5872_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)5872_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "18127ffb34d01613c56309531cf444e613cafcd9863a4697aefc3c1a7ea711c9": {
+      "address": "0xc3596B41Ba0125503D26fd4662Bea26a69786610",
+      "txHash": "0xba52ddd1e1794521dd8ba58f48eaac1a150d5e5995386fe37811e0b49585eeff",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5226",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4805",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)4887",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5872_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4805": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)4887": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5226": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)5872_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)5872_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "192ea4c5d3ee8b470cf8ad9c7ba3892c58916c1d1d5e14c7a2d6afee38dd9c99": {
+      "address": "0x53cEEeeaeb3D932d1Eefc5930fA49f7C5e381Af9",
+      "txHash": "0x7bb781e708192a7fa33cc3bdb08424ee1da6e466abc0f8461ff54be902f0a4b0",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5234",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4813",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5880_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5880_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)4895",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5880_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4813": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)4895": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5234": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)5880_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)5880_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "8f670d95a8d670922b71acfbdab71ba226249868dc4f34c588e4836bb834a57b": {
+      "address": "0x3C393C3256D2Ad03A8eE630cdB6446b53a55Bb6A",
+      "txHash": "0xc2a429946c5d7f2c84493096c1bbdbd32e3fe40b4f85c2efea4cedbc007b7b8c",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)32886",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)32311",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)34308_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)34308_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)32420",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)34308_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)7183",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)20626)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:88"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)7183": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)32311": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)32420": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)32886": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)20626": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)20626)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)34308_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)34308_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "cb1e3175c1a895830fa921d06f891ce4af53e97489daf5bcb8a7273149a6226c": {
+      "address": "0x2A2C77BE9Ba6D78746D1047c1cF8875e0159ef29",
+      "txHash": "0x238148c8c275406758bf0af501ce6d6e0ccc2f569a785426083bbc597b27dd25",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5351",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4930",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5997_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5997_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)5012",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5997_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:88"
+          },
+          {
+            "label": "activeSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5997_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:91"
+          },
+          {
+            "label": "resolvedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_address,t_struct(AddressSet)5997_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:94"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4930": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)5012": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5351": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)5997_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)5997_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "3a801e0a813dc43f278a842b875511ee5126044029232bf38165850358546943": {
+      "address": "0x0bD6C501F48d855c62aB986dADa8534757F7a9f6",
+      "txHash": "0xc0902b6292eb3a61c96ac82739b4d2954f8ab8cf82e8f773c5b1aef4913f36c9",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5377",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4956",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6023_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6023_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)5038",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6023_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:88"
+          },
+          {
+            "label": "activeSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6023_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:91"
+          },
+          {
+            "label": "resolvedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6023_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts\\core\\FreeBets\\FreeBetsHolder.sol:94"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4956": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)5038": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5377": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)6023_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)6023_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "cebb8cbae0ba2034531fda6371d526375408a7ba61b723ef057a97bb4b43dc0c": {
+      "address": "0xCeef194764c3D863Bea08FA0942989F0289dfd12",
+      "txHash": "0x98f3c53f5e047adc1a8f55b7a8f8c1ae4842b0f77eb729a03fd385350e5af1aa",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)29152",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)28731",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)29949_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)29949_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)28813",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)29949_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)5699",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)17151)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          },
+          {
+            "label": "activeSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_struct(AddressSet)29949_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:91"
+          },
+          {
+            "label": "resolvedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_address,t_struct(AddressSet)29949_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:94"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)5699": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)28731": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)28813": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)29152": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)17151": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)17151)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)29949_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)29949_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "87f966a1fad8a475eaad49b40234c3668a06663e53b7124051fd9617c151794e": {
+      "address": "0xd2EFE5385d099CD9E0FE6c5335943e69f4482846",
+      "txHash": "0xb4ae4fd8cb190d37d8ecb58ef0419838816e2e3d834d42f65e6b716a45334310",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 1,
+            "slot": "3",
+            "type": "t_contract(ILiveTradingProcessor)4772",
+            "contract": "LiveTradingProcessorData",
+            "src": "contracts\\core\\Data\\LiveTradingProcessorData.sol:35"
+          },
+          {
+            "label": "freeBetsHolder",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_contract(IFreeBetsHolder)4673",
+            "contract": "LiveTradingProcessorData",
+            "src": "contracts\\core\\Data\\LiveTradingProcessorData.sol:36"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IFreeBetsHolder)4673": {
+            "label": "contract IFreeBetsHolder",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4772": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "a984e6c8e44a3d4832a9ab9d41e614d6b59e782dcba7af5cd53b6111e2ea33bc": {
+      "address": "0x51Fc5076eFf9C5F95D98795fBBBFb009331dE75a",
+      "txHash": "0xcf35d3109dad8b1a56d88169cda1999feb792e5177d10a38c0ae77511d9c5453",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5454",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)5033",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6100_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6100_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)5115",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6100_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2279)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          },
+          {
+            "label": "activeSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6100_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:91"
+          },
+          {
+            "label": "resolvedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6100_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:94"
+          },
+          {
+            "label": "activeChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6100_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:97"
+          },
+          {
+            "label": "resolvedChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6100_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:100"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)5033": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)5115": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5454": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2279": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2279)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)6100_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)6100_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
           },
           "t_uint256": {
             "label": "uint256",
@@ -55608,143 +59702,6 @@
         }
       }
     },
-    "87f966a1fad8a475eaad49b40234c3668a06663e53b7124051fd9617c151794e": {
-      "address": "0xd2EFE5385d099CD9E0FE6c5335943e69f4482846",
-      "txHash": "0xb4ae4fd8cb190d37d8ecb58ef0419838816e2e3d834d42f65e6b716a45334310",
-      "layout": {
-        "solcVersion": "0.8.20",
-        "storage": [
-          {
-            "label": "owner",
-            "offset": 0,
-            "slot": "0",
-            "type": "t_address",
-            "contract": "ProxyOwned",
-            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
-          },
-          {
-            "label": "nominatedOwner",
-            "offset": 0,
-            "slot": "1",
-            "type": "t_address",
-            "contract": "ProxyOwned",
-            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
-          },
-          {
-            "label": "_initialized",
-            "offset": 20,
-            "slot": "1",
-            "type": "t_bool",
-            "contract": "ProxyOwned",
-            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
-          },
-          {
-            "label": "_transferredAtInit",
-            "offset": 21,
-            "slot": "1",
-            "type": "t_bool",
-            "contract": "ProxyOwned",
-            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
-          },
-          {
-            "label": "lastPauseTime",
-            "offset": 0,
-            "slot": "2",
-            "type": "t_uint256",
-            "contract": "ProxyPausable",
-            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
-          },
-          {
-            "label": "paused",
-            "offset": 0,
-            "slot": "3",
-            "type": "t_bool",
-            "contract": "ProxyPausable",
-            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
-          },
-          {
-            "label": "liveTradingProcessor",
-            "offset": 1,
-            "slot": "3",
-            "type": "t_contract(ILiveTradingProcessor)4772",
-            "contract": "LiveTradingProcessorData",
-            "src": "contracts\\core\\Data\\LiveTradingProcessorData.sol:35"
-          },
-          {
-            "label": "freeBetsHolder",
-            "offset": 0,
-            "slot": "4",
-            "type": "t_contract(IFreeBetsHolder)4673",
-            "contract": "LiveTradingProcessorData",
-            "src": "contracts\\core\\Data\\LiveTradingProcessorData.sol:36"
-          }
-        ],
-        "types": {
-          "t_bool": {
-            "label": "bool",
-            "numberOfBytes": "1"
-          },
-          "t_struct(InitializableStorage)371_storage": {
-            "label": "struct Initializable.InitializableStorage",
-            "members": [
-              {
-                "label": "_initialized",
-                "type": "t_uint64",
-                "offset": 0,
-                "slot": "0"
-              },
-              {
-                "label": "_initializing",
-                "type": "t_bool",
-                "offset": 8,
-                "slot": "0"
-              }
-            ],
-            "numberOfBytes": "32"
-          },
-          "t_uint64": {
-            "label": "uint64",
-            "numberOfBytes": "8"
-          },
-          "t_address": {
-            "label": "address",
-            "numberOfBytes": "20"
-          },
-          "t_contract(IFreeBetsHolder)4673": {
-            "label": "contract IFreeBetsHolder",
-            "numberOfBytes": "20"
-          },
-          "t_contract(ILiveTradingProcessor)4772": {
-            "label": "contract ILiveTradingProcessor",
-            "numberOfBytes": "20"
-          },
-          "t_uint256": {
-            "label": "uint256",
-            "numberOfBytes": "32"
-          }
-        },
-        "namespaces": {
-          "erc7201:openzeppelin.storage.Initializable": [
-            {
-              "contract": "Initializable",
-              "label": "_initialized",
-              "type": "t_uint64",
-              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
-              "offset": 0,
-              "slot": "0"
-            },
-            {
-              "contract": "Initializable",
-              "label": "_initializing",
-              "type": "t_bool",
-              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
-              "offset": 8,
-              "slot": "0"
-            }
-          ]
-        }
-      }
-    },
     "b4c0b4199eb47954b2419b7d741d89a9e9edfb13814b6cbbaab02546a3ff0d50": {
       "address": "0x9c7F6D34163C4270C6e02F19F9D3D723c7bE46F2",
       "txHash": "0x2dfa746406bc22745627daf585e408203107116e190383f7d6c0c0d11cbfa9b2",
@@ -56012,6 +59969,1137 @@
               "label": "_initializing",
               "type": "t_bool",
               "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "55272eb2ad145e347de626eae069ec3af43232c6145ebc046b18f0f5d0e46584": {
+      "address": "0x1E4CeAebff71AaCeA9e9737EeFC7f7dAcb8c5775",
+      "txHash": "0xb13c5e0b2649ffe55450b09a2f06263d05f67bc7c75053221bec6ddb98fdab77",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5480",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)5059",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6137_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6137_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)5141",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6137_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2303)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          },
+          {
+            "label": "activeSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6137_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:91"
+          },
+          {
+            "label": "resolvedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6137_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:94"
+          },
+          {
+            "label": "activeChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6137_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:97"
+          },
+          {
+            "label": "resolvedChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6137_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:100"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)5059": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)5141": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5480": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2303": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2303)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)6137_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)6137_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "af14f965ccb5d09d61a596ea24104bfa43b7181bb64e6a8ea98ecd3fe966f778": {
+      "address": "0xc6A8BE23c6C570c4306Fa3C07f7ab0Bf363B9c59",
+      "txHash": "0xed2b7d6bd489a595b2810f8d9c4cbb131114cac28e98ac2f607c1f9cba390b72",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5524",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:52"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)5103",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:54"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:56"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:58"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:62"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:64"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6181_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6181_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:70"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)5185",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:72"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:74"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:76"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:78"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:80"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6181_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:84"
+          },
+          {
+            "label": "ticketType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_enum(TicketType)2303)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:86"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          },
+          {
+            "label": "activeSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6181_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:91"
+          },
+          {
+            "label": "resolvedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6181_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:94"
+          },
+          {
+            "label": "activeChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6181_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:97"
+          },
+          {
+            "label": "resolvedChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6181_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:100"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)5103": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)5185": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5524": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_enum(TicketType)2303": {
+            "label": "enum FreeBetsHolder.TicketType",
+            "members": [
+              "SPORTS",
+              "SPEED_MARKET",
+              "CHAINED_SPEED_MARKET"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(TicketType)2303)": {
+            "label": "mapping(address => enum FreeBetsHolder.TicketType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)6181_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)6181_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "ca40ff1b55419d6654c3bf47f3a9d3f1eba39bbce93d234235b2c0a8293eff45": {
+      "address": "0xE6572732026256213d7d468Eb3Ab0AB8E8D18B03",
+      "txHash": "0x95271283eedc0f2f15eef79cba51b1e4feed529662c73f4f09a747f5815de9cd",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts/utils/proxy/ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts/utils/proxy/ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts/utils/proxy/ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "sportsAMM",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2)5399",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:45"
+          },
+          {
+            "label": "liveTradingProcessor",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(ILiveTradingProcessor)4970",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:47"
+          },
+          {
+            "label": "balancePerUserAndCollateral",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:49"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:51"
+          },
+          {
+            "label": "ticketToUser",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:53"
+          },
+          {
+            "label": "paidPerTicket",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:55"
+          },
+          {
+            "label": "liveRequestsPerUser",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:57"
+          },
+          {
+            "label": "activeTicketsPerUser",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6056_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:60"
+          },
+          {
+            "label": "resolvedTicketsPerUser",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6056_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:63"
+          },
+          {
+            "label": "sgpTradingProcessor",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_contract(ISGPTradingProcessor)5052",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:65"
+          },
+          {
+            "label": "sgpRequestsPerUser",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:67"
+          },
+          {
+            "label": "freeBetExpiration",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:69"
+          },
+          {
+            "label": "freeBetExpirationPeriod",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:71"
+          },
+          {
+            "label": "freeBetExpirationUpgrade",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:73"
+          },
+          {
+            "label": "usersWithFreeBetPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6056_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:75"
+          },
+          {
+            "label": "addressManager",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_contract(IAddressManager)985",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:77"
+          },
+          {
+            "label": "speedMarketRequestToUser",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:79"
+          },
+          {
+            "label": "activeSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6056_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:82"
+          },
+          {
+            "label": "resolvedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6056_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:85"
+          },
+          {
+            "label": "activeChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6056_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:88"
+          },
+          {
+            "label": "resolvedChainedSpeedMarketsPerUser",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_address,t_struct(AddressSet)6056_storage)",
+            "contract": "FreeBetsHolder",
+            "src": "contracts/core/FreeBets/FreeBetsHolder.sol:91"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IAddressManager)985": {
+            "label": "contract IAddressManager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ILiveTradingProcessor)4970": {
+            "label": "contract ILiveTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISGPTradingProcessor)5052": {
+            "label": "contract ISGPTradingProcessor",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2)5399": {
+            "label": "contract ISportsAMMV2",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(AddressSet)6056_storage)": {
+            "label": "mapping(address => struct AddressSetLib.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)6056_storage": {
+            "label": "struct AddressSetLib.AddressSet",
+            "members": [
+              {
+                "label": "elements",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "indices",
+                "type": "t_mapping(t_address,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }
