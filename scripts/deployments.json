@@ -355,5 +355,13 @@
 		"ThalesToOverMigrationImplementation": "0xA1eAd27EBBD90b8Ef385F264cC66Ba4C96767fDf",
 		"ThalesToOverMigrationProxyAdmin": "0xB063BCFae812BeaeE857308c769743D78e50a2b2"
 	},
-	"sepolia": { "OVER": "0xA2dCFEe657Bc0a71AC31d146366246202eae18a4" }
+	"sepolia": { "OVER": "0xA2dCFEe657Bc0a71AC31d146366246202eae18a4" },
+	"polygon": {
+		"ProtocolDAO": "0xD315EaE38773a9d2032E4A17DA702f57115d6fa1",
+		"OVER": "0x90ce5720c17587d28e4af120ae2d313b3bad1722",
+		"THALES": "0x8947da500Eb47F82df21143D0C01A29862a8C3c5",
+		"FreeBetsHolder": "0xcB4728a1789B87E05c813B68DBc5E6A98a4856bA",
+		"FreeBetsHolderImplementation": "0x2073Db849e3b724f5c98823f8F2bd70B23e82B16",
+		"FreeBetsHolderProxyAdmin": "0x99d5680567Fe187E3808b321C52F0215CDb361dB"
+	}
 }
