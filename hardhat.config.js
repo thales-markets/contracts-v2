@@ -67,6 +67,11 @@ module.exports = {
 			accounts: [PRIVATE_KEY],
 			chainId: 8453,
 		},
+		polygon: {
+			url: 'https://polygon-mainnet.infura.io/v3/' + INFURA,
+			accounts: [PRIVATE_KEY],
+			chainId: 137,
+		},
 	},
 
 	gasReporter: {
