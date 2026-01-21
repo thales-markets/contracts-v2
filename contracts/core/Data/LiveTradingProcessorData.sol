@@ -11,6 +11,16 @@ import "../../interfaces/IFreeBetsHolder.sol";
 contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
     /* ========== STRUCT VARIABLES ========== */
 
+    struct Leg {
+        string gameId;
+        uint16 sportId;
+        uint16 typeId;
+        int24 line;
+        uint8 position;
+        uint24 playerId;
+        uint expectedQuote;
+    }
+
     struct RequestData {
         address user;
         bytes32 requestId;
@@ -18,17 +28,12 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         bool isFulfilled;
         uint timestamp;
         uint maturityTimestamp;
-        string gameId;
-        uint16 sportId;
-        uint16 typeId;
-        int24 line;
-        uint8 position;
         uint buyInAmount;
-        uint expectedQuote;
+        uint expectedPayout;
         uint additionalSlippage;
         address referrer;
         address collateral;
-        uint24 playerId;
+        Leg[] legs;
     }
 
     /* ========== STATE VARIABLES ========== */
@@ -50,36 +55,22 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
      */
     function getRequestsData(uint _startIndex, uint _pageSize) external view returns (RequestData[] memory requestsData) {
         uint requestsSize = liveTradingProcessor.requestCounter();
+        uint remaining = requestsSize > _startIndex ? requestsSize - _startIndex : 0;
+        uint size = _pageSize > remaining ? remaining : _pageSize;
 
-        requestsData = new RequestData[](_pageSize);
+        requestsData = new RequestData[](size);
 
-        _pageSize = _pageSize > requestsSize - _startIndex ? requestsSize - _startIndex : _pageSize;
-        for (uint i = _startIndex; i < (_startIndex + _pageSize); i++) {
-            bytes32 requestId = liveTradingProcessor.counterToRequestId(i);
+        for (uint i = 0; i < size; ++i) {
+            uint requestIndex = _startIndex + i;
+            bytes32 requestId = liveTradingProcessor.counterToRequestId(requestIndex);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
             address ticketId = liveTradingProcessor.requestIdToTicketId(requestId);
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
-            ILiveTradingProcessor.LiveTradeData memory liveTradeData = liveTradingProcessor.getTradeData(requestId);
+            bool isLiveParlay = liveTradingProcessor.requestIdIsParlay(requestId);
 
-            requestsData[i] = RequestData({
-                user: requester,
-                requestId: requestId,
-                ticketId: ticketId,
-                isFulfilled: liveTradingProcessor.requestIdFulfilled(requestId),
-                timestamp: timestampPerRequest,
-                maturityTimestamp: timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),
-                gameId: liveTradeData._gameId,
-                sportId: liveTradeData._sportId,
-                typeId: liveTradeData._typeId,
-                line: liveTradeData._line,
-                position: liveTradeData._position,
-                buyInAmount: liveTradeData._buyInAmount,
-                expectedQuote: liveTradeData._expectedQuote,
-                additionalSlippage: liveTradeData._additionalSlippage,
-                referrer: liveTradeData._referrer,
-                collateral: liveTradeData._collateral,
-                playerId: liveTradeData._playerId
-            });
+            requestsData[i] = isLiveParlay
+                ? _processParlayTrade(requestId, requester, ticketId, timestampPerRequest)
+                : _processSingleTrade(requestId, requester, ticketId, timestampPerRequest);
         }
     }
 
@@ -113,31 +104,92 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
             if (requester != user) continue;
 
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
-            ILiveTradingProcessor.LiveTradeData memory liveTradeData = liveTradingProcessor.getTradeData(requestId);
+            bool isLiveParlay = liveTradingProcessor.requestIdIsParlay(requestId);
 
-            requestsData[count] = RequestData({
-                user: requester,
-                requestId: requestId,
-                ticketId: ticketId,
-                isFulfilled: liveTradingProcessor.requestIdFulfilled(requestId),
-                timestamp: timestampPerRequest,
-                maturityTimestamp: timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),
-                gameId: liveTradeData._gameId,
-                sportId: liveTradeData._sportId,
-                typeId: liveTradeData._typeId,
-                line: liveTradeData._line,
-                position: liveTradeData._position,
+            requestsData[count] = isLiveParlay
+                ? _processParlayTrade(requestId, requester, ticketId, timestampPerRequest)
+                : _processSingleTrade(requestId, requester, ticketId, timestampPerRequest);
+
+            ++count;
+            if (count == _maxSize) break;
+        }
+    }
+
+    function _processSingleTrade(
+        bytes32 _requestId,
+        address _requester,
+        address _ticketId,
+        uint _timestampPerRequest
+    ) private view returns (RequestData memory) {
+        ILiveTradingProcessor.LiveTradeData memory liveTradeData = liveTradingProcessor.getTradeData(_requestId);
+
+        Leg[] memory legs = new Leg[](1);
+        legs[0] = Leg({
+            gameId: liveTradeData._gameId,
+            sportId: liveTradeData._sportId,
+            typeId: liveTradeData._typeId,
+            line: liveTradeData._line,
+            position: liveTradeData._position,
+            playerId: liveTradeData._playerId,
+            expectedQuote: liveTradeData._expectedQuote
+        });
+
+        return
+            RequestData({
+                user: _requester,
+                requestId: _requestId,
+                ticketId: _ticketId,
+                isFulfilled: liveTradingProcessor.requestIdFulfilled(_requestId),
+                timestamp: _timestampPerRequest,
+                maturityTimestamp: _timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),
                 buyInAmount: liveTradeData._buyInAmount,
-                expectedQuote: liveTradeData._expectedQuote,
+                expectedPayout: liveTradeData._expectedQuote,
                 additionalSlippage: liveTradeData._additionalSlippage,
                 referrer: liveTradeData._referrer,
                 collateral: liveTradeData._collateral,
-                playerId: liveTradeData._playerId
+                legs: legs
             });
+    }
 
-            count++;
-            if (count == _maxSize) break;
+    function _processParlayTrade(
+        bytes32 _requestId,
+        address _requester,
+        address _ticketId,
+        uint _timestampPerRequest
+    ) private view returns (RequestData memory) {
+        ILiveTradingProcessor.LiveParlayTradeData memory liveParlayTradeData = liveTradingProcessor.getParlayTradeData(
+            _requestId
+        );
+
+        Leg[] memory legs = new Leg[](liveParlayTradeData.legs.length);
+        for (uint j = 0; j < liveParlayTradeData.legs.length; ++j) {
+            ILiveTradingProcessor.LiveParlayLeg memory leg = liveParlayTradeData.legs[j];
+            legs[j] = Leg({
+                gameId: leg.gameId,
+                sportId: leg.sportId,
+                typeId: leg.typeId,
+                line: leg.line,
+                position: leg.position,
+                playerId: leg.playerId,
+                expectedQuote: leg.expectedLegOdd
+            });
         }
+
+        return
+            RequestData({
+                user: _requester,
+                requestId: _requestId,
+                ticketId: _ticketId,
+                isFulfilled: liveTradingProcessor.requestIdFulfilled(_requestId),
+                timestamp: _timestampPerRequest,
+                maturityTimestamp: _timestampPerRequest + liveTradingProcessor.maxAllowedExecutionDelay(),
+                buyInAmount: liveParlayTradeData.buyInAmount,
+                expectedPayout: liveParlayTradeData.expectedPayout,
+                additionalSlippage: liveParlayTradeData.additionalSlippage,
+                referrer: liveParlayTradeData.referrer,
+                collateral: liveParlayTradeData.collateral,
+                legs: legs
+            });
     }
 
     function setLiveTradingProcessor(ILiveTradingProcessor _liveTradingProcessor) external onlyOwner {

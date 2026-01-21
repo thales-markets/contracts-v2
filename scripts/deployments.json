@@ -77,7 +77,7 @@
 		"OVER": "0xdDEDfAF154a0228cD15b2FDAaEc9F0ADA5fae2a2",
 		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD",
 		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
-		"LiveTradingProcessorDataImplementation": "0x5259ac73C7452f755E79fe46F1244b9416218b67",
+		"LiveTradingProcessorDataImplementation": "0x0a103F2C25d6A42A34E3C2Be7b0161E1021fe6AF",
 		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2",
 		"OverdropRewards": "0xa4505687368a044931C96dad55BEe2c3e4Ae2516",
 		"OverdropRewardsImplementation": "0x4D4CC84fAF3d5DDB1e6df533E767b81f439E9846",

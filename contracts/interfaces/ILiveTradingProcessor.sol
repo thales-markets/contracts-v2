@@ -47,6 +47,8 @@ interface ILiveTradingProcessor {
 
     function requestIdToRequester(bytes32 _requestId) external view returns (address);
 
+    function requestIdIsParlay(bytes32 _requestId) external view returns (bool);
+
     function requestIdToTicketId(bytes32 _requestId) external view returns (address);
 
     function requestIdFulfilled(bytes32 _requestId) external view returns (bool);
