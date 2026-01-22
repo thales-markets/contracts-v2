@@ -191,6 +191,11 @@
             "type": "address"
           },
           {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
             "components": [
               {
                 "internalType": "string",
@@ -312,6 +317,11 @@
             "internalType": "address",
             "name": "collateral",
             "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
           },
           {
             "components": [

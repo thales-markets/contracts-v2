@@ -33,6 +33,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         uint additionalSlippage;
         address referrer;
         address collateral;
+        bool isFreeBet;
         Leg[] legs;
     }
 
@@ -66,11 +67,12 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
             address ticketId = liveTradingProcessor.requestIdToTicketId(requestId);
             uint timestampPerRequest = liveTradingProcessor.timestampPerRequest(requestId);
+            bool isFreeBet = requester == address(freeBetsHolder);
             bool isLiveParlay = liveTradingProcessor.requestIdIsParlay(requestId);
 
             requestsData[i] = isLiveParlay
-                ? _processParlayTrade(requestId, requester, ticketId, timestampPerRequest)
-                : _processSingleTrade(requestId, requester, ticketId, timestampPerRequest);
+                ? _processParlayTrade(requestId, requester, ticketId, timestampPerRequest, isFreeBet)
+                : _processSingleTrade(requestId, requester, ticketId, timestampPerRequest, isFreeBet);
         }
     }
 
@@ -98,7 +100,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
             bytes32 requestId = liveTradingProcessor.counterToRequestId(i - 1);
             address requester = liveTradingProcessor.requestIdToRequester(requestId);
             address ticketId = liveTradingProcessor.requestIdToTicketId(requestId);
-            if (requester == address(freeBetsHolder)) {
+            bool isFreeBet = requester == address(freeBetsHolder);
+            if (isFreeBet) {
                 requester = freeBetsHolder.ticketToUser(ticketId);
             }
             if (requester != user) continue;
@@ -107,8 +110,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
             bool isLiveParlay = liveTradingProcessor.requestIdIsParlay(requestId);
 
             requestsData[count] = isLiveParlay
-                ? _processParlayTrade(requestId, requester, ticketId, timestampPerRequest)
-                : _processSingleTrade(requestId, requester, ticketId, timestampPerRequest);
+                ? _processParlayTrade(requestId, requester, ticketId, timestampPerRequest, isFreeBet)
+                : _processSingleTrade(requestId, requester, ticketId, timestampPerRequest, isFreeBet);
 
             ++count;
             if (count == _maxSize) break;
@@ -119,7 +122,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         bytes32 _requestId,
         address _requester,
         address _ticketId,
-        uint _timestampPerRequest
+        uint _timestampPerRequest,
+        bool _isFreeBet
     ) private view returns (RequestData memory) {
         ILiveTradingProcessor.LiveTradeData memory liveTradeData = liveTradingProcessor.getTradeData(_requestId);
 
@@ -147,6 +151,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
                 additionalSlippage: liveTradeData._additionalSlippage,
                 referrer: liveTradeData._referrer,
                 collateral: liveTradeData._collateral,
+                isFreeBet: _isFreeBet,
                 legs: legs
             });
     }
@@ -155,7 +160,8 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
         bytes32 _requestId,
         address _requester,
         address _ticketId,
-        uint _timestampPerRequest
+        uint _timestampPerRequest,
+        bool _isFreeBet
     ) private view returns (RequestData memory) {
         ILiveTradingProcessor.LiveParlayTradeData memory liveParlayTradeData = liveTradingProcessor.getParlayTradeData(
             _requestId
@@ -188,6 +194,7 @@ contract LiveTradingProcessorData is Initializable, ProxyOwned, ProxyPausable {
                 additionalSlippage: liveParlayTradeData.additionalSlippage,
                 referrer: liveParlayTradeData.referrer,
                 collateral: liveParlayTradeData.collateral,
+                isFreeBet: _isFreeBet,
                 legs: legs
             });
     }
