@@ -2769,6 +2769,26 @@
 			"id": 10264,
 			"result_type": 2,
 			"name": "CHILD_AWAY_TEAM_TOTAL_FAULS"
+		},
+		{
+			"id": 13014,
+			"result_type": 1,
+			"name": "CHILD_TOP_GOALSCORER"
+		},
+		{
+			"id": 13015,
+			"result_type": 1,
+			"name": "CHILD_GROUP_WINNER"
+		},
+		{
+			"id": 13016,
+			"result_type": 1,
+			"name": "CHILD_GROUP_BOTTOM_FINISH"
+		},
+		{
+			"id": 13017,
+			"result_type": 1,
+			"name": "CHILD_TO_QUALIFY_NEXT_ROUND"
 		}
 	]
 ]

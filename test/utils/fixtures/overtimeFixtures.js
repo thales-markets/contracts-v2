@@ -811,7 +811,7 @@ async function deploySportsAMMV2Fixture() {
 	await sgpTradingProcessor.setFreeBetsHolder(freeBetsHolderAddress);
 
 	await collateral.connect(owner).approve(freeBetsHolder, DEFAULT_AMOUNT);
-	await freeBetsHolder.addSupportedCollateral(collateralAddress, true);
+	await freeBetsHolder.addSupportedCollateral(collateralAddress, true, sportsAMMV2Address);
 	const FOURTY_DAYS = 40 * 24 * 60 * 60;
 	await freeBetsHolder.setFreeBetExpirationPeriod(FOURTY_DAYS, 0);
 	await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);

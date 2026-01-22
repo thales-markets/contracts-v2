@@ -59,7 +59,7 @@
 		"DefaultLiquidityProviderWETH": "0x001464DF99f368780c3b6cc68A809A748e8bb64e",
 		"DefaultLiquidityProviderWETHImplementation": "0x8280270f70f8Ef0CB22800cF21Fd6f83B38FDAF6",
 		"DefaultLiquidityProviderWETHProxyAdmin": "0x30d092DCDe10E2c89C4b7a3b18289Ffab195F09C",
-		"FreeBetsHolder": "0xAeDB908b82626F031E31140527b45c7C89d4bb53",
+		"FreeBetsHolder": "0x592dEDa33Aa41b540E1821eCed7D635D344c21B6",
 		"MockMultiCollateralOnOffRampV1": "0xF10c6f46e18a7e6AD9b13c9cE1FF063D3E45D510",
 		"MockMultiCollateralOnOffRampV1Implementation": "0x384aB342620513b48064Ec0e53e464d63C238d98",
 		"MockUniswap": "0xb0d70493ECD2E4753a4bB91fA6be159597F4d1F5",
@@ -73,7 +73,7 @@
 		"ResolveBlockerImplementation": "0xd62f3Cc9a9414Fe1303386a511307b94cB57F124",
 		"ResolveBlockerProxyAdmin": "0x74e781ADdfC588aFf25c1A724b963E8A75f9a631",
 		"SportsAMMV2LiquidityPoolImplementationTHALES": "0x4CfB5F92b34528f046Cf4A6023F14378307c8037",
-		"FreeBetsHolderImplementation": "0x797ce025e987D734589bb67d39F4Db5a2a52B075",
+		"FreeBetsHolderImplementation": "0xE6572732026256213d7d468Eb3Ab0AB8E8D18B03",
 		"OVER": "0xdDEDfAF154a0228cD15b2FDAaEc9F0ADA5fae2a2",
 		"SGPTradingProcessor": "0x1B3b991Da49DBCAbf5b5DA401E8a13946bBedEBD",
 		"LiveTradingProcessorData": "0xE7fB0a3Cb69dC503464147A6836df7E69023E09C",
@@ -81,7 +81,8 @@
 		"LiveTradingProcessorDataProxyAdmin": "0x84b5B242F204785AcAb41d9306e96b1131E3BdF2",
 		"OverdropRewards": "0xa4505687368a044931C96dad55BEe2c3e4Ae2516",
 		"OverdropRewardsImplementation": "0x4D4CC84fAF3d5DDB1e6df533E767b81f439E9846",
-		"OverdropRewardsProxyAdmin": "0x900Af2133d9c636ed65BDF89AB1E99b9f54fCd20"
+		"OverdropRewardsProxyAdmin": "0x900Af2133d9c636ed65BDF89AB1E99b9f54fCd20",
+		"FreeBetsHolderProxyAdmin": "0x0429ed7CBD1B32f130E2ef42FAD99f63A471A3cB"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
@@ -138,7 +139,7 @@
 		"ChainlinkResolver": "0xc5a00fF7Dc2a127E8F63721DbbEd67d506C38211",
 		"LiveTradingProcessor": "0x1eAb81B2461601C74f1Cbc2B8b803FFEc54768B8",
 		"FreeBetsHolder": "0x8D18e68563d53be97c2ED791CA4354911F16A54B",
-		"FreeBetsHolderImplementation": "0xd1040d54E00F1a1966f96455697BD31C58A8cA7F",
+		"FreeBetsHolderImplementation": "0x0a713B8282B01e95B73fe9AED43157863d70E823",
 		"FreeBetsHolderProxyAdmin": "0x275D006bB022Cb23268AA759feCBDc63470a41A7",
 		"StakingThalesBettingProxy": "0x5e6D44B17bc989652920197790eF626b8a84e219",
 		"StakingThalesBettingProxyImplementation": "0x0C8ecb43a54f84eE4E0df90283c55ab6d595c13C",
@@ -224,7 +225,7 @@
 		"ChainlinkResolver": "0x4f2822D4e60af7f9F70E7e45BC1941fe3461231e",
 		"LiveTradingProcessor": "0xef0F33029E27a578618C23016a10f7A636364f16",
 		"FreeBetsHolder": "0xd1F2b87a9521315337855A132e5721cfe272BBd9",
-		"FreeBetsHolderImplementation": "0x9eEc575Ab4d311414f8386CCdE635bd8f4931bF0",
+		"FreeBetsHolderImplementation": "0x06EB8B9547Ae925D2cB964Dc37B350DFB1035992",
 		"FreeBetsHolderProxyAdmin": "0x609AB342035075F360e6fFbb1c43Dc3E96B9FCF3",
 		"StakingThalesBettingProxy": "0x109e966A4d856B82f158BF528395de6fF36214A8",
 		"StakingThalesBettingProxyImplementation": "0x9F35e4EeAaeF6Ab0b5E75364452e6aA7c6B79823",
@@ -320,7 +321,7 @@
 		"ChainlinkResolver": "0x34d38CD05886F0A9B15B8ab9fB393FF739494E0C",
 		"LiveTradingProcessor": "0xC7BD9193224637d04075962d06e55dE2a8Bc3ef1",
 		"FreeBetsHolder": "0x2929Cf1edAc2DB91F68e2822CEc25736cAe029bf",
-		"FreeBetsHolderImplementation": "0x82875de31C589B11A25A239c7814E68A2868e25B",
+		"FreeBetsHolderImplementation": "0x12e6c6233Ab1Cf850c624939Adb17D2b4B8F5961",
 		"FreeBetsHolderProxyAdmin": "0xa70Fab4899fCFbDc3a838b4730047101517b722A",
 		"MultiCollateralOnOffRampUSDC": "0x9e8dDCcd5AF4A25712Cd7Bd3De24e931AeC1CE16",
 		"MultiCollateralOnOffRampImplementationUSDC": "0xe52340277315CF227C53284E91A942469FA7484d",
@@ -354,5 +355,12 @@
 		"ThalesToOverMigrationImplementation": "0xA1eAd27EBBD90b8Ef385F264cC66Ba4C96767fDf",
 		"ThalesToOverMigrationProxyAdmin": "0xB063BCFae812BeaeE857308c769743D78e50a2b2"
 	},
-	"sepolia": { "OVER": "0xA2dCFEe657Bc0a71AC31d146366246202eae18a4" }
+	"sepolia": { "OVER": "0xA2dCFEe657Bc0a71AC31d146366246202eae18a4" },
+	"polygon": {
+		"ProtocolDAO": "0xD315EaE38773a9d2032E4A17DA702f57115d6fa1",
+		"USDCe": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+		"FreeBetsHolder": "0xcB4728a1789B87E05c813B68DBc5E6A98a4856bA",
+		"FreeBetsHolderImplementation": "0x2073Db849e3b724f5c98823f8F2bd70B23e82B16",
+		"FreeBetsHolderProxyAdmin": "0x99d5680567Fe187E3808b321C52F0215CDb361dB"
+	}
 }

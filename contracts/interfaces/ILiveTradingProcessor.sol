@@ -39,6 +39,8 @@ interface ILiveTradingProcessor {
     // Views
     // =========================
 
+    function freeBetsHolder() external view returns (address);
+
     function maxAllowedExecutionDelay() external view returns (uint);
 
     function requestCounter() external view returns (uint);
