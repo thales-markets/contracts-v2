@@ -245,6 +245,20 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit FreeBetLiveTradeRequested(msg.sender, _liveTradeData._buyInAmount, _requestId);
     }
 
+    /// @notice request a live parlay ticket for a user if he has enough free bet in given collateral
+    function tradeLiveParlay(
+        ILiveTradingProcessor.LiveParlayTradeData calldata _liveParlayTradeData
+    ) external notPaused canTrade(msg.sender, _liveParlayTradeData.collateral, _liveParlayTradeData.buyInAmount) {
+        bytes32 _requestId = liveTradingProcessor.requestLiveParlayTrade(_liveParlayTradeData);
+        liveRequestsPerUser[_requestId] = msg.sender;
+        emit FreeBetLiveParlayTradeRequested(
+            msg.sender,
+            _liveParlayTradeData.buyInAmount,
+            _requestId,
+            uint16(_liveParlayTradeData.legs.length)
+        );
+    }
+
     /// @notice confirm a live ticket purchase. As live betting is a 2 step approach, the LiveTradingProcessor needs this method as callback so that the correct amount is deducted from the user's balance
     function confirmLiveTrade(
         bytes32 requestId,
@@ -770,6 +784,7 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event FreeBetTicketResolved(address ticket, address user, uint earned);
     event FreeBetSpeedMarketResolved(address speedMarket, address user, uint earned);
     event FreeBetLiveTradeRequested(address user, uint buyInAmount, bytes32 requestId);
+    event FreeBetLiveParlayTradeRequested(address user, uint buyInAmount, bytes32 requestId, uint16 legsCount);
     event FreeBetSGPTradeRequested(address user, uint buyInAmount, bytes32 requestId);
     event FreeBetSpeedMarketTradeRequested(
         address user,
