@@ -708,9 +708,16 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 ? 0
                 : _divWithDecimals(_tradeDataInternal._buyInAmount, _tradeDataInternal._expectedPayout);
 
+            // NOTE: despite the name, this is "min implied probability" (i.e. max supported decimal odds)
+            uint minImplied = riskManager.maxSupportedOdds();
+
             if (numOfMarkets == 1) {
                 uint legOdd = _tradeData[0].odds[_tradeData[0].position];
                 uint boosted = _applyBonusToOdd(legOdd, added);
+
+                // ===== CLAMP (same behavior as prematch) =====
+                if (boosted < minImplied) boosted = minImplied;
+
                 processingParams._totalQuote = boosted;
             } else {
                 uint baseQuote = 0;
@@ -728,15 +735,25 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     boostedQuote = (boostedQuote == 0) ? boostedLeg : _mulWithDecimals(boostedQuote, boostedLeg);
                 }
 
-                // ===== Guardrail =====
-                // Require baseQuote ~= approvedBaseQuote within tolerance.
-                // relTol is in 1e18 precision. Example: 1e12 => 1e-6 = 1 ppm relative tolerance.
-                uint relTol = 1e12;
-                uint diff = _absDiff(baseQuote, approvedBaseQuote);
+                // ===== Guardrail (clamp-aware) =====
+                uint relTol = 1e12; // 1 ppm
                 require(approvedBaseQuote > 0, "Bad approved quote");
-                require((diff * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+
+                // If the *boosted* parlay implies odds above max (boostedQuote < minImplied),
+                // then the node will clamp the approved quote to minImplied, and we should
+                // validate against the clamp instead of baseQuote.
+                if (boostedQuote < minImplied) {
+                    uint diffClamp = _absDiff(minImplied, approvedBaseQuote);
+                    require((diffClamp * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                } else {
+                    uint diffBase = _absDiff(baseQuote, approvedBaseQuote);
+                    require((diffBase * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                }
 
                 processingParams._totalQuote = boostedQuote;
+
+                // Clamp final boosted quote (same behavior as prematch)
+                if (processingParams._totalQuote < minImplied) processingParams._totalQuote = minImplied;
             }
 
             processingParams._payout = _divWithDecimals(_tradeDataInternal._buyInAmount, processingParams._totalQuote);
