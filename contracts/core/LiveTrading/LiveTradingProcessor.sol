@@ -87,6 +87,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             "Live trading not enabled on _sportId"
         );
 
+        require(_liveTradeData._expectedQuote >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
+
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
         req.add("mode", "single");
@@ -151,6 +153,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 "Live trading not enabled on leg"
             );
         }
+
+        require(_parlay.expectedPayout >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
 
         Chainlink.Request memory req = buildChainlinkRequest(
             parlayJobSpecId,

@@ -143,4 +143,113 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 		// processor linkage
 		expect(await liveTradingProcessor.requestIdToTicketId(requestId)).to.eq(ticketAddress);
 	});
+	it('Should revert on request if expectedPayout is below maxSupportedOdds (decimal odds above max)', async () => {
+		const m0 = tradeDataTenMarketsCurrentRound[0];
+		const m1 = tradeDataTenMarketsCurrentRound[1];
+
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m0.sportId, m0.typeId, true);
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m1.sportId, m1.typeId, true);
+
+		const maxSupportedOdds = await sportsAMMV2RiskManager.maxSupportedOdds();
+
+		// If user sets expectedPayout (quote) to maxSupportedOdds - 1, it implies odds ABOVE allowed max.
+		// This should now fail immediately in LiveTradingProcessor.requestLiveParlayTrade().
+		const badExpectedPayout = maxSupportedOdds - 1n;
+
+		await expect(
+			liveTradingProcessor.connect(firstTrader).requestLiveParlayTrade({
+				legs: [
+					{
+						gameId: m0.gameId,
+						sportId: m0.sportId,
+						typeId: m0.typeId,
+						line: m0.line,
+						position: m0.position,
+						expectedLegOdd: 0,
+						playerId: 0,
+					},
+					{
+						gameId: m1.gameId,
+						sportId: m1.sportId,
+						typeId: m1.typeId,
+						line: m1.line,
+						position: m1.position,
+						expectedLegOdd: 0,
+						playerId: 0,
+					},
+				],
+				buyInAmount: BUY_IN_AMOUNT,
+				expectedPayout: badExpectedPayout,
+				additionalSlippage: ADDITIONAL_SLIPPAGE,
+				referrer: ZERO_ADDRESS,
+				collateral: ZERO_ADDRESS,
+			})
+		).to.be.revertedWith('ExceededMaxOdds');
+	});
+
+	it('Should not revert on live parlay when additionalSlippage=0 due to rounding (off-by-1)', async () => {
+		const m0 = tradeDataTenMarketsCurrentRound[0];
+		const m1 = tradeDataTenMarketsCurrentRound[1];
+
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m0.sportId, m0.typeId, true);
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m1.sportId, m1.typeId, true);
+
+		const leg0 = BigInt(m0.odds[m0.position]);
+		const leg1 = BigInt(m1.odds[m1.position]);
+
+		const approvedLegOdds = [leg0, leg1];
+		const approvedQuote = mulWithDecimals(leg0, leg1);
+
+		// additionalSlippage = 0 to stress the rounding edge case
+		await liveTradingProcessor.connect(firstTrader).requestLiveParlayTrade({
+			legs: [
+				{
+					gameId: m0.gameId,
+					sportId: m0.sportId,
+					typeId: m0.typeId,
+					line: m0.line,
+					position: m0.position,
+					expectedLegOdd: 0,
+					playerId: 0,
+				},
+				{
+					gameId: m1.gameId,
+					sportId: m1.sportId,
+					typeId: m1.typeId,
+					line: m1.line,
+					position: m1.position,
+					expectedLegOdd: 0,
+					playerId: 0,
+				},
+			],
+			buyInAmount: BUY_IN_AMOUNT,
+			expectedPayout: approvedQuote, // must match product(legOdds) for guardrail consistency
+			additionalSlippage: 0,
+			referrer: ZERO_ADDRESS,
+			collateral: ZERO_ADDRESS,
+		});
+
+		const requestId = await liveTradingProcessor.counterToRequestId(0);
+
+		await mockChainlinkOracle.fulfillLiveTradeParlay(
+			requestId,
+			true,
+			approvedQuote,
+			approvedLegOdds
+		);
+
+		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+		expect(activeTickets.length).to.be.greaterThan(0);
+
+		const ticketAddress = activeTickets[0];
+		const TicketContract = await ethers.getContractFactory('Ticket');
+		const ticket = await TicketContract.attach(ticketAddress);
+
+		expect(await ticket.isLive()).to.eq(true);
+		expect(await ticket.numOfMarkets()).to.eq(2);
+		expect(await ticket.buyInAmount()).to.eq(BUY_IN_AMOUNT);
+
+		// Also verify linkage
+		expect(await liveTradingProcessor.requestIdToTicketId(requestId)).to.eq(ticketAddress);
+	});
 });
