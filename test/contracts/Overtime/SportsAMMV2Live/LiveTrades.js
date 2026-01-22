@@ -485,24 +485,36 @@ describe('SportsAMMV2Live Live Trades', () => {
 		});
 
 		it('Should get a live parlay trade requests data by user', async () => {
+			const ONE = 10n ** 18n;
+			const mulWithDecimals = (a, b) => (a * b) / ONE;
+
 			// GIVEN 5 live requests where latest request is from different user
 			const NUM_OF_REQUESTS = 5;
 			let userLastRequestIndex;
 
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
-			// enable live trading for all two legs
+
+			// enable live trading for both legs
+			const m0 = tradeDataTenMarketsCurrentRound[0];
+			const m1 = tradeDataTenMarketsCurrentRound[1];
+
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(
-				tradeDataTenMarketsCurrentRound[0].sportId,
-				tradeDataTenMarketsCurrentRound[0].typeId,
+				m0.sportId,
+				m0.typeId,
 				true
 			);
 			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(
-				tradeDataTenMarketsCurrentRound[1].sportId,
-				tradeDataTenMarketsCurrentRound[1].typeId,
+				m1.sportId,
+				m1.typeId,
 				true
 			);
 
-			const approvedQuote = singleQuote.totalQuote;
+			// ---- NEW: build consistent Chainlink approvals (NO bonus) ----
+			const leg0 = BigInt(m0.odds[m0.position]);
+			const leg1 = BigInt(m1.odds[m1.position]);
+
+			const approvedLegOdds = [leg0, leg1];
+			const approvedQuote = mulWithDecimals(leg0, leg1);
 
 			for (let i = 0; i < NUM_OF_REQUESTS; i++) {
 				const user = i == NUM_OF_REQUESTS - 1 ? secondAccount : firstTrader;
@@ -511,26 +523,26 @@ describe('SportsAMMV2Live Live Trades', () => {
 				await liveTradingProcessor.connect(user).requestLiveParlayTrade({
 					legs: [
 						{
-							gameId: tradeDataTenMarketsCurrentRound[0].gameId,
-							sportId: tradeDataTenMarketsCurrentRound[0].sportId,
-							typeId: tradeDataTenMarketsCurrentRound[0].typeId,
-							line: tradeDataTenMarketsCurrentRound[0].line,
-							position: tradeDataTenMarketsCurrentRound[0].position,
+							gameId: m0.gameId,
+							sportId: m0.sportId,
+							typeId: m0.typeId,
+							line: m0.line,
+							position: m0.position,
 							expectedLegOdd: 0,
 							playerId: 0,
 						},
 						{
-							gameId: tradeDataTenMarketsCurrentRound[1].gameId,
-							sportId: tradeDataTenMarketsCurrentRound[1].sportId,
-							typeId: tradeDataTenMarketsCurrentRound[1].typeId,
-							line: tradeDataTenMarketsCurrentRound[1].line,
-							position: tradeDataTenMarketsCurrentRound[1].position,
+							gameId: m1.gameId,
+							sportId: m1.sportId,
+							typeId: m1.typeId,
+							line: m1.line,
+							position: m1.position,
 							expectedLegOdd: 0,
 							playerId: 0,
 						},
 					],
 					buyInAmount: BUY_IN_AMOUNT,
-					expectedPayout: approvedQuote,
+					expectedPayout: approvedQuote, // treated as "approved quote" in your current flow
 					additionalSlippage: ADDITIONAL_SLIPPAGE,
 					referrer: ZERO_ADDRESS,
 					collateral: ZERO_ADDRESS,
@@ -538,8 +550,6 @@ describe('SportsAMMV2Live Live Trades', () => {
 			}
 
 			const userLastRequestId = await liveTradingProcessor.counterToRequestId(userLastRequestIndex);
-
-			const approvedLegOdds = [approvedQuote, approvedQuote];
 
 			await mockChainlinkOracle.fulfillLiveTradeParlay(
 				userLastRequestId,

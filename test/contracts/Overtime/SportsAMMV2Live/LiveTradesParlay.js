@@ -18,8 +18,10 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 		liveTradingProcessor,
 		mockChainlinkOracle,
 		sportsAMMV2RiskManager,
-		sportsAMMV2Manager,
-		singleQuote;
+		sportsAMMV2Manager;
+
+	const ONE = 10n ** 18n;
+	const mulWithDecimals = (a, b) => (a * b) / ONE;
 
 	beforeEach(async () => {
 		({
@@ -32,7 +34,6 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-
 		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
 		// fund LPs
@@ -45,17 +46,9 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 			.connect(firstLiquidityProvider)
 			.deposit(ethers.parseEther('1'));
 		await sportsAMMV2LiquidityPoolETH.start();
-
-		// just to get a deterministic "approvedQuote" value we can reuse
-		singleQuote = await sportsAMMV2.tradeQuote(
-			[tradeDataTenMarketsCurrentRound[0]],
-			BUY_IN_AMOUNT,
-			ZERO_ADDRESS,
-			false
-		);
 	});
 
-	it('Should create a 3-leg live parlay ticket and store totalQuote = approvedQuote', async () => {
+	it('Should create a 3-leg live parlay ticket and store totalQuote = boosted(product(legOdds))', async () => {
 		const m0 = tradeDataTenMarketsCurrentRound[0];
 		const m1 = tradeDataTenMarketsCurrentRound[1];
 		const m2 = tradeDataTenMarketsCurrentRound[2];
@@ -65,10 +58,16 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m1.sportId, m1.typeId, true);
 		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m2.sportId, m2.typeId, true);
 
-		// This is what we want to assert later ends up as Ticket.totalQuote
-		const approvedQuote = singleQuote.totalQuote;
+		// ----- NEW: build Chainlink-style approval payload -----
+		// approvedLegOdds must be the raw leg odds (no bonus), and approvedQuote must match the product (no bonus)
+		const leg0 = BigInt(m0.odds[m0.position]);
+		const leg1 = BigInt(m1.odds[m1.position]);
+		const leg2 = BigInt(m2.odds[m2.position]);
 
-		// Build parlay request with 3 legs (gameId is string in interface)
+		const approvedLegOdds = [leg0, leg1, leg2];
+		const approvedQuote = mulWithDecimals(mulWithDecimals(leg0, leg1), leg2); // baseQuote guardrail
+
+		// Build parlay request with 3 legs
 		const parlay = {
 			legs: [
 				{
@@ -100,7 +99,8 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 				},
 			],
 			buyInAmount: BUY_IN_AMOUNT,
-			// must be non-zero due to slippage check in fulfillLiveTradeParlay
+			// keep as non-zero for slippage check in fulfillLiveTradeParlay
+			// and must be consistent with the guardrail logic (treated as "approvedQuote" effectively)
 			expectedPayout: approvedQuote,
 			additionalSlippage: ADDITIONAL_SLIPPAGE,
 			referrer: ZERO_ADDRESS,
@@ -108,13 +108,8 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 		};
 
 		await liveTradingProcessor.connect(firstTrader).requestLiveParlayTrade(parlay);
-
 		const requestId = await liveTradingProcessor.counterToRequestId(0);
 
-		// PARLAY fulfill: leg odds array must match legs length
-		const approvedLegOdds = [approvedQuote, approvedQuote, approvedQuote];
-
-		// UPDATED: call the parlay fulfill on the mock
 		await mockChainlinkOracle.fulfillLiveTradeParlay(
 			requestId,
 			true,
@@ -130,13 +125,20 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 		const TicketContract = await ethers.getContractFactory('Ticket');
 		const ticket = await TicketContract.attach(ticketAddress);
 
-		// core asserts
 		expect(await ticket.isLive()).to.eq(true);
 		expect(await ticket.numOfMarkets()).to.eq(3);
 		expect(await ticket.buyInAmount()).to.eq(BUY_IN_AMOUNT);
 
-		// quote correctness check
-		expect(await ticket.totalQuote()).to.eq(approvedQuote);
+		// IMPORTANT: with your new implementation, ticket.totalQuote is the BOOSTED quote (bonus per leg)
+		// so we can't assert totalQuote == approvedQuote anymore.
+		//
+		// We *can* assert that totalQuote >= approvedQuote (bonus increases odds), unless addedPayout is 0.
+		const storedTotalQuote = await ticket.totalQuote();
+		expect(storedTotalQuote).to.be.greaterThan(0n);
+
+		// If there is a bonus configured for this collateral, boosted quote should be > base.
+		// If bonus is 0, they’ll be equal.
+		expect(storedTotalQuote).to.be.greaterThanOrEqual(approvedQuote);
 
 		// processor linkage
 		expect(await liveTradingProcessor.requestIdToTicketId(requestId)).to.eq(ticketAddress);

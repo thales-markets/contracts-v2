@@ -700,14 +700,51 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _systemBetDenominator
             );
         } else {
-            processingParams._totalQuote = _divWithDecimals(
-                _tradeDataInternal._buyInAmount,
-                _tradeDataInternal._expectedPayout
-            );
-            processingParams._totalQuote =
-                (processingParams._totalQuote * ONE) /
-                ((ONE + processingParams._addedPayoutPercentage) -
-                    _mulWithDecimals(processingParams._addedPayoutPercentage, processingParams._totalQuote));
+            uint numOfMarkets = _tradeData.length;
+            uint added = processingParams._addedPayoutPercentage;
+
+            // Chainlink returns this as the guardrail base quote (NO bonus)
+            uint approvedBaseQuote = _tradeDataInternal._expectedPayout == 0
+                ? 0
+                : _divWithDecimals(_tradeDataInternal._buyInAmount, _tradeDataInternal._expectedPayout);
+
+            if (numOfMarkets == 1) {
+                uint legOdd = _tradeData[0].odds[_tradeData[0].position];
+                uint boosted = _applyBonusToOdd(legOdd, added);
+                processingParams._totalQuote = boosted;
+            } else {
+                uint baseQuote = 0;
+                uint boostedQuote = 0;
+
+                for (uint i = 0; i < numOfMarkets; ++i) {
+                    ISportsAMMV2.TradeData memory td = _tradeData[i];
+                    if (td.odds.length <= td.position) revert InvalidPosition();
+                    uint legOdd = td.odds[td.position];
+                    require(legOdd > 0, "Zero leg odd");
+
+                    baseQuote = (baseQuote == 0) ? legOdd : _mulWithDecimals(baseQuote, legOdd);
+
+                    uint boostedLeg = _applyBonusToOdd(legOdd, added);
+                    boostedQuote = (boostedQuote == 0) ? boostedLeg : _mulWithDecimals(boostedQuote, boostedLeg);
+                }
+
+                // ===== Guardrail =====
+                // Require baseQuote ~= approvedBaseQuote within tolerance.
+                // relTol is in 1e18 precision. Example: 1e12 => 1e-6 = 1 ppm relative tolerance.
+                uint relTol = 1e12;
+                uint diff = _absDiff(baseQuote, approvedBaseQuote);
+                require(approvedBaseQuote > 0, "Bad approved quote");
+                require((diff * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+
+                processingParams._totalQuote = boostedQuote;
+            }
+
+            // ===== (2) Clamp to maxSupportedOdds (same as prematch) =====
+            uint maxSupportedOdds = riskManager.maxSupportedOdds();
+            if (processingParams._totalQuote < maxSupportedOdds) {
+                processingParams._totalQuote = maxSupportedOdds;
+            }
+
             processingParams._payout = _divWithDecimals(_tradeDataInternal._buyInAmount, processingParams._totalQuote);
             processingParams._fees = _getFees(_tradeDataInternal._buyInAmount);
         }
@@ -935,6 +972,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _ticket,
             ticketCollateral.balanceOf(address(this))
         );
+    }
+
+    function _applyBonusToOdd(uint odd, uint addedPayoutPercentage) internal pure returns (uint) {
+        // odd' = odd / ((1 + a) - a*odd)
+        return (odd * ONE) / ((ONE + addedPayoutPercentage) - _mulWithDecimals(addedPayoutPercentage, odd));
+    }
+
+    function _absDiff(uint a, uint b) internal pure returns (uint) {
+        return a >= b ? (a - b) : (b - a);
     }
 
     /* ========== SETTERS ========== */
