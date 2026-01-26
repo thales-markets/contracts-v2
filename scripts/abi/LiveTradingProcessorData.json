@@ -166,38 +166,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "string",
-            "name": "gameId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint16",
-            "name": "sportId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "typeId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "int24",
-            "name": "line",
-            "type": "int24"
-          },
-          {
-            "internalType": "uint8",
-            "name": "position",
-            "type": "uint8"
-          },
-          {
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "expectedQuote",
+            "name": "expectedPayout",
             "type": "uint256"
           },
           {
@@ -216,9 +191,51 @@
             "type": "address"
           },
           {
-            "internalType": "uint24",
-            "name": "playerId",
-            "type": "uint24"
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedQuote",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LiveTradingProcessorData.Leg[]",
+            "name": "legs",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",
@@ -277,38 +294,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "string",
-            "name": "gameId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint16",
-            "name": "sportId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "typeId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "int24",
-            "name": "line",
-            "type": "int24"
-          },
-          {
-            "internalType": "uint8",
-            "name": "position",
-            "type": "uint8"
-          },
-          {
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "expectedQuote",
+            "name": "expectedPayout",
             "type": "uint256"
           },
           {
@@ -327,9 +319,51 @@
             "type": "address"
           },
           {
-            "internalType": "uint24",
-            "name": "playerId",
-            "type": "uint24"
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedQuote",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LiveTradingProcessorData.Leg[]",
+            "name": "legs",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",

@@ -286,6 +286,10 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				// If payout < buyInAmount, all goes to user
 				expect(ownerReceived).to.equal(0);
 				expect(userReceived).to.equal(0);
+				const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
+					firstTrader,
+					collateralAddress
+				);
 			}
 		});
 
@@ -333,13 +337,11 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 
 			// Get balances after exercise
 			const userBalanceAfter = await collateral.balanceOf(firstTrader);
-
-			// For cancelled system bet, full buyInAmount should go to user free bet balance
-			expect(userBalanceAfter - userBalanceBefore).to.equal(0);
 			const freeBetBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
 				firstTrader,
 				collateralAddress
 			);
+			expect(userBalanceAfter - userBalanceBefore).to.equal(0);
 			expect(freeBetBalanceAfter).to.equal(BUY_IN_AMOUNT);
 		});
 

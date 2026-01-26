@@ -700,16 +700,67 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _systemBetDenominator
             );
         } else {
-            processingParams._totalQuote = _divWithDecimals(
-                _tradeDataInternal._buyInAmount,
-                _tradeDataInternal._expectedPayout
-            );
-            processingParams._totalQuote =
-                (processingParams._totalQuote * ONE) /
-                ((ONE + processingParams._addedPayoutPercentage) -
-                    _mulWithDecimals(processingParams._addedPayoutPercentage, processingParams._totalQuote));
+            uint numOfMarkets = _tradeData.length;
+            uint added = processingParams._addedPayoutPercentage;
+
+            // Chainlink returns this as the guardrail base quote (NO bonus)
+            uint approvedBaseQuote = _tradeDataInternal._expectedPayout == 0
+                ? 0
+                : _divWithDecimals(_tradeDataInternal._buyInAmount, _tradeDataInternal._expectedPayout);
+
+            // NOTE: despite the name, this is "min implied probability" (i.e. max supported decimal odds)
+            uint minImplied = riskManager.maxSupportedOdds();
+
+            if (numOfMarkets == 1) {
+                uint legOdd = _tradeData[0].odds[_tradeData[0].position];
+                uint boosted = _applyBonusToOdd(legOdd, added);
+
+                // ===== CLAMP (same behavior as prematch) =====
+                if (boosted < minImplied) boosted = minImplied;
+
+                processingParams._totalQuote = boosted;
+            } else {
+                uint baseQuote = 0;
+                uint boostedQuote = 0;
+
+                for (uint i = 0; i < numOfMarkets; ++i) {
+                    ISportsAMMV2.TradeData memory td = _tradeData[i];
+                    if (td.odds.length <= td.position) revert InvalidPosition();
+                    uint legOdd = td.odds[td.position];
+                    require(legOdd > 0, "Zero leg odd");
+
+                    baseQuote = (baseQuote == 0) ? legOdd : _mulWithDecimals(baseQuote, legOdd);
+
+                    uint boostedLeg = _applyBonusToOdd(legOdd, added);
+                    boostedQuote = (boostedQuote == 0) ? boostedLeg : _mulWithDecimals(boostedQuote, boostedLeg);
+                }
+
+                // ===== Guardrail (clamp-aware) =====
+                uint relTol = 1e12; // 1 ppm
+                require(approvedBaseQuote > 0, "Bad approved quote");
+
+                // If the *boosted* parlay implies odds above max (boostedQuote < minImplied),
+                // then the node will clamp the approved quote to minImplied, and we should
+                // validate against the clamp instead of baseQuote.
+                if (boostedQuote < minImplied) {
+                    uint diffClamp = _absDiff(minImplied, approvedBaseQuote);
+                    require((diffClamp * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                } else {
+                    uint diffBase = _absDiff(baseQuote, approvedBaseQuote);
+                    require((diffBase * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                }
+
+                processingParams._totalQuote = boostedQuote;
+
+                // Clamp final boosted quote (same behavior as prematch)
+                if (processingParams._totalQuote < minImplied) processingParams._totalQuote = minImplied;
+            }
+
             processingParams._payout = _divWithDecimals(_tradeDataInternal._buyInAmount, processingParams._totalQuote);
             processingParams._fees = _getFees(_tradeDataInternal._buyInAmount);
+
+            // Align expected payout with final (bonus-inclusive) payout for checkLimits
+            _tradeDataInternal._expectedPayout = processingParams._payout;
         }
 
         processingParams._payoutWithFees = processingParams._payout + processingParams._fees;
@@ -935,6 +986,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _ticket,
             ticketCollateral.balanceOf(address(this))
         );
+    }
+
+    function _applyBonusToOdd(uint odd, uint addedPayoutPercentage) internal pure returns (uint) {
+        // odd' = odd / ((1 + a) - a*odd)
+        return (odd * ONE) / ((ONE + addedPayoutPercentage) - _mulWithDecimals(addedPayoutPercentage, odd));
+    }
+
+    function _absDiff(uint a, uint b) internal pure returns (uint) {
+        return a >= b ? (a - b) : (b - a);
     }
 
     /* ========== SETTERS ========== */

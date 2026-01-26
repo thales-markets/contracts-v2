@@ -31,11 +31,39 @@
       },
       {
         "internalType": "uint256",
-        "name": "approvedAmount",
+        "name": "approvedQuote",
         "type": "uint256"
       }
     ],
     "name": "fulfillLiveTrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "allow",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "approvedQuote",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "approvedLegOdds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "fulfillLiveTradeParlay",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

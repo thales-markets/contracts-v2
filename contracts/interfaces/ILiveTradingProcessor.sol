@@ -13,8 +13,31 @@ interface ILiveTradingProcessor {
         uint _additionalSlippage;
         address _referrer;
         address _collateral;
-        uint24 _playerId; // 🆕 added for player props
+        uint24 _playerId; // player props
     }
+
+    struct LiveParlayLeg {
+        string gameId;
+        uint16 sportId;
+        uint16 typeId;
+        int24 line;
+        uint8 position;
+        uint expectedLegOdd; // optional; node-side hint
+        uint24 playerId;
+    }
+
+    struct LiveParlayTradeData {
+        LiveParlayLeg[] legs;
+        uint buyInAmount;
+        uint expectedPayout;
+        uint additionalSlippage;
+        address referrer;
+        address collateral;
+    }
+
+    // =========================
+    // Views
+    // =========================
 
     function freeBetsHolder() external view returns (address);
 
@@ -26,6 +49,8 @@ interface ILiveTradingProcessor {
 
     function requestIdToRequester(bytes32 _requestId) external view returns (address);
 
+    function requestIdIsParlay(bytes32 _requestId) external view returns (bool);
+
     function requestIdToTicketId(bytes32 _requestId) external view returns (address);
 
     function requestIdFulfilled(bytes32 _requestId) external view returns (bool);
@@ -34,7 +59,29 @@ interface ILiveTradingProcessor {
 
     function getTradeData(bytes32 _requestId) external view returns (LiveTradeData memory);
 
-    function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedAmount) external;
+    function getParlayTradeData(bytes32 _requestId) external view returns (LiveParlayTradeData memory);
+
+    // =========================
+    // Actions
+    // =========================
 
     function requestLiveTrade(LiveTradeData calldata _liveTradeData) external returns (bytes32);
+
+    function requestLiveParlayTrade(LiveParlayTradeData calldata _parlay) external returns (bytes32);
+
+    /**
+     * @notice SINGLE fulfill (backwards-compatible with production)
+     */
+    function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedQuote) external;
+
+    /**
+     * @notice PARLAY fulfill (new)
+     * @dev approvedLegOdds.length must equal number of legs
+     */
+    function fulfillLiveTradeParlay(
+        bytes32 _requestId,
+        bool allow,
+        uint approvedQuote,
+        uint[] calldata approvedLegOdds
+    ) external;
 }

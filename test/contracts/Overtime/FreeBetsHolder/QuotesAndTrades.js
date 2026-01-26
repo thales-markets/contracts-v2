@@ -195,6 +195,113 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			await mockChainlinkOracle.fulfillLiveTrade(requestId, true, quote.totalQuote);
 		});
 
+		it('Should pass live parlay', async () => {
+			const market0 = tradeDataTenMarketsCurrentRound[0];
+			const market1 = tradeDataTenMarketsCurrentRound[1];
+			const market2 = tradeDataTenMarketsCurrentRound[2];
+
+			// Enable live trading for all three legs
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(market0.sportId, market0.typeId, true);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(market1.sportId, market1.typeId, true);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(market2.sportId, market2.typeId, true);
+
+			const firstTraderBalance = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+			expect(firstTraderBalance).to.equal(ethers.parseEther('10'));
+
+			// Calculate approved quote from leg odds
+			const ONE = 10n ** 18n;
+			const mulWithDecimals = (a, b) => (a * b) / ONE;
+			const leg0 = BigInt(market0.odds[market0.position]);
+			const leg1 = BigInt(market1.odds[market1.position]);
+			const leg2 = BigInt(market2.odds[market2.position]);
+			const approvedLegOdds = [leg0, leg1, leg2];
+			const approvedQuote = mulWithDecimals(mulWithDecimals(leg0, leg1), leg2);
+
+			// Build parlay request
+			const parlay = {
+				legs: [
+					{
+						gameId: market0.gameId,
+						sportId: market0.sportId,
+						typeId: market0.typeId,
+						line: market0.line,
+						position: market0.position,
+						expectedLegOdd: 0,
+						playerId: 0,
+					},
+					{
+						gameId: market1.gameId,
+						sportId: market1.sportId,
+						typeId: market1.typeId,
+						line: market1.line,
+						position: market1.position,
+						expectedLegOdd: 0,
+						playerId: 0,
+					},
+					{
+						gameId: market2.gameId,
+						sportId: market2.sportId,
+						typeId: market2.typeId,
+						line: market2.line,
+						position: market2.position,
+						expectedLegOdd: 0,
+						playerId: 0,
+					},
+				],
+				buyInAmount: BUY_IN_AMOUNT,
+				expectedPayout: approvedQuote,
+				additionalSlippage: ADDITIONAL_SLIPPAGE,
+				referrer: ZERO_ADDRESS,
+				collateral: collateralAddress,
+			};
+
+			// Call tradeLiveParlay
+			const tx = await freeBetsHolder.connect(firstTrader).tradeLiveParlay(parlay);
+
+			// Get the requestId after the transaction
+			const requestId = await liveTradingProcessor.counterToRequestId(0);
+
+			// Verify event emission
+			await expect(tx)
+				.to.emit(freeBetsHolder, 'FreeBetLiveParlayTradeRequested')
+				.withArgs(firstTrader.address, BUY_IN_AMOUNT, requestId, 3);
+			const userForRequest = await freeBetsHolder.liveRequestsPerUser(requestId);
+			expect(userForRequest).to.equal(firstTrader.address);
+
+			// Fulfill the live parlay trade
+			await mockChainlinkOracle.fulfillLiveTradeParlay(requestId, true, approvedQuote, approvedLegOdds);
+
+			// Verify ticket was created
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			expect(activeTickets.length).to.be.greaterThan(0);
+
+			const ticketAddress = activeTickets[0];
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.attach(ticketAddress);
+
+			expect(await ticket.isLive()).to.eq(true);
+			expect(await ticket.numOfMarkets()).to.eq(3);
+			expect(await ticket.buyInAmount()).to.eq(BUY_IN_AMOUNT);
+
+			// Verify ticket is linked to user via freeBetsHolder
+			const ticketUser = await freeBetsHolder.ticketToUser(ticketAddress);
+			expect(ticketUser).to.equal(firstTrader.address);
+
+			// Verify user's free bet balance was deducted
+			const firstTraderBalanceAfter = await freeBetsHolder.balancePerUserAndCollateral(
+				firstTrader,
+				collateralAddress
+			);
+			expect(firstTraderBalanceAfter).to.equal(ethers.parseEther('0'));
+
+			// Verify active tickets per user
+			const numActive = await freeBetsHolder.numOfActiveTicketsPerUser(firstTrader);
+			expect(numActive).to.equal(1);
+		});
+
 		it('Should claim winnings', async () => {
 			const quote = await sportsAMMV2.tradeQuote(
 				tradeDataCurrentRound,

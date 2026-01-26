@@ -45,13 +45,129 @@
       },
       {
         "internalType": "uint256",
-        "name": "approvedAmount",
+        "name": "approvedQuote",
         "type": "uint256"
       }
     ],
     "name": "fulfillLiveTrade",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "allow",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "approvedQuote",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "approvedLegOdds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "fulfillLiveTradeParlay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getParlayTradeData",
+    "outputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedLegOdd",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              }
+            ],
+            "internalType": "struct ILiveTradingProcessor.LiveParlayLeg[]",
+            "name": "legs",
+            "type": "tuple[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "buyInAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expectedPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct ILiveTradingProcessor.LiveParlayTradeData",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -183,6 +299,25 @@
         "type": "bytes32"
       }
     ],
+    "name": "requestIdIsParlay",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      }
+    ],
     "name": "requestIdToRequester",
     "outputs": [
       {
@@ -211,6 +346,94 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedLegOdd",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              }
+            ],
+            "internalType": "struct ILiveTradingProcessor.LiveParlayLeg[]",
+            "name": "legs",
+            "type": "tuple[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "buyInAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expectedPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct ILiveTradingProcessor.LiveParlayTradeData",
+        "name": "_parlay",
+        "type": "tuple"
+      }
+    ],
+    "name": "requestLiveParlayTrade",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

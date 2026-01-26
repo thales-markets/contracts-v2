@@ -18,6 +18,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolETH,
 		tradeDataCurrentRound,
+		tradeDataTenMarketsCurrentRound,
 		firstLiquidityProvider,
 		firstTrader,
 		secondAccount,
@@ -27,6 +28,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 		sportsAMMV2RiskManager,
 		weth,
 		quote,
+		singleQuote,
 		sportsAMMV2Manager;
 
 	beforeEach(async () => {
@@ -35,6 +37,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
 			tradeDataCurrentRound,
+			tradeDataTenMarketsCurrentRound,
 			liveTradingProcessor,
 			liveTradingProcessorData,
 			mockChainlinkOracle,
@@ -59,6 +62,14 @@ describe('SportsAMMV2Live Live Trades', () => {
 		quoteETH = await sportsAMMV2.tradeQuote(
 			tradeDataCurrentRound,
 			ETH_BUY_IN_AMOUNT,
+			ZERO_ADDRESS,
+			false
+		);
+
+		// just to get a deterministic "approvedQuote" value we can reuse
+		singleQuote = await sportsAMMV2.tradeQuote(
+			[tradeDataTenMarketsCurrentRound[0]],
+			BUY_IN_AMOUNT,
 			ZERO_ADDRESS,
 			false
 		);
@@ -426,7 +437,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			expect(requestsData[0].ticketId).to.not.eq(ZERO_ADDRESS);
 		});
 
-		it('Should get a live trade requests data by user', async () => {
+		it('Should get a live single trade requests data by user', async () => {
 			// GIVEN 5 live requests where latest request is from different user
 			const NUM_OF_REQUESTS = 5;
 			let userLastRequestIndex;
@@ -470,6 +481,98 @@ describe('SportsAMMV2Live Live Trades', () => {
 			expect(requestsData[0].user).to.eq(firstTrader.address);
 			expect(requestsData[0].requestId).to.eq(userLastRequestId);
 			expect(requestsData[0].isFulfilled).to.eq(true);
+			expect(requestsData[0].legs.length).to.eq(1);
+		});
+
+		it('Should get a live parlay trade requests data by user', async () => {
+			const ONE = 10n ** 18n;
+			const mulWithDecimals = (a, b) => (a * b) / ONE;
+
+			// GIVEN 5 live requests where latest request is from different user
+			const NUM_OF_REQUESTS = 5;
+			let userLastRequestIndex;
+
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+
+			// enable live trading for both legs
+			const m0 = tradeDataTenMarketsCurrentRound[0];
+			const m1 = tradeDataTenMarketsCurrentRound[1];
+
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(
+				m0.sportId,
+				m0.typeId,
+				true
+			);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(
+				m1.sportId,
+				m1.typeId,
+				true
+			);
+
+			// ---- NEW: build consistent Chainlink approvals (NO bonus) ----
+			const leg0 = BigInt(m0.odds[m0.position]);
+			const leg1 = BigInt(m1.odds[m1.position]);
+
+			const approvedLegOdds = [leg0, leg1];
+			const approvedQuote = mulWithDecimals(leg0, leg1);
+
+			for (let i = 0; i < NUM_OF_REQUESTS; i++) {
+				const user = i == NUM_OF_REQUESTS - 1 ? secondAccount : firstTrader;
+				userLastRequestIndex = user == firstTrader ? i : userLastRequestIndex;
+
+				await liveTradingProcessor.connect(user).requestLiveParlayTrade({
+					legs: [
+						{
+							gameId: m0.gameId,
+							sportId: m0.sportId,
+							typeId: m0.typeId,
+							line: m0.line,
+							position: m0.position,
+							expectedLegOdd: 0,
+							playerId: 0,
+						},
+						{
+							gameId: m1.gameId,
+							sportId: m1.sportId,
+							typeId: m1.typeId,
+							line: m1.line,
+							position: m1.position,
+							expectedLegOdd: 0,
+							playerId: 0,
+						},
+					],
+					buyInAmount: BUY_IN_AMOUNT,
+					expectedPayout: approvedQuote, // treated as "approved quote" in your current flow
+					additionalSlippage: ADDITIONAL_SLIPPAGE,
+					referrer: ZERO_ADDRESS,
+					collateral: ZERO_ADDRESS,
+				});
+			}
+
+			const userLastRequestId = await liveTradingProcessor.counterToRequestId(userLastRequestIndex);
+
+			await mockChainlinkOracle.fulfillLiveTradeParlay(
+				userLastRequestId,
+				true,
+				approvedQuote,
+				approvedLegOdds
+			);
+
+			// WHEN trying to fetch last request data for user
+			const BATCH_SIZE = 10;
+			const MAX_DATA_SIZE = 1;
+			const requestsData = await liveTradingProcessorData.getLatestRequestsDataPerUser(
+				firstTrader,
+				BATCH_SIZE,
+				MAX_DATA_SIZE
+			);
+
+			// THEN exactly MAX_DATA_SIZE is retrieved, user and request ID is matching last request is fulfilled
+			expect(requestsData.length).to.eq(MAX_DATA_SIZE);
+			expect(requestsData[0].user).to.eq(firstTrader.address);
+			expect(requestsData[0].requestId).to.eq(userLastRequestId);
+			expect(requestsData[0].isFulfilled).to.eq(true);
+			expect(requestsData[0].legs.length).to.gt(1);
 		});
 
 		it('Should get a live trade requests data by user for smaller batch size', async () => {

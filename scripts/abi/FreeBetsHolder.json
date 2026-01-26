@@ -215,6 +215,37 @@
         "internalType": "bytes32",
         "name": "requestId",
         "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "legsCount",
+        "type": "uint16"
+      }
+    ],
+    "name": "FreeBetLiveParlayTradeRequested",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "requestId",
+        "type": "bytes32"
       }
     ],
     "name": "FreeBetLiveTradeRequested",
@@ -2005,6 +2036,88 @@
       }
     ],
     "name": "tradeLive",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedLegOdd",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              }
+            ],
+            "internalType": "struct ILiveTradingProcessor.LiveParlayLeg[]",
+            "name": "legs",
+            "type": "tuple[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "buyInAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expectedPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct ILiveTradingProcessor.LiveParlayTradeData",
+        "name": "_liveParlayTradeData",
+        "type": "tuple"
+      }
+    ],
+    "name": "tradeLiveParlay",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
