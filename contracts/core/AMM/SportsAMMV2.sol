@@ -56,6 +56,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     error InvalidPosition();
     error MultiCollatDisabled();
     error OnlyTicketOwner();
+    error NonCancelableTicket();
 
     /* ========== STRUCT VARIABLES ========== */
     struct TradeDataInternal {
@@ -515,6 +516,57 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         _exerciseTicket(_ticket, _exerciseCollateral, false, false);
     }
 
+    /// @notice Allows ticket owner to cancel their own ticket under specific conditions
+    /// @param _ticket address of the ticket
+    /// @param _tradeData TradeData[] representing the markets
+    function cancelTicketByOwner(
+        address _ticket,
+        ISportsAMMV2.TradeData[] calldata _tradeData
+    ) external nonReentrant notPaused onlyKnownTickets(_ticket) {
+        // TODO: consider only allowing the cancellation in the first 10 minutes or so since ticket creation
+        Ticket ticket = Ticket(_ticket);
+        (address ticketOwner, uint buyInAmount, IERC20 collateral) = _getTicketCoreData(ticket);
+
+        if (ticketOwner != msg.sender) revert OnlyTicketOwner();
+        if (ticket.isSystem() || ticket.isSGP() || ticket.isLive() || (ticketOwner == freeBetsHolder))
+            revert NonCancelableTicket();
+
+        (uint totalQuote, , , , , ) = _tradeQuoteCommon(_tradeData, buyInAmount, address(collateral), false, NON_SYSTEM_BET);
+
+        if (totalQuote == 0) revert ZeroAmount();
+
+        ticket.cancelByOwner();
+
+        uint originalExpectedPayout = _divWithDecimals(buyInAmount, ticket.totalQuote());
+        uint newExpectedPayout = _divWithDecimals(buyInAmount, totalQuote);
+
+        uint baseRefundAmount = newExpectedPayout >= originalExpectedPayout
+            ? (buyInAmount * originalExpectedPayout) / newExpectedPayout
+            : buyInAmount;
+
+        // cancelation fee is double of SafeBoxFee
+        uint feeAmount = _handleFees(buyInAmount, ticketOwner, collateral, 2);
+
+        collateral.safeTransfer(ticketOwner, baseRefundAmount - feeAmount);
+
+        // mark ticket as exercised in LiquidityPool and return any funds to the pool if ticket was lost or cancelled
+        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(collateral)]).transferToPool(
+            _ticket,
+            collateral.balanceOf(address(this))
+        );
+
+        manager.resolveKnownTicket(_ticket, ticketOwner);
+        emit TicketResolved(_ticket, ticketOwner, false);
+    }
+
+    function _getTicketCoreData(
+        Ticket ticket
+    ) internal view returns (address ticketOwner, uint buyInAmount, IERC20 collateral) {
+        ticketOwner = ticket.ticketOwner();
+        buyInAmount = ticket.buyInAmount();
+        collateral = ticket.collateral();
+    }
+
     /// @notice Withdraws collateral from a specified Ticket contract and sends it to the target address
     /// @param ticketAddress The address of the Ticket contract
     /// @param recipient The address to receive the withdrawn collateral
@@ -890,7 +942,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _handleFees(uint _buyInAmount, address _tickerOwner, IERC20 _collateral) internal returns (uint fees) {
+    function _handleFees(
+        uint _buyInAmount,
+        address _tickerOwner,
+        IERC20 _collateral,
+        uint feeMultiplier
+    ) internal returns (uint fees) {
         uint referrerShare;
         address referrer = referrals.sportReferrals(_tickerOwner);
         uint ammBalance = _collateral.balanceOf(address(this));
@@ -906,7 +963,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 }
             }
         }
-        fees = _getFees(_buyInAmount);
+        fees = _getFees(_buyInAmount) * feeMultiplier;
         if (fees > referrerShare) {
             uint safeBoxAmount = fees - referrerShare;
             if (ammBalance >= safeBoxAmount) {
@@ -960,14 +1017,13 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         } else {
             userWonAmount = ticket.exercise(_exerciseCollateral);
         }
-        IERC20 ticketCollateral = ticket.collateral();
-        address ticketOwner = ticket.ticketOwner();
+        (address ticketOwner, uint buyInAmount, IERC20 ticketCollateral) = _getTicketCoreData(ticket);
 
         if (ticketOwner == freeBetsHolder || ticketOwner == stakingThalesBettingProxy) {
             IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
         }
         if (!ticket.cancelled()) {
-            _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
+            _handleFees(buyInAmount, ticketOwner, ticketCollateral, 1);
         }
         manager.resolveKnownTicket(_ticket, ticketOwner);
         emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());

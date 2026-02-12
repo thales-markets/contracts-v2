@@ -136,6 +136,13 @@
   },
   {
     "inputs": [],
+    "name": "cancelByOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "cancelled",
     "outputs": [
       {
