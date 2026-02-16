@@ -14,6 +14,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "FreeBetsHolderChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -88,6 +101,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "freeBetsHolder",
+    "outputs": [
+      {
+        "internalType": "contract IFreeBetsHolder",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -140,38 +166,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "string",
-            "name": "gameId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint16",
-            "name": "sportId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "typeId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "int24",
-            "name": "line",
-            "type": "int24"
-          },
-          {
-            "internalType": "uint8",
-            "name": "position",
-            "type": "uint8"
-          },
-          {
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "expectedQuote",
+            "name": "expectedPayout",
             "type": "uint256"
           },
           {
@@ -188,6 +189,53 @@
             "internalType": "address",
             "name": "collateral",
             "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedQuote",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LiveTradingProcessorData.Leg[]",
+            "name": "legs",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",
@@ -246,38 +294,13 @@
             "type": "uint256"
           },
           {
-            "internalType": "string",
-            "name": "gameId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint16",
-            "name": "sportId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "typeId",
-            "type": "uint16"
-          },
-          {
-            "internalType": "int24",
-            "name": "line",
-            "type": "int24"
-          },
-          {
-            "internalType": "uint8",
-            "name": "position",
-            "type": "uint8"
-          },
-          {
             "internalType": "uint256",
             "name": "buyInAmount",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "expectedQuote",
+            "name": "expectedPayout",
             "type": "uint256"
           },
           {
@@ -294,6 +317,53 @@
             "internalType": "address",
             "name": "collateral",
             "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedQuote",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LiveTradingProcessorData.Leg[]",
+            "name": "legs",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct LiveTradingProcessorData.RequestData[]",
@@ -398,6 +468,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IFreeBetsHolder",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "setFreeBetsHolder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

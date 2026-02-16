@@ -16,6 +16,7 @@ async function main() {
 	const sportsAMMV2Address = getTargetAddress('SportsAMMV2', network);
 
 	const mockSpecId = '0x6431653939363663346238643438373838633563376333396235633838353264';
+	const parlayJobSpecId = '0x3866336237663561366436613463376139643765326332663663396134653531';
 	const paymentAmount = ethers.parseEther('1');
 
 	const liveTradingProcessor = await ethers.getContractFactory('LiveTradingProcessor');
@@ -25,6 +26,7 @@ async function main() {
 		mockChainlinkOracleAddress,
 		sportsAMMV2Address,
 		mockSpecId,
+		parlayJobSpecId,
 		paymentAmount
 	);
 	await liveTradingProcessorDeployed.waitForDeployment();
@@ -35,23 +37,23 @@ async function main() {
 	setTargetAddress('LiveTradingProcessor', network, liveTradingProcessorAddress);
 	await delay(5000);
 
-	if (isTestNetwork(networkObj.chainId)) {
-		const mockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
-		const mockChainlinkOracleDeployed = mockChainlinkOracle.attach(mockChainlinkOracleAddress);
-		await mockChainlinkOracleDeployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
-			from: owner.address,
-		});
-		console.log('LiveTradingProcessor set in MockChainlinkOracle');
+	// if (isTestNetwork(networkObj.chainId)) {
+	// 	const mockChainlinkOracle = await ethers.getContractFactory('MockChainlinkOracle');
+	// 	const mockChainlinkOracleDeployed = mockChainlinkOracle.attach(mockChainlinkOracleAddress);
+	// 	await mockChainlinkOracleDeployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
+	// 		from: owner.address,
+	// 	});
+	// 	console.log('LiveTradingProcessor set in MockChainlinkOracle');
+	//
+	// 	const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
+	// 	const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
+	// 	await sportsAMMV2Deployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
+	// 		from: owner.address,
+	// 	});
+	// 	console.log('LiveTradingProcessor set in SportsAMMV2');
+	// }
 
-		const sportsAMMV2 = await ethers.getContractFactory('SportsAMMV2');
-		const sportsAMMV2Deployed = sportsAMMV2.attach(sportsAMMV2Address);
-		await sportsAMMV2Deployed.setLiveTradingProcessor(liveTradingProcessorAddress, {
-			from: owner.address,
-		});
-		console.log('LiveTradingProcessor set in SportsAMMV2');
-	}
-
-	await delay(5000);
+	//await delay(5000);
 
 	try {
 		await hre.run('verify:verify', {
@@ -61,6 +63,7 @@ async function main() {
 				mockChainlinkOracleAddress,
 				sportsAMMV2Address,
 				mockSpecId,
+				parlayJobSpecId,
 				paymentAmount,
 			],
 			contract: 'contracts/core/LiveTrading/LiveTradingProcessor.sol:LiveTradingProcessor',

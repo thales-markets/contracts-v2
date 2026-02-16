@@ -26,6 +26,7 @@ describe('SportsAMMV2Live Deployment and Setters', () => {
 				collateralAddress, //_oracle
 				collateralAddress, // _sportsAMM
 				mockSpecId, // _specId
+				mockSpecId, // _parlaySpecId
 				0 // payment
 			);
 		});
@@ -33,6 +34,7 @@ describe('SportsAMMV2Live Deployment and Setters', () => {
 
 	describe('Live Trade Data', () => {
 		it('Should set the new Live Trading Processor', async () => {
+			// setLiveTradingProcessor
 			await expect(
 				liveTradingProcessorData.connect(secondAccount).setLiveTradingProcessor(thirdAccount)
 			).to.be.revertedWith('Only the contract owner may perform this action');
@@ -42,6 +44,18 @@ describe('SportsAMMV2Live Deployment and Setters', () => {
 
 			await expect(liveTradingProcessorData.setLiveTradingProcessor(thirdAccount))
 				.to.emit(liveTradingProcessorData, 'LiveTradingProcessorChanged')
+				.withArgs(thirdAccount.address);
+
+			// setFreeBetsHolder
+			await expect(
+				liveTradingProcessorData.connect(secondAccount).setFreeBetsHolder(thirdAccount)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+
+			await liveTradingProcessorData.setFreeBetsHolder(thirdAccount);
+			expect(await liveTradingProcessorData.liveTradingProcessor()).to.equal(thirdAccount.address);
+
+			await expect(liveTradingProcessorData.setFreeBetsHolder(thirdAccount))
+				.to.emit(liveTradingProcessorData, 'FreeBetsHolderChanged')
 				.withArgs(thirdAccount.address);
 		});
 	});

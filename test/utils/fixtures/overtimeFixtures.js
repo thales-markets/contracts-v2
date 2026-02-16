@@ -294,7 +294,11 @@ async function deploySportsAMMV2Fixture() {
 	const sportsAMMV2Address = await sportsAMMV2.getAddress();
 
 	await sportsAMMV2.setAmounts(SPORTS_AMM_INITAL_PARAMS.safeBoxFee);
-	await sportsAMMV2RiskManager.setSportsAMM(sportsAMMV2Address);
+	await sportsAMMV2RiskManager.setAddresses(
+		sportsAMMV2ManagerAddress,
+		sportsAMMV2ResultManagerAddress,
+		sportsAMMV2Address
+	);
 	await sportsAMMV2Manager.setSportsAMM(sportsAMMV2Address);
 
 	await sportsAMMV2.setMultiCollateralOnOffRamp(multiCollateralAddress);
@@ -735,6 +739,7 @@ async function deploySportsAMMV2Fixture() {
 		mockChainlinkOracleAddress, //_oracle
 		sportsAMMV2Address, // _sportsAMM
 		mockSpecId, // _specId
+		mockSpecId, // _parlaySpecId
 		0 // payment
 	);
 	const liveTradingProcessorAddress = await liveTradingProcessor.getAddress();
@@ -774,7 +779,6 @@ async function deploySportsAMMV2Fixture() {
 		.connect(firstTrader)
 		.approve(stakingThalesBettingProxyAddress, DEFAULT_AMOUNT);
 	await stakingThales.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
-	await liveTradingProcessor.setStakingThalesBettingProxy(stakingThalesBettingProxyAddress);
 	await mockChainlinkOracle.setLiveTradingProcessor(liveTradingProcessorAddress);
 	await mockChainlinkOracle.setSGPTradingProcessor(sgpTradingProcessorAddress);
 
@@ -807,7 +811,7 @@ async function deploySportsAMMV2Fixture() {
 	await sgpTradingProcessor.setFreeBetsHolder(freeBetsHolderAddress);
 
 	await collateral.connect(owner).approve(freeBetsHolder, DEFAULT_AMOUNT);
-	await freeBetsHolder.addSupportedCollateral(collateralAddress, true);
+	await freeBetsHolder.addSupportedCollateral(collateralAddress, true, sportsAMMV2Address);
 	const FOURTY_DAYS = 40 * 24 * 60 * 60;
 	await freeBetsHolder.setFreeBetExpirationPeriod(FOURTY_DAYS, 0);
 	await freeBetsHolder.fund(firstTrader, collateralAddress, BUY_IN_AMOUNT);

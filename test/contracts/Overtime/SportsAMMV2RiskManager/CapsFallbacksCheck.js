@@ -24,6 +24,13 @@ describe('SportsAMMV2RiskManager Cap Logic: Use 1/2 of Moneyline Market Cap (Per
 		const moneylineMarketCap = ethers.parseEther('20');
 		await sportsAMMV2RiskManager.setCapsPerMarket([GAME_ID_1], [0], [0], [0], [moneylineMarketCap]);
 
+		// set capPerSportAndType to something > 10 to allow moneyline cap to apply
+		await sportsAMMV2RiskManager.setCapsPerSportAndType(
+			[SPORT_ID_NBA],
+			[TYPE_ID_TOTAL],
+			[ethers.parseEther('100')]
+		);
+
 		const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 			GAME_ID_1,
 			SPORT_ID_NBA,
@@ -34,7 +41,7 @@ describe('SportsAMMV2RiskManager Cap Logic: Use 1/2 of Moneyline Market Cap (Per
 			false
 		);
 
-		expect(cap).to.equal(ethers.parseEther('10'));
+		expect(cap).to.equal(ethers.parseEther('10')); // ✅ moneylineCap / 2 is lower
 	});
 
 	it('Should fallback to sport cap logic if no moneyline market cap is set', async () => {
@@ -54,16 +61,18 @@ describe('SportsAMMV2RiskManager Cap Logic: Use 1/2 of Moneyline Market Cap (Per
 		expect(cap).to.equal(ethers.parseEther('15'));
 	});
 
-	it('Should use 1/2 of moneyline market cap even if capPerSportAndType is set', async () => {
-		const moneylineMarketCap = ethers.parseEther('40');
+	it('Should use 1/2 of moneyline market cap only if smaller than capPerSportAndType', async () => {
+		const moneylineMarketCap = ethers.parseEther('40'); // → 20
 		await sportsAMMV2RiskManager.setCapsPerMarket([GAME_ID_1], [0], [0], [0], [moneylineMarketCap]);
+
+		// Set capPerSportAndType HIGH → moneyline cap applies
 		await sportsAMMV2RiskManager.setCapsPerSportAndType(
 			[SPORT_ID_NBA],
 			[TYPE_ID_TOTAL],
-			[ethers.parseEther('9')]
+			[ethers.parseEther('25')]
 		);
 
-		const cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+		let cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
 			GAME_ID_1,
 			SPORT_ID_NBA,
 			TYPE_ID_TOTAL,
@@ -72,8 +81,25 @@ describe('SportsAMMV2RiskManager Cap Logic: Use 1/2 of Moneyline Market Cap (Per
 			maturity,
 			false
 		);
+		expect(cap).to.equal(ethers.parseEther('20')); // ✅ moneyline cap wins
 
-		expect(cap).to.equal(ethers.parseEther('20'));
+		// Set capPerSportAndType LOW → sport/type cap applies
+		await sportsAMMV2RiskManager.setCapsPerSportAndType(
+			[SPORT_ID_NBA],
+			[TYPE_ID_TOTAL],
+			[ethers.parseEther('9')]
+		);
+
+		cap = await sportsAMMV2RiskManager.calculateCapToBeUsed(
+			GAME_ID_1,
+			SPORT_ID_NBA,
+			TYPE_ID_TOTAL,
+			0,
+			TOTAL_LINE,
+			maturity,
+			false
+		);
+		expect(cap).to.equal(ethers.parseEther('9')); // ✅ capPerSportAndType wins
 	});
 
 	it('Should fallback to capPerSportAndType if no moneyline market cap is set', async () => {

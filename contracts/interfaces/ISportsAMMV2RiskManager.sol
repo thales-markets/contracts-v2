@@ -57,6 +57,12 @@ interface ISportsAMMV2RiskManager {
         bool _isLive
     ) external view returns (uint cap);
 
+    function calculateTotalRiskOnGame(
+        bytes32 _gameId,
+        uint16 _sportId,
+        uint _maturity
+    ) external view returns (uint totalRisk);
+
     function checkRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,

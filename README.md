@@ -1,35 +1,36 @@
-# Thales v2 contracts
+# Overtime v2 contracts
 
 [![CircleCI](https://circleci.com/gh/thales-markets/contracts-v2/tree/main.svg?style=svg)](https://circleci.com/gh/thales-markets/contracts-v2/tree/main)
 [![Codecov](https://codecov.io/gh/thales-markets/contracts-v2/branch/main/graph/badge.svg?token=M2e5X0vJRQ)](https://codecov.io/gh/thales-markets/contracts-v2)
-[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
-[![Twitter Follow](https://img.shields.io/twitter/follow/thales_io.svg?label=thales_io&style=social)](https://twitter.com/thales_io)
+[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](http://discord.gg/overtime-io)
+[![Twitter Follow](https://img.shields.io/twitter/follow/Overtime.svg?label=Overtime&style=social)](https://x.com/overtime_io)
 
-This repository is intended for v2 version of Thales contract architecture.
+This repository is intended for v2 version of Overtime contract architecture.
 
-## About Thales
+## About Overtime
 
-A permissionless ecosystem where every derivative market is a unique smart contract.
+Overtime is an onchain sportsbook ecosystem with platforms for placing bets on popular sporting events and digital options trading. It operates without relying on a centralized entity like most sportsbooks. With Overtime smart contracts used as a foundation for the platform, as well as reliable data feeds from the industry-leading onchain data provider Chainlink, Overtime promises the most fun you'll have onchain!
+
 Powered by pioneering AMM architecture and trustless liquidity pools.
 
-For the latest system documentation see [docs.thales.io](https://docs.thales.io/).
+For the latest system documentation see [docs.overtime.io](https://docs.overtime.io/).
 
-Everything about the [THALES token](https://thales.io/about/thales-token).
+Everything about the [Overtime token](https://overtime.io/over-token).
 
 ### dApps
 
+- [Overtime Sportsbook](https://overtimemarkets.xyz/)
+- [Speed Markets](https://speedmarkets.xyz/)
 - [Thales Markets](https://thalesmarket.io/)
-- [Overtime (Sport) Markets](https://overtimemarkets.xyz/)
-- [Overtime v2](https://v2.overtimemarkets.xyz/)
 
 ### Community
 
-[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](https://discord.gg/DHebdQqqaD)
-[![Twitter Follow](https://img.shields.io/twitter/follow/thales_io.svg?label=thales_io&style=social)](https://twitter.com/thales_io)
+[![Discord](https://img.shields.io/discord/906484044915687464.svg?color=768AD4&label=discord&logo=https%3A%2F%2Fdiscordapp.com%2Fassets%2F8c9701b98ad4372b58f13fd9f65f966e.svg)](http://discord.gg/overtime-io)
+[![Twitter Follow](https://img.shields.io/twitter/follow/Overtime.svg?label=Overtime&style=social)](https://x.com/overtime_io)
 
 ## Contracts
 
-List off all deployed contracts are listed [here](https://contracts.thalesmarket.io/).
+List off all deployed contracts are listed [here](https://v2.contracts.overtime.io/).
 
 ### Audits
 

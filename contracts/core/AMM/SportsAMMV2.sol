@@ -752,16 +752,67 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 _systemBetDenominator
             );
         } else {
-            processingParams._totalQuote = _divWithDecimals(
-                _tradeDataInternal._buyInAmount,
-                _tradeDataInternal._expectedPayout
-            );
-            processingParams._totalQuote =
-                (processingParams._totalQuote * ONE) /
-                ((ONE + processingParams._addedPayoutPercentage) -
-                    _mulWithDecimals(processingParams._addedPayoutPercentage, processingParams._totalQuote));
+            uint numOfMarkets = _tradeData.length;
+            uint added = processingParams._addedPayoutPercentage;
+
+            // Chainlink returns this as the guardrail base quote (NO bonus)
+            uint approvedBaseQuote = _tradeDataInternal._expectedPayout == 0
+                ? 0
+                : _divWithDecimals(_tradeDataInternal._buyInAmount, _tradeDataInternal._expectedPayout);
+
+            // NOTE: despite the name, this is "min implied probability" (i.e. max supported decimal odds)
+            uint minImplied = riskManager.maxSupportedOdds();
+
+            if (numOfMarkets == 1) {
+                uint legOdd = _tradeData[0].odds[_tradeData[0].position];
+                uint boosted = _applyBonusToOdd(legOdd, added);
+
+                // ===== CLAMP (same behavior as prematch) =====
+                if (boosted < minImplied) boosted = minImplied;
+
+                processingParams._totalQuote = boosted;
+            } else {
+                uint baseQuote = 0;
+                uint boostedQuote = 0;
+
+                for (uint i = 0; i < numOfMarkets; ++i) {
+                    ISportsAMMV2.TradeData memory td = _tradeData[i];
+                    if (td.odds.length <= td.position) revert InvalidPosition();
+                    uint legOdd = td.odds[td.position];
+                    require(legOdd > 0, "Zero leg odd");
+
+                    baseQuote = (baseQuote == 0) ? legOdd : _mulWithDecimals(baseQuote, legOdd);
+
+                    uint boostedLeg = _applyBonusToOdd(legOdd, added);
+                    boostedQuote = (boostedQuote == 0) ? boostedLeg : _mulWithDecimals(boostedQuote, boostedLeg);
+                }
+
+                // ===== Guardrail (clamp-aware) =====
+                uint relTol = 1e12; // 1 ppm
+                require(approvedBaseQuote > 0, "Bad approved quote");
+
+                // If the *boosted* parlay implies odds above max (boostedQuote < minImplied),
+                // then the node will clamp the approved quote to minImplied, and we should
+                // validate against the clamp instead of baseQuote.
+                if (boostedQuote < minImplied) {
+                    uint diffClamp = _absDiff(minImplied, approvedBaseQuote);
+                    require((diffClamp * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                } else {
+                    uint diffBase = _absDiff(baseQuote, approvedBaseQuote);
+                    require((diffBase * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                }
+
+                processingParams._totalQuote = boostedQuote;
+
+                // Clamp final boosted quote (same behavior as prematch)
+                if (processingParams._totalQuote < minImplied) processingParams._totalQuote = minImplied;
+            }
+
             processingParams._payout = _divWithDecimals(_tradeDataInternal._buyInAmount, processingParams._totalQuote);
             processingParams._fees = _getFees(_tradeDataInternal._buyInAmount);
+
+            // Align expected payout with final (bonus-inclusive) payout for checkLimits
+            _tradeDataInternal._expectedPayout = processingParams._payout;
         }
 
         processingParams._payoutWithFees = processingParams._payout + processingParams._fees;
@@ -778,6 +829,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         Ticket.MarketData[] memory markets = _getTicketMarkets(_tradeData, processingParams._addedPayoutPercentage);
         Ticket ticket = Ticket(Clones.clone(ticketMastercopy));
 
+        // 1) Initialize the ticket (unchanged)
         ticket.initialize(
             Ticket.TicketInit(
                 markets,
@@ -794,13 +846,20 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             )
         );
 
+        // 2) Track ticket on the manager (unchanged)
         manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._recipient);
 
+        // 3) Commit trade to LP (unchanged)
         ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
             address(ticket),
             processingParams._payoutWithFees - _tradeDataInternal._buyInAmount
         );
+
+        // 4) Fund the ticket with the full expected amount (unchanged)
         IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), processingParams._payoutWithFees);
+
+        // 5) Lock the accounting: tell the Ticket what the authoritative funded amount is
+        ticket.setExpectedFinalPayout(processingParams._payoutWithFees);
 
         emit NewTicket(
             markets,
@@ -893,7 +952,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address referrer = referrals.sportReferrals(_tickerOwner);
         uint ammBalance = _collateral.balanceOf(address(this));
 
-        if (referrer != address(0)) {
+        if (referrer != address(0) && _tickerOwner != address(freeBetsHolder)) {
             uint referrerFeeByTier = referrals.getReferrerFee(referrer);
             if (referrerFeeByTier > 0) {
                 referrerShare = _mulWithDecimals(_buyInAmount, referrerFeeByTier);
@@ -945,7 +1004,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     }
 
     function _setReferrer(address _referrer, address _recipient) internal {
-        if (_referrer != address(0)) referrals.setReferrer(_referrer, _recipient);
+        if (_referrer != address(0) && _recipient != address(freeBetsHolder)) referrals.setReferrer(_referrer, _recipient);
     }
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _cancelTicket, bool _markLost) internal {
@@ -983,6 +1042,15 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _ticket,
             ticketCollateral.balanceOf(address(this))
         );
+    }
+
+    function _applyBonusToOdd(uint odd, uint addedPayoutPercentage) internal pure returns (uint) {
+        // odd' = odd / ((1 + a) - a*odd)
+        return (odd * ONE) / ((ONE + addedPayoutPercentage) - _mulWithDecimals(addedPayoutPercentage, odd));
+    }
+
+    function _absDiff(uint a, uint b) internal pure returns (uint) {
+        return a >= b ? (a - b) : (b - a);
     }
 
     /* ========== SETTERS ========== */
