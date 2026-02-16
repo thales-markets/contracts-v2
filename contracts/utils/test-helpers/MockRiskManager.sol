@@ -38,6 +38,10 @@ contract MockRiskManager is ISportsAMMV2RiskManager {
         return 100 ether;
     }
 
+    function calculateTotalRiskOnGame(bytes32, uint16, uint) external pure override returns (uint) {
+        return 100 ether;
+    }
+
     function checkRisks(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint,
