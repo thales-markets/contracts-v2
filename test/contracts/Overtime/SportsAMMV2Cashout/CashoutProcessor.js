@@ -105,6 +105,20 @@ describe('CashoutProcessor (E2E)', () => {
 			);
 	}
 
+	async function resolveLegAsLost(market) {
+		await ensureExactPositionResultType(market.typeId);
+		// choose any other position than market.position
+		const losingResult = market.position === 0 ? 1 : 0;
+		await sportsAMMV2ResultManager
+			.connect(owner)
+			.setResultsPerMarkets(
+				[market.gameId],
+				[market.typeId],
+				[market.playerId || 0],
+				[[losingResult]]
+			);
+	}
+
 	async function voidLeg(market) {
 		await sportsAMMV2ResultManager
 			.connect(owner)
@@ -216,7 +230,7 @@ describe('CashoutProcessor (E2E)', () => {
 	});
 
 	// -----------------------------
-	// Added coverage
+	// Added coverage (request-level)
 	// -----------------------------
 
 	it('6) request: ticket=0 => InvalidTicket', async () => {
@@ -324,6 +338,10 @@ describe('CashoutProcessor (E2E)', () => {
 				)
 		).to.be.revertedWithCustomError(cashoutProcessor, 'SettledLegOddMismatch');
 	});
+
+	// -----------------------------
+	// Added coverage (fulfill-level / plumbing)
+	// -----------------------------
 
 	it('14) fulfill: approvedOdds length mismatch => InvalidLegArraysLength', async () => {
 		const ticket = await buyParlayTicket2Legs();
@@ -498,5 +516,81 @@ describe('CashoutProcessor (E2E)', () => {
 		);
 		expect(arrays.isLegResolved[0]).to.equal(false);
 		expect(arrays.isLegResolved[1]).to.equal(false);
+	});
+
+	// -----------------------------
+	// Added coverage (AMM / Ticket / LP integration)
+	// -----------------------------
+
+	it('25) SportsAMM: only cashoutProcessor can call cashoutTicketWithLegOdds', async () => {
+		const ticket = await buyParlayTicket2Legs();
+		const approvedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
+		const isLegSettled = [false, false];
+
+		await expect(
+			sportsAMMV2
+				.connect(owner) // not cashoutProcessor
+				.cashoutTicketWithLegOdds(
+					addr(ticket),
+					approvedOddsPerLeg,
+					isLegSettled,
+					firstTrader.address
+				)
+		).to.be.revertedWithCustomError(sportsAMMV2, 'OnlyDedicatedProcessor');
+	});
+
+	it('26) Ticket gating: if all legs resolved (won) then cashout fulfill reverts "Not in trading phase"', async () => {
+		const ticket = await buyParlayTicket2Legs();
+		const m0 = tradeDataTenMarketsCurrentRound[0];
+		const m1 = tradeDataTenMarketsCurrentRound[1];
+
+		await resolveLegAsWon(m0);
+		await resolveLegAsWon(m1);
+
+		// For resolved legs, processor requires expected == stored
+		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
+		const isLegResolved = [true, true];
+
+		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
+
+		await expect(
+			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg)
+		).to.be.revertedWith('Not in trading phase');
+	});
+
+	it('27) Losing leg resolved -> requestCashout reverts TicketNotCashoutable', async () => {
+		const ticket = await buyParlayTicket2Legs();
+		const m0 = tradeDataTenMarketsCurrentRound[0];
+
+		// Make leg0 lose so ticket becomes not cashoutable
+		await resolveLegAsLost(m0);
+
+		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
+		const isLegResolved = [true, false];
+
+		await expect(
+			cashoutProcessor
+				.connect(firstTrader)
+				.requestCashout(addr(ticket), expectedOddsPerLeg, isLegResolved, 0n)
+		).to.be.revertedWithCustomError(cashoutProcessor, 'TicketNotCashoutable');
+	});
+
+	it('28) LP integration: after successful cashout, LP marks ticket exercised in its round', async () => {
+		const ticket = await buyParlayTicket2Legs();
+
+		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
+		const isLegResolved = [false, false];
+
+		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
+
+		await mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg);
+
+		const ticketRound = await sportsAMMV2LiquidityPool.getTicketRound(addr(ticket));
+		const exercised = await sportsAMMV2LiquidityPool.ticketAlreadyExercisedInRound(
+			ticketRound,
+			addr(ticket)
+		);
+
+		expect(exercised).to.equal(true);
 	});
 });
