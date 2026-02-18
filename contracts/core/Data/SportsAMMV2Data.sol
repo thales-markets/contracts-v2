@@ -525,6 +525,28 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         }
     }
 
+    /**
+     * @notice Returns cashout quote and payout data for a ticket.
+     * @dev Delegates to Ticket using approved per-leg odds and settled flags.
+     *      Applies cashout fee via multiplier (currently hardcoded).
+     * @param ticket Ticket address.
+     * @param approvedOddsPerLeg Approved per-leg implied probabilities (1e18).
+     * @param isLegSettled Flags indicating whether each leg is settled.
+     * @return quote Combined implied probability for cashout.
+     * @return payoutAfterFee Cashout payout after fee.
+     */
+    function getCashoutQuoteAndPayout(
+        address ticket,
+        uint[] calldata approvedOddsPerLeg,
+        bool[] calldata isLegSettled
+    ) external view returns (uint quote, uint payoutAfterFee) {
+        if (!sportsAMM.manager().isTicketPotentiallyCashoutable(ticket) || !sportsAMM.manager().isActiveTicket(ticket)) {
+            return (0, 0);
+        }
+
+        return Ticket(ticket).getCashoutQuoteAndPayout(approvedOddsPerLeg, isLegSettled);
+    }
+
     function _getTicketsData(address[] memory ticketsArray) internal view returns (TicketData[] memory) {
         TicketData[] memory tickets = new TicketData[](ticketsArray.length);
         for (uint i = 0; i < ticketsArray.length; i++) {

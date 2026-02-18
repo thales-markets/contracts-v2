@@ -308,6 +308,19 @@
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "multiplier",
+        "type": "uint256"
+      }
+    ],
+    "name": "SetCashoutSafeBoxFeeMultiplier",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "_sportID",
         "type": "uint256"
       },
@@ -588,6 +601,19 @@
   },
   {
     "inputs": [],
+    "name": "DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "DEFAULT_DYNAMIC_LIQUIDITY_CUTOFF_DIVIDER",
     "outputs": [
       {
@@ -862,6 +888,19 @@
       }
     ],
     "name": "capPerSportChild",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cashoutSafeBoxFeeMultiplier",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1266,6 +1305,19 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCashoutSafeBoxFeeMultiplier",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2210,6 +2262,19 @@
       }
     ],
     "name": "setCapsPerSportChild",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_multiplier",
+        "type": "uint256"
+      }
+    ],
+    "name": "setCashoutSafeBoxFeeMultiplier",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

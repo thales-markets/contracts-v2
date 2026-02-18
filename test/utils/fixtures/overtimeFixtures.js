@@ -762,6 +762,17 @@ async function deploySportsAMMV2Fixture() {
 	);
 	const sgpTradingProcessorAddress = await sgpTradingProcessor.getAddress();
 
+	// deploy CashoutProcessor
+	const CashoutProcessor = await ethers.getContractFactory('CashoutProcessor');
+	const cashoutProcessor = await CashoutProcessor.deploy(
+		collateralAddress, //link
+		mockChainlinkOracleAddress, //_oracle
+		sportsAMMV2Address, // _sportsAMM
+		mockSpecId, // cashoutSpecId
+		0 // payment
+	);
+	const cashoutProcessorAddress = await cashoutProcessor.getAddress();
+
 	await stakingThales.setStakingToken(collateralTHALESAddress);
 
 	const StakingThalesBettingProxy = await ethers.getContractFactory('StakingThalesBettingProxy');
@@ -819,7 +830,8 @@ async function deploySportsAMMV2Fixture() {
 	await sportsAMMV2.setBettingProcessors(
 		liveTradingProcessorAddress,
 		sgpTradingProcessorAddress,
-		freeBetsHolderAddress
+		freeBetsHolderAddress,
+		cashoutProcessorAddress
 	);
 
 	await sportsAMMV2.configureCollateral(
@@ -886,6 +898,8 @@ async function deploySportsAMMV2Fixture() {
 		tradeDataTenMarketsCurrentRoundTenth,
 		liveTradingProcessor,
 		liveTradingProcessorData,
+		cashoutProcessor,
+		cashoutProcessorAddress,
 		sgpTradingProcessor,
 		mockChainlinkOracle,
 		sportsAMMV2Data,

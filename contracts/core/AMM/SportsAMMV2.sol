@@ -48,7 +48,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     error OfframpOnlyDefaultCollateralAllowed();
     error InsuffETHSent();
     error ZeroPriceForCollateral();
-    error MultiCollateralDisabled();
     error InsuffReceived();
     error InvalidLength();
     error InvalidSender();
@@ -129,6 +128,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // the contract that processes betting with StakedTHALES
     address public stakingThalesBettingProxy;
 
+    // the contract that can call cashout method
+    address public cashoutProcessor;
+
     struct TradeDataQuoteInternal {
         uint _buyInAmount;
         bool _shouldCheckRisks;
@@ -170,8 +172,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
-    /// @notice get roots for the list of games
-    /// @param _games to return roots for
     /// @notice get roots for the list of games
     /// @param _games to return roots for
     function getRootsPerGames(bytes32[] calldata _games) external view returns (bytes32[] memory _roots) {
@@ -538,6 +538,57 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
+    // ============================
+    // CASHOUT (quote-based) additions
+    // ============================
+
+    /**
+     * @notice Cashout using approved per-leg odds & settled flags.
+     * @param _ticket Ticket address.
+     * @param approvedOddsPerLeg Approved per-leg implied probs (1e18).
+     * @param isLegSettled Settled flags per leg (voided legs => true).
+     * @param _recipient Recipient (must be ticket owner).
+     */
+    function cashoutTicketWithLegOdds(
+        address _ticket,
+        uint[] calldata approvedOddsPerLeg,
+        bool[] calldata isLegSettled,
+        address _recipient
+    ) external nonReentrant notPaused onlyKnownTickets(_ticket) onlyValidRecipient(_recipient) returns (uint cashoutAmount) {
+        if (msg.sender != cashoutProcessor) revert OnlyDedicatedProcessor();
+        Ticket ticket = Ticket(_ticket);
+
+        (, uint payoutAfterCashoutFee) = ticket.getCashoutQuoteAndPayout(approvedOddsPerLeg, isLegSettled);
+        if (payoutAfterCashoutFee == 0) revert IllegalInputAmounts();
+
+        cashoutAmount = ticket.cashout(payoutAfterCashoutFee, _recipient);
+
+        IERC20 collateral = ticket.collateral();
+
+        // protocol fees (safeBox/referrer), NOT cashout fee
+        _handleFees(ticket.buyInAmount(), _recipient, collateral);
+
+        _finalizeTicketResolution(_ticket, _recipient, collateral, false);
+
+        emit TicketCashedOut(_ticket, _recipient, 0, cashoutAmount);
+    }
+
+    function _finalizeTicketResolution(
+        address _ticket,
+        address _ticketOwner,
+        IERC20 _collateral,
+        bool _isUserTheWinner
+    ) internal {
+        manager.resolveKnownTicket(_ticket, _ticketOwner);
+        emit TicketResolved(_ticket, _ticketOwner, _isUserTheWinner);
+
+        // mark ticket as exercised in LiquidityPool and return any funds to the pool if ticket was lost or cancelled
+        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(_collateral)]).transferToPool(
+            _ticket,
+            _collateral.balanceOf(address(this))
+        );
+    }
+
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _tradeQuote(
@@ -727,7 +778,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                     ISportsAMMV2.TradeData memory td = _tradeData[i];
                     if (td.odds.length <= td.position) revert InvalidPosition();
                     uint legOdd = td.odds[td.position];
-                    require(legOdd > 0, "Zero leg odd");
+                    if (legOdd == 0) revert ZeroAmount();
 
                     baseQuote = (baseQuote == 0) ? legOdd : _mulWithDecimals(baseQuote, legOdd);
 
@@ -737,17 +788,17 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
                 // ===== Guardrail (clamp-aware) =====
                 uint relTol = 1e12; // 1 ppm
-                require(approvedBaseQuote > 0, "Bad approved quote");
+                if (approvedBaseQuote == 0) revert IllegalInputAmounts();
 
                 // If the *boosted* parlay implies odds above max (boostedQuote < minImplied),
                 // then the node will clamp the approved quote to minImplied, and we should
                 // validate against the clamp instead of baseQuote.
                 if (boostedQuote < minImplied) {
                     uint diffClamp = _absDiff(minImplied, approvedBaseQuote);
-                    require((diffClamp * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                    if ((diffClamp * ONE) / approvedBaseQuote > relTol) revert IllegalInputAmounts();
                 } else {
                     uint diffBase = _absDiff(baseQuote, approvedBaseQuote);
-                    require((diffBase * ONE) / approvedBaseQuote <= relTol, "Approved quote mismatch");
+                    if ((diffBase * ONE) / approvedBaseQuote > relTol) revert IllegalInputAmounts();
                 }
 
                 processingParams._totalQuote = boostedQuote;
@@ -969,8 +1020,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (!ticket.cancelled()) {
             _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
-        manager.resolveKnownTicket(_ticket, ticketOwner);
-        emit TicketResolved(_ticket, ticketOwner, ticket.isUserTheWinner());
 
         if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
             if (ticketCollateral != defaultCollateral) revert OfframpOnlyDefaultCollateralAllowed();
@@ -981,11 +1030,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             );
         }
 
-        // mark ticket as exercised in LiquidityPool and return any funds to the pool if ticket was lost or cancelled
-        ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).transferToPool(
-            _ticket,
-            ticketCollateral.balanceOf(address(this))
-        );
+        _finalizeTicketResolution(_ticket, ticketOwner, ticketCollateral, false);
     }
 
     function _applyBonusToOdd(uint odd, uint addedPayoutPercentage) internal pure returns (uint) {
@@ -1054,16 +1099,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
      * @param _liveTradingProcessor Address of the live trading processor contract.
      * @param _sgpTradingProcessor Address of the single-game parlay trading processor contract.
      * @param _freeBetsHolder Address of the free bets holder contract.
+     * @param _cashoutProcessor Address of cashout processor contract.
      */
     function setBettingProcessors(
         address _liveTradingProcessor,
         address _sgpTradingProcessor,
-        address _freeBetsHolder
+        address _freeBetsHolder,
+        address _cashoutProcessor
     ) external onlyOwner {
         liveTradingProcessor = _liveTradingProcessor;
         sgpTradingProcessor = _sgpTradingProcessor;
         freeBetsHolder = _freeBetsHolder;
-        emit SetBettingProcessors(liveTradingProcessor, sgpTradingProcessor, freeBetsHolder);
+        cashoutProcessor = _cashoutProcessor;
+        emit SetBettingProcessors(liveTradingProcessor, sgpTradingProcessor, freeBetsHolder, cashoutProcessor);
     }
 
     /// @notice sets new Ticket Mastercopy address
@@ -1172,6 +1220,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     );
     event TicketMastercopyUpdated(address ticketMastercopy);
     event SetMultiCollateralOnOffRamp(address onOffRamper);
-    event SetBettingProcessors(address liveTradingProcessor, address sgpTradingProcessor, address freeBetsHolder);
+    event SetBettingProcessors(
+        address liveTradingProcessor,
+        address sgpTradingProcessor,
+        address freeBetsHolder,
+        address cashoutProcessor
+    );
     event CollateralConfigured(address collateral, address liquidityPool, uint addedPayout, address safeBox);
+    event TicketCashedOut(address indexed ticket, address indexed recipient, uint approvedQuote, uint cashoutAmount);
 }

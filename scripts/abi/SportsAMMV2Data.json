@@ -826,6 +826,40 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "approvedOddsPerLeg",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "isLegSettled",
+        "type": "bool[]"
+      }
+    ],
+    "name": "getCashoutQuoteAndPayout",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "quote",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payoutAfterFee",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "user",
         "type": "address"
       },

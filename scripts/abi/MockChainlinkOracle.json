@@ -6,6 +6,19 @@
   },
   {
     "inputs": [],
+    "name": "cashoutProcessor",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "chainlinkResolver",
     "outputs": [
       {
@@ -15,6 +28,29 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_requestId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "allow",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "approvedOddsPerLeg",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "fulfillCashout",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -120,6 +156,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_cashoutProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "setCashoutProcessor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
