@@ -128,9 +128,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     // the contract that processes betting with StakedTHALES
     address public stakingThalesBettingProxy;
 
-    // the contract that can call cashout method
-    address public cashoutProcessor;
-
     struct TradeDataQuoteInternal {
         uint _buyInAmount;
         bool _shouldCheckRisks;
@@ -157,6 +154,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         bool _isSGP;
         bool _isLive;
     }
+
+    // the contract that can call cashout method
+    address public cashoutProcessor;
 
     // declare that it can receive eth
     receive() external payable {}
