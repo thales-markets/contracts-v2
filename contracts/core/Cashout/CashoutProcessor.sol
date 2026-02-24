@@ -9,66 +9,131 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 // internal
 import "../../interfaces/ISportsAMMV2.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../core/AMM/Ticket.sol";
 
 /**
  * @title CashoutProcessor
- * @notice Quote-based cashout processor with per-leg odds (implied probability, 18 decimals).
+ * @notice Chainlink-powered cashout gatekeeper for SportsAMMV2 tickets using per-leg odds.
  * @dev
- * Handles voided legs: for legs already voided onchain, expected/approved odd must be 1e18.
- * For resolved (non-void) legs, expected/approved odd must equal ticket stored odd.
- * For pending legs, approved odd must satisfy per-leg slippage vs expected odd.
+ * High-level flow:
+ * 1) User calls {requestCashout} supplying:
+ *    - `expectedOddsPerLeg`: user-expected implied probabilities per leg (18 decimals).
+ *    - `isLegResolved`: user-asserted resolved/pending flags per leg.
+ *    - `additionalSlippage`: max allowed increase vs expected odds for *pending* legs (18-decimal percentage).
+ * 2) Contract validates the ticket is cashout-eligible and that the user did not lie about leg status / settled odds.
+ * 3) Contract submits a Chainlink request to an offchain adapter to compute `approvedOddsPerLeg` and an allow/deny flag.
+ * 4) Oracle calls {fulfillCashout}:
+ *    - re-checks leg status / settled odds again (defense-in-depth),
+ *    - enforces per-leg slippage for pending legs,
+ *    - then calls `sportsAMM.cashoutTicketWithLegOdds(...)` if allowed.
+ *
+ * Security model notes:
+ * - Uses Chainlink's `recordChainlinkFulfillment` to restrict fulfill calls to the configured oracle + requestId.
+ * - Reverts on `_allow=false` to avoid executing AMM cashout.
+ * - Enforces a maximum oracle execution delay (`maxAllowedExecutionDelay`) to reduce stale quote risk.
+ * - Stores request data to allow UIs and indexers to display the request/response details.
  */
 contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
 
+    /// @dev 18-decimal fixed-point scalar (also used as "1.0" for implied probability).
     uint private constant ONE = 1e18;
 
+    /// @notice SportsAMM instance used to validate tickets and execute the cashout.
     ISportsAMMV2 public sportsAMM;
 
+    /// @notice Chainlink job spec id used for the cashout quote adapter request.
     bytes32 public jobSpecId;
+
+    /// @notice LINK payment amount for each request (in LINK smallest unit).
     uint public paymentAmount;
 
+    /// @notice Max time (in seconds) allowed between request creation and fulfill execution.
+    /// @dev Requests older than `timestampPerRequest + maxAllowedExecutionDelay` are rejected as stale.
     uint public maxAllowedExecutionDelay = 60;
 
     // ===== Requests =====
+
+    /// @notice Maps requestId => ticket address.
     mapping(bytes32 => address) public requestIdToTicket;
+
+    /// @notice Maps requestId => original requester (ticket owner) address.
     mapping(bytes32 => address) public requestIdToRequester;
 
-    // user slippage params (per-leg)
+    /// @notice Maps requestId => additionalSlippage passed by the requester.
     mapping(bytes32 => uint) public requestIdToAdditionalSlippage;
 
-    // user-provided expected legs data
+    /// @dev Maps requestId => expected odds per leg provided by the requester.
     mapping(bytes32 => uint[]) internal _requestIdToExpectedOddsPerLeg;
+
+    /// @dev Maps requestId => resolved flags per leg provided by the requester.
     mapping(bytes32 => bool[]) internal _requestIdToIsLegResolved;
 
+    /// @notice Maps requestId => timestamp at which request was stored (block.timestamp).
     mapping(bytes32 => uint) public timestampPerRequest;
 
+    /// @notice True if request has been fulfilled already.
     mapping(bytes32 => bool) public requestIdFulfilled;
+
+    /// @notice Oracle allow/deny decision per requestId (written in fulfill).
     mapping(bytes32 => bool) public requestIdToFulfillAllowed;
 
-    // store approved odds for UI/debugging
+    /// @dev Maps requestId => approved odds per leg returned by oracle (stored for UI/debugging).
     mapping(bytes32 => uint[]) internal _requestIdToApprovedOddsPerLeg;
 
+    /// @notice Monotonic counter for requests (useful for offchain indexing).
     uint public requestCounter;
+
+    /// @notice Maps a sequential counter => requestId.
     mapping(uint => bytes32) public counterToRequestId;
 
-    /// @notice Free bets holder address; tickets owned by this contract are NOT cashoutable for now.
+    /// @notice Optional FreeBetsHolder address; tickets owned by this address are not cashoutable.
     address public freeBetsHolder;
 
     // ===== Errors =====
+
+    /// @notice Request already fulfilled (replay protection).
     error RequestAlreadyFulfilled();
+
+    /// @notice Request exceeded maxAllowedExecutionDelay.
     error RequestTimedOut();
+
+    /// @notice Ticket address is invalid (e.g., zero address).
     error InvalidTicket();
+
+    /// @notice Odds array invalid (e.g., empty or contains zeros where not allowed).
     error InvalidExpectedOdds();
+
+    /// @notice Provided per-leg arrays lengths do not match.
     error InvalidLegArraysLength();
+
+    /// @notice Oracle decided cashout is not allowed.
     error CashoutNotAllowed();
+
+    /// @notice Caller is not the ticket owner.
     error NotOwner();
+
+    /// @notice Ticket fails cashout eligibility checks.
     error TicketNotCashoutable();
+
+    /// @notice User-provided resolved flags do not match onchain status.
     error LegStatusMismatch();
+
+    /// @notice For settled legs, provided odd does not match ticket's stored odd (or ONE for voided legs).
     error SettledLegOddMismatch();
+
+    /// @notice Approved odds exceed expected odds by more than allowed slippage for a pending leg.
     error SlippageTooHigh();
 
+    /**
+     * @notice Creates CashoutProcessor and sets initial Chainlink + SportsAMM configuration.
+     * @param _link LINK token address for the current network.
+     * @param _oracle Chainlink oracle address that will fulfill requests.
+     * @param _sportsAMM SportsAMMV2 address that performs the cashout settlement.
+     * @param _jobSpecId Chainlink job spec id for the offchain adapter.
+     * @param _paymentAmount LINK amount to pay per request.
+     */
     constructor(
         address _link,
         address _oracle,
@@ -85,21 +150,30 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     // ============================
-    // User entrypoint
+    // Request
     // ============================
 
     /**
-     * @notice Request a cashout quote for a ticket using per-leg odds.
+     * @notice Requests a cashout quote/approval from the Chainlink adapter for a given ticket.
      * @dev
-     * - `expectedOddsPerLeg` is per-leg implied probability (18 decimals).
-     * - `isLegResolved` is user assertion; verified against onchain truth.
-     * - Slippage applies per *pending* leg: approvedOdd <= expectedOdd * (1 + additionalSlippage).
-     * - Voided legs: expected odd must be 1e18.
+     * Validations performed before sending the oracle request:
+     * - Ticket must be non-zero address.
+     * - Arrays must be non-empty and have matching lengths.
+     * - Caller must be the ticket owner and ticket must be active and cashout-eligible.
+     * - Caller must not misrepresent leg status:
+     *   - For any leg that is already resolved onchain, `isLegResolved[i]` must be true.
+     *   - For resolved legs, `expectedOddsPerLeg[i]` must match the ticket's settled odd
+     *     (or ONE if the leg is voided).
      *
-     * @param ticket Ticket address to cash out.
-     * @param expectedOddsPerLeg Expected odds per leg (18 decimals).
-     * @param isLegResolved User-asserted leg resolved flags.
-     * @param additionalSlippage Slippage tolerance in 18 decimals (e.g. 0.01e18 for 1%).
+     * The oracle request includes per-leg market identifiers and user-provided expectations:
+     * `gameIds`, `typeIds`, `playerIds`, `positions`, `lines`, `expectedOddsPerLeg`, `isLegResolved`,
+     * plus `additionalSlippage` and `requester`.
+     *
+     * @param ticket Ticket contract address.
+     * @param expectedOddsPerLeg User-expected implied probabilities per leg (18 decimals). Must be > 0 for all legs.
+     * @param isLegResolved User-asserted resolved flags per leg (must match onchain `Ticket.isLegResolved(i)`).
+     * @param additionalSlippage Max allowed increase vs expected odds for pending legs (18-decimal percentage).
+     * @return requestId The Chainlink request id for the created request.
      */
     function requestCashout(
         address ticket,
@@ -109,59 +183,55 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
     ) external whenNotPaused returns (bytes32 requestId) {
         if (ticket == address(0)) revert InvalidTicket();
 
-        uint legs = expectedOddsPerLeg.length;
-        if (legs == 0) revert InvalidExpectedOdds();
-        if (isLegResolved.length != legs) revert InvalidLegArraysLength();
+        uint legsLen = expectedOddsPerLeg.length;
+        if (legsLen == 0) revert InvalidExpectedOdds();
+        if (isLegResolved.length != legsLen) revert InvalidLegArraysLength();
 
-        // Best-effort preflight checks (final enforcement must still be in SportsAMM + Ticket.cashout())
         _assertTicketLooksCashoutable(ticket, msg.sender);
 
-        // Verify user didn't lie about leg statuses AND resolved-leg expected odds match ticket stored odds
-        // AND voided legs expected odd == 1e18
         _verifyLegStatusesAndResolvedOdds(ticket, expectedOddsPerLeg, isLegResolved);
 
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillCashout.selector);
 
-        // Minimal payload: adapter can read full ticket state via RPC
-        req.add("mode", "ticket");
-        req.add("ticket", Strings.toHexString(ticket));
-        req.add("requester", Strings.toHexString(msg.sender));
-
-        // Arrays are passed as strings for adapter parsing (keep consistent with your adapter conventions).
-        req.add("expectedOddsPerLeg", _uintArrayToString(expectedOddsPerLeg));
-        req.add("isLegResolved", _boolArrayToString(isLegResolved));
+        // Adapter expects arrays (build each array in a separate frame to avoid stack-too-deep)
+        _addLegArraysToRequest(req, ticket, legsLen, expectedOddsPerLeg, isLegResolved);
 
         req.addUint("additionalSlippage", additionalSlippage);
+        req.add("requester", Strings.toHexString(msg.sender));
 
         requestId = sendChainlinkRequest(req, paymentAmount);
 
-        timestampPerRequest[requestId] = block.timestamp;
-        requestIdToTicket[requestId] = ticket;
-        requestIdToRequester[requestId] = msg.sender;
+        _storeRequest(requestId, ticket, msg.sender, additionalSlippage, expectedOddsPerLeg, isLegResolved);
 
-        requestIdToAdditionalSlippage[requestId] = additionalSlippage;
-
-        // store request arrays for fulfill-time checks
-        _requestIdToExpectedOddsPerLeg[requestId] = expectedOddsPerLeg;
-        _requestIdToIsLegResolved[requestId] = isLegResolved;
-
-        counterToRequestId[requestCounter] = requestId;
-        emit CashoutRequested(msg.sender, requestCounter, requestId, ticket, legs, additionalSlippage);
+        emit CashoutRequested(msg.sender, requestCounter, requestId, ticket, legsLen, additionalSlippage);
         requestCounter++;
     }
 
     // ============================
-    // Chainlink fulfillment
+    // Fulfill
     // ============================
 
     /**
-     * @notice Chainlink callback with cashout decision and approved odds per leg.
-     * @dev Approved odds are per-leg implied probability (18 decimals).
-     *      Voided legs must be 1e18.
+     * @notice Chainlink fulfillment entrypoint that approves/denies and finalizes a cashout.
+     * @dev
+     * Access control:
+     * - Restricted by `recordChainlinkFulfillment(_requestId)` which enforces oracle + requestId validity.
      *
-     * @param _requestId Request id.
-     * @param _allow Whether cashout is allowed.
-     * @param _approvedOddsPerLeg Approved odds per leg (18 decimals).
+     * Safety checks:
+     * - Reverts if request already fulfilled (replay protection).
+     * - Reverts if request is stale (older than `maxAllowedExecutionDelay`).
+     * - Reverts if returned odds array length mismatches the expected legs length.
+     *
+     * If `_allow` is false, it stores the result and reverts with {CashoutNotAllowed}.
+     *
+     * If `_allow` is true, it:
+     * - Re-checks leg status/settled odds to ensure nothing changed vs the request snapshot.
+     * - Enforces per-leg slippage for pending legs: `approvedOdd <= expectedOdd*(1+slippage)`.
+     * - Calls `sportsAMM.cashoutTicketWithLegOdds(...)`.
+     *
+     * @param _requestId Chainlink request id.
+     * @param _allow Whether cashout is approved by the oracle/adaptor.
+     * @param _approvedOddsPerLeg Per-leg approved implied probabilities (18 decimals). Must match legs length.
      */
     function fulfillCashout(
         bytes32 _requestId,
@@ -171,62 +241,92 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         if (requestIdFulfilled[_requestId]) revert RequestAlreadyFulfilled();
         if ((timestampPerRequest[_requestId] + maxAllowedExecutionDelay) <= block.timestamp) revert RequestTimedOut();
 
-        address ticketAddr = requestIdToTicket[_requestId];
-        address requester = requestIdToRequester[_requestId];
+        uint legsLen = _requestIdToExpectedOddsPerLeg[_requestId].length;
+        if (legsLen == 0) revert InvalidExpectedOdds(); // safety (should never happen)
+        if (_approvedOddsPerLeg.length != legsLen) revert InvalidLegArraysLength();
 
-        uint additionalSlippage = requestIdToAdditionalSlippage[_requestId];
-
-        uint[] storage expectedOddsPerLeg = _requestIdToExpectedOddsPerLeg[_requestId];
-        bool[] storage isLegResolved = _requestIdToIsLegResolved[_requestId];
-
-        uint legs = expectedOddsPerLeg.length;
-        if (legs == 0) revert InvalidExpectedOdds();
-        if (_approvedOddsPerLeg.length != legs) revert InvalidLegArraysLength();
-
-        // store fulfillment outcome for UI/debugging
         requestIdToFulfillAllowed[_requestId] = _allow;
         requestIdFulfilled[_requestId] = true;
 
-        // copy approved odds for UI/debugging
+        // store approved odds for UI/debugging (reverted back in)
         _requestIdToApprovedOddsPerLeg[_requestId] = _approvedOddsPerLeg;
 
         if (!_allow) revert CashoutNotAllowed();
 
-        // Edge-case defense: verify user still didn't lie (leg may have resolved/voided between request & fulfill),
-        // and ensure resolved-leg expected odds still match ticket odds; voided legs expected == 1e18.
-        _verifyLegStatusesAndResolvedOdds(ticketAddr, expectedOddsPerLeg, isLegResolved);
+        address ticketAddr = requestIdToTicket[_requestId];
 
-        // Verify:
-        // - voided legs: approved must be 1e18
-        // - resolved (non-void) legs: approved must equal ticket stored odd
-        // - pending legs: approved must satisfy per-leg slippage vs expected
+        _verifyLegStatusesAndResolvedOdds(
+            ticketAddr,
+            _requestIdToExpectedOddsPerLeg[_requestId],
+            _requestIdToIsLegResolved[_requestId]
+        );
+
         _verifyApprovedOddsAndPerLegSlippage(
             ticketAddr,
             _approvedOddsPerLeg,
-            expectedOddsPerLeg,
-            isLegResolved,
-            additionalSlippage
+            _requestIdToExpectedOddsPerLeg[_requestId],
+            _requestIdToIsLegResolved[_requestId],
+            requestIdToAdditionalSlippage[_requestId]
         );
 
-        // Execute via AMM
-        sportsAMM.cashoutTicketWithLegOdds(ticketAddr, _approvedOddsPerLeg, isLegResolved, requester);
+        sportsAMM.cashoutTicketWithLegOdds(
+            ticketAddr,
+            _approvedOddsPerLeg,
+            _requestIdToIsLegResolved[_requestId],
+            requestIdToRequester[_requestId]
+        );
 
-        emit CashoutFulfilled(requester, _requestId, ticketAddr, _allow, legs, block.timestamp);
+        emit CashoutFulfilled(requestIdToRequester[_requestId], _requestId, ticketAddr, _allow, legsLen, block.timestamp);
     }
 
     // ============================
-    // Internal helpers
+    // Internal Logic
     // ============================
 
     /**
-     * @dev Best-effort preflight checks. Final checks must be in SportsAMMV2.cashoutTicketWithLegOdds + Ticket.cashout().
+     * @dev Persists request metadata and user-provided per-leg arrays for later verification and UI reads.
+     * @param requestId Chainlink request id.
+     * @param ticket Ticket address.
+     * @param requester Original caller.
+     * @param additionalSlippage User-provided additional slippage.
+     * @param expectedOddsPerLeg User-provided expected odds per leg.
+     * @param isLegResolved User-provided resolved flags per leg.
+     */
+    function _storeRequest(
+        bytes32 requestId,
+        address ticket,
+        address requester,
+        uint additionalSlippage,
+        uint[] calldata expectedOddsPerLeg,
+        bool[] calldata isLegResolved
+    ) internal {
+        timestampPerRequest[requestId] = block.timestamp;
+        requestIdToTicket[requestId] = ticket;
+        requestIdToRequester[requestId] = requester;
+        requestIdToAdditionalSlippage[requestId] = additionalSlippage;
+
+        _requestIdToExpectedOddsPerLeg[requestId] = expectedOddsPerLeg;
+        _requestIdToIsLegResolved[requestId] = isLegResolved;
+
+        counterToRequestId[requestCounter] = requestId;
+    }
+
+    /**
+     * @dev Ensures ticket meets basic eligibility requirements for cashout.
+     * @param ticketAddr Ticket contract address.
+     * @param requester Address attempting to cashout (must be ticket owner).
+     *
+     * Reverts with:
+     * - {NotOwner} if requester != ticketOwner.
+     * - {TicketNotCashoutable} if ticket is inactive, resolved/lost/SGP/system-bet,
+     *   owned by freeBetsHolder, or manager marks it as not potentially cashoutable.
      */
     function _assertTicketLooksCashoutable(address ticketAddr, address requester) internal view {
         Ticket t = Ticket(ticketAddr);
+        ISportsAMMV2Manager mgr = sportsAMM.manager();
 
         if (t.ticketOwner() != requester) revert NotOwner();
-
-        if (!sportsAMM.manager().isActiveTicket(ticketAddr)) revert TicketNotCashoutable();
+        if (!mgr.isActiveTicket(ticketAddr)) revert TicketNotCashoutable();
 
         if (
             t.resolved() ||
@@ -234,18 +334,22 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
             t.isSGP() ||
             t.systemBetDenominator() > 1 ||
             (freeBetsHolder != address(0) && t.ticketOwner() == freeBetsHolder) ||
-            !sportsAMM.manager().isTicketPotentiallyCashoutable(ticketAddr)
+            !mgr.isTicketPotentiallyCashoutable(ticketAddr)
         ) revert TicketNotCashoutable();
     }
 
     /**
-     * @dev Verifies user did not lie about which legs are resolved.
-     * Also:
-     * - if leg is voided onchain => expected odd MUST be 1e18
-     * - else if leg is resolved (non-void) => expected odd MUST equal ticket stored odd
+     * @dev Verifies the requester did not misrepresent leg statuses and that settled odds match onchain values.
+     * @param ticketAddr Ticket contract address.
+     * @param expectedOddsPerLeg User-expected odds per leg (18 decimals).
+     * @param isLegResolved User-asserted resolved flags per leg.
      *
-     * Edge-case: if a leg flips to resolved/voided between request and fulfill,
-     * user assertion will mismatch and revert.
+     * For each leg:
+     * - `expectedOdd` must be non-zero.
+     * - Onchain `Ticket.isLegResolved(i)` must equal `isLegResolved[i]`.
+     * - If resolved:
+     *   - if voided => `expectedOdd` must equal ONE
+     *   - else => `expectedOdd` must equal `Ticket.getMarketOdd(i)`
      */
     function _verifyLegStatusesAndResolvedOdds(
         address ticketAddr,
@@ -259,69 +363,188 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
             uint expectedOdd = expectedOddsPerLeg[i];
             if (expectedOdd == 0) revert InvalidExpectedOdds();
 
-            bool resolvedOnchain = t.isLegResolved(i);
+            bool resolved = t.isLegResolved(i);
+            if (resolved != isLegResolved[i]) revert LegStatusMismatch();
 
-            if (resolvedOnchain != isLegResolved[i]) revert LegStatusMismatch();
-
-            if (resolvedOnchain) {
-                bool voided = t.isLegVoided(i);
-                if (voided) {
+            if (resolved) {
+                if (t.isLegVoided(i)) {
                     if (expectedOdd != ONE) revert SettledLegOddMismatch();
                 } else {
-                    uint ticketOdd = t.getMarketOdd(i);
-                    if (expectedOdd != ticketOdd) revert SettledLegOddMismatch();
+                    if (expectedOdd != t.getMarketOdd(i)) revert SettledLegOddMismatch();
                 }
             }
         }
     }
 
     /**
-     * @dev Verifies approved odds and per-leg slippage:
-     * - resolved+voided: approved MUST be 1e18
-     * - resolved (non-void): approved MUST equal ticket stored odd
-     * - pending: approved MUST be <= expected * (1 + additionalSlippage)
+     * @dev Enforces oracle-approved odds validity, leg-status consistency, and per-leg slippage for pending legs.
+     * @param ticketAddr Ticket contract address.
+     * @param approved Oracle-approved odds per leg (18 decimals).
+     * @param expected User-expected odds per leg (18 decimals).
+     * @param isLegResolved User-asserted resolved flags per leg (must still match onchain status).
+     * @param slippage Max allowed increase vs expected for pending legs (18-decimal percentage).
+     *
+     * Rules per leg:
+     * - `approvedOdd` and `expectedOdd` must be non-zero.
+     * - Onchain resolved status must still equal `isLegResolved[i]`.
+     * - If resolved: approved must match settled odd (or ONE if voided).
+     * - If pending: `approvedOdd` must be <= `expectedOdd * (1 + slippage)`.
      */
     function _verifyApprovedOddsAndPerLegSlippage(
         address ticketAddr,
-        uint[] calldata approvedOddsPerLeg,
-        uint[] memory expectedOddsPerLeg,
+        uint[] calldata approved,
+        uint[] memory expected,
         bool[] memory isLegResolved,
-        uint additionalSlippage
+        uint slippage
     ) internal view {
         Ticket t = Ticket(ticketAddr);
-        uint legs = approvedOddsPerLeg.length;
+        uint legs = approved.length;
 
         for (uint i = 0; i < legs; ++i) {
-            uint approved = approvedOddsPerLeg[i];
-            uint expected = expectedOddsPerLeg[i];
-            if (approved == 0 || expected == 0) revert InvalidExpectedOdds();
+            uint approvedOdd = approved[i];
+            uint expectedOdd = expected[i];
+            if (approvedOdd == 0 || expectedOdd == 0) revert InvalidExpectedOdds();
 
-            bool resolvedOnchain = t.isLegResolved(i);
-            if (resolvedOnchain != isLegResolved[i]) revert LegStatusMismatch();
+            bool resolved = t.isLegResolved(i);
+            if (resolved != isLegResolved[i]) revert LegStatusMismatch();
 
-            if (resolvedOnchain) {
-                bool voided = t.isLegVoided(i);
-                if (voided) {
-                    if (approved != ONE) revert SettledLegOddMismatch();
+            if (resolved) {
+                if (t.isLegVoided(i)) {
+                    if (approvedOdd != ONE) revert SettledLegOddMismatch();
                 } else {
-                    uint ticketOdd = t.getMarketOdd(i);
-                    if (approved != ticketOdd) revert SettledLegOddMismatch();
+                    if (approvedOdd != t.getMarketOdd(i)) revert SettledLegOddMismatch();
                 }
             } else {
-                uint maxApproved = (expected * (ONE + additionalSlippage)) / ONE;
-                if (approved > maxApproved) revert SlippageTooHigh();
+                uint maxApproved = (expectedOdd * (ONE + slippage)) / ONE;
+                if (approvedOdd > maxApproved) revert SlippageTooHigh();
             }
         }
+    }
+
+    // ============================
+    // Adapter array building (stack-safe)
+    // ============================
+
+    /**
+     * @dev Adds all per-leg arrays required by the adapter to the Chainlink request.
+     * @param req Chainlink request object (memory).
+     * @param ticketAddr Ticket address.
+     * @param legsLen Number of legs in the ticket.
+     * @param expectedOddsPerLeg User-expected odds per leg.
+     * @param isLegResolved User-asserted resolved flags per leg.
+     */
+    function _addLegArraysToRequest(
+        Chainlink.Request memory req,
+        address ticketAddr,
+        uint legsLen,
+        uint[] calldata expectedOddsPerLeg,
+        bool[] calldata isLegResolved
+    ) internal view {
+        req.addStringArray("gameIds", _buildGameIds(ticketAddr, legsLen));
+        req.addStringArray("typeIds", _buildTypeIds(ticketAddr, legsLen));
+        req.addStringArray("playerIds", _buildPlayerIds(ticketAddr, legsLen));
+        req.addStringArray("positions", _buildPositions(ticketAddr, legsLen));
+        req.addStringArray("lines", _buildLines(ticketAddr, legsLen));
+        req.addStringArray("expectedOddsPerLeg", _buildExpectedOdds(expectedOddsPerLeg, legsLen));
+        req.addStringArray("isLegResolved", _buildIsResolved(isLegResolved, legsLen));
+    }
+
+    /// @dev Builds hex-encoded bytes32 gameIds for each leg.
+    function _buildGameIds(address ticketAddr, uint legsLen) internal view returns (string[] memory out) {
+        Ticket t = Ticket(ticketAddr);
+        out = new string[](legsLen);
+        for (uint i = 0; i < legsLen; ++i) {
+            (bytes32 gid, , , , , , , , ) = t.markets(i);
+            out[i] = Strings.toHexString(uint256(gid), 32);
+        }
+    }
+
+    /// @dev Builds decimal-encoded typeIds for each leg.
+    function _buildTypeIds(address ticketAddr, uint legsLen) internal view returns (string[] memory out) {
+        Ticket t = Ticket(ticketAddr);
+        out = new string[](legsLen);
+        for (uint i = 0; i < legsLen; ++i) {
+            (, , uint16 typeId, , , , , , ) = t.markets(i);
+            out[i] = Strings.toString(uint256(typeId));
+        }
+    }
+
+    /// @dev Builds decimal-encoded playerIds for each leg.
+    function _buildPlayerIds(address ticketAddr, uint legsLen) internal view returns (string[] memory out) {
+        Ticket t = Ticket(ticketAddr);
+        out = new string[](legsLen);
+        for (uint i = 0; i < legsLen; ++i) {
+            (, , , , , , uint24 playerId, , ) = t.markets(i);
+            out[i] = Strings.toString(uint256(playerId));
+        }
+    }
+
+    /// @dev Builds decimal-encoded positions for each leg.
+    function _buildPositions(address ticketAddr, uint legsLen) internal view returns (string[] memory out) {
+        Ticket t = Ticket(ticketAddr);
+        out = new string[](legsLen);
+        for (uint i = 0; i < legsLen; ++i) {
+            (, , , , , , , uint8 position, ) = t.markets(i);
+            out[i] = Strings.toString(uint256(position));
+        }
+    }
+
+    /// @dev Builds string-encoded signed lines for each leg.
+    function _buildLines(address ticketAddr, uint legsLen) internal view returns (string[] memory out) {
+        Ticket t = Ticket(ticketAddr);
+        out = new string[](legsLen);
+        for (uint i = 0; i < legsLen; ++i) {
+            (, , , , , int24 line, , , ) = t.markets(i);
+            out[i] = _intToString(int256(line));
+        }
+    }
+
+    /// @dev Builds decimal-encoded expected odds per leg.
+    function _buildExpectedOdds(
+        uint[] calldata expectedOddsPerLeg,
+        uint legsLen
+    ) internal pure returns (string[] memory out) {
+        out = new string[](legsLen);
+        for (uint i = 0; i < legsLen; ++i) {
+            out[i] = Strings.toString(expectedOddsPerLeg[i]);
+        }
+    }
+
+    /// @dev Builds "1"/"0" strings representing resolved flags.
+    function _buildIsResolved(bool[] calldata isLegResolved, uint legsLen) internal pure returns (string[] memory out) {
+        out = new string[](legsLen);
+        for (uint i = 0; i < legsLen; ++i) {
+            out[i] = isLegResolved[i] ? "1" : "0";
+        }
+    }
+
+    /// @dev Converts a signed integer to string (base-10), including a leading '-' for negative values.
+    function _intToString(int256 value) internal pure returns (string memory) {
+        if (value >= 0) return Strings.toString(uint256(value));
+        return string(abi.encodePacked("-", Strings.toString(uint256(-value))));
     }
 
     // ============================
     // Admin
     // ============================
 
+    /**
+     * @notice Pauses/unpauses {requestCashout} and {fulfillCashout}.
+     * @param _setPausing True to pause, false to unpause.
+     */
     function setPaused(bool _setPausing) external onlyOwner {
         _setPausing ? _pause() : _unpause();
     }
 
+    /**
+     * @notice Updates Chainlink + SportsAMM configuration in a single call.
+     * @dev Emits {ContextReset}.
+     * @param _link New LINK token address.
+     * @param _oracle New oracle address.
+     * @param _sportsAMM New SportsAMM address.
+     * @param _jobSpecId New job spec id.
+     * @param _paymentAmount New payment amount.
+     */
     function setConfiguration(
         address _link,
         address _oracle,
@@ -331,7 +554,6 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
     ) external onlyOwner {
         setChainlinkToken(_link);
         setChainlinkOracle(_oracle);
-
         sportsAMM = ISportsAMMV2(_sportsAMM);
         jobSpecId = _jobSpecId;
         paymentAmount = _paymentAmount;
@@ -339,22 +561,38 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         emit ContextReset(_link, _oracle, _sportsAMM, _jobSpecId, _paymentAmount);
     }
 
-    /// @notice Sets the FreeBetsHolder address; tickets owned by this contract are not cashoutable.
-    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
-        freeBetsHolder = _freeBetsHolder;
-        emit SetFreeBetsHolder(_freeBetsHolder);
-    }
-
-    /// @notice Sets maximum allowed buffer for the Chainlink request to be executed (seconds).
+    /**
+     * @notice Sets the maximum oracle execution delay (staleness limit) for fulfillments.
+     * @param _maxAllowedExecutionDelay Delay in seconds.
+     */
     function setMaxAllowedExecutionDelay(uint _maxAllowedExecutionDelay) external onlyOwner {
         maxAllowedExecutionDelay = _maxAllowedExecutionDelay;
         emit SetMaxAllowedExecutionDelay(_maxAllowedExecutionDelay);
     }
 
+    /**
+     * @notice Sets the FreeBetsHolder address; tickets owned by this address are not cashoutable.
+     * @param _freeBetsHolder FreeBetsHolder address (set to zero to disable this restriction).
+     */
+    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+        emit SetFreeBetsHolder(_freeBetsHolder);
+    }
+
     // ============================
-    // View helpers
+    // View helpers (reverted back in)
     // ============================
 
+    /**
+     * @notice Returns basic request info for UI/indexers.
+     * @param requestId Chainlink request id.
+     * @return ticket Ticket address.
+     * @return requester Requester address.
+     * @return additionalSlippage Additional slippage set by requester.
+     * @return ts Timestamp (block.timestamp) when the request was stored.
+     * @return fulfilled Whether it has been fulfilled.
+     * @return allow Whether the oracle allowed the cashout (only meaningful if fulfilled).
+     */
     function getRequestBasics(
         bytes32 requestId
     )
@@ -370,6 +608,13 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         allow = requestIdToFulfillAllowed[requestId];
     }
 
+    /**
+     * @notice Returns per-leg arrays associated with a request for UI/debugging.
+     * @param requestId Chainlink request id.
+     * @return expectedOddsPerLeg User-provided expected odds per leg.
+     * @return isLegResolved User-provided resolved flags per leg.
+     * @return approvedOddsPerLeg Oracle-approved odds per leg (empty until fulfilled).
+     */
     function getRequestArrays(
         bytes32 requestId
     )
@@ -383,39 +628,13 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
     }
 
     // ============================
-    // Small encoding helpers for adapter payload
-    // ============================
-
-    function _uintArrayToString(uint[] calldata arr) internal pure returns (string memory) {
-        uint len = arr.length;
-        if (len == 0) return "";
-
-        bytes memory out;
-        for (uint i = 0; i < len; i++) {
-            out = bytes.concat(out, bytes(Strings.toString(arr[i])));
-            if (i + 1 < len) out = bytes.concat(out, bytes(","));
-        }
-        return string(out);
-    }
-
-    function _boolArrayToString(bool[] calldata arr) internal pure returns (string memory) {
-        uint len = arr.length;
-        if (len == 0) return "";
-
-        bytes memory out;
-        for (uint i = 0; i < len; i++) {
-            out = bytes.concat(out, arr[i] ? bytes("1") : bytes("0"));
-            if (i + 1 < len) out = bytes.concat(out, bytes(","));
-        }
-        return string(out);
-    }
-
-    // ============================
     // Events
     // ============================
 
+    /// @notice Emitted when Chainlink/SportsAMM context is updated.
     event ContextReset(address link, address oracle, address sportsAMM, bytes32 jobSpecId, uint paymentAmount);
 
+    /// @notice Emitted when a cashout request is created.
     event CashoutRequested(
         address indexed requester,
         uint indexed requestCounter,
@@ -425,6 +644,7 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         uint additionalSlippage
     );
 
+    /// @notice Emitted when a request is fulfilled (will only be emitted if allow=true and cashout executes).
     event CashoutFulfilled(
         address indexed requester,
         bytes32 indexed requestId,
@@ -434,6 +654,9 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         uint timestamp
     );
 
+    /// @notice Emitted when maxAllowedExecutionDelay is updated.
     event SetMaxAllowedExecutionDelay(uint delay);
+
+    /// @notice Emitted when freeBetsHolder is updated.
     event SetFreeBetsHolder(address _freeBetsHolder);
 }

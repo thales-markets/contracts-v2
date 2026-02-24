@@ -83,7 +83,7 @@
 		"OverdropRewardsImplementation": "0x4D4CC84fAF3d5DDB1e6df533E767b81f439E9846",
 		"OverdropRewardsProxyAdmin": "0x900Af2133d9c636ed65BDF89AB1E99b9f54fCd20",
 		"FreeBetsHolderProxyAdmin": "0x0429ed7CBD1B32f130E2ef42FAD99f63A471A3cB",
-		"CashoutProcessor": "0x68c0601F3e2E34F3E3B416EC02b8f57106f648D7"
+		"CashoutProcessor": "0x913f7e2B7Fd176bc8B90Fff941a8827A4798041D"
 	},
 	"optimisticEthereum": {
 		"ProtocolDAO": "0xEF2b0A2FFCdCD3b53D81800D19A543136f26a6b8",
