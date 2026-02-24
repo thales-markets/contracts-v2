@@ -7,6 +7,7 @@ import "../../utils/proxy/ProxyOwned.sol";
 import "../../utils/proxy/ProxyPausable.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/ISportsAMMV2RiskManager.sol";
+import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ISportsAMMV2ResultManager.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "./../AMM/Ticket.sol";
@@ -63,6 +64,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         bool isSystem;
         uint8 systemBetDenominator;
         bool isSGP;
+        bool cashedOut;
     }
 
     struct TicketMarketInfo {
@@ -549,6 +551,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     function _getTicketsData(address[] memory ticketsArray) internal view returns (TicketData[] memory) {
         TicketData[] memory tickets = new TicketData[](ticketsArray.length);
+        ISportsAMMV2Manager manager = sportsAMM.manager();
         for (uint i = 0; i < ticketsArray.length; i++) {
             Ticket ticket = Ticket(ticketsArray[i]);
             MarketData[] memory marketsData = new MarketData[](ticket.numOfMarkets());
@@ -557,8 +560,13 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 marketsData[j] = _getMarketData(ticket, j);
                 marketsResult[j] = _getMarketResult(ticket, j);
             }
-            bool isSystem = sportsAMM.manager().isSystemTicket(address(ticket));
-            bool isSGP = sportsAMM.manager().isSGPTicket(address(ticket));
+            bool isSystem = manager.isSystemTicket(address(ticket));
+            bool isSGP = manager.isSGPTicket(address(ticket));
+
+            bool cashedOut = false;
+            if (manager.isTicketPotentiallyCashoutable(address(ticket))) {
+                cashedOut = ticket.cashedOut();
+            }
 
             tickets[i] = TicketData(
                 ticketsArray[i],
@@ -582,7 +590,8 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 ticket.isLive(),
                 isSystem,
                 isSystem ? ticket.systemBetDenominator() : 0,
-                isSGP
+                isSGP,
+                cashedOut
             );
         }
         return tickets;
@@ -632,11 +641,12 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         view
         returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
     {
+        ISportsAMMV2Manager manager = sportsAMM.manager();
         _pageSize = _pageSize > _gameIds.length ? _gameIds.length : _pageSize;
         uint[] memory ticketsPerGame = new uint[](_pageSize);
         uint counter;
         for (uint i = _startIndex; i < _pageSize; i++) {
-            uint numOfTicketsPerGame = sportsAMM.manager().numOfTicketsPerGame(_gameIds[i]);
+            uint numOfTicketsPerGame = manager.numOfTicketsPerGame(_gameIds[i]);
             if (numOfTicketsPerGame > 0) {
                 counter++;
                 ticketsPerGame[i] = numOfTicketsPerGame;
@@ -650,7 +660,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             if (ticketsPerGame[i] > 0) {
                 activeGameIds[counter] = _gameIds[i];
                 numOfTicketsPerGameId[counter] = ticketsPerGame[i];
-                ticketsPerGameId[counter] = sportsAMM.manager().getTicketsPerGame(0, ticketsPerGame[i], _gameIds[i]);
+                ticketsPerGameId[counter] = manager.getTicketsPerGame(0, ticketsPerGame[i], _gameIds[i]);
                 counter++;
             }
         }

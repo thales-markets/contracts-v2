@@ -341,6 +341,11 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -534,6 +539,11 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -726,6 +736,11 @@
           {
             "internalType": "bool",
             "name": "isSGP",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
             "type": "bool"
           }
         ],
@@ -1202,6 +1217,11 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1395,6 +1415,11 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1587,6 +1612,11 @@
           {
             "internalType": "bool",
             "name": "isSGP",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
             "type": "bool"
           }
         ],
@@ -1927,6 +1957,11 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -2143,6 +2178,11 @@
           {
             "internalType": "bool",
             "name": "isSGP",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
             "type": "bool"
           }
         ],
