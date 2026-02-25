@@ -60,7 +60,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         knownTickets.add(_ticket);
         activeTicketsPerUser[_user].add(_ticket);
 
-        for (uint i = 0; i < _tradeData.length; ++i) {
+        for (uint i = 0; i < _tradeData.length; i++) {
             ticketsPerGame[_tradeData[i].gameId].add(_ticket);
             ticketsPerMarket[_tradeData[i].gameId][_tradeData[i].typeId][_tradeData[i].playerId].add(_ticket);
         }
