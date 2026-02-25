@@ -91,6 +91,15 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         activeTicketsPerUser[_user].remove(_ticket);
     }
 
+    /// @notice remove resolved tickets from user's resolved list (batch)
+    /// @param _tickets array of ticket addresses
+    /// @param _user user to remove tickets for
+    function removeResolvedTickets(address[] calldata _tickets, address _user) external onlyOwner {
+        for (uint i = 0; i < _tickets.length; i++) {
+            resolvedTicketsPerUser[_user].remove(_tickets[i]);
+        }
+    }
+
     /* ========== EXTERNAL READ FUNCTIONS ========== */
 
     /// @notice check whether a ticket is known
