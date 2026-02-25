@@ -60,7 +60,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
         knownTickets.add(_ticket);
         activeTicketsPerUser[_user].add(_ticket);
 
-        for (uint i = 0; i < _tradeData.length; i++) {
+        for (uint i = 0; i < _tradeData.length; ++i) {
             ticketsPerGame[_tradeData[i].gameId].add(_ticket);
             ticketsPerMarket[_tradeData[i].gameId][_tradeData[i].typeId][_tradeData[i].playerId].add(_ticket);
         }
@@ -85,6 +85,15 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     function expireKnownTicket(address _ticket, address _user) external onlySportAMMV2 {
         knownTickets.remove(_ticket);
         activeTicketsPerUser[_user].remove(_ticket);
+    }
+
+    /// @notice remove resolved tickets from user's resolved list (batch)
+    /// @param _tickets array of ticket addresses
+    /// @param _user user to remove tickets for
+    function removeResolvedTickets(address[] calldata _tickets, address _user) external onlyOwner {
+        for (uint i = 0; i < _tickets.length; i++) {
+            resolvedTicketsPerUser[_user].remove(_tickets[i]);
+        }
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
