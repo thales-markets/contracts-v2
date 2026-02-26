@@ -90,7 +90,11 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     /// @notice remove resolved tickets from user's resolved list (batch)
     /// @param _tickets array of ticket addresses
     /// @param _user user to remove tickets for
-    function removeResolvedTickets(address[] calldata _tickets, address _user) external onlyOwner {
+    function removeResolvedTickets(address[] calldata _tickets, address _user) external {
+        require(
+            msg.sender == owner || whitelistedAddresses[msg.sender][ISportsAMMV2Manager.Role.MARKET_RESOLVING],
+            "Invalid resolver"
+        );
         for (uint i = 0; i < _tickets.length; i++) {
             resolvedTicketsPerUser[_user].remove(_tickets[i]);
         }
