@@ -760,9 +760,14 @@
 		"name": "CHILD_LAST_SCORE"
 	},
 	{
-		"id": 10130,
+		"id": 10129,
 		"result_type": 1,
 		"name": "CHILD_WHO_WILL_QUALIFY"
+	},
+	{
+		"id": 10130,
+		"result_type": 1,
+		"name": "CHILD_WHO_WILL_LIFT_THE_CUP"
 	},
 	{
 		"id": 10118,
