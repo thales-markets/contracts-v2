@@ -319,7 +319,8 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
      * Reverts with:
      * - {NotOwner} if requester != ticketOwner.
      * - {TicketNotCashoutable} if ticket is inactive, resolved/lost/SGP/system-bet,
-     *   owned by freeBetsHolder, or manager marks it as not potentially cashoutable.
+     *   owned by freeBetsHolder, manager marks it as not potentially cashoutable,
+     *   or if the ticket odds exceed (or equal) RiskManager.maxSupportedOdds().
      */
     function _assertTicketLooksCashoutable(address ticketAddr, address requester) internal view {
         Ticket t = Ticket(ticketAddr);
@@ -334,7 +335,8 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
             t.isSGP() ||
             t.systemBetDenominator() > 1 ||
             (freeBetsHolder != address(0) && t.ticketOwner() == freeBetsHolder) ||
-            !mgr.isTicketPotentiallyCashoutable(ticketAddr)
+            !mgr.isTicketPotentiallyCashoutable(ticketAddr) ||
+            t.totalQuote() <= sportsAMM.riskManager().maxSupportedOdds()
         ) revert TicketNotCashoutable();
     }
 

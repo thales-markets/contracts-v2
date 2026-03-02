@@ -20,7 +20,8 @@ describe('CashoutProcessor (E2E)', () => {
 		sportsAMMV2Manager,
 		sportsAMMV2ResultManager,
 		cashoutProcessor,
-		collateral; // used as "LINK" like other processors
+		collateral, // used as "LINK" like other processors
+		sportsAMMV2RiskManager; // attached from sportsAMMV2.riskManager()
 
 	const ONE = 10n ** 18n;
 	const addr = (c) => (c?.target ? c.target : c.address);
@@ -47,6 +48,28 @@ describe('CashoutProcessor (E2E)', () => {
 
 	async function buyParlayTicket2Legs() {
 		const legs = [tradeDataTenMarketsCurrentRound[0], tradeDataTenMarketsCurrentRound[1]];
+		const quote = await sportsAMMV2.tradeQuote(legs, BUY_IN_AMOUNT, ZERO_ADDRESS, false);
+
+		await sportsAMMV2.connect(firstTrader).trade(
+			legs,
+			BUY_IN_AMOUNT,
+			quote.totalQuote,
+			0, // trade additional slippage not relevant here
+			ZERO_ADDRESS,
+			ZERO_ADDRESS,
+			false
+		);
+
+		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+		const ticketAddress = activeTickets[0];
+
+		const TicketContract = await ethers.getContractFactory('Ticket');
+		return TicketContract.attach(ticketAddress);
+	}
+
+	// helper: 10-leg parlay (use all 10 legs)
+	async function buyParlayTicket10Legs() {
+		const legs = tradeDataTenMarketsCurrentRound;
 		const quote = await sportsAMMV2.tradeQuote(legs, BUY_IN_AMOUNT, ZERO_ADDRESS, false);
 
 		await sportsAMMV2.connect(firstTrader).trade(
@@ -107,7 +130,6 @@ describe('CashoutProcessor (E2E)', () => {
 
 	async function resolveLegAsLost(market) {
 		await ensureExactPositionResultType(market.typeId);
-		// choose any other position than market.position
 		const losingResult = market.position === 0 ? 1 : 0;
 		await sportsAMMV2ResultManager
 			.connect(owner)
@@ -138,6 +160,12 @@ describe('CashoutProcessor (E2E)', () => {
 
 		({ owner, firstLiquidityProvider, firstTrader, secondTrader } =
 			await loadFixture(deployAccountsFixture));
+
+		// IMPORTANT: sportsAMMV2.riskManager() is an address, so attach the contract
+		sportsAMMV2RiskManager = await ethers.getContractAt(
+			'SportsAMMV2RiskManager',
+			await sportsAMMV2.riskManager()
+		);
 
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
@@ -293,7 +321,6 @@ describe('CashoutProcessor (E2E)', () => {
 
 		const expectedOddsPerLeg = [ONE, await ticket.getMarketOdd(1)];
 
-		// onchain leg0 is now resolved/voided, but user lies "false"
 		await expect(
 			cashoutProcessor
 				.connect(firstTrader)
@@ -309,7 +336,6 @@ describe('CashoutProcessor (E2E)', () => {
 
 		const leg1 = await ticket.getMarketOdd(1);
 
-		// user claims resolved (true) but gives wrong expected odd for voided leg
 		await expect(
 			cashoutProcessor
 				.connect(firstTrader)
@@ -326,7 +352,6 @@ describe('CashoutProcessor (E2E)', () => {
 		const leg0Stored = await ticket.getMarketOdd(0);
 		const leg1Stored = await ticket.getMarketOdd(1);
 
-		// resolved leg0 but expected != stored
 		await expect(
 			cashoutProcessor
 				.connect(firstTrader)
@@ -340,10 +365,55 @@ describe('CashoutProcessor (E2E)', () => {
 	});
 
 	// -----------------------------
+	// NEW: maxSupportedOdds clamp -> TicketNotCashoutable
+	// -----------------------------
+	it('14) request: max odds clamp (ticket.totalQuote == maxSupportedOdds) => TicketNotCashoutable', async () => {
+		// Read existing params, only override maxSupportedOdds
+		const minBuyInAmount = await sportsAMMV2RiskManager.minBuyInAmount();
+		const maxTicketSize = await sportsAMMV2RiskManager.maxTicketSize();
+		const maxSupportedAmount = await sportsAMMV2RiskManager.maxSupportedAmount();
+		const maxAllowedSystemCombinations =
+			await sportsAMMV2RiskManager.maxAllowedSystemCombinations();
+
+		// Force clamp deterministically: set "min implied prob" to 1e18
+		// => any computed totalQuote < 1e18 will be clamped to 1e18
+		const forcedMaxSupportedOdds = ONE;
+
+		await sportsAMMV2RiskManager
+			.connect(owner)
+			.setTicketParams(
+				minBuyInAmount,
+				maxTicketSize,
+				maxSupportedAmount,
+				forcedMaxSupportedOdds,
+				maxAllowedSystemCombinations
+			);
+
+		const ticket = await buyParlayTicket10Legs();
+
+		// sanity: ticket got clamped
+		expect(await ticket.totalQuote()).to.equal(forcedMaxSupportedOdds);
+
+		const expectedOddsPerLeg = [];
+		const isLegResolved = [];
+
+		for (let i = 0; i < 10; i++) {
+			expectedOddsPerLeg.push(await ticket.getMarketOdd(i));
+			isLegResolved.push(false);
+		}
+
+		await expect(
+			cashoutProcessor
+				.connect(firstTrader)
+				.requestCashout(addr(ticket), expectedOddsPerLeg, isLegResolved, 0n)
+		).to.be.revertedWithCustomError(cashoutProcessor, 'TicketNotCashoutable');
+	});
+
+	// -----------------------------
 	// Added coverage (fulfill-level / plumbing)
 	// -----------------------------
 
-	it('14) fulfill: approvedOdds length mismatch => InvalidLegArraysLength', async () => {
+	it('15) fulfill: approvedOdds length mismatch => InvalidLegArraysLength', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, [false, false], 0n);
@@ -353,7 +423,7 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'InvalidLegArraysLength');
 	});
 
-	it('15) fulfill: approvedOdd=0 => InvalidExpectedOdds', async () => {
+	it('16) fulfill: approvedOdd=0 => InvalidExpectedOdds', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, [false, false], 0n);
@@ -363,42 +433,36 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'InvalidExpectedOdds');
 	});
 
-	it('16) slippage: additionalSlippage allows small increase but rejects larger', async () => {
+	it('17) slippage: additionalSlippage allows small increase but rejects larger', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
 
 		const onePct = ethers.parseEther('0.01'); // 1% in 1e18
-
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, onePct);
 
-		// +0.5% should pass
-		const approvedOk = [(expectedOddsPerLeg[0] * 1005n) / 1000n, expectedOddsPerLeg[1]];
+		const approvedOk = [(expectedOddsPerLeg[0] * 1005n) / 1000n, expectedOddsPerLeg[1]]; // +0.5%
 
 		await expect(mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedOk)).to
 			.not.be.reverted;
 	});
 
-	it('17) slippage: additionalSlippage=1% but approved +2% => SlippageTooHigh', async () => {
+	it('18) slippage: additionalSlippage=1% but approved +2% => SlippageTooHigh', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
 
 		const onePct = ethers.parseEther('0.01'); // 1%
-
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, onePct);
 
-		const approvedTooHigh = [
-			(expectedOddsPerLeg[0] * 102n) / 100n, // +2%
-			expectedOddsPerLeg[1],
-		];
+		const approvedTooHigh = [(expectedOddsPerLeg[0] * 102n) / 100n, expectedOddsPerLeg[1]]; // +2%
 
 		await expect(
 			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedTooHigh)
 		).to.be.revertedWithCustomError(cashoutProcessor, 'SlippageTooHigh');
 	});
 
-	it('18) fulfill: voided leg approved must be 1e18 => SettledLegOddMismatch', async () => {
+	it('19) fulfill: voided leg approved must be 1e18 => SettledLegOddMismatch', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const m0 = tradeDataTenMarketsCurrentRound[0];
 
@@ -409,7 +473,6 @@ describe('CashoutProcessor (E2E)', () => {
 
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
 
-		// approved wrong for voided leg
 		await expect(
 			mockChainlinkOracle
 				.connect(owner)
@@ -417,7 +480,7 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'SettledLegOddMismatch');
 	});
 
-	it('19) fulfill: resolved non-void leg approved must equal ticket odd => SettledLegOddMismatch', async () => {
+	it('20) fulfill: resolved non-void leg approved must equal ticket odd => SettledLegOddMismatch', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const m0 = tradeDataTenMarketsCurrentRound[0];
 
@@ -431,7 +494,6 @@ describe('CashoutProcessor (E2E)', () => {
 
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
 
-		// approved wrong for resolved non-void leg
 		await expect(
 			mockChainlinkOracle
 				.connect(owner)
@@ -439,7 +501,7 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'SettledLegOddMismatch');
 	});
 
-	it('20) oracle plumbing: calling fulfillCashout directly (not oracle) => "Source must be the oracle of the request"', async () => {
+	it('21) oracle plumbing: calling fulfillCashout directly (not oracle) => "Source must be the oracle of the request"', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, [false, false], 0n);
@@ -449,13 +511,12 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWith('Source must be the oracle of the request');
 	});
 
-	it('21) paused: requestCashout reverts (OZ Pausable v5 custom error)', async () => {
+	it('22) paused: requestCashout reverts (OZ Pausable v5 custom error)', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 
 		await cashoutProcessor.connect(owner).setPaused(true);
 
-		// OZ v5: EnforcedPause()
 		await expect(
 			cashoutProcessor
 				.connect(firstTrader)
@@ -463,7 +524,7 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'EnforcedPause');
 	});
 
-	it('22) paused: fulfillCashout reverts (OZ Pausable v5 custom error)', async () => {
+	it('23) paused: fulfillCashout reverts (OZ Pausable v5 custom error)', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, [false, false], 0n);
@@ -475,20 +536,19 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'EnforcedPause');
 	});
 
-	it('23) fulfill twice: second attempt fails at ChainlinkClient oracle guard ("Source must be the oracle of the request")', async () => {
+	it('24) fulfill twice: second attempt fails at ChainlinkClient oracle guard ("Source must be the oracle of the request")', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, [false, false], 0n);
 
 		await mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg);
 
-		// After first fulfill, ChainlinkClient clears pending request, so second fulfill fails in modifier before your body runs.
 		await expect(
 			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg)
 		).to.be.revertedWith('Source must be the oracle of the request');
 	});
 
-	it('24) request: getRequestBasics/getRequestArrays reflect stored values pre-fulfill', async () => {
+	it('25) request: getRequestBasics/getRequestArrays reflect stored values pre-fulfill', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
@@ -522,7 +582,7 @@ describe('CashoutProcessor (E2E)', () => {
 	// Added coverage (AMM / Ticket / LP integration)
 	// -----------------------------
 
-	it('25) SportsAMM: only cashoutProcessor can call cashoutTicketWithLegOdds', async () => {
+	it('26) SportsAMM: only cashoutProcessor can call cashoutTicketWithLegOdds', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const approvedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegSettled = [false, false];
@@ -539,7 +599,7 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(sportsAMMV2, 'OnlyDedicatedProcessor');
 	});
 
-	it('26) Ticket gating: if all legs resolved (won) then cashout fulfill reverts "Not in trading phase"', async () => {
+	it('27) Ticket gating: if all legs resolved (won) then cashout fulfill reverts "Not in trading phase"', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const m0 = tradeDataTenMarketsCurrentRound[0];
 		const m1 = tradeDataTenMarketsCurrentRound[1];
@@ -547,7 +607,6 @@ describe('CashoutProcessor (E2E)', () => {
 		await resolveLegAsWon(m0);
 		await resolveLegAsWon(m1);
 
-		// For resolved legs, processor requires expected == stored
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [true, true];
 
@@ -558,11 +617,10 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWith('Not in trading phase');
 	});
 
-	it('27) Losing leg resolved -> requestCashout reverts TicketNotCashoutable', async () => {
+	it('28) Losing leg resolved -> requestCashout reverts TicketNotCashoutable', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const m0 = tradeDataTenMarketsCurrentRound[0];
 
-		// Make leg0 lose so ticket becomes not cashoutable
 		await resolveLegAsLost(m0);
 
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
@@ -575,7 +633,7 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'TicketNotCashoutable');
 	});
 
-	it('28) LP integration: after successful cashout, LP marks ticket exercised in its round', async () => {
+	it('29) LP integration: after successful cashout, LP marks ticket exercised in its round', async () => {
 		const ticket = await buyParlayTicket2Legs();
 
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
