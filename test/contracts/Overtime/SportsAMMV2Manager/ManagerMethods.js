@@ -205,7 +205,7 @@ describe('SportsAMMV2Manager Methods', () => {
 			expect(resolvedTicketsAfter[0]).to.equal(thirdTicketAddress);
 		});
 
-		it('Should revert when called by non-owner', async () => {
+		it('Should revert when called by non-owner and non-whitelisted address', async () => {
 			// Set result type
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 
@@ -244,12 +244,67 @@ describe('SportsAMMV2Manager Methods', () => {
 
 			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
 
-			// Try to remove tickets as non-owner
+			// Try to remove tickets as non-owner / non-whitelisted
 			await expect(
 				sportsAMMV2Manager
 					.connect(secondAccount)
 					.removeResolvedTickets([ticketAddress], firstTrader)
-			).to.be.revertedWith('Only the contract owner may perform this action');
+			).to.be.revertedWith('Invalid resolver');
+		});
+
+		it('Should allow whitelisted MARKET_RESOLVING address to remove resolved tickets', async () => {
+			// Whitelist secondAccount for MARKET_RESOLVING role
+			const MARKET_RESOLVING_ROLE = 2; // ISportsAMMV2Manager.Role.MARKET_RESOLVING
+			await sportsAMMV2Manager
+				.connect(owner)
+				.setWhitelistedAddresses([secondAccount.address], MARKET_RESOLVING_ROLE, true);
+
+			// Set result type
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			// Create and resolve a ticket
+			tradeDataCurrentRound[0].position = 0;
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// Resolve ticket
+			const ticketMarket = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket.gameId],
+				[ticketMarket.typeId],
+				[ticketMarket.playerId],
+				[[0]]
+			);
+
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
+
+			expect(await sportsAMMV2Manager.numOfResolvedTicketsPerUser(firstTrader)).to.equal(1);
+
+			// Whitelisted address removes resolved ticket
+			await sportsAMMV2Manager
+				.connect(secondAccount)
+				.removeResolvedTickets([ticketAddress], firstTrader);
+
+			expect(await sportsAMMV2Manager.numOfResolvedTicketsPerUser(firstTrader)).to.equal(0);
 		});
 
 		it('Should handle empty ticket array', async () => {
