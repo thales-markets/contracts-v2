@@ -531,12 +531,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "approvedQuote",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "cashoutAmount",
         "type": "uint256"
       }

@@ -570,7 +570,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         _finalizeTicketResolution(_ticket, _recipient, collateral, false);
 
-        emit TicketCashedOut(_ticket, _recipient, 0, cashoutAmount);
+        emit TicketCashedOut(_ticket, _recipient, cashoutAmount);
     }
 
     function _finalizeTicketResolution(
@@ -1227,5 +1227,5 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address cashoutProcessor
     );
     event CollateralConfigured(address collateral, address liquidityPool, uint addedPayout, address safeBox);
-    event TicketCashedOut(address indexed ticket, address indexed recipient, uint approvedQuote, uint cashoutAmount);
+    event TicketCashedOut(address indexed ticket, address indexed recipient, uint cashoutAmount);
 }

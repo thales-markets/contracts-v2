@@ -186,6 +186,8 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         uint legsLen = expectedOddsPerLeg.length;
         if (legsLen == 0) revert InvalidExpectedOdds();
         if (isLegResolved.length != legsLen) revert InvalidLegArraysLength();
+        uint ticketLegs = Ticket(ticket).numOfMarkets();
+        if (legsLen != ticketLegs) revert InvalidLegArraysLength();
 
         _assertTicketLooksCashoutable(ticket, msg.sender);
 
@@ -245,6 +247,11 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         if (legsLen == 0) revert InvalidExpectedOdds(); // safety (should never happen)
         if (_approvedOddsPerLeg.length != legsLen) revert InvalidLegArraysLength();
 
+        // also ensure request arrays still match ticket legs
+        address ticketAddr = requestIdToTicket[_requestId];
+        uint ticketLegs = Ticket(ticketAddr).numOfMarkets();
+        if (legsLen != ticketLegs) revert InvalidLegArraysLength();
+
         requestIdToFulfillAllowed[_requestId] = _allow;
         requestIdFulfilled[_requestId] = true;
 
@@ -252,8 +259,6 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         _requestIdToApprovedOddsPerLeg[_requestId] = _approvedOddsPerLeg;
 
         if (!_allow) revert CashoutNotAllowed();
-
-        address ticketAddr = requestIdToTicket[_requestId];
 
         _verifyLegStatusesAndResolvedOdds(
             ticketAddr,

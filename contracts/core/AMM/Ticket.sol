@@ -277,8 +277,7 @@ contract Ticket {
         bool[] calldata isLegSettled
     ) external view returns (uint cashoutQuote, uint payoutAfterFee) {
         uint legs = numOfMarkets;
-        require(approvedOddsPerLeg.length == legs, "Invalid leg arrays length");
-        require(isLegSettled.length == legs, "Invalid leg arrays length");
+        require(approvedOddsPerLeg.length == legs && isLegSettled.length == legs, "Invalid leg arrays length");
 
         uint origProbTotal = ONE;
         uint liveProbTotal = ONE;
@@ -385,11 +384,13 @@ contract Ticket {
         uint payout = payoutWithFees - fees;
         bool isCancelled = false;
 
+        ISportsAMMV2ResultManager resultManager = sportsAMM.resultManager();
+
         if (_isUserTheWinner()) {
             finalPayout = payout;
             isCancelled = true;
             for (uint i = 0; i < numOfMarkets; i++) {
-                bool isCancelledMarketPosition = sportsAMM.resultManager().isCancelledMarketPosition(
+                bool isCancelledMarketPosition = resultManager.isCancelledMarketPosition(
                     markets[i].gameId,
                     markets[i].typeId,
                     markets[i].playerId,
