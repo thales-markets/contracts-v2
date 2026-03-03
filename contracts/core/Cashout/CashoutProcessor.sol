@@ -191,7 +191,7 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
 
         _assertTicketLooksCashoutable(ticket, msg.sender);
 
-        _verifyLegStatusesAndResolvedOdds(ticket, expectedOddsPerLeg, isLegResolved);
+        _verifyLegStatusesAndSettledOdds(ticket, expectedOddsPerLeg, isLegResolved);
 
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillCashout.selector);
 
@@ -259,12 +259,6 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         _requestIdToApprovedOddsPerLeg[_requestId] = _approvedOddsPerLeg;
 
         if (!_allow) revert CashoutNotAllowed();
-
-        _verifyLegStatusesAndResolvedOdds(
-            ticketAddr,
-            _requestIdToExpectedOddsPerLeg[_requestId],
-            _requestIdToIsLegResolved[_requestId]
-        );
 
         _verifyApprovedOddsAndPerLegSlippage(
             ticketAddr,
@@ -339,48 +333,10 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
             t.isTicketLost() ||
             t.isSGP() ||
             t.systemBetDenominator() > 1 ||
-            (freeBetsHolder != address(0) && t.ticketOwner() == freeBetsHolder) ||
+            (freeBetsHolder != address(0) && requester == freeBetsHolder) ||
             !mgr.isTicketPotentiallyCashoutable(ticketAddr) ||
             t.totalQuote() <= sportsAMM.riskManager().maxSupportedOdds()
         ) revert TicketNotCashoutable();
-    }
-
-    /**
-     * @dev Verifies the requester did not misrepresent leg statuses and that settled odds match onchain values.
-     * @param ticketAddr Ticket contract address.
-     * @param expectedOddsPerLeg User-expected odds per leg (18 decimals).
-     * @param isLegResolved User-asserted resolved flags per leg.
-     *
-     * For each leg:
-     * - `expectedOdd` must be non-zero.
-     * - Onchain `Ticket.isLegResolved(i)` must equal `isLegResolved[i]`.
-     * - If resolved:
-     *   - if voided => `expectedOdd` must equal ONE
-     *   - else => `expectedOdd` must equal `Ticket.getMarketOdd(i)`
-     */
-    function _verifyLegStatusesAndResolvedOdds(
-        address ticketAddr,
-        uint[] memory expectedOddsPerLeg,
-        bool[] memory isLegResolved
-    ) internal view {
-        Ticket t = Ticket(ticketAddr);
-        uint legs = expectedOddsPerLeg.length;
-
-        for (uint i = 0; i < legs; ++i) {
-            uint expectedOdd = expectedOddsPerLeg[i];
-            if (expectedOdd == 0) revert InvalidExpectedOdds();
-
-            bool resolved = t.isLegResolved(i);
-            if (resolved != isLegResolved[i]) revert LegStatusMismatch();
-
-            if (resolved) {
-                if (t.isLegVoided(i)) {
-                    if (expectedOdd != ONE) revert SettledLegOddMismatch();
-                } else {
-                    if (expectedOdd != t.getMarketOdd(i)) revert SettledLegOddMismatch();
-                }
-            }
-        }
     }
 
     /**
@@ -404,26 +360,61 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         bool[] memory isLegResolved,
         uint slippage
     ) internal view {
-        Ticket t = Ticket(ticketAddr);
+        _verifyLegStatusesAndSettledOdds(ticketAddr, approved, isLegResolved);
+
         uint legs = approved.length;
 
         for (uint i = 0; i < legs; ++i) {
-            uint approvedOdd = approved[i];
             uint expectedOdd = expected[i];
-            if (approvedOdd == 0 || expectedOdd == 0) revert InvalidExpectedOdds();
+            if (expectedOdd == 0) revert InvalidExpectedOdds();
+
+            if (!isLegResolved[i]) {
+                uint maxApproved = (expectedOdd * (ONE + slippage)) / ONE;
+                if (approved[i] > maxApproved) revert SlippageTooHigh();
+            }
+        }
+    }
+
+    /**
+     * @dev Verifies per-leg resolved status and (if resolved) the settled odd against onchain Ticket data.
+     *
+     * Requirements per leg `i`:
+     * - `odds[i]` must be non-zero.
+     * - Onchain `Ticket.isLegResolved(i)` must equal `isLegResolved[i]` (prevents misreporting).
+     * - If the leg is resolved:
+     *   - if voided => `odds[i]` must equal ONE
+     *   - else      => `odds[i]` must equal `Ticket.getMarketOdd(i)`
+     *
+     * Reverts with:
+     * - {InvalidExpectedOdds} if any `odds[i] == 0`.
+     * - {LegStatusMismatch} if provided status differs from onchain resolved status.
+     * - {SettledLegOddMismatch} if a resolved leg's odd does not match the ticket's settled odd (or ONE for voided).
+     *
+     * @param ticketAddr Ticket contract address.
+     * @param odds Per-leg odds to validate (expected odds during request, or approved odds during fulfill), 18 decimals.
+     * @param isLegResolved User-provided resolved flags per leg; must match onchain `Ticket.isLegResolved(i)`.
+     */
+    function _verifyLegStatusesAndSettledOdds(
+        address ticketAddr,
+        uint[] memory odds,
+        bool[] memory isLegResolved
+    ) internal view {
+        Ticket t = Ticket(ticketAddr);
+        uint legs = odds.length;
+
+        for (uint i = 0; i < legs; ++i) {
+            uint odd = odds[i];
+            if (odd == 0) revert InvalidExpectedOdds();
 
             bool resolved = t.isLegResolved(i);
             if (resolved != isLegResolved[i]) revert LegStatusMismatch();
 
             if (resolved) {
                 if (t.isLegVoided(i)) {
-                    if (approvedOdd != ONE) revert SettledLegOddMismatch();
+                    if (odd != ONE) revert SettledLegOddMismatch();
                 } else {
-                    if (approvedOdd != t.getMarketOdd(i)) revert SettledLegOddMismatch();
+                    if (odd != t.getMarketOdd(i)) revert SettledLegOddMismatch();
                 }
-            } else {
-                uint maxApproved = (expectedOdd * (ONE + slippage)) / ONE;
-                if (approvedOdd > maxApproved) revert SlippageTooHigh();
             }
         }
     }
