@@ -184,6 +184,39 @@ describe('SportsAMMV2Data Read Data', () => {
 			expect(ticketsData[0].resolved).to.be.equal(false);
 		});
 
+		// ---------------------------------------------------------------------
+		// NEW: getTicketLegStatesBatch
+		// ---------------------------------------------------------------------
+		it('Should return per-leg resolved/voided/marketOdds for ticket batch', async () => {
+			const out = await sportsAMMV2Data.getTicketLegStatesBatch([ticketAddress]);
+
+			expect(out.length).to.equal(1);
+			expect(out[0].ticket).to.equal(ticketAddress);
+
+			// lengths should match ticket legs
+			expect(out[0].resolved.length).to.equal(numberOfGamesOnTicket);
+			expect(out[0].voided.length).to.equal(numberOfGamesOnTicket);
+			expect(out[0].marketOdds.length).to.equal(numberOfGamesOnTicket);
+
+			// all legs are unresolved & not voided right after trade in this fixture
+			for (let i = 0; i < numberOfGamesOnTicket; i++) {
+				expect(out[0].resolved[i]).to.equal(false);
+				expect(out[0].voided[i]).to.equal(false);
+			}
+
+			// odds should match the stored ticket odds (from Ticket.getMarketOdd)
+			const ticket = await ethers.getContractAt('Ticket', ticketAddress);
+
+			// sanity check a couple indices (enough coverage without heavy loops)
+			const mid = Math.floor(numberOfGamesOnTicket / 2);
+
+			const odd0 = await ticket.getMarketOdd(0);
+			const oddMid = await ticket.getMarketOdd(mid);
+
+			expect(out[0].marketOdds[0]).to.equal(odd0);
+			expect(out[0].marketOdds[mid]).to.equal(oddMid);
+		});
+
 		it('Should return active tickets data per user with free bets', async () => {
 			const firstTraderAddress = await firstTrader.getAddress();
 			const [ticketsData, freeBetsData] = await sportsAMMV2Data.getActiveTicketsDataPerUser(

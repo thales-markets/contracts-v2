@@ -1787,6 +1787,47 @@
     "inputs": [
       {
         "internalType": "address[]",
+        "name": "tickets",
+        "type": "address[]"
+      }
+    ],
+    "name": "getTicketLegStatesBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ticket",
+            "type": "address"
+          },
+          {
+            "internalType": "bool[]",
+            "name": "resolved",
+            "type": "bool[]"
+          },
+          {
+            "internalType": "bool[]",
+            "name": "voided",
+            "type": "bool[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "marketOdds",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct SportsAMMV2Data.TicketLegState[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
         "name": "ticketsArray",
         "type": "address[]"
       }

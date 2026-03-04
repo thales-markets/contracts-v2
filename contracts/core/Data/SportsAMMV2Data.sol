@@ -100,6 +100,17 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
 
     ISportsAMMV2RiskManager public riskManager;
 
+    // ============================
+    // Ticket batch view helpers
+    // ============================
+
+    struct TicketLegState {
+        address ticket;
+        bool[] resolved;
+        bool[] voided;
+        uint[] marketOdds;
+    }
+
     function initialize(address _owner, ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external initializer {
         setOwner(_owner);
         sportsAMM = _sportsAMM;
@@ -139,6 +150,37 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
      */
     function getTicketsData(address[] calldata ticketsArray) external view returns (TicketData[] memory) {
         return _getTicketsData(ticketsArray);
+    }
+
+    /**
+     * @notice Batch-reads per-leg states for multiple tickets.
+     * @dev Returns one struct per ticket, each holding its own leg arrays.
+     *
+     * @param tickets Array of Ticket addresses.
+     * @return out Array of TicketLegState (same order as input).
+     */
+    function getTicketLegStatesBatch(address[] calldata tickets) external view returns (TicketLegState[] memory out) {
+        uint tLen = tickets.length;
+        out = new TicketLegState[](tLen);
+
+        for (uint ti = 0; ti < tLen; ++ti) {
+            address ticketAddr = tickets[ti];
+
+            Ticket t = Ticket(ticketAddr);
+            uint legs = t.numOfMarkets();
+
+            bool[] memory r = new bool[](legs);
+            bool[] memory v = new bool[](legs);
+            uint[] memory o = new uint[](legs);
+
+            for (uint li = 0; li < legs; ++li) {
+                r[li] = t.isLegResolved(li);
+                v[li] = t.isLegVoided(li);
+                o[li] = t.getMarketOdd(li);
+            }
+
+            out[ti] = TicketLegState({ticket: ticketAddr, resolved: r, voided: v, marketOdds: o});
+        }
     }
 
     /**
