@@ -453,6 +453,7 @@ contract Ticket {
         require(_recipient != address(0), "Invalid recipient");
         require(expectedFinalPayout > 0, "Expected final payout not set");
         require(phase() == Phase.Trading, "Not in trading phase");
+        require(!isSystem && !isSGP, "Not possible for System bets or SGPs");
 
         // Hard rule: cannot cashout if already lost (same as AMM check, defense-in-depth)
         require(!isTicketLost(), "Ticket lost");
