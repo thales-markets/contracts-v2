@@ -40,6 +40,9 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     // stores whether a given ticket address is a SGP bet
     mapping(address => bool) public isSGPTicket;
 
+    // stores whether a given ticket can be cancelled
+    mapping(address => bool) public isCancelable;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner) external initializer {
@@ -67,6 +70,7 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
 
         isSystemTicket[_ticket] = ITicket(_ticket).isSystem();
         isSGPTicket[_ticket] = ITicket(_ticket).isSGP();
+        isCancelable[_ticket] = true;
     }
 
     /// @notice remove known ticket from active and add as resolved
@@ -75,7 +79,6 @@ contract SportsAMMV2Manager is Initializable, ProxyOwned, ProxyPausable {
     function resolveKnownTicket(address _ticket, address _user) external onlySportAMMV2 {
         knownTickets.remove(_ticket);
         activeTicketsPerUser[_user].remove(_ticket);
-
         resolvedTicketsPerUser[_user].add(_ticket);
     }
 
