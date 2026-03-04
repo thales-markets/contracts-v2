@@ -14,6 +14,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "sportsAMM",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "riskManager",
+        "type": "address"
+      }
+    ],
+    "name": "AddressesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -65,32 +84,6 @@
       }
     ],
     "name": "PauseChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "riskManager",
-        "type": "address"
-      }
-    ],
-    "name": "RiskManagerChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "sportsAMM",
-        "type": "address"
-      }
-    ],
-    "name": "SportAMMChanged",
     "type": "event"
   },
   {
@@ -346,6 +339,11 @@
             "internalType": "bool",
             "name": "cashedOut",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -544,6 +542,11 @@
             "internalType": "bool",
             "name": "cashedOut",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -741,6 +744,11 @@
           {
             "internalType": "bool",
             "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
             "type": "bool"
           }
         ],
@@ -1222,6 +1230,11 @@
             "internalType": "bool",
             "name": "cashedOut",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1420,6 +1433,11 @@
             "internalType": "bool",
             "name": "cashedOut",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1617,6 +1635,11 @@
           {
             "internalType": "bool",
             "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
             "type": "bool"
           }
         ],
@@ -1962,6 +1985,11 @@
             "internalType": "bool",
             "name": "cashedOut",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -2184,6 +2212,11 @@
             "internalType": "bool",
             "name": "cashedOut",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -2298,6 +2331,24 @@
   {
     "inputs": [
       {
+        "internalType": "contract ISportsAMMV2",
+        "name": "_sportsAMM",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "_riskManager",
+        "type": "address"
+      }
+    ],
+    "name": "setAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_owner",
         "type": "address"
@@ -2317,32 +2368,6 @@
       }
     ],
     "name": "setPaused",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract ISportsAMMV2RiskManager",
-        "name": "_riskManager",
-        "type": "address"
-      }
-    ],
-    "name": "setRiskManager",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract ISportsAMMV2",
-        "name": "_sportsAMM",
-        "type": "address"
-      }
-    ],
-    "name": "setSportsAMM",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
