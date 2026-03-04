@@ -36,6 +36,7 @@ import "../../core/AMM/Ticket.sol";
  */
 contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
+    using SafeERC20 for IERC20;
 
     /// @dev 18-decimal fixed-point scalar (also used as "1.0" for implied probability).
     uint private constant ONE = 1e18;
@@ -532,6 +533,14 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
      */
     function setPaused(bool _setPausing) external onlyOwner {
         _setPausing ? _pause() : _unpause();
+    }
+
+    /// @notice withdraw collateral in the contract
+    /// @dev Transfers the full balance of `collateral` held by this contract to `recipient`.
+    /// @param collateral ERC20 token address to withdraw
+    /// @param recipient Address receiving withdrawn collateral
+    function withdrawCollateral(address collateral, address recipient) external onlyOwner {
+        IERC20(collateral).safeTransfer(recipient, IERC20(collateral).balanceOf(address(this)));
     }
 
     /**
