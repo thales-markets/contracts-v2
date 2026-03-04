@@ -279,14 +279,41 @@ contract Ticket {
         uint legs = numOfMarkets;
         require(approvedOddsPerLeg.length == legs && isLegSettled.length == legs, "Invalid leg arrays length");
 
-        uint origProbTotal = ONE;
-        uint liveProbTotal = ONE;
-        uint remainingLegs = 0;
+        (uint origProbTotal, uint liveProbTotal, uint remainingLegs, bool cashoutable) = _cashoutProbTotals(
+            approvedOddsPerLeg,
+            isLegSettled
+        );
+
+        if (!cashoutable || origProbTotal == 0) {
+            return (0, 0);
+        }
+
+        // 1) Fair cashout multiplier (before vig): ratio = live/orig
+        uint ratio = (liveProbTotal * ONE) / origProbTotal; // 1e18
+
+        // 2) Compound vig: keepMultiplier = (1 - v)^n
+        uint keepMultiplier = _cashoutKeepMultiplier(remainingLegs);
+
+        cashoutQuote = (ratio * keepMultiplier) / ONE; // 1e18
+        payoutAfterFee = (buyInAmount * cashoutQuote) / ONE;
+    }
+
+    function _cashoutProbTotals(
+        uint[] calldata approvedOddsPerLeg,
+        bool[] calldata isLegSettled
+    ) internal view returns (uint origProbTotal, uint liveProbTotal, uint remainingLegs, bool cashoutable) {
+        uint legs = numOfMarkets;
+
+        origProbTotal = ONE;
+        liveProbTotal = ONE;
+        remainingLegs = 0;
+
+        ISportsAMMV2ResultManager resultManager = sportsAMM.resultManager();
 
         for (uint i = 0; i < legs; ++i) {
             MarketData memory m = markets[i];
 
-            bool cancelledPos = sportsAMM.resultManager().isCancelledMarketPosition(
+            bool cancelledPos = resultManager.isCancelledMarketPosition(
                 m.gameId,
                 m.typeId,
                 m.playerId,
@@ -295,7 +322,7 @@ contract Ticket {
                 m.combinedPositions
             );
 
-            bool resolvedMarket = sportsAMM.resultManager().isMarketResolved(
+            bool resolvedMarket = resultManager.isMarketResolved(
                 m.gameId,
                 m.typeId,
                 m.playerId,
@@ -319,7 +346,7 @@ contract Ticket {
                 liveLegProb = ONE;
             } else if (resolvedMarket) {
                 // resolved: if losing -> not cashoutable
-                bool isWinning = sportsAMM.resultManager().isWinningMarketPosition(
+                bool isWinning = resultManager.isWinningMarketPosition(
                     m.gameId,
                     m.typeId,
                     m.playerId,
@@ -329,7 +356,7 @@ contract Ticket {
                 );
 
                 if (!isWinning) {
-                    return (0, 0);
+                    return (0, 0, 0, false);
                 }
 
                 // already won leg => omitted from remaining risk
@@ -344,32 +371,21 @@ contract Ticket {
             liveProbTotal = (liveProbTotal * liveLegProb) / ONE;
         }
 
-        if (origProbTotal == 0) return (0, 0);
+        cashoutable = true;
+    }
 
-        // --------------------------------------------------
-        // 1) Fair cashout multiplier (before vig): ratio = live/orig
-        // --------------------------------------------------
-        uint ratio = (liveProbTotal * ONE) / origProbTotal; // 1e18
-
-        // --------------------------------------------------
-        // 2) Compound vig: keepMultiplier = (1 - v)^n
-        //    where totalVigRate = 1 - keepMultiplier
-        // --------------------------------------------------
+    function _cashoutKeepMultiplier(uint remainingLegs) internal view returns (uint keepMultiplier) {
         uint safeBoxFee = sportsAMM.safeBoxFee(); // 1e18 fraction (e.g. 0.01e18)
         uint multiplier = sportsAMM.riskManager().getCashoutSafeBoxFeeMultiplier(); // e.g. 5
         uint perLegVig = safeBoxFee * multiplier; // 1e18 fraction (e.g. 0.05e18)
         require(perLegVig < ONE, "Invalid vig");
 
-        uint keepMultiplier = ONE;
         uint oneMinusV = ONE - perLegVig;
 
+        keepMultiplier = ONE;
         for (uint k = 0; k < remainingLegs; ++k) {
             keepMultiplier = (keepMultiplier * oneMinusV) / ONE;
         }
-
-        cashoutQuote = (ratio * keepMultiplier) / ONE; // 1e18
-
-        payoutAfterFee = (buyInAmount * cashoutQuote) / ONE;
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
