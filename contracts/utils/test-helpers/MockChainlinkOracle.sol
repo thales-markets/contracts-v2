@@ -5,10 +5,15 @@ import "../../interfaces/ILiveTradingProcessor.sol";
 import "../../interfaces/IChainlinkResolver.sol";
 import "../../interfaces/ISGPTradingProcessor.sol";
 
+interface ICashoutProcessor {
+    function fulfillCashout(bytes32 requestId, bool allow, uint[] calldata approvedOddsPerLeg) external;
+}
+
 contract MockChainlinkOracle {
     address public liveTradingProcessor;
     address public sgpTradingProcessor;
     address public chainlinkResolver;
+    address public cashoutProcessor;
 
     constructor() {}
 
@@ -24,16 +29,18 @@ contract MockChainlinkOracle {
         chainlinkResolver = _chainlinkResolver;
     }
 
+    function setCashoutProcessor(address _cashoutProcessor) external {
+        cashoutProcessor = _cashoutProcessor;
+    }
+
     // =========================
     // LiveTradingProcessor fulfill mocks
     // =========================
 
-    // SINGLE
     function fulfillLiveTrade(bytes32 _requestId, bool allow, uint approvedQuote) external {
         ILiveTradingProcessor(liveTradingProcessor).fulfillLiveTrade(_requestId, allow, approvedQuote);
     }
 
-    // PARLAY
     function fulfillLiveTradeParlay(
         bytes32 _requestId,
         bool allow,
@@ -58,5 +65,9 @@ contract MockChainlinkOracle {
 
     function fulfillSGPTrade(bytes32 _requestId, bool allow, uint approvedQuote) external {
         ISGPTradingProcessor(sgpTradingProcessor).fulfillSGPTrade(_requestId, allow, approvedQuote);
+    }
+
+    function fulfillCashout(bytes32 _requestId, bool allow, uint[] calldata approvedOddsPerLeg) external {
+        ICashoutProcessor(cashoutProcessor).fulfillCashout(_requestId, allow, approvedOddsPerLeg);
     }
 }

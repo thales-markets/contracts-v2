@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const {
 	deploySportsAMMV2Fixture,
 	deployAccountsFixture,
@@ -110,6 +112,14 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 			expect(await sportsAMMV2RiskManager.expiryDuration()).to.equal(
 				RISK_MANAGER_INITAL_PARAMS.expiryDuration
 			);
+		});
+
+		it('Should have default cashout safe box fee multiplier via getter', async () => {
+			// storage is unset (0) by default
+			expect(await sportsAMMV2RiskManager.cashoutSafeBoxFeeMultiplier()).to.equal(0);
+
+			// getter should fall back to DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER (5)
+			expect(await sportsAMMV2RiskManager.getCashoutSafeBoxFeeMultiplier()).to.equal(4);
 		});
 	});
 
@@ -276,6 +286,35 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 			await expect(sportsAMMV2RiskManager.setTimes(minimalTimeLeftToMaturity, expiryDuration))
 				.to.emit(sportsAMMV2RiskManager, 'TimesUpdated')
 				.withArgs(minimalTimeLeftToMaturity, expiryDuration);
+		});
+
+		it('Should set cashout safe box fee multiplier and return it via getter', async () => {
+			// default getter returns 5
+			expect(await sportsAMMV2RiskManager.getCashoutSafeBoxFeeMultiplier()).to.equal(4);
+
+			// Non-owner should be blocked
+			await expect(
+				sportsAMMV2RiskManager.connect(secondAccount).setCashoutSafeBoxFeeMultiplier(5)
+			).to.be.revertedWith('Only the contract owner may perform this action');
+
+			// Invalid values (per current implementation: 0 OR > 10 revert)
+			await expect(
+				sportsAMMV2RiskManager.setCashoutSafeBoxFeeMultiplier(0)
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'InvalidInput');
+
+			await expect(
+				sportsAMMV2RiskManager.setCashoutSafeBoxFeeMultiplier(11)
+			).to.be.revertedWithCustomError(sportsAMMV2RiskManager, 'InvalidInput');
+
+			// Valid update
+			const newMultiplier = 7;
+
+			await expect(sportsAMMV2RiskManager.setCashoutSafeBoxFeeMultiplier(newMultiplier))
+				.to.emit(sportsAMMV2RiskManager, 'SetCashoutSafeBoxFeeMultiplier')
+				.withArgs(newMultiplier);
+
+			expect(await sportsAMMV2RiskManager.cashoutSafeBoxFeeMultiplier()).to.equal(newMultiplier);
+			expect(await sportsAMMV2RiskManager.getCashoutSafeBoxFeeMultiplier()).to.equal(newMultiplier);
 		});
 
 		it('Should set the new cap per sport (NBA)', async () => {

@@ -14,6 +14,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "sportsAMM",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "riskManager",
+        "type": "address"
+      }
+    ],
+    "name": "AddressesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -65,32 +84,6 @@
       }
     ],
     "name": "PauseChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "riskManager",
-        "type": "address"
-      }
-    ],
-    "name": "RiskManagerChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "sportsAMM",
-        "type": "address"
-      }
-    ],
-    "name": "SportAMMChanged",
     "type": "event"
   },
   {
@@ -341,6 +334,16 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -533,6 +536,16 @@
           {
             "internalType": "bool",
             "name": "isSGP",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
             "type": "bool"
           }
         ],
@@ -727,6 +740,16 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -817,6 +840,40 @@
         "internalType": "uint256[]",
         "name": "caps",
         "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "approvedOddsPerLeg",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "isLegSettled",
+        "type": "bool[]"
+      }
+    ],
+    "name": "getCashoutQuoteAndPayout",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "quote",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payoutAfterFee",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1168,6 +1225,16 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1360,6 +1427,16 @@
           {
             "internalType": "bool",
             "name": "isSGP",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
             "type": "bool"
           }
         ],
@@ -1554,6 +1631,16 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -1691,6 +1778,47 @@
         "internalType": "struct SportsAMMV2Data.SportsAMMParameters",
         "name": "",
         "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "tickets",
+        "type": "address[]"
+      }
+    ],
+    "name": "getTicketLegStatesBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ticket",
+            "type": "address"
+          },
+          {
+            "internalType": "bool[]",
+            "name": "resolved",
+            "type": "bool[]"
+          },
+          {
+            "internalType": "bool[]",
+            "name": "voided",
+            "type": "bool[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "marketOdds",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct SportsAMMV2Data.TicketLegState[]",
+        "name": "out",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -1892,6 +2020,16 @@
           {
             "internalType": "bool",
             "name": "isSGP",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
             "type": "bool"
           }
         ],
@@ -2110,6 +2248,16 @@
             "internalType": "bool",
             "name": "isSGP",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
           }
         ],
         "internalType": "struct SportsAMMV2Data.TicketData[]",
@@ -2224,6 +2372,24 @@
   {
     "inputs": [
       {
+        "internalType": "contract ISportsAMMV2",
+        "name": "_sportsAMM",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "_riskManager",
+        "type": "address"
+      }
+    ],
+    "name": "setAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_owner",
         "type": "address"
@@ -2243,32 +2409,6 @@
       }
     ],
     "name": "setPaused",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract ISportsAMMV2RiskManager",
-        "name": "_riskManager",
-        "type": "address"
-      }
-    ],
-    "name": "setRiskManager",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "contract ISportsAMMV2",
-        "name": "_sportsAMM",
-        "type": "address"
-      }
-    ],
-    "name": "setSportsAMM",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

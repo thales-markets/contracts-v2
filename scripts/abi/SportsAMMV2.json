@@ -73,11 +73,6 @@
   },
   {
     "inputs": [],
-    "name": "MultiCollateralDisabled",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NotInitializing",
     "type": "error"
   },
@@ -494,6 +489,12 @@
         "internalType": "address",
         "name": "freeBetsHolder",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "cashoutProcessor",
+        "type": "address"
       }
     ],
     "name": "SetBettingProcessors",
@@ -510,6 +511,31 @@
       }
     ],
     "name": "SetMultiCollateralOnOffRamp",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ticket",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "cashoutAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "TicketCashedOut",
     "type": "event"
   },
   {
@@ -623,6 +649,53 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cashoutProcessor",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "approvedOddsPerLeg",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "isLegSettled",
+        "type": "bool[]"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipient",
+        "type": "address"
+      }
+    ],
+    "name": "cashoutTicketWithLegOdds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "cashoutAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1059,6 +1132,11 @@
       {
         "internalType": "address",
         "name": "_freeBetsHolder",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_cashoutProcessor",
         "type": "address"
       }
     ],
