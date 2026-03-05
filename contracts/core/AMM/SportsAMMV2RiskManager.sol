@@ -21,7 +21,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     uint public constant DEFAULT_DYNAMIC_LIQUIDITY_CUTOFF_DIVIDER = 2e18;
     uint private constant ONE = 1e18;
-    uint public constant DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER = 5;
+    uint public constant DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER = 4;
 
     /* ========== ERRORS ========== */
     error InvalidCap();

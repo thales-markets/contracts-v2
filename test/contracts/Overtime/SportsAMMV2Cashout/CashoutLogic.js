@@ -52,7 +52,17 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		return TicketContract.attach(ticketAddress);
 	}
 
-	it('1) pending-only: cashoutQuote & payout follow (orig/live ratio) with compounded vig', async () => {
+	// IMPORTANT: your new rule is "2x vig for single remaining leg" which,
+	// with your compounding implementation, means exponent = remainingLegs + 1.
+	// Also: you said you set cashout fee multiplier to 4, so v = safeBoxFee * 4.
+	async function getPerLegVig1e18(sportsAMMV2) {
+		const safeBoxFee = BigInt((await sportsAMMV2.safeBoxFee()).toString()); // 1e18
+		const multiplier = 4n; // <-- you changed this from 5 to 4
+		const v = safeBoxFee * multiplier; // 1e18 fraction
+		return { safeBoxFee, multiplier, v };
+	}
+
+	it('1) pending-only: cashoutQuote & payout follow (orig/live ratio) with compounded vig (+1 exponent rule)', async () => {
 		const {
 			sportsAMMV2,
 			sportsAMMV2Manager,
@@ -88,16 +98,15 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 
 		const buyIn = BigInt(BUY_IN_AMOUNT.toString());
 
-		// ratio=1 => rawPayout=buyIn
+		// ratio=1 => rawPayout=buyIn (since approved odds == stored odds and all pending)
 		const rawPayout = buyIn;
 
-		const safeBoxFee = BigInt((await sportsAMMV2.safeBoxFee()).toString());
-		const multiplier = 5n; // cashout multiplier
-		const v = safeBoxFee * multiplier; // 1e18 fraction
+		const { v } = await getPerLegVig1e18(sportsAMMV2);
 
-		const n = 2; // 2 pending legs
-		// totalVig = 1 - (1 - v)^n  => payout = raw * (1 - totalVig) = raw * (1 - v)^n
-		const keepFactor = pow1e18(ONE - v, n);
+		const remainingLegs = 2; // 2 pending legs
+		// New rule implemented via compounding: keep = (1 - v)^(remainingLegs + 1)
+		const keepFactor = pow1e18(ONE - v, remainingLegs + 1);
+
 		const expectedPayout = mul1e18(rawPayout, keepFactor);
 		const expectedQuote = div1e18(expectedPayout, buyIn);
 
@@ -145,7 +154,7 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 			.reverted;
 	});
 
-	it('3) one-won-one-pending: won leg treated as 1, only pending leg repriced, vig applies for remaining=1', async () => {
+	it('3) one-won-one-pending: won leg treated as 1, only pending leg repriced, vig applies with remaining=1 (+1 exponent rule)', async () => {
 		const {
 			sportsAMMV2,
 			sportsAMMV2Manager,
@@ -181,20 +190,17 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 			[[m0.position]]
 		);
 
-		// Call cashout with:
-		// - won leg => isLegSettled=true, approved odd can be anything (ignored in contract when resolved)
-		// - pending leg => isLegSettled=false, approved odd used for live pricing
 		const leg0Stored = BigInt((await ticket.getMarketOdd(0)).toString());
 		const leg1Stored = BigInt((await ticket.getMarketOdd(1)).toString());
 
-		const approvedOddsPerLeg = [leg0Stored, leg1Stored]; // keep same live odd for deterministic
+		const approvedOddsPerLeg = [leg0Stored, leg1Stored]; // deterministic: same as stored
 		const isLegSettled = [true, false];
 
 		const res = await ticket.getCashoutQuoteAndPayout(approvedOddsPerLeg, isLegSettled);
 		const cashoutQuote = BigInt(res[0].toString());
 		const payoutAfterFee = BigInt(res[1].toString());
 
-		// ---- expected (match economic intent; allow tiny rounding dust) ----
+		// ---- expected (match contract math) ----
 		const buyIn = BigInt(BUY_IN_AMOUNT.toString());
 
 		// origProbTotal = leg0 * leg1
@@ -203,22 +209,20 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		// liveProbTotal: won leg => ONE, pending => leg1
 		const liveProbTotal = leg1Stored;
 
-		// raw payout
+		// raw payout = buyIn * (live/orig)
 		const ratio = div1e18(liveProbTotal, origProbTotal);
 		const rawPayout = mul1e18(buyIn, ratio);
 
-		// remaining legs = 1 => totalVig = v
-		const safeBoxFee = BigInt((await sportsAMMV2.safeBoxFee()).toString());
-		const multiplier = 5n;
-		const v = safeBoxFee * multiplier;
+		const { v } = await getPerLegVig1e18(sportsAMMV2);
 
-		// contract does fee via integer division; tiny dust can appear
-		const fee = (rawPayout * v) / ONE;
-		const expectedPayout = rawPayout - fee;
+		const remainingLegs = 1;
+		// New rule via compounding: keep = (1 - v)^(remainingLegs + 1) = (1 - v)^2
+		const keepFactor = pow1e18(ONE - v, remainingLegs + 1);
 
+		const expectedPayout = mul1e18(rawPayout, keepFactor);
 		const expectedQuote = div1e18(expectedPayout, buyIn);
 
-		// tolerate tiny rounding dust (you’re currently seeing diff=9)
+		// small rounding dust tolerance (integer division)
 		const TOL = 10n;
 
 		expectApprox(payoutAfterFee, expectedPayout, TOL, 'payoutAfterFee');

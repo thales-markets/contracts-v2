@@ -383,7 +383,7 @@ contract Ticket {
         uint oneMinusV = ONE - perLegVig;
 
         keepMultiplier = ONE;
-        for (uint k = 0; k < remainingLegs; ++k) {
+        for (uint k = 0; k < remainingLegs + 1; ++k) {
             keepMultiplier = (keepMultiplier * oneMinusV) / ONE;
         }
     }

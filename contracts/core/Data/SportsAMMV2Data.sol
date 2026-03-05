@@ -226,24 +226,24 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         address user,
         address[] memory collateralAddresses
     ) external view returns (uint[] memory freeBetsAmountPerCollateral, uint[] memory freeBetsExpiryPerCollateral) {
-        freeBetsAmountPerCollateral = new uint[](collateralAddresses.length);
-        freeBetsExpiryPerCollateral = new uint[](collateralAddresses.length);
+        uint len = collateralAddresses.length;
+        freeBetsAmountPerCollateral = new uint[](len);
+        freeBetsExpiryPerCollateral = new uint[](len);
+
         IFreeBetsHolder freeBetsHolder = sportsAMM.freeBetsHolder();
-        uint freeBetExpirationUpgrade = freeBetsHolder.freeBetExpirationUpgrade();
-        uint freeBetExpirationPeriod = freeBetsHolder.freeBetExpirationPeriod();
-        for (uint i = 0; i < collateralAddresses.length; i++) {
-            freeBetsAmountPerCollateral[i] = freeBetsHolder.balancePerUserAndCollateral(user, collateralAddresses[i]);
-            uint userFreeBetExpiration = freeBetsHolder.freeBetExpiration(user, collateralAddresses[i]);
-            if (userFreeBetExpiration == 0) {
-                userFreeBetExpiration = freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp
-                    ? freeBetExpirationUpgrade + freeBetExpirationPeriod - block.timestamp
-                    : 0;
-            } else {
-                userFreeBetExpiration = userFreeBetExpiration > block.timestamp
-                    ? userFreeBetExpiration - block.timestamp
-                    : 0;
-            }
-            freeBetsExpiryPerCollateral[i] = userFreeBetExpiration;
+
+        uint upgradeExpiration = freeBetsHolder.freeBetExpirationUpgrade() + freeBetsHolder.freeBetExpirationPeriod();
+        uint timestamp = block.timestamp;
+
+        for (uint i; i < len; ++i) {
+            address collateral = collateralAddresses[i];
+
+            freeBetsAmountPerCollateral[i] = freeBetsHolder.balancePerUserAndCollateral(user, collateral);
+
+            uint expiration = freeBetsHolder.freeBetExpiration(user, collateral);
+            expiration = expiration == 0 ? upgradeExpiration : expiration;
+
+            freeBetsExpiryPerCollateral[i] = expiration > timestamp ? expiration - timestamp : 0;
         }
     }
 
@@ -347,16 +347,16 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         );
         // Get number of matches
         uint matchCounter;
-        for (uint i = 0; i < activeGameIds.length; i++) {
-            for (uint j = 0; j < numOfTicketsPerGameId[i]; j++) {
+        for (uint i = 0; i < activeGameIds.length; ++i) {
+            for (uint j; j < numOfTicketsPerGameId[i]; ++j) {
                 matchCounter += Ticket(ticketsPerGameId[i][j]).numOfMarkets();
             }
         }
         TicketMarketInfo[] memory ticketsMarkets = new TicketMarketInfo[](matchCounter);
         matchCounter = 0;
         MarketData memory marketData;
-        for (uint i = 0; i < activeGameIds.length; i++) {
-            for (uint j = 0; j < numOfTicketsPerGameId[i]; j++) {
+        for (uint i = 0; i < activeGameIds.length; ++i) {
+            for (uint j; j < numOfTicketsPerGameId[i]; ++j) {
                 Ticket ticket = Ticket(ticketsPerGameId[i][j]);
                 for (uint t = 0; t < ticket.numOfMarkets(); t++) {
                     marketData = _getMarketData(ticket, t);
@@ -371,7 +371,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         (matchCounter, numOfTicketsPerGameId) = _getUniqueTypeIdsPlayerIds(ticketsMarkets);
         finalTicketsInfo = new TicketMarketInfo[](matchCounter);
         matchCounter = 0;
-        for (uint i = 0; i < ticketsMarkets.length; i++) {
+        for (uint i = 0; i < ticketsMarkets.length; ++i) {
             if (numOfTicketsPerGameId[i] == 1) {
                 finalTicketsInfo[matchCounter] = ticketsMarkets[i];
                 ++matchCounter;
@@ -395,12 +395,12 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         int24[] memory _lines
     ) external view returns (bool[] memory resolvedMarkets) {
         ISportsAMMV2ResultManager resultManager = sportsAMM.resultManager();
+        ISportsAMMV2.CombinedPosition[] memory combinedPositions = new ISportsAMMV2.CombinedPosition[](0);
         if (_gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length) {
             resolvedMarkets = new bool[](_gameIds.length);
-            for (uint i = 0; i < _gameIds.length; i++) {
+            for (uint i = 0; i < _gameIds.length; ++i) {
                 uint8 resultType = resultManager.resultTypePerMarketType(_typeIds[i]);
                 if (resultType != uint8(ResultType.CombinedPositions)) {
-                    ISportsAMMV2.CombinedPosition[] memory combinedPositions = new ISportsAMMV2.CombinedPosition[](0);
                     resolvedMarkets[i] = resultManager.isMarketResolved(
                         _gameIds[i],
                         _typeIds[i],
@@ -429,7 +429,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         ISportsAMMV2ResultManager resultManager = sportsAMM.resultManager();
         if (_gameIds.length == _typeIds.length && _typeIds.length == _playerIds.length) {
             resultsForMarkets = new int24[][](_gameIds.length);
-            for (uint i = 0; i < _gameIds.length; i++) {
+            for (uint i; i < _gameIds.length; ++i) {
                 resultsForMarkets[i] = resultManager.getResultsPerMarket(_gameIds[i], _typeIds[i], _playerIds[i]);
             }
         }
@@ -443,7 +443,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
      */
     function getSpentOnGames(bytes32[] calldata _gameIds) external view returns (uint[] memory spentAmounts) {
         spentAmounts = new uint[](_gameIds.length);
-        for (uint i = 0; i < _gameIds.length; i++) {
+        for (uint i; i < _gameIds.length; ++i) {
             spentAmounts[i] = riskManager.spentOnGame(_gameIds[i]);
         }
     }
@@ -464,7 +464,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint[] calldata _positions
     ) external view returns (int[] memory riskAmounts) {
         riskAmounts = new int[](_gameIds.length);
-        for (uint i = 0; i < _gameIds.length; i++) {
+        for (uint i; i < _gameIds.length; ++i) {
             riskAmounts[i] = riskManager.riskPerMarketTypeAndPosition(
                 _gameIds[i],
                 _typeIds[i],
@@ -488,7 +488,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         maxStakes = new uint[](len);
         availableLiquidity = new uint[](len);
 
-        for (uint i = 0; i < len; i++) {
+        for (uint i; i < len; ++i) {
             maxStakes[i] = _calculateMaxStakeAndLiquidity(inputs[i], availableLiquidity, i);
         }
     }
@@ -498,7 +498,6 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint[] memory availableLiquidity,
         uint index
     ) internal view returns (uint _maxStakeAndLiquidity) {
-        // Fetch position-level cap and risk
         uint cap = riskManager.calculateCapToBeUsed(
             input.gameId,
             input.sportId,
@@ -508,29 +507,20 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             input.maturity,
             input.isLive
         );
-
-        int positionRisk = riskManager.riskPerMarketTypeAndPosition(
-            input.gameId,
-            input.typeId,
-            input.playerId,
-            input.position
-        );
-
-        int availablePosRisk = int(cap) - positionRisk;
-        uint availablePerPosition = availablePosRisk > 0 ? uint(availablePosRisk) : 0;
+        int available = int(cap) -
+            riskManager.riskPerMarketTypeAndPosition(input.gameId, input.typeId, input.playerId, input.position);
+        uint availablePerPosition = available > 0 ? uint(available) : 0;
         availableLiquidity[index] = availablePerPosition;
 
-        // Fetch game-level cap and spent
         uint totalGameCap = riskManager.calculateTotalRiskOnGame(input.gameId, input.sportId, input.maturity);
-
         uint spent = riskManager.spentOnGame(input.gameId);
-        uint availablePerGame = totalGameCap > spent ? totalGameCap - spent : 0;
 
         if (input.odds > 0 && input.odds < 1e18) {
             uint denominator = 1e18 - input.odds;
-            uint maxStakePos = (availablePerPosition * input.odds) / denominator;
-            uint maxStakeGame = (availablePerGame * input.odds) / denominator;
-            _maxStakeAndLiquidity = maxStakePos < maxStakeGame ? maxStakePos : maxStakeGame;
+            uint availablePerGame = totalGameCap > spent ? totalGameCap - spent : 0;
+            _maxStakeAndLiquidity =
+                ((availablePerPosition < availablePerGame ? availablePerPosition : availablePerGame) * input.odds) /
+                denominator;
         }
     }
 
@@ -550,7 +540,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uint[] calldata _maturities
     ) external view returns (uint[] memory caps) {
         caps = new uint[](_gameIds.length);
-        for (uint i = 0; i < _gameIds.length; i++) {
+        for (uint i; i < _gameIds.length; ++i) {
             caps[i] = riskManager.calculateCapToBeUsed(_gameIds[i], _sportIds[i], _typeIds[i], 0, 0, _maturities[i], false);
         }
     }
@@ -581,11 +571,11 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function _getTicketsData(address[] memory ticketsArray) internal view returns (TicketData[] memory) {
         TicketData[] memory tickets = new TicketData[](ticketsArray.length);
         ISportsAMMV2Manager manager = sportsAMM.manager();
-        for (uint i = 0; i < ticketsArray.length; i++) {
+        for (uint i; i < ticketsArray.length; ++i) {
             Ticket ticket = Ticket(ticketsArray[i]);
             MarketData[] memory marketsData = new MarketData[](ticket.numOfMarkets());
             MarketResult[] memory marketsResult = new MarketResult[](ticket.numOfMarkets());
-            for (uint j = 0; j < ticket.numOfMarkets(); j++) {
+            for (uint j; j < ticket.numOfMarkets(); ++j) {
                 marketsData[j] = _getMarketData(ticket, j);
                 marketsResult[j] = _getMarketResult(ticket, j);
             }
@@ -593,13 +583,16 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
             bool isSGP = manager.isSGPTicket(address(ticket));
             bool createdAfterCashoutDeploy = manager.isTicketPotentiallyCashoutable(address(ticket));
 
+            address ticketOwner = ticket.ticketOwner();
+
             bool cashedOut = false;
             bool isPotentiallyCashoutable = !ticket.resolved() &&
                 !ticket.isTicketLost() &&
                 !isSGP &&
                 !isSystem &&
                 createdAfterCashoutDeploy &&
-                !(ticket.totalQuote() <= riskManager.maxSupportedOdds());
+                !(ticket.totalQuote() <= riskManager.maxSupportedOdds()) &&
+                ticketOwner != address(sportsAMM.freeBetsHolder());
 
             if (createdAfterCashoutDeploy) {
                 cashedOut = ticket.cashedOut();
@@ -610,7 +603,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
                 marketsData,
                 marketsResult,
                 address(ticket.collateral()),
-                ticket.ticketOwner(),
+                ticketOwner,
                 ticket.buyInAmount(),
                 ticket.fees(),
                 ticket.totalQuote(),
@@ -657,18 +650,11 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         ISportsAMMV2.CombinedPosition[] memory combinedPositions = ticket.getCombinedPositions(marketIndex);
         ISportsAMMV2ResultManager resultManager = sportsAMM.resultManager();
 
-        ISportsAMMV2ResultManager.MarketPositionStatus status = resultManager.getMarketPositionStatus(
-            gameId,
-            typeId,
-            playerId,
-            line,
-            position,
-            combinedPositions
-        );
-
-        int24[] memory results = resultManager.getResultsPerMarket(gameId, typeId, playerId);
-
-        return MarketResult(status, results);
+        return
+            MarketResult(
+                resultManager.getMarketPositionStatus(gameId, typeId, playerId, line, position, combinedPositions),
+                resultManager.getResultsPerMarket(gameId, typeId, playerId)
+            );
     }
 
     function _getOnlyActiveGameIdsAndTicketsOf(
@@ -684,7 +670,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         _pageSize = _pageSize > _gameIds.length ? _gameIds.length : _pageSize;
         uint[] memory ticketsPerGame = new uint[](_pageSize);
         uint counter;
-        for (uint i = _startIndex; i < _pageSize; i++) {
+        for (uint i = _startIndex; i < _pageSize; ++i) {
             uint numOfTicketsPerGame = manager.numOfTicketsPerGame(_gameIds[i]);
             if (numOfTicketsPerGame > 0) {
                 counter++;
@@ -695,7 +681,7 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         numOfTicketsPerGameId = new uint[](counter);
         ticketsPerGameId = new address[][](counter);
         counter = 0;
-        for (uint i = 0; i < _gameIds.length; i++) {
+        for (uint i; i < _gameIds.length; ++i) {
             if (ticketsPerGame[i] > 0) {
                 activeGameIds[counter] = _gameIds[i];
                 numOfTicketsPerGameId[counter] = ticketsPerGame[i];
@@ -712,10 +698,10 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
         uniqueIndexes = new uint[](ticketsMarkets.length);
         bytes32 currentHash;
         bool isUnique;
-        for (uint i = 0; i < ticketsMarkets.length; i++) {
+        for (uint i; i < ticketsMarkets.length; ++i) {
             currentHash = keccak256(abi.encode(ticketsMarkets[i]));
             isUnique = true;
-            for (uint j = 0; j < numOfUniqueMatches; j++) {
+            for (uint j; j < numOfUniqueMatches; ++j) {
                 if (currentHash == uniqueHashes[j]) {
                     isUnique = false;
                     break;
@@ -732,7 +718,6 @@ contract SportsAMMV2Data is Initializable, ProxyOwned, ProxyPausable {
     function setAddresses(ISportsAMMV2 _sportsAMM, ISportsAMMV2RiskManager _riskManager) external onlyOwner {
         sportsAMM = _sportsAMM;
         riskManager = _riskManager;
-
         emit AddressesUpdated(address(_sportsAMM), address(_riskManager));
     }
 

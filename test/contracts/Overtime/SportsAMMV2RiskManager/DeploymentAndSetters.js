@@ -119,7 +119,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 			expect(await sportsAMMV2RiskManager.cashoutSafeBoxFeeMultiplier()).to.equal(0);
 
 			// getter should fall back to DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER (5)
-			expect(await sportsAMMV2RiskManager.getCashoutSafeBoxFeeMultiplier()).to.equal(5);
+			expect(await sportsAMMV2RiskManager.getCashoutSafeBoxFeeMultiplier()).to.equal(4);
 		});
 	});
 
@@ -290,7 +290,7 @@ describe('SportsAMMV2RiskManager Deployment And Setters', () => {
 
 		it('Should set cashout safe box fee multiplier and return it via getter', async () => {
 			// default getter returns 5
-			expect(await sportsAMMV2RiskManager.getCashoutSafeBoxFeeMultiplier()).to.equal(5);
+			expect(await sportsAMMV2RiskManager.getCashoutSafeBoxFeeMultiplier()).to.equal(4);
 
 			// Non-owner should be blocked
 			await expect(
