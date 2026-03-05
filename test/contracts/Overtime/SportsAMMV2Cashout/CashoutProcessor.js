@@ -234,10 +234,12 @@ describe('CashoutProcessor (E2E)', () => {
 
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
 
-		const approvedOddsTooHigh = [expectedOddsPerLeg[0] + 1n, expectedOddsPerLeg[1]];
+		// For implied probabilities: "worse for user cashout" = LOWER approved odd.
+		// With slippage=0, approved must be >= expected for pending legs.
+		const approvedOddsTooLow = [expectedOddsPerLeg[0] - 1n, expectedOddsPerLeg[1]];
 
 		await expect(
-			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedOddsTooHigh)
+			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedOddsTooLow)
 		).to.be.revertedWithCustomError(cashoutProcessor, 'SlippageTooHigh');
 	});
 
@@ -433,7 +435,7 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'InvalidExpectedOdds');
 	});
 
-	it('17) slippage: additionalSlippage allows small increase but rejects larger', async () => {
+	it('17) slippage: additionalSlippage allows small decrease but rejects larger', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
@@ -441,13 +443,14 @@ describe('CashoutProcessor (E2E)', () => {
 		const onePct = ethers.parseEther('0.01'); // 1% in 1e18
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, onePct);
 
-		const approvedOk = [(expectedOddsPerLeg[0] * 1005n) / 1000n, expectedOddsPerLeg[1]]; // +0.5%
+		// ok: -0.5% (approved >= expected*(1-1%))
+		const approvedOk = [(expectedOddsPerLeg[0] * 995n) / 1000n, expectedOddsPerLeg[1]];
 
 		await expect(mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedOk)).to
 			.not.be.reverted;
 	});
 
-	it('18) slippage: additionalSlippage=1% but approved +2% => SlippageTooHigh', async () => {
+	it('18) slippage: additionalSlippage=1% but approved -2% => SlippageTooHigh', async () => {
 		const ticket = await buyParlayTicket2Legs();
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
@@ -455,10 +458,11 @@ describe('CashoutProcessor (E2E)', () => {
 		const onePct = ethers.parseEther('0.01'); // 1%
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, onePct);
 
-		const approvedTooHigh = [(expectedOddsPerLeg[0] * 102n) / 100n, expectedOddsPerLeg[1]]; // +2%
+		// too low: -2% (violates approved >= expected*(1-1%))
+		const approvedTooLow = [(expectedOddsPerLeg[0] * 98n) / 100n, expectedOddsPerLeg[1]];
 
 		await expect(
-			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedTooHigh)
+			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedTooLow)
 		).to.be.revertedWithCustomError(cashoutProcessor, 'SlippageTooHigh');
 	});
 
@@ -589,7 +593,7 @@ describe('CashoutProcessor (E2E)', () => {
 
 		await expect(
 			sportsAMMV2
-				.connect(owner) // not cashoutProcessor
+				.connect(owner)
 				.cashoutTicketWithLegOdds(
 					addr(ticket),
 					approvedOddsPerLeg,

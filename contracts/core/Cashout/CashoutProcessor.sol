@@ -20,7 +20,7 @@ import "../../core/AMM/Ticket.sol";
  * 1) User calls {requestCashout} supplying:
  *    - `expectedOddsPerLeg`: user-expected implied probabilities per leg (18 decimals).
  *    - `isLegResolved`: user-asserted resolved/pending flags per leg.
- *    - `additionalSlippage`: max allowed increase vs expected odds for *pending* legs (18-decimal percentage).
+ *    - `additionalSlippage`: max allowed decrease vs expected odds for *pending* legs (18-decimal percentage).
  * 2) Contract validates the ticket is cashout-eligible and that the user did not lie about leg status / settled odds.
  * 3) Contract submits a Chainlink request to an offchain adapter to compute `approvedOddsPerLeg` and an allow/deny flag.
  * 4) Oracle calls {fulfillCashout}:
@@ -173,7 +173,7 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
      * @param ticket Ticket contract address.
      * @param expectedOddsPerLeg User-expected implied probabilities per leg (18 decimals). Must be > 0 for all legs.
      * @param isLegResolved User-asserted resolved flags per leg (must match onchain `Ticket.isLegResolved(i)`).
-     * @param additionalSlippage Max allowed increase vs expected odds for pending legs (18-decimal percentage).
+     * @param additionalSlippage Max allowed decrease vs expected odds for pending legs (18-decimal percentage).
      * @return requestId The Chainlink request id for the created request.
      */
     function requestCashout(
@@ -229,7 +229,7 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
      *
      * If `_allow` is true, it:
      * - Re-checks leg status/settled odds to ensure nothing changed vs the request snapshot.
-     * - Enforces per-leg slippage for pending legs: `approvedOdd <= expectedOdd*(1+slippage)`.
+     * - Enforces per-leg slippage for pending legs: `approvedOdd >= expectedOdd*(1-slippage)`.
      * - Calls `sportsAMM.cashoutTicketWithLegOdds(...)`.
      *
      * @param _requestId Chainlink request id.
@@ -256,7 +256,6 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
         requestIdToFulfillAllowed[_requestId] = _allow;
         requestIdFulfilled[_requestId] = true;
 
-        // store approved odds for UI/debugging (reverted back in)
         _requestIdToApprovedOddsPerLeg[_requestId] = _approvedOddsPerLeg;
 
         if (!_allow) revert CashoutNotAllowed();
@@ -346,13 +345,13 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
      * @param approved Oracle-approved odds per leg (18 decimals).
      * @param expected User-expected odds per leg (18 decimals).
      * @param isLegResolved User-asserted resolved flags per leg (must still match onchain status).
-     * @param slippage Max allowed increase vs expected for pending legs (18-decimal percentage).
+     * @param slippage Max allowed decrease vs expected for pending legs (18-decimal percentage).
      *
      * Rules per leg:
      * - `approvedOdd` and `expectedOdd` must be non-zero.
      * - Onchain resolved status must still equal `isLegResolved[i]`.
      * - If resolved: approved must match settled odd (or ONE if voided).
-     * - If pending: `approvedOdd` must be <= `expectedOdd * (1 + slippage)`.
+     * - If pending: `approvedOdd` must be >= `expectedOdd * (1 - slippage)`.
      */
     function _verifyApprovedOddsAndPerLegSlippage(
         address ticketAddr,
@@ -370,8 +369,8 @@ contract CashoutProcessor is ChainlinkClient, Ownable, Pausable {
             if (expectedOdd == 0) revert InvalidExpectedOdds();
 
             if (!isLegResolved[i]) {
-                uint maxApproved = (expectedOdd * (ONE + slippage)) / ONE;
-                if (approved[i] > maxApproved) revert SlippageTooHigh();
+                uint minApproved = (expectedOdd * (ONE - slippage)) / ONE;
+                if (approved[i] < minApproved) revert SlippageTooHigh();
             }
         }
     }
