@@ -201,9 +201,21 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			const market2 = tradeDataTenMarketsCurrentRound[2];
 
 			// Enable live trading for all three legs
-			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(market0.sportId, market0.typeId, true);
-			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(market1.sportId, market1.typeId, true);
-			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(market2.sportId, market2.typeId, true);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(
+				market0.sportId,
+				market0.typeId,
+				true
+			);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(
+				market1.sportId,
+				market1.typeId,
+				true
+			);
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(
+				market2.sportId,
+				market2.typeId,
+				true
+			);
 
 			const firstTraderBalance = await freeBetsHolder.balancePerUserAndCollateral(
 				firstTrader,
@@ -272,7 +284,12 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 			expect(userForRequest).to.equal(firstTrader.address);
 
 			// Fulfill the live parlay trade
-			await mockChainlinkOracle.fulfillLiveTradeParlay(requestId, true, approvedQuote, approvedLegOdds);
+			await mockChainlinkOracle.fulfillLiveTradeParlay(
+				requestId,
+				true,
+				approvedQuote,
+				approvedLegOdds
+			);
 
 			// Verify ticket was created
 			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);

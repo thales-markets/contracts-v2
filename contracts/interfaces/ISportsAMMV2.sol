@@ -96,4 +96,11 @@ interface ISportsAMMV2 {
     function getRootsPerGames(bytes32[] calldata _games) external view returns (bytes32[] memory _roots);
 
     function paused() external view returns (bool);
+
+    function cashoutTicketWithLegOdds(
+        address _ticket,
+        uint[] calldata approvedOddsPerLeg,
+        bool[] calldata isLegSettled,
+        address _recipient
+    ) external returns (uint cashoutAmount);
 }

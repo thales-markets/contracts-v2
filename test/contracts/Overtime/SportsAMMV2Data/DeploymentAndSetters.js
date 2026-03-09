@@ -31,30 +31,39 @@ describe('SportsAMMV2Data Deployment And Setters', () => {
 	});
 
 	describe('Setters', () => {
-		it('Should set the new Sports AMM', async () => {
+		it('Should set the new Sports AMM and risk manager (single setter)', async () => {
+			// non-owner
 			await expect(
-				sportsAMMV2Data.connect(secondAccount).setSportsAMM(thirdAccount)
+				sportsAMMV2Data
+					.connect(secondAccount)
+					.setAddresses(thirdAccount.address, thirdAccount.address)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await sportsAMMV2Data.setSportsAMM(thirdAccount);
+			// owner updates state
+			await sportsAMMV2Data.setAddresses(thirdAccount.address, thirdAccount.address);
+
 			expect(await sportsAMMV2Data.sportsAMM()).to.equal(thirdAccount.address);
-
-			await expect(sportsAMMV2Data.setSportsAMM(thirdAccount))
-				.to.emit(sportsAMMV2Data, 'SportAMMChanged')
-				.withArgs(thirdAccount.address);
-		});
-
-		it('Should set the new risk manager', async () => {
-			await expect(
-				sportsAMMV2Data.connect(secondAccount).setRiskManager(thirdAccount)
-			).to.be.revertedWith('Only the contract owner may perform this action');
-
-			await sportsAMMV2Data.setRiskManager(thirdAccount);
 			expect(await sportsAMMV2Data.riskManager()).to.equal(thirdAccount.address);
 
-			await expect(sportsAMMV2Data.setRiskManager(thirdAccount))
-				.to.emit(sportsAMMV2Data, 'RiskManagerChanged')
-				.withArgs(thirdAccount.address);
+			// emits merged event
+			await expect(sportsAMMV2Data.setAddresses(thirdAccount.address, thirdAccount.address))
+				.to.emit(sportsAMMV2Data, 'AddressesUpdated')
+				.withArgs(thirdAccount.address, thirdAccount.address);
+		});
+
+		it('Should allow setting only one address by passing the current value for the other', async () => {
+			const currentSportsAMM = await sportsAMMV2Data.sportsAMM();
+			const currentRiskManager = await sportsAMMV2Data.riskManager();
+
+			// change only sportsAMM
+			await sportsAMMV2Data.setAddresses(thirdAccount.address, currentRiskManager);
+			expect(await sportsAMMV2Data.sportsAMM()).to.equal(thirdAccount.address);
+			expect(await sportsAMMV2Data.riskManager()).to.equal(currentRiskManager);
+
+			// change only riskManager
+			await sportsAMMV2Data.setAddresses(currentSportsAMM, thirdAccount.address);
+			expect(await sportsAMMV2Data.sportsAMM()).to.equal(currentSportsAMM);
+			expect(await sportsAMMV2Data.riskManager()).to.equal(thirdAccount.address);
 		});
 	});
 });

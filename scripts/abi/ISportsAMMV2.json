@@ -1,5 +1,39 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ticket",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "approvedOddsPerLeg",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "isLegSettled",
+        "type": "bool[]"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipient",
+        "type": "address"
+      }
+    ],
+    "name": "cashoutTicketWithLegOdds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "cashoutAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "defaultCollateral",
     "outputs": [
