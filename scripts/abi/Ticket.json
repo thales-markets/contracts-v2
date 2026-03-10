@@ -327,24 +327,18 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_marketIndex",
-        "type": "uint256"
-      }
-    ],
-    "name": "getCashoutDataForLeg",
+    "inputs": [],
+    "name": "getCashoutData",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "approvedOdd",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "approvedOddsPerLeg",
+        "type": "uint256[]"
       },
       {
-        "internalType": "bool",
-        "name": "wasSettled",
-        "type": "bool"
+        "internalType": "bool[]",
+        "name": "wasSettledPerLeg",
+        "type": "bool[]"
       }
     ],
     "stateMutability": "view",

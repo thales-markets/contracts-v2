@@ -229,7 +229,7 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		expectApprox(cashoutQuote, expectedQuote, TOL, 'cashoutQuote');
 	});
 
-	it('4) getCashoutDataForLeg reverts before ticket is cashed out', async () => {
+	it('4) getCashoutData reverts before ticket is cashed out', async () => {
 		const {
 			sportsAMMV2,
 			sportsAMMV2Manager,
@@ -253,7 +253,7 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 			legs,
 		});
 
-		await expect(ticket.getCashoutDataForLeg(0)).to.be.revertedWith('Ticket not cashed out');
+		await expect(ticket.getCashoutData()).to.be.revertedWith('Ticket not cashed out');
 	});
 
 	it('5) stores approved cashout odds and settled flags per leg on successful cashout', async () => {
@@ -306,13 +306,15 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 
 		expect(await ticket.cashedOut()).to.eq(true);
 
-		const [approvedOdd0, wasSettled0] = await ticket.getCashoutDataForLeg(0);
-		const [approvedOdd1, wasSettled1] = await ticket.getCashoutDataForLeg(1);
+		const [storedApprovedOdds, storedSettledFlags] = await ticket.getCashoutData();
 
-		expect(approvedOdd0).to.eq(approvedOddsPerLeg[0]);
-		expect(wasSettled0).to.eq(false);
+		expect(storedApprovedOdds.length).to.eq(2);
+		expect(storedSettledFlags.length).to.eq(2);
 
-		expect(approvedOdd1).to.eq(approvedOddsPerLeg[1]);
-		expect(wasSettled1).to.eq(false);
+		expect(storedApprovedOdds[0]).to.eq(approvedOddsPerLeg[0]);
+		expect(storedSettledFlags[0]).to.eq(false);
+
+		expect(storedApprovedOdds[1]).to.eq(approvedOddsPerLeg[1]);
+		expect(storedSettledFlags[1]).to.eq(false);
 	});
 });

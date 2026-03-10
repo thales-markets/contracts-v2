@@ -305,17 +305,22 @@ contract Ticket {
     }
 
     /**
-     * @notice Returns stored cashout data for a given leg.
-     * @param _marketIndex Index of the leg (0..numOfMarkets-1)
-     * @return approvedOdd Approved cashout odd used for this leg
-     * @return wasSettled Whether the leg was already settled when cashout occurred
+     * @notice Returns stored cashout data for all legs.
+     * @return approvedOddsPerLeg Approved odds used for each leg during cashout
+     * @return wasSettledPerLeg Whether each leg was settled at the time of cashout
      */
-    function getCashoutDataForLeg(uint _marketIndex) external view returns (uint approvedOdd, bool wasSettled) {
-        require(_marketIndex < numOfMarkets, "Invalid market index");
+    function getCashoutData() external view returns (uint[] memory approvedOddsPerLeg, bool[] memory wasSettledPerLeg) {
         require(cashedOut, "Ticket not cashed out");
 
-        approvedOdd = cashoutOddsPerLeg[_marketIndex];
-        wasSettled = cashoutLegWasSettled[_marketIndex];
+        uint legs = numOfMarkets;
+
+        approvedOddsPerLeg = new uint[](legs);
+        wasSettledPerLeg = new bool[](legs);
+
+        for (uint i; i < legs; ++i) {
+            approvedOddsPerLeg[i] = cashoutOddsPerLeg[i];
+            wasSettledPerLeg[i] = cashoutLegWasSettled[i];
+        }
     }
 
     function _cashoutProbTotals(
