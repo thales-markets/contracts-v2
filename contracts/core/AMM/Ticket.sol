@@ -78,6 +78,12 @@ contract Ticket {
     bool public cashedOut;
     uint public cashoutPayout;
 
+    // Snapshot of approved cashout odds at the moment of cashout
+    mapping(uint => uint) private cashoutOddsPerLeg;
+
+    // Whether the leg was already settled when cashout happened
+    mapping(uint => bool) private cashoutLegWasSettled;
+
     /* ========== CONSTRUCTOR and INITIALIZERS========== */
 
     /// @notice initialize the ticket contract
@@ -298,6 +304,20 @@ contract Ticket {
         payoutAfterFee = (buyInAmount * cashoutQuote) / ONE;
     }
 
+    /**
+     * @notice Returns stored cashout data for a given leg.
+     * @param _marketIndex Index of the leg (0..numOfMarkets-1)
+     * @return approvedOdd Approved cashout odd used for this leg
+     * @return wasSettled Whether the leg was already settled when cashout occurred
+     */
+    function getCashoutDataForLeg(uint _marketIndex) external view returns (uint approvedOdd, bool wasSettled) {
+        require(_marketIndex < numOfMarkets, "Invalid market index");
+        require(cashedOut, "Ticket not cashed out");
+
+        approvedOdd = cashoutOddsPerLeg[_marketIndex];
+        wasSettled = cashoutLegWasSettled[_marketIndex];
+    }
+
     function _cashoutProbTotals(
         uint[] calldata approvedOddsPerLeg,
         bool[] calldata isLegSettled
@@ -481,6 +501,25 @@ contract Ticket {
         emit CashedOut(_recipient, _cashoutAmount);
 
         return _cashoutAmount;
+    }
+
+    /**
+     * @notice Stores the approved cashout odds and settled flags per leg.
+     * @dev Callable only by AMM. Intended to be called immediately before successful cashout.
+     * @param _approvedOddsPerLeg Approved cashout odds per leg.
+     * @param _isLegSettled Whether each leg was settled at cashout time.
+     */
+    function setCashoutData(uint[] calldata _approvedOddsPerLeg, bool[] calldata _isLegSettled) external onlyAMM notPaused {
+        require(!resolved, "Ticket already resolved");
+
+        uint legs = numOfMarkets;
+        require(_approvedOddsPerLeg.length == legs, "Invalid approved odds length");
+        require(_isLegSettled.length == legs, "Invalid settled flags length");
+
+        for (uint i = 0; i < legs; ++i) {
+            cashoutOddsPerLeg[i] = _approvedOddsPerLeg[i];
+            cashoutLegWasSettled[i] = _isLegSettled[i];
+        }
     }
 
     /// @notice expire ticket

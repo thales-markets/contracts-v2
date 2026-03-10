@@ -561,6 +561,9 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         (, uint payoutAfterCashoutFee) = ticket.getCashoutQuoteAndPayout(approvedOddsPerLeg, isLegSettled);
         if (payoutAfterCashoutFee == 0) revert IllegalInputAmounts();
 
+        // Try storing snapshot (new tickets support this, old ones don't)
+        try ticket.setCashoutData(approvedOddsPerLeg, isLegSettled) {} catch {}
+
         cashoutAmount = ticket.cashout(payoutAfterCashoutFee, _recipient);
 
         IERC20 collateral = ticket.collateral();

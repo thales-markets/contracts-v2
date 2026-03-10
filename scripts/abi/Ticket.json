@@ -329,6 +329,30 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_marketIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCashoutDataForLeg",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "approvedOdd",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "wasSettled",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256[]",
         "name": "approvedOddsPerLeg",
         "type": "uint256[]"
@@ -826,6 +850,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "_approvedOddsPerLeg",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "_isLegSettled",
+        "type": "bool[]"
+      }
+    ],
+    "name": "setCashoutData",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
