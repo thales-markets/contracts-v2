@@ -440,9 +440,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         address _user = ticketToUser[_resolvedSpeedMarket];
         if (_user == address(0)) revert UnknownTicket();
         uint earned;
-        if(ISpeedMarket(_resolvedSpeedMarket).isUserWinner()) {
+        if (ISpeedMarket(_resolvedSpeedMarket).isUserWinner()) {
             earned = _resolveMarket(_user, IERC20(_collateral), _exercized, _buyInAmount);
-        } 
+        }
         if (isChained) {
             if (!activeChainedSpeedMarketsPerUser[_user].contains(_resolvedSpeedMarket)) revert UnknownActiveTicket();
 
