@@ -333,7 +333,7 @@
   },
   {
     "inputs": [],
-    "name": "getCashoutData",
+    "name": "getCashoutPerLegData",
     "outputs": [
       {
         "internalType": "uint256[]",
@@ -864,7 +864,7 @@
         "type": "bool[]"
       }
     ],
-    "name": "setCashoutData",
+    "name": "setCashoutPerLegData",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

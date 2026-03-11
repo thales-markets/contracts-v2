@@ -82,7 +82,7 @@ contract Ticket {
     mapping(uint => uint) private cashoutOddsPerLeg;
 
     // Whether the leg was already settled when cashout happened
-    mapping(uint => bool) private cashoutLegWasSettled;
+    mapping(uint => bool) private cashoutWasSettledPerLeg;
 
     /* ========== CONSTRUCTOR and INITIALIZERS========== */
 
@@ -309,7 +309,11 @@ contract Ticket {
      * @return approvedOddsPerLeg Approved odds used for each leg during cashout
      * @return wasSettledPerLeg Whether each leg was settled at the time of cashout
      */
-    function getCashoutData() external view returns (uint[] memory approvedOddsPerLeg, bool[] memory wasSettledPerLeg) {
+    function getCashoutPerLegData()
+        external
+        view
+        returns (uint[] memory approvedOddsPerLeg, bool[] memory wasSettledPerLeg)
+    {
         require(cashedOut, "Ticket not cashed out");
 
         uint legs = numOfMarkets;
@@ -319,7 +323,7 @@ contract Ticket {
 
         for (uint i; i < legs; ++i) {
             approvedOddsPerLeg[i] = cashoutOddsPerLeg[i];
-            wasSettledPerLeg[i] = cashoutLegWasSettled[i];
+            wasSettledPerLeg[i] = cashoutWasSettledPerLeg[i];
         }
     }
 
@@ -514,7 +518,10 @@ contract Ticket {
      * @param _approvedOddsPerLeg Approved cashout odds per leg.
      * @param _isLegSettled Whether each leg was settled at cashout time.
      */
-    function setCashoutData(uint[] calldata _approvedOddsPerLeg, bool[] calldata _isLegSettled) external onlyAMM notPaused {
+    function setCashoutPerLegData(
+        uint[] calldata _approvedOddsPerLeg,
+        bool[] calldata _isLegSettled
+    ) external onlyAMM notPaused {
         require(!resolved, "Ticket already resolved");
 
         uint legs = numOfMarkets;
@@ -523,7 +530,7 @@ contract Ticket {
 
         for (uint i = 0; i < legs; ++i) {
             cashoutOddsPerLeg[i] = _approvedOddsPerLeg[i];
-            cashoutLegWasSettled[i] = _isLegSettled[i];
+            cashoutWasSettledPerLeg[i] = _isLegSettled[i];
         }
     }
 

@@ -229,7 +229,7 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		expectApprox(cashoutQuote, expectedQuote, TOL, 'cashoutQuote');
 	});
 
-	it('4) getCashoutData reverts before ticket is cashed out', async () => {
+	it('4) getCashoutPerLegData reverts before ticket is cashed out', async () => {
 		const {
 			sportsAMMV2,
 			sportsAMMV2Manager,
@@ -253,7 +253,7 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 			legs,
 		});
 
-		await expect(ticket.getCashoutData()).to.be.revertedWith('Ticket not cashed out');
+		await expect(ticket.getCashoutPerLegData()).to.be.revertedWith('Ticket not cashed out');
 	});
 
 	it('5) stores approved cashout odds and settled flags per leg on successful cashout', async () => {
@@ -306,7 +306,7 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 
 		expect(await ticket.cashedOut()).to.eq(true);
 
-		const [storedApprovedOdds, storedSettledFlags] = await ticket.getCashoutData();
+		const [storedApprovedOdds, storedSettledFlags] = await ticket.getCashoutPerLegData();
 
 		expect(storedApprovedOdds.length).to.eq(2);
 		expect(storedSettledFlags.length).to.eq(2);

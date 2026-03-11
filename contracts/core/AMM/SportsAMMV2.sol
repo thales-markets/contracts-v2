@@ -562,7 +562,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (payoutAfterCashoutFee == 0) revert IllegalInputAmounts();
 
         // Try storing snapshot (new tickets support this, old ones don't)
-        try ticket.setCashoutData(approvedOddsPerLeg, isLegSettled) {} catch {}
+        try ticket.setCashoutPerLegData(approvedOddsPerLeg, isLegSettled) {} catch {}
 
         cashoutAmount = ticket.cashout(payoutAfterCashoutFee, _recipient);
 
