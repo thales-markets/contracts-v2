@@ -332,6 +332,24 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getCashoutPerLegData",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "approvedOddsPerLeg",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "wasSettledPerLeg",
+        "type": "bool[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256[]",
@@ -831,6 +849,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "_approvedOddsPerLeg",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "_isLegSettled",
+        "type": "bool[]"
+      }
+    ],
+    "name": "setCashoutPerLegData",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

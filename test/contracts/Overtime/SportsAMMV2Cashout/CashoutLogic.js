@@ -228,4 +228,93 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		expectApprox(payoutAfterFee, expectedPayout, TOL, 'payoutAfterFee');
 		expectApprox(cashoutQuote, expectedQuote, TOL, 'cashoutQuote');
 	});
+
+	it('4) getCashoutPerLegData reverts before ticket is cashed out', async () => {
+		const {
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			sportsAMMV2LiquidityPool,
+			tradeDataTenMarketsCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture);
+
+		const { firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture);
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+
+		const legs = [tradeDataTenMarketsCurrentRound[0], tradeDataTenMarketsCurrentRound[1]];
+
+		const ticket = await buyParlayAndGetTicket({
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			firstTrader,
+			legs,
+		});
+
+		await expect(ticket.getCashoutPerLegData()).to.be.revertedWith('Ticket not cashed out');
+	});
+
+	it('5) stores approved cashout odds and settled flags per leg on successful cashout', async () => {
+		const {
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			sportsAMMV2LiquidityPool,
+			tradeDataTenMarketsCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture);
+
+		const { owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture);
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+
+		const legs = [tradeDataTenMarketsCurrentRound[0], tradeDataTenMarketsCurrentRound[1]];
+
+		const ticket = await buyParlayAndGetTicket({
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			firstTrader,
+			legs,
+		});
+
+		await sportsAMMV2
+			.connect(owner)
+			.setBettingProcessors(
+				await sportsAMMV2.liveTradingProcessor(),
+				await sportsAMMV2.sgpTradingProcessor(),
+				await sportsAMMV2.freeBetsHolder(),
+				owner.address
+			);
+
+		const storedLeg0 = await ticket.getMarketOdd(0);
+		const storedLeg1 = await ticket.getMarketOdd(1);
+
+		const approvedOddsPerLeg = [(storedLeg0 * 101n) / 100n, (storedLeg1 * 99n) / 100n];
+		const isLegSettled = [false, false];
+
+		await sportsAMMV2
+			.connect(owner)
+			.cashoutTicketWithLegOdds(
+				ticket.target,
+				approvedOddsPerLeg,
+				isLegSettled,
+				firstTrader.address
+			);
+
+		expect(await ticket.cashedOut()).to.eq(true);
+
+		const [storedApprovedOdds, storedSettledFlags] = await ticket.getCashoutPerLegData();
+
+		expect(storedApprovedOdds.length).to.eq(2);
+		expect(storedSettledFlags.length).to.eq(2);
+
+		expect(storedApprovedOdds[0]).to.eq(approvedOddsPerLeg[0]);
+		expect(storedSettledFlags[0]).to.eq(false);
+
+		expect(storedApprovedOdds[1]).to.eq(approvedOddsPerLeg[1]);
+		expect(storedSettledFlags[1]).to.eq(false);
+	});
 });
