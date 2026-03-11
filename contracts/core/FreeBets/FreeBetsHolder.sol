@@ -18,6 +18,10 @@ import "../../interfaces/ISGPTradingProcessor.sol";
 
 import "./../AMM/Ticket.sol";
 
+interface ISpeedMarket {
+    function isUserWinner() external view returns (bool);
+}
+
 contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
     using AddressSetLib for AddressSetLib.AddressSet;
@@ -435,8 +439,10 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         if (msg.sender != speedMarketsAMMResolver) revert CallerNotAllowed();
         address _user = ticketToUser[_resolvedSpeedMarket];
         if (_user == address(0)) revert UnknownTicket();
-        uint earned = _resolveMarket(_user, IERC20(_collateral), _exercized, _buyInAmount);
-
+        uint earned;
+        if(ISpeedMarket(_resolvedSpeedMarket).isUserWinner()) {
+            earned = _resolveMarket(_user, IERC20(_collateral), _exercized, _buyInAmount);
+        } 
         if (isChained) {
             if (!activeChainedSpeedMarketsPerUser[_user].contains(_resolvedSpeedMarket)) revert UnknownActiveTicket();
 
