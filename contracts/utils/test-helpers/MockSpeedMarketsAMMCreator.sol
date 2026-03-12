@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IFreeBetsHolder} from "../../interfaces/IFreeBetsHolder.sol";
+import {MockSpeedMarket} from "./MockSpeedMarket.sol";
 
 /// @title Mock speed/chained markets creator for testing freeBetsHolder interactions
 contract MockSpeedMarketsAMMCreator {
@@ -128,9 +129,6 @@ contract MockSpeedMarketsAMMCreator {
         }
 
         uint8 createdSize;
-        address mockSpeedMarketAddress = address(
-            uint160(uint256(keccak256(abi.encodePacked("MOCK_SPEED_MARKET", block.timestamp))))
-        );
 
         // process all pending speed markets
         for (uint8 i = 0; i < pendingSpeedMarkets.length; i++) {
@@ -140,6 +138,9 @@ contract MockSpeedMarketsAMMCreator {
                 // too late for processing
                 continue;
             }
+
+            MockSpeedMarket mockMarket = new MockSpeedMarket(true);
+            address mockSpeedMarketAddress = address(mockMarket);
 
             // Mock successful creation
             if (pendingSpeedMarket.user == freeBetsHolder) {
@@ -214,9 +215,6 @@ contract MockSpeedMarketsAMMCreator {
         }
 
         uint8 createdSize;
-        address mockChainedSpeedMarketAddress = address(
-            uint160(uint256(keccak256(abi.encodePacked("MOCK_CHAINED_SPEED_MARKET", block.timestamp))))
-        );
 
         // process all pending chained speed markets
         for (uint8 i = 0; i < pendingChainedSpeedMarkets.length; i++) {
@@ -226,6 +224,9 @@ contract MockSpeedMarketsAMMCreator {
                 // too late for processing
                 continue;
             }
+
+            MockSpeedMarket mockMarket = new MockSpeedMarket(true);
+            address mockChainedSpeedMarketAddress = address(mockMarket);
 
             // Mock successful creation
             if (pendingChainedSpeedMarket.user == freeBetsHolder) {
