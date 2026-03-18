@@ -20,8 +20,8 @@ describe('CashoutProcessor (E2E)', () => {
 		sportsAMMV2Manager,
 		sportsAMMV2ResultManager,
 		cashoutProcessor,
-		collateral, // used as "LINK" like other processors
-		sportsAMMV2RiskManager; // attached from sportsAMMV2.riskManager()
+		collateral,
+		sportsAMMV2RiskManager;
 
 	const ONE = 10n ** 18n;
 	const addr = (c) => (c?.target ? c.target : c.address);
@@ -31,11 +31,11 @@ describe('CashoutProcessor (E2E)', () => {
 		const jobSpecId = ethers.hexlify(ethers.randomBytes(32));
 
 		cashoutProcessor = await CashoutProcessor.connect(owner).deploy(
-			addr(collateral), // "link"
+			addr(collateral),
 			addr(mockChainlinkOracle),
 			addr(sportsAMMV2),
 			jobSpecId,
-			0 // paymentAmount = 0 (no ERC677 transferAndCall needed)
+			0
 		);
 		await cashoutProcessor.waitForDeployment();
 
@@ -50,15 +50,9 @@ describe('CashoutProcessor (E2E)', () => {
 		const legs = [tradeDataTenMarketsCurrentRound[0], tradeDataTenMarketsCurrentRound[1]];
 		const quote = await sportsAMMV2.tradeQuote(legs, BUY_IN_AMOUNT, ZERO_ADDRESS, false);
 
-		await sportsAMMV2.connect(firstTrader).trade(
-			legs,
-			BUY_IN_AMOUNT,
-			quote.totalQuote,
-			0, // trade additional slippage not relevant here
-			ZERO_ADDRESS,
-			ZERO_ADDRESS,
-			false
-		);
+		await sportsAMMV2
+			.connect(firstTrader)
+			.trade(legs, BUY_IN_AMOUNT, quote.totalQuote, 0, ZERO_ADDRESS, ZERO_ADDRESS, false);
 
 		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 		const ticketAddress = activeTickets[0];
@@ -67,20 +61,13 @@ describe('CashoutProcessor (E2E)', () => {
 		return TicketContract.attach(ticketAddress);
 	}
 
-	// helper: 10-leg parlay (use all 10 legs)
 	async function buyParlayTicket10Legs() {
 		const legs = tradeDataTenMarketsCurrentRound;
 		const quote = await sportsAMMV2.tradeQuote(legs, BUY_IN_AMOUNT, ZERO_ADDRESS, false);
 
-		await sportsAMMV2.connect(firstTrader).trade(
-			legs,
-			BUY_IN_AMOUNT,
-			quote.totalQuote,
-			0, // trade additional slippage not relevant here
-			ZERO_ADDRESS,
-			ZERO_ADDRESS,
-			false
-		);
+		await sportsAMMV2
+			.connect(firstTrader)
+			.trade(legs, BUY_IN_AMOUNT, quote.totalQuote, 0, ZERO_ADDRESS, ZERO_ADDRESS, false);
 
 		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
 		const ticketAddress = activeTickets[0];
@@ -90,7 +77,7 @@ describe('CashoutProcessor (E2E)', () => {
 	}
 
 	async function getLastRequestId() {
-		const rc = await cashoutProcessor.requestCounter(); // uint -> bigint in ethers v6
+		const rc = await cashoutProcessor.requestCounter();
 		const idx = rc - 1n;
 		return await cashoutProcessor.counterToRequestId(idx);
 	}
@@ -110,7 +97,6 @@ describe('CashoutProcessor (E2E)', () => {
 	}
 
 	async function ensureExactPositionResultType(typeId) {
-		// Avoid "Result type not set"
 		await sportsAMMV2ResultManager
 			.connect(owner)
 			.setResultTypesPerMarketTypes([typeId], [RESULT_TYPE.ExactPosition]);
@@ -147,6 +133,29 @@ describe('CashoutProcessor (E2E)', () => {
 			.cancelMarket(market.gameId, market.typeId, market.playerId || 0, market.line);
 	}
 
+	async function getCashoutCooldown() {
+		return BigInt((await sportsAMMV2RiskManager.getCashoutCooldown()).toString());
+	}
+
+	async function moveToCashoutCooldown(ticket) {
+		const createdAt = BigInt((await ticket.createdAt()).toString());
+		const cooldown = await getCashoutCooldown();
+		await time.increaseTo(createdAt + cooldown);
+		return { createdAt, cooldown };
+	}
+
+	async function ensureExecutionDelayCoversCooldown(extraBuffer = 10n) {
+		const cooldown = await getCashoutCooldown();
+		const delay = cooldown + extraBuffer;
+
+		if (delay > BigInt(Number.MAX_SAFE_INTEGER)) {
+			throw new Error('Delay too large for JS number conversion');
+		}
+
+		await cashoutProcessor.connect(owner).setMaxAllowedExecutionDelay(Number(delay));
+		return delay;
+	}
+
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
@@ -161,7 +170,6 @@ describe('CashoutProcessor (E2E)', () => {
 		({ owner, firstLiquidityProvider, firstTrader, secondTrader } =
 			await loadFixture(deployAccountsFixture));
 
-		// IMPORTANT: sportsAMMV2.riskManager() is an address, so attach the contract
 		sportsAMMV2RiskManager = await ethers.getContractAt(
 			'SportsAMMV2RiskManager',
 			await sportsAMMV2.riskManager()
@@ -175,17 +183,17 @@ describe('CashoutProcessor (E2E)', () => {
 		await deployCashoutProcessorAndWire();
 	});
 
-	// -----------------------------
-	// Original happy-path suite
-	// -----------------------------
-
 	it('1) happy path: requestCashout + fulfill => ticket cashed out, becomes inactive', async () => {
 		const ticket = await buyParlayTicket2Legs();
+
+		await ensureExecutionDelayCoversCooldown();
 
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
 
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
+
+		await moveToCashoutCooldown(ticket);
 
 		await mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg);
 
@@ -204,7 +212,6 @@ describe('CashoutProcessor (E2E)', () => {
 			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, false, expectedOddsPerLeg)
 		).to.be.revertedWithCustomError(cashoutProcessor, 'CashoutNotAllowed');
 
-		// revert => no state persisted
 		expect(await cashoutProcessor.requestIdFulfilled(requestId)).to.equal(false);
 		expect(await cashoutProcessor.requestIdToFulfillAllowed(requestId)).to.equal(false);
 	});
@@ -234,8 +241,6 @@ describe('CashoutProcessor (E2E)', () => {
 
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
 
-		// For implied probabilities: "worse for user cashout" = LOWER approved odd.
-		// With slippage=0, approved must be >= expected for pending legs.
 		const approvedOddsTooLow = [expectedOddsPerLeg[0] - 1n, expectedOddsPerLeg[1]];
 
 		await expect(
@@ -252,16 +257,12 @@ describe('CashoutProcessor (E2E)', () => {
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
 
 		const m0 = tradeDataTenMarketsCurrentRound[0];
-		await voidLeg(m0); // flips onchain status
+		await voidLeg(m0);
 
 		await expect(
 			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg)
 		).to.be.revertedWithCustomError(cashoutProcessor, 'LegStatusMismatch');
 	});
-
-	// -----------------------------
-	// Added coverage (request-level)
-	// -----------------------------
 
 	it('6) request: ticket=0 => InvalidTicket', async () => {
 		const ticket = await buyParlayTicket2Legs();
@@ -366,19 +367,13 @@ describe('CashoutProcessor (E2E)', () => {
 		).to.be.revertedWithCustomError(cashoutProcessor, 'SettledLegOddMismatch');
 	});
 
-	// -----------------------------
-	// NEW: maxSupportedOdds clamp -> TicketNotCashoutable
-	// -----------------------------
 	it('14) request: max odds clamp (ticket.totalQuote == maxSupportedOdds) => TicketNotCashoutable', async () => {
-		// Read existing params, only override maxSupportedOdds
 		const minBuyInAmount = await sportsAMMV2RiskManager.minBuyInAmount();
 		const maxTicketSize = await sportsAMMV2RiskManager.maxTicketSize();
 		const maxSupportedAmount = await sportsAMMV2RiskManager.maxSupportedAmount();
 		const maxAllowedSystemCombinations =
 			await sportsAMMV2RiskManager.maxAllowedSystemCombinations();
 
-		// Force clamp deterministically: set "min implied prob" to 1e18
-		// => any computed totalQuote < 1e18 will be clamped to 1e18
 		const forcedMaxSupportedOdds = ONE;
 
 		await sportsAMMV2RiskManager
@@ -393,7 +388,6 @@ describe('CashoutProcessor (E2E)', () => {
 
 		const ticket = await buyParlayTicket10Legs();
 
-		// sanity: ticket got clamped
 		expect(await ticket.totalQuote()).to.equal(forcedMaxSupportedOdds);
 
 		const expectedOddsPerLeg = [];
@@ -410,10 +404,6 @@ describe('CashoutProcessor (E2E)', () => {
 				.requestCashout(addr(ticket), expectedOddsPerLeg, isLegResolved, 0n)
 		).to.be.revertedWithCustomError(cashoutProcessor, 'TicketNotCashoutable');
 	});
-
-	// -----------------------------
-	// Added coverage (fulfill-level / plumbing)
-	// -----------------------------
 
 	it('15) fulfill: approvedOdds length mismatch => InvalidLegArraysLength', async () => {
 		const ticket = await buyParlayTicket2Legs();
@@ -437,14 +427,18 @@ describe('CashoutProcessor (E2E)', () => {
 
 	it('17) slippage: additionalSlippage allows small decrease but rejects larger', async () => {
 		const ticket = await buyParlayTicket2Legs();
+
+		await ensureExecutionDelayCoversCooldown();
+
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
 
-		const onePct = ethers.parseEther('0.01'); // 1% in 1e18
+		const onePct = ethers.parseEther('0.01');
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, onePct);
 
-		// ok: -0.5% (approved >= expected*(1-1%))
 		const approvedOk = [(expectedOddsPerLeg[0] * 995n) / 1000n, expectedOddsPerLeg[1]];
+
+		await moveToCashoutCooldown(ticket);
 
 		await expect(mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, approvedOk)).to
 			.not.be.reverted;
@@ -455,10 +449,9 @@ describe('CashoutProcessor (E2E)', () => {
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
 
-		const onePct = ethers.parseEther('0.01'); // 1%
+		const onePct = ethers.parseEther('0.01');
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, onePct);
 
-		// too low: -2% (violates approved >= expected*(1-1%))
 		const approvedTooLow = [(expectedOddsPerLeg[0] * 98n) / 100n, expectedOddsPerLeg[1]];
 
 		await expect(
@@ -542,8 +535,13 @@ describe('CashoutProcessor (E2E)', () => {
 
 	it('24) fulfill twice: second attempt fails at ChainlinkClient oracle guard ("Source must be the oracle of the request")', async () => {
 		const ticket = await buyParlayTicket2Legs();
+
+		await ensureExecutionDelayCoversCooldown();
+
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, [false, false], 0n);
+
+		await moveToCashoutCooldown(ticket);
 
 		await mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg);
 
@@ -581,10 +579,6 @@ describe('CashoutProcessor (E2E)', () => {
 		expect(arrays.isLegResolved[0]).to.equal(false);
 		expect(arrays.isLegResolved[1]).to.equal(false);
 	});
-
-	// -----------------------------
-	// Added coverage (AMM / Ticket / LP integration)
-	// -----------------------------
 
 	it('26) SportsAMM: only cashoutProcessor can call cashoutTicketWithLegOdds', async () => {
 		const ticket = await buyParlayTicket2Legs();
@@ -640,10 +634,14 @@ describe('CashoutProcessor (E2E)', () => {
 	it('29) LP integration: after successful cashout, LP marks ticket exercised in its round', async () => {
 		const ticket = await buyParlayTicket2Legs();
 
+		await ensureExecutionDelayCoversCooldown();
+
 		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
 		const isLegResolved = [false, false];
 
 		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
+
+		await moveToCashoutCooldown(ticket);
 
 		await mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg);
 
@@ -654,5 +652,52 @@ describe('CashoutProcessor (E2E)', () => {
 		);
 
 		expect(exercised).to.equal(true);
+	});
+
+	it('30) cooldown: fulfill during cooldown reverts with RequestTimedOut or ticket cooldown revert depending on timing config', async () => {
+		const ticket = await buyParlayTicket2Legs();
+
+		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
+		const isLegResolved = [false, false];
+
+		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
+
+		await expect(
+			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg)
+		).to.be.reverted;
+	});
+
+	it('31) cooldown: fulfill reverts at cooldown - 1 and succeeds exactly at cooldown timestamp', async () => {
+		const ticket = await buyParlayTicket2Legs();
+
+		const cooldown = await getCashoutCooldown();
+		const delay = cooldown > 0n ? cooldown : 1n;
+		if (delay > BigInt(Number.MAX_SAFE_INTEGER)) {
+			throw new Error('Delay too large for JS number conversion');
+		}
+		await cashoutProcessor.connect(owner).setMaxAllowedExecutionDelay(Number(delay));
+
+		const expectedOddsPerLeg = [await ticket.getMarketOdd(0), await ticket.getMarketOdd(1)];
+		const isLegResolved = [false, false];
+
+		const requestId = await requestCashout(ticket, expectedOddsPerLeg, isLegResolved, 0n);
+
+		const createdAt = BigInt((await ticket.createdAt()).toString());
+
+		if (cooldown > 0n) {
+			await time.setNextBlockTimestamp(createdAt + cooldown - 1n);
+
+			await expect(
+				mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg)
+			).to.be.revertedWith('Not possible during cooldown');
+		}
+
+		await time.setNextBlockTimestamp(createdAt + cooldown);
+
+		await expect(
+			mockChainlinkOracle.connect(owner).fulfillCashout(requestId, true, expectedOddsPerLeg)
+		).to.not.be.reverted;
+
+		expect(await sportsAMMV2Manager.isActiveTicket(addr(ticket))).to.equal(false);
 	});
 });

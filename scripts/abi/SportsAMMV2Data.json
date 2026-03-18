@@ -33,6 +33,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "dataUtils",
+        "type": "address"
+      }
+    ],
+    "name": "DataUtilsUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
@@ -122,6 +135,19 @@
         "internalType": "bool[]",
         "name": "resolvedMarkets",
         "type": "bool[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "dataUtils",
+    "outputs": [
+      {
+        "internalType": "contract SportsAMMV2DataUtils",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -219,7 +245,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -236,7 +262,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -346,7 +372,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "ticketsData",
         "type": "tuple[]"
       },
@@ -422,7 +448,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -439,7 +465,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -549,7 +575,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "freeBetsData",
         "type": "tuple[]"
       },
@@ -625,7 +651,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -642,7 +668,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -752,7 +778,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "stakingBettingProxyData",
         "type": "tuple[]"
       }
@@ -803,7 +829,7 @@
             "type": "int24"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketMarketInfo[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketMarketInfo[]",
         "name": "finalTicketsInfo",
         "type": "tuple[]"
       }
@@ -958,7 +984,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.MarketStakeCalculationInput[]",
+        "internalType": "struct SportsAMMV2DataUtils.MarketStakeCalculationInput[]",
         "name": "inputs",
         "type": "tuple[]"
       }
@@ -1110,7 +1136,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -1127,7 +1153,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -1237,7 +1263,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "ticketsData",
         "type": "tuple[]"
       },
@@ -1313,7 +1339,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -1330,7 +1356,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -1440,7 +1466,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "freeBetsData",
         "type": "tuple[]"
       },
@@ -1516,7 +1542,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -1533,7 +1559,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -1643,7 +1669,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "stakingBettingProxyData",
         "type": "tuple[]"
       }
@@ -1816,7 +1842,7 @@
             "type": "uint256[]"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketLegState[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketLegState[]",
         "name": "out",
         "type": "tuple[]"
       }
@@ -1906,7 +1932,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -1923,7 +1949,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -2033,7 +2059,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -2133,7 +2159,7 @@
                 "type": "tuple[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketData[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
             "name": "marketsData",
             "type": "tuple[]"
           },
@@ -2150,7 +2176,7 @@
                 "type": "int24[]"
               }
             ],
-            "internalType": "struct SportsAMMV2Data.MarketResult[]",
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
             "name": "marketsResult",
             "type": "tuple[]"
           },
@@ -2260,7 +2286,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct SportsAMMV2Data.TicketData[]",
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -2383,6 +2409,19 @@
       }
     ],
     "name": "setAddresses",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract SportsAMMV2DataUtils",
+        "name": "_dataUtils",
+        "type": "address"
+      }
+    ],
+    "name": "setDataUtils",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

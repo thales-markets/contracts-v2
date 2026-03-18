@@ -1,4 +1,4 @@
-const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
+const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
@@ -52,14 +52,36 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		return TicketContract.attach(ticketAddress);
 	}
 
-	// IMPORTANT: your new rule is "2x vig for single remaining leg" which,
-	// with your compounding implementation, means exponent = remainingLegs + 1.
-	// Also: you said you set cashout fee multiplier to 4, so v = safeBoxFee * 4.
 	async function getPerLegVig1e18(sportsAMMV2) {
-		const safeBoxFee = BigInt((await sportsAMMV2.safeBoxFee()).toString()); // 1e18
-		const multiplier = 4n; // <-- you changed this from 5 to 4
-		const v = safeBoxFee * multiplier; // 1e18 fraction
+		const safeBoxFee = BigInt((await sportsAMMV2.safeBoxFee()).toString());
+		const multiplier = 4n;
+		const v = safeBoxFee * multiplier;
 		return { safeBoxFee, multiplier, v };
+	}
+
+	async function getCashoutCooldown(sportsAMMV2) {
+		const riskManagerAddress = await sportsAMMV2.riskManager();
+		const RiskManager = await ethers.getContractFactory('SportsAMMV2RiskManager');
+		const riskManager = RiskManager.attach(riskManagerAddress);
+		return BigInt((await riskManager.getCashoutCooldown()).toString());
+	}
+
+	async function setOwnerAsCashoutProcessor({ sportsAMMV2, owner }) {
+		await sportsAMMV2
+			.connect(owner)
+			.setBettingProcessors(
+				await sportsAMMV2.liveTradingProcessor(),
+				await sportsAMMV2.sgpTradingProcessor(),
+				await sportsAMMV2.freeBetsHolder(),
+				owner.address
+			);
+	}
+
+	async function moveToExactCashoutTimestamp({ ticket, sportsAMMV2 }) {
+		const createdAt = BigInt((await ticket.createdAt()).toString());
+		const cooldown = await getCashoutCooldown(sportsAMMV2);
+		await time.increaseTo(createdAt + cooldown);
+		return { createdAt, cooldown };
 	}
 
 	it('1) pending-only: cashoutQuote & payout follow (orig/live ratio) with compounded vig (+1 exponent rule)', async () => {
@@ -97,14 +119,11 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		const payoutAfterFee = BigInt(res[1].toString());
 
 		const buyIn = BigInt(BUY_IN_AMOUNT.toString());
-
-		// ratio=1 => rawPayout=buyIn (since approved odds == stored odds and all pending)
 		const rawPayout = buyIn;
 
 		const { v } = await getPerLegVig1e18(sportsAMMV2);
 
-		const remainingLegs = 2; // 2 pending legs
-		// New rule implemented via compounding: keep = (1 - v)^(remainingLegs + 1)
+		const remainingLegs = 2;
 		const keepFactor = pow1e18(ONE - v, remainingLegs + 1);
 
 		const expectedPayout = mul1e18(rawPayout, keepFactor);
@@ -178,10 +197,8 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 			legs,
 		});
 
-		// Make sure result type for typeId=0 is set
 		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 
-		// Resolve FIRST leg as WON (set result = the chosen position)
 		const m0 = legs[0];
 		await sportsAMMV2ResultManager.setResultsPerMarkets(
 			[m0.gameId],
@@ -193,36 +210,29 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 		const leg0Stored = BigInt((await ticket.getMarketOdd(0)).toString());
 		const leg1Stored = BigInt((await ticket.getMarketOdd(1)).toString());
 
-		const approvedOddsPerLeg = [leg0Stored, leg1Stored]; // deterministic: same as stored
+		const approvedOddsPerLeg = [leg0Stored, leg1Stored];
 		const isLegSettled = [true, false];
 
 		const res = await ticket.getCashoutQuoteAndPayout(approvedOddsPerLeg, isLegSettled);
 		const cashoutQuote = BigInt(res[0].toString());
 		const payoutAfterFee = BigInt(res[1].toString());
 
-		// ---- expected (match contract math) ----
 		const buyIn = BigInt(BUY_IN_AMOUNT.toString());
 
-		// origProbTotal = leg0 * leg1
 		const origProbTotal = mul1e18(leg0Stored, leg1Stored);
-
-		// liveProbTotal: won leg => ONE, pending => leg1
 		const liveProbTotal = leg1Stored;
 
-		// raw payout = buyIn * (live/orig)
 		const ratio = div1e18(liveProbTotal, origProbTotal);
 		const rawPayout = mul1e18(buyIn, ratio);
 
 		const { v } = await getPerLegVig1e18(sportsAMMV2);
 
 		const remainingLegs = 1;
-		// New rule via compounding: keep = (1 - v)^(remainingLegs + 1) = (1 - v)^2
 		const keepFactor = pow1e18(ONE - v, remainingLegs + 1);
 
 		const expectedPayout = mul1e18(rawPayout, keepFactor);
 		const expectedQuote = div1e18(expectedPayout, buyIn);
 
-		// small rounding dust tolerance (integer division)
 		const TOL = 10n;
 
 		expectApprox(payoutAfterFee, expectedPayout, TOL, 'payoutAfterFee');
@@ -280,14 +290,9 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 			legs,
 		});
 
-		await sportsAMMV2
-			.connect(owner)
-			.setBettingProcessors(
-				await sportsAMMV2.liveTradingProcessor(),
-				await sportsAMMV2.sgpTradingProcessor(),
-				await sportsAMMV2.freeBetsHolder(),
-				owner.address
-			);
+		await setOwnerAsCashoutProcessor({ sportsAMMV2, owner });
+
+		await moveToExactCashoutTimestamp({ ticket, sportsAMMV2 });
 
 		const storedLeg0 = await ticket.getMarketOdd(0);
 		const storedLeg1 = await ticket.getMarketOdd(1);
@@ -316,5 +321,145 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 
 		expect(storedApprovedOdds[1]).to.eq(approvedOddsPerLeg[1]);
 		expect(storedSettledFlags[1]).to.eq(false);
+	});
+
+	it('6) quote can still be fetched during cooldown (cooldown is enforced only on execution)', async () => {
+		const {
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			sportsAMMV2LiquidityPool,
+			tradeDataTenMarketsCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture);
+
+		const { firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture);
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+
+		const legs = [tradeDataTenMarketsCurrentRound[0], tradeDataTenMarketsCurrentRound[1]];
+
+		const ticket = await buyParlayAndGetTicket({
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			firstTrader,
+			legs,
+		});
+
+		const leg0 = await ticket.getMarketOdd(0);
+		const leg1 = await ticket.getMarketOdd(1);
+
+		await expect(ticket.getCashoutQuoteAndPayout([leg0, leg1], [false, false])).to.not.be.reverted;
+	});
+
+	it('7) cashout reverts during cooldown', async () => {
+		const {
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			sportsAMMV2LiquidityPool,
+			tradeDataTenMarketsCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture);
+
+		const { owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture);
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+
+		const legs = [tradeDataTenMarketsCurrentRound[0], tradeDataTenMarketsCurrentRound[1]];
+
+		const ticket = await buyParlayAndGetTicket({
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			firstTrader,
+			legs,
+		});
+
+		await setOwnerAsCashoutProcessor({ sportsAMMV2, owner });
+
+		const storedLeg0 = await ticket.getMarketOdd(0);
+		const storedLeg1 = await ticket.getMarketOdd(1);
+
+		const approvedOddsPerLeg = [storedLeg0, storedLeg1];
+		const isLegSettled = [false, false];
+
+		await expect(
+			sportsAMMV2
+				.connect(owner)
+				.cashoutTicketWithLegOdds(
+					ticket.target,
+					approvedOddsPerLeg,
+					isLegSettled,
+					firstTrader.address
+				)
+		).to.be.revertedWith('Not possible during cooldown');
+	});
+
+	it('8) cashout reverts at cooldown - 1 and succeeds exactly at cooldown timestamp', async () => {
+		const {
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			sportsAMMV2LiquidityPool,
+			tradeDataTenMarketsCurrentRound,
+		} = await loadFixture(deploySportsAMMV2Fixture);
+
+		const { owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture);
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+
+		const legs = [tradeDataTenMarketsCurrentRound[0], tradeDataTenMarketsCurrentRound[1]];
+
+		const ticket = await buyParlayAndGetTicket({
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			firstTrader,
+			legs,
+		});
+
+		await setOwnerAsCashoutProcessor({ sportsAMMV2, owner });
+
+		const storedLeg0 = await ticket.getMarketOdd(0);
+		const storedLeg1 = await ticket.getMarketOdd(1);
+
+		const approvedOddsPerLeg = [storedLeg0, storedLeg1];
+		const isLegSettled = [false, false];
+
+		const createdAt = BigInt((await ticket.createdAt()).toString());
+		const cooldown = await getCashoutCooldown(sportsAMMV2);
+
+		if (cooldown > 0n) {
+			await time.setNextBlockTimestamp(createdAt + cooldown - 1n);
+
+			await expect(
+				sportsAMMV2
+					.connect(owner)
+					.cashoutTicketWithLegOdds(
+						ticket.target,
+						approvedOddsPerLeg,
+						isLegSettled,
+						firstTrader.address
+					)
+			).to.be.revertedWith('Not possible during cooldown');
+		}
+
+		await time.setNextBlockTimestamp(createdAt + cooldown);
+
+		await expect(
+			sportsAMMV2
+				.connect(owner)
+				.cashoutTicketWithLegOdds(
+					ticket.target,
+					approvedOddsPerLeg,
+					isLegSettled,
+					firstTrader.address
+				)
+		).to.not.be.reverted;
+
+		expect(await ticket.cashedOut()).to.eq(true);
 	});
 });

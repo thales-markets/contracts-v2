@@ -22,6 +22,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     uint public constant DEFAULT_DYNAMIC_LIQUIDITY_CUTOFF_DIVIDER = 2e18;
     uint private constant ONE = 1e18;
     uint public constant DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER = 4;
+    uint public constant DEFAULT_CASHOUT_COOLDOWN = 5 minutes;
 
     /* ========== ERRORS ========== */
     error InvalidCap();
@@ -148,6 +149,9 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
     // cashout safe box fee multiplier (0 => use DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER)
     uint public cashoutSafeBoxFeeMultiplier;
+
+    // cashout cooldown in seconds (0 => use DEFAULT_CASHOUT_COOLDOWN)
+    uint public cashoutCooldown;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -361,6 +365,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice Returns cashout safe box fee multiplier (uses default if unset).
     function getCashoutSafeBoxFeeMultiplier() external view returns (uint) {
         return cashoutSafeBoxFeeMultiplier > 0 ? cashoutSafeBoxFeeMultiplier : DEFAULT_CASHOUT_SAFEBOX_FEE_MULTIPLIER;
+    }
+
+    /// @notice Returns cashout cooldown in seconds (uses default if unset).
+    function getCashoutCooldown() external view returns (uint) {
+        return cashoutCooldown > 0 ? cashoutCooldown : DEFAULT_CASHOUT_COOLDOWN;
     }
 
     /* ========== SYSTEM BET UTILS ========== */
@@ -1027,6 +1036,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetCashoutSafeBoxFeeMultiplier(_multiplier);
     }
 
+    /// @notice Sets cashout cooldown in seconds (0 resets to default).
+    /// @param _cooldown New cooldown in seconds
+    function setCashoutCooldown(uint _cooldown) external onlyOwner {
+        cashoutCooldown = _cooldown;
+        emit SetCashoutCooldown(_cooldown);
+    }
+
     /// @notice sets whether a sportsId is future
     /// @param _sportId to set whether is a future
     /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
@@ -1162,4 +1178,5 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetIsSportIdFuture(uint16 _sportId, bool _isFuture);
     event SetSGPEnabledOnSport(uint16 _sportId, bool _isEnabled);
     event SetCashoutSafeBoxFeeMultiplier(uint multiplier);
+    event SetCashoutCooldown(uint cooldown);
 }

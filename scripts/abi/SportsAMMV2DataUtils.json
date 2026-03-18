@@ -1,0 +1,480 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISportsAMMV2Manager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAllActiveGameIdsTypeIdsPlayerIdsLinesForGameIds",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct SportsAMMV2DataUtils.TicketMarketInfo[]",
+        "name": "finalTicketsInfo",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IFreeBetsHolder",
+        "name": "freeBetsHolder",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "collateralAddresses",
+        "type": "address[]"
+      }
+    ],
+    "name": "getFreeBetsDataPerUser",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "freeBetsAmountPerCollateral",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "freeBetsExpiryPerCollateral",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "_riskManager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "gameId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint16",
+            "name": "sportId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "typeId",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint24",
+            "name": "playerId",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "line",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLive",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "position",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "odds",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SportsAMMV2DataUtils.MarketStakeCalculationInput[]",
+        "name": "inputs",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "getMaxStakeAndLiquidityBatch",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "maxStakes",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "availableLiquidity",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISportsAMMV2Manager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "_gameIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_startIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_pageSize",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOnlyActiveGameIdsAndTicketsOf",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "activeGameIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "numOfTicketsPerGameId",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address[][]",
+        "name": "ticketsPerGameId",
+        "type": "address[][]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "tickets",
+        "type": "address[]"
+      }
+    ],
+    "name": "getTicketLegStatesBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ticket",
+            "type": "address"
+          },
+          {
+            "internalType": "bool[]",
+            "name": "resolved",
+            "type": "bool[]"
+          },
+          {
+            "internalType": "bool[]",
+            "name": "voided",
+            "type": "bool[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "marketOdds",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct SportsAMMV2DataUtils.TicketLegState[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISportsAMMV2",
+        "name": "_sportsAMM",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ISportsAMMV2RiskManager",
+        "name": "_riskManager",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "ticketsArray",
+        "type": "address[]"
+      }
+    ],
+    "name": "getTicketsData",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "id",
+            "type": "address"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "gameId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint256",
+                "name": "maturity",
+                "type": "uint256"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint256",
+                "name": "odd",
+                "type": "uint256"
+              },
+              {
+                "components": [
+                  {
+                    "internalType": "uint16",
+                    "name": "typeId",
+                    "type": "uint16"
+                  },
+                  {
+                    "internalType": "uint8",
+                    "name": "position",
+                    "type": "uint8"
+                  },
+                  {
+                    "internalType": "int24",
+                    "name": "line",
+                    "type": "int24"
+                  }
+                ],
+                "internalType": "struct ISportsAMMV2.CombinedPosition[]",
+                "name": "combinedPositions",
+                "type": "tuple[]"
+              }
+            ],
+            "internalType": "struct SportsAMMV2DataUtils.MarketData[]",
+            "name": "marketsData",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "enum ISportsAMMV2ResultManager.MarketPositionStatus",
+                "name": "status",
+                "type": "uint8"
+              },
+              {
+                "internalType": "int24[]",
+                "name": "results",
+                "type": "int24[]"
+              }
+            ],
+            "internalType": "struct SportsAMMV2DataUtils.MarketResult[]",
+            "name": "marketsResult",
+            "type": "tuple[]"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "ticketOwner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "buyInAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalQuote",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "numOfMarkets",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expiry",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLost",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isUserTheWinner",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isExercisable",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "finalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isLive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSystem",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "systemBetDenominator",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSGP",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cashedOut",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPotentiallyCashoutable",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SportsAMMV2DataUtils.TicketData[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
