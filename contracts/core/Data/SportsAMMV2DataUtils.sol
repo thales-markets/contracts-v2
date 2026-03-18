@@ -196,10 +196,8 @@ contract SportsAMMV2DataUtils {
         returns (bytes32[] memory activeGameIds, uint[] memory numOfTicketsPerGameId, address[][] memory ticketsPerGameId)
     {
         _pageSize = _pageSize > _gameIds.length ? _gameIds.length : _pageSize;
-
         uint[] memory ticketsPerGame = new uint[](_pageSize);
         uint counter;
-
         for (uint i = _startIndex; i < _pageSize; ++i) {
             uint numOfTicketsPerGame = manager.numOfTicketsPerGame(_gameIds[i]);
             if (numOfTicketsPerGame > 0) {
@@ -207,14 +205,12 @@ contract SportsAMMV2DataUtils {
                 ticketsPerGame[i] = numOfTicketsPerGame;
             }
         }
-
         activeGameIds = new bytes32[](counter);
         numOfTicketsPerGameId = new uint[](counter);
         ticketsPerGameId = new address[][](counter);
-
         counter = 0;
         for (uint i; i < _gameIds.length; ++i) {
-            if (i < ticketsPerGame.length && ticketsPerGame[i] > 0) {
+            if (ticketsPerGame[i] > 0) {
                 activeGameIds[counter] = _gameIds[i];
                 numOfTicketsPerGameId[counter] = ticketsPerGame[i];
                 ticketsPerGameId[counter] = manager.getTicketsPerGame(0, ticketsPerGame[i], _gameIds[i]);
