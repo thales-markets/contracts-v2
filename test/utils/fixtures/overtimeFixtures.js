@@ -313,6 +313,14 @@ async function deploySportsAMMV2Fixture() {
 
 	const SportsAMMV2DataAddress = await sportsAMMV2Data.getAddress();
 
+	// deploy Sports AMM Data Utils
+	const SportsAMMV2DataUtils = await ethers.getContractFactory('SportsAMMV2DataUtils');
+	const sportsAMMV2DataUtils = await SportsAMMV2DataUtils.deploy();
+	const sportsAMMV2DataUtilsAddress = await sportsAMMV2DataUtils.getAddress();
+
+	// wire utils into data contract
+	await sportsAMMV2Data.setDataUtils(sportsAMMV2DataUtilsAddress);
+
 	// deploy ticket mastercopy
 	const TicketMastercopy = await ethers.getContractFactory('TicketMastercopy');
 	const ticketMastercopy = await TicketMastercopy.deploy();

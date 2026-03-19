@@ -822,12 +822,10 @@ describe('FreeBetsHolder Speed Markets', function () {
 			);
 			expect(balanceAfter).to.equal(balanceBefore);
 
-			expect(await freeBetsHolder.numOfActiveSpeedMarketsPerUser(firstTrader.address)).to.equal(
-				0
+			expect(await freeBetsHolder.numOfActiveSpeedMarketsPerUser(firstTrader.address)).to.equal(0);
+			expect(await freeBetsHolder.numOfResolvedSpeedMarketsPerUser(firstTrader.address)).to.equal(
+				1
 			);
-			expect(
-				await freeBetsHolder.numOfResolvedSpeedMarketsPerUser(firstTrader.address)
-			).to.equal(1);
 
 			const resolvedMarkets = await freeBetsHolder.getResolvedSpeedMarketsPerUser(
 				0,

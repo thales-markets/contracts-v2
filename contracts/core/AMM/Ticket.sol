@@ -483,6 +483,7 @@ contract Ticket {
         require(expectedFinalPayout > 0, "Expected final payout not set");
         require(phase() == Phase.Trading, "Not in trading phase");
         require(!isSystem && !isSGP, "Not possible for System bets or SGPs");
+        require(block.timestamp >= createdAt + sportsAMM.riskManager().getCashoutCooldown(), "Not possible during cooldown");
 
         // Hard rule: cannot cashout if already lost (same as AMM check, defense-in-depth)
         require(!isTicketLost(), "Ticket lost");
