@@ -571,7 +571,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // protocol fees (safeBox/referrer), NOT cashout fee
         _handleFees(ticket.buyInAmount(), _recipient, collateral);
 
-        _finalizeTicketResolution(_ticket, _recipient, collateral, false);
+        _finalizeTicketResolution(_ticket, _recipient, collateral, ticket.isUserTheWinner());
 
         emit TicketCashedOut(_ticket, _recipient, cashoutAmount);
     }
@@ -1033,7 +1033,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             );
         }
 
-        _finalizeTicketResolution(_ticket, ticketOwner, ticketCollateral, false);
+        _finalizeTicketResolution(_ticket, ticketOwner, ticketCollateral, ticket.isUserTheWinner());
     }
 
     function _applyBonusToOdd(uint odd, uint addedPayoutPercentage) internal pure returns (uint) {
