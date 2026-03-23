@@ -478,7 +478,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
 
                 if (!_isSGP && _isInvalidCombinationOnTicket(_tradeData, marketTradeData, i)) revert InvalidCombination();
 
-                _updateRisk(marketTradeData, marketRiskAmount, _buyInAmount);
+                _updateRisk(marketTradeData, marketRiskAmount, _buyInAmount, _isLive);
             }
         }
         if (_isSGP) {
@@ -650,7 +650,12 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         }
     }
 
-    function _updateRisk(ISportsAMMV2.TradeData memory _marketTradeData, uint marketRiskAmount, uint _buyInAmount) internal {
+    function _updateRisk(
+        ISportsAMMV2.TradeData memory _marketTradeData,
+        uint marketRiskAmount,
+        uint _buyInAmount,
+        bool _isLive
+    ) internal {
         bytes32 gameId = _marketTradeData.gameId;
         uint16 typeId = _marketTradeData.typeId;
         uint24 playerId = _marketTradeData.playerId;
@@ -659,7 +664,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         uint256 len = _marketTradeData.odds.length;
         bool isBigMarket = len > 32;
 
-        for (uint256 j; j < len; ++j) {
+        // For live markets we hardcode number of positions to 225. Only write from 0 to position +3, covers 99% of markets.
+        // For others (correct score mostly), its enough to just write the risk to the position being bet on.
+        uint256 endIndex = _isLive ? (position + 3 > len ? len : position + 3) : len;
+
+        for (uint256 j; j < endIndex; ++j) {
             int currentRisk = riskPerMarketTypeAndPosition[gameId][typeId][playerId][j];
 
             if (j == position) {
