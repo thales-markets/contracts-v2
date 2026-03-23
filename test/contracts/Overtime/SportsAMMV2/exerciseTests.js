@@ -6,6 +6,7 @@ const {
 } = require('../../../utils/fixtures/overtimeFixtures');
 const { BUY_IN_AMOUNT, ADDITIONAL_SLIPPAGE, RESULT_TYPE } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
+const { ethers } = require('hardhat');
 
 describe('SportsAMMV2 — expectedFinalPayout', () => {
 	let sportsAMMV2,
@@ -55,9 +56,10 @@ describe('SportsAMMV2 — expectedFinalPayout', () => {
 		const expectedPayout = quoteTHALES.payout; // amount user should receive upon win (excl. fees)
 		const expectedFees = quoteTHALES.fees;
 		const expectedPayoutWithFees = expectedPayout + expectedFees;
+		const safeBoxFee = await sportsAMMV2.safeBoxFee();
 
 		// 2) Execute trade
-		await sportsAMMV2
+		const tradeTx = await sportsAMMV2
 			.connect(firstTrader)
 			.trade(
 				tradeDataCurrentRound,
@@ -69,6 +71,18 @@ describe('SportsAMMV2 — expectedFinalPayout', () => {
 				false
 			);
 
+		// fetch ticket
+		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+		const ticketAddress = activeTickets[0];
+		const TicketFactory = await ethers.getContractFactory('Ticket');
+		const ticket = await TicketFactory.attach(ticketAddress);
+
+		await expect(tradeTx)
+			.to.emit(sportsAMMV2, 'NewTicket')
+			.and.to.emit(sportsAMMV2, 'TicketCreated')
+			.and.to.emit(ticket, 'ExpectedFinalPayoutSet')
+			.withArgs(expectedPayoutWithFees);
+
 		// 3) Resolve market as a win
 		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 		await sportsAMMV2ResultManager.setResultsPerMarkets(
@@ -78,27 +92,27 @@ describe('SportsAMMV2 — expectedFinalPayout', () => {
 			[[0]] // correct position
 		);
 
-		// 4) Fetch the ticket
-		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
-		const ticketAddress = activeTickets[0];
-		const TicketFactory = await ethers.getContractFactory('Ticket');
-		const ticket = await TicketFactory.attach(ticketAddress);
-
-		// 5) Check expectedFinalPayout committed on Ticket
+		// 4) Check expectedFinalPayout committed on Ticket
 		const committed = await ticket.expectedFinalPayout();
 		expect(committed).to.equal(expectedPayoutWithFees);
 
-		// 6) Capture user balance before exercise
+		// 5) Capture user balance before exercise
 		const userBalBefore = await collateralTHALES.balanceOf(firstTrader.address);
 
-		// 7) Exercise via AMM
-		await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
+		// 6) Exercise via AMM
+		await expect(sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0))
+			.to.emit(sportsAMMV2, 'SafeBoxFeePaid')
+			.withArgs(safeBoxFee, expectedFees, collateralTHALESAddress)
+			.and.to.emit(sportsAMMV2, 'TicketResolved')
+			.withArgs(ticketAddress, firstTrader.address, true)
+			.and.to.emit(ticket, 'Resolved')
+			.withArgs(true, false);
 
-		// 8) User should receive exactly "payout" (not payout+fees)
+		// 7) User should receive exactly "payout" (not payout+fees)
 		const userBalAfter = await collateralTHALES.balanceOf(firstTrader.address);
 		expect(userBalAfter - userBalBefore).to.equal(expectedPayout);
 
-		// 9) Ticket should be swept (no leftovers)
+		// 8) Ticket should be swept (no leftovers)
 		expect(await collateralTHALES.balanceOf(ticketAddress)).to.equal(0n);
 	});
 
@@ -113,8 +127,9 @@ describe('SportsAMMV2 — expectedFinalPayout', () => {
 		const expectedPayout = quoteTHALES.payout;
 		const expectedFees = quoteTHALES.fees;
 		const expectedPayoutWithFees = expectedPayout + expectedFees;
+		const safeBoxFee = await sportsAMMV2.safeBoxFee();
 
-		await sportsAMMV2
+		const tradeTx = await sportsAMMV2
 			.connect(firstTrader)
 			.trade(
 				tradeDataCurrentRound,
@@ -126,6 +141,18 @@ describe('SportsAMMV2 — expectedFinalPayout', () => {
 				false
 			);
 
+		// Fetch ticket
+		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+		const ticketAddress = activeTickets[0];
+		const TicketFactory = await ethers.getContractFactory('Ticket');
+		const ticket = await TicketFactory.attach(ticketAddress);
+
+		await expect(tradeTx)
+			.to.emit(sportsAMMV2, 'NewTicket')
+			.and.to.emit(sportsAMMV2, 'TicketCreated')
+			.and.to.emit(ticket, 'ExpectedFinalPayoutSet')
+			.withArgs(expectedPayoutWithFees);
+
 		// Resolve as win
 		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
 		await sportsAMMV2ResultManager.setResultsPerMarkets(
@@ -134,12 +161,6 @@ describe('SportsAMMV2 — expectedFinalPayout', () => {
 			[tradeDataCurrentRound[0].playerId],
 			[[0]]
 		);
-
-		// Fetch ticket
-		const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
-		const ticketAddress = activeTickets[0];
-		const TicketFactory = await ethers.getContractFactory('Ticket');
-		const ticket = await TicketFactory.attach(ticketAddress);
 
 		// Sanity: expectedFinalPayout committed
 		expect(await ticket.expectedFinalPayout()).to.equal(expectedPayoutWithFees);
@@ -162,7 +183,13 @@ describe('SportsAMMV2 — expectedFinalPayout', () => {
 		expect(ticketBalBefore).to.be.greaterThan(expectedPayoutWithFees); // top-up landed
 
 		// 4) Exercise
-		await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
+		await expect(sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0))
+			.to.emit(sportsAMMV2, 'SafeBoxFeePaid')
+			.withArgs(safeBoxFee, expectedFees, collateralTHALESAddress)
+			.and.to.emit(sportsAMMV2, 'TicketResolved')
+			.withArgs(ticketAddress, firstTrader.address, true)
+			.and.to.emit(ticket, 'Resolved')
+			.withArgs(true, false);
 
 		// 5) User still only gets "payout" (fees and any top-ups are not paid to user)
 		const userBalAfter = await collateralTHALES.balanceOf(firstTrader.address);

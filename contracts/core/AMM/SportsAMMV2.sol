@@ -571,7 +571,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // protocol fees (safeBox/referrer), NOT cashout fee
         _handleFees(ticket.buyInAmount(), _recipient, collateral);
 
-        _finalizeTicketResolution(_ticket, _recipient, collateral, ticket.isUserTheWinner());
+        _finalizeTicketResolution(_ticket, _recipient, collateral, true);
 
         emit TicketCashedOut(_ticket, _recipient, cashoutAmount);
     }
