@@ -23,6 +23,8 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 
 	const ONE = 10n ** 18n;
 	const mulWithDecimals = (a, b) => (a * b) / ONE;
+	const toBytes32LiveGameId = (g) =>
+		ethers.hexlify(ethers.zeroPadBytes(ethers.toUtf8Bytes(g).slice(0, 32), 32));
 
 	beforeEach(async () => {
 		({
@@ -150,6 +152,182 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 
 		// linkage
 		expect(await liveTradingProcessor.requestIdToTicketId(requestId)).to.eq(ticketAddress);
+	});
+
+	it('Should update risk for each leg in live parlay (selected positions)', async () => {
+		const m0 = tradeDataTenMarketsCurrentRound[0];
+		const m1 = tradeDataTenMarketsCurrentRound[1];
+
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m0.sportId, m0.typeId, true);
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m1.sportId, m1.typeId, true);
+
+		const leg0 = BigInt(m0.odds[m0.position]);
+		const leg1 = BigInt(m1.odds[m1.position]);
+
+		const approvedLegOdds = [leg0, leg1];
+		const approvedQuote = mulWithDecimals(leg0, leg1);
+
+		const parlay = {
+			legs: [
+				{
+					gameId: m0.gameId,
+					sportId: m0.sportId,
+					typeId: m0.typeId,
+					line: m0.line,
+					position: m0.position,
+					expectedLegOdd: 0,
+					playerId: m0.playerId || 0,
+				},
+				{
+					gameId: m1.gameId,
+					sportId: m1.sportId,
+					typeId: m1.typeId,
+					line: m1.line,
+					position: m1.position,
+					expectedLegOdd: 0,
+					playerId: m1.playerId || 0,
+				},
+			],
+			buyInAmount: BUY_IN_AMOUNT,
+			expectedPayout: approvedQuote,
+			additionalSlippage: ADDITIONAL_SLIPPAGE,
+			referrer: ZERO_ADDRESS,
+			collateral: ZERO_ADDRESS,
+		};
+
+		await liveTradingProcessor.connect(firstTrader).requestLiveParlayTrade(parlay);
+		const requestId = await liveTradingProcessor.counterToRequestId(0);
+
+		await mockChainlinkOracle.fulfillLiveTradeParlay(
+			requestId,
+			true,
+			approvedQuote,
+			approvedLegOdds
+		);
+
+		const gameId0 = toBytes32LiveGameId(m0.gameId);
+		const gameId1 = toBytes32LiveGameId(m1.gameId);
+
+		const risk0 = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+			gameId0,
+			m0.typeId,
+			m0.playerId || 0,
+			m0.position
+		);
+
+		const risk1 = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+			gameId1,
+			m1.typeId,
+			m1.playerId || 0,
+			m1.position
+		);
+
+		expect(risk0).to.be.gt(0);
+		expect(risk1).to.be.gt(0);
+	});
+
+	it('Should only update nearby positions (bounded loop) in live parlay', async () => {
+		const m0 = tradeDataTenMarketsCurrentRound[0];
+		const m1 = tradeDataTenMarketsCurrentRound[1];
+
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m0.sportId, m0.typeId, true);
+		await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(m1.sportId, m1.typeId, true);
+
+		const gameId0 = toBytes32LiveGameId(m0.gameId);
+		const typeId0 = m0.typeId;
+		const playerId0 = m0.playerId || 0;
+
+		const createAndFulfillTwoLegLiveParlay = async (position0, buyInAmount = BUY_IN_AMOUNT) => {
+			const approvedLegOdd0 = BigInt(m0.odds[m0.position]);
+			const approvedLegOdd1 = BigInt(m1.odds[m1.position]);
+			const approvedQuote = mulWithDecimals(approvedLegOdd0, approvedLegOdd1);
+
+			const requestIndex = await liveTradingProcessor.requestCounter();
+
+			await liveTradingProcessor.connect(firstTrader).requestLiveParlayTrade({
+				legs: [
+					{
+						gameId: m0.gameId,
+						sportId: m0.sportId,
+						typeId: m0.typeId,
+						line: m0.line,
+						position: position0,
+						expectedLegOdd: 0,
+						playerId: playerId0,
+					},
+					{
+						gameId: m1.gameId,
+						sportId: m1.sportId,
+						typeId: m1.typeId,
+						line: m1.line,
+						position: m1.position,
+						expectedLegOdd: 0,
+						playerId: m1.playerId || 0,
+					},
+				],
+				buyInAmount,
+				expectedPayout: approvedQuote,
+				additionalSlippage: ADDITIONAL_SLIPPAGE,
+				referrer: ZERO_ADDRESS,
+				collateral: ZERO_ADDRESS,
+			});
+
+			const requestId = await liveTradingProcessor.counterToRequestId(requestIndex);
+
+			await mockChainlinkOracle.fulfillLiveTradeParlay(requestId, true, approvedQuote, [
+				approvedLegOdd0,
+				approvedLegOdd1,
+			]);
+		};
+
+		// Seed far position on first leg; later trade at position 10 must not touch it.
+		await createAndFulfillTwoLegLiveParlay(20);
+
+		const riskFarBefore = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+			gameId0,
+			typeId0,
+			playerId0,
+			20
+		);
+		expect(riskFarBefore).to.be.gt(0);
+
+		// Seed near position on first leg; later trade at position 10 should touch position 11.
+		await createAndFulfillTwoLegLiveParlay(11);
+
+		const riskNearBefore = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+			gameId0,
+			typeId0,
+			playerId0,
+			11
+		);
+		expect(riskNearBefore).to.be.gt(0);
+
+		// position 10 => bounded loop touches 0..12, so 11 should change, 20 should not
+		const newBuyInAmount = ethers.parseEther('5');
+		await createAndFulfillTwoLegLiveParlay(10, newBuyInAmount);
+
+		const riskSelectedAfter = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+			gameId0,
+			typeId0,
+			playerId0,
+			10
+		);
+		const riskNearAfter = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+			gameId0,
+			typeId0,
+			playerId0,
+			11
+		);
+		const riskFarAfter = await sportsAMMV2RiskManager.riskPerMarketTypeAndPosition(
+			gameId0,
+			typeId0,
+			playerId0,
+			20
+		);
+
+		expect(riskSelectedAfter).to.be.gt(0);
+		expect(riskNearAfter).to.equal(riskNearBefore - newBuyInAmount);
+		expect(riskFarAfter).to.equal(riskFarBefore);
 	});
 
 	it('Should revert on request if expectedPayout is below maxSupportedOdds (decimal odds above max)', async () => {
