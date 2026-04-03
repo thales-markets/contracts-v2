@@ -207,6 +207,41 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         isTradingTicketInARound[ticketRound][ticket] = true;
     }
 
+    /// @notice Track a default-round ticket without pulling profit from LP.
+    ///         AMM sends buyIn to defaultLiquidityProvider for safekeeping.
+    /// @param ticket the ticket to track
+    /// @param buyInAmount the user's buy-in to deposit into LP
+    function commitTradeDeferred(
+        address ticket,
+        uint buyInAmount
+    ) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
+        require(started, "PoolNotStarted");
+        uint ticketRound = getTicketRound(ticket);
+        require(ticketRound == 1, "OnlyDefaultRound");
+        roundPerTicket[ticket] = ticketRound;
+        _getOrCreateRoundPool(ticketRound);
+
+        // Take buyIn from AMM and deposit into defaultLiquidityProvider
+        if (buyInAmount > 0) {
+            collateral.safeTransferFrom(address(sportsAMM), defaultLiquidityProvider, buyInAmount);
+        }
+
+        tradingTicketsPerRound[ticketRound].push(ticket);
+        isTradingTicketInARound[ticketRound][ticket] = true;
+    }
+
+    /// @notice Pull funds from defaultLiquidityProvider to AMM for ticket resolution.
+    ///         Only for default-round tickets with deferred collateralization.
+    /// @param ticket the ticket being resolved
+    /// @param amount the amount to pull from LP to AMM
+    function provideForResolution(address ticket, uint amount) external whenNotPaused onlyAMM {
+        uint ticketRound = getTicketRound(ticket);
+        require(ticketRound == 1, "OnlyDefaultRound");
+        if (amount > 0) {
+            collateral.safeTransferFrom(defaultLiquidityProvider, address(sportsAMM), amount);
+        }
+    }
+
     /// @notice transfer collateral amount from AMM to LP (ticket liquidity pool round)
     /// @param _ticket to trade
     function transferToPool(address _ticket, uint _amount) external whenNotPaused roundClosingNotPrepared onlyAMM {

@@ -456,15 +456,18 @@ contract Ticket {
 
             finalPayout = isCancelled ? buyInAmount : (isSystem ? _getSystemBetPayout() : finalPayout);
 
-            collateral.safeTransfer(
-                _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
-                    ? address(ticketOwner)
-                    : address(sportsAMM),
-                finalPayout
-            );
+            // Only transfer if ticket holds funds (non-default round)
+            if (collateral.balanceOf(address(this)) > 0) {
+                collateral.safeTransfer(
+                    _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
+                        ? address(ticketOwner)
+                        : address(sportsAMM),
+                    finalPayout
+                );
+            }
         }
 
-        // if user is lost or if the user payout was less than anticipated due to cancelled games, send the remainder to AMM
+        // Send any remaining ticket balance to AMM (non-default round cleanup)
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
             collateral.safeTransfer(address(sportsAMM), balance);
@@ -496,13 +499,16 @@ contract Ticket {
         finalPayout = _cashoutAmount;
         cashedOut = true;
 
-        // Pay user
-        collateral.safeTransfer(_recipient, _cashoutAmount);
+        // Only transfer if ticket holds funds (non-default round)
+        if (collateral.balanceOf(address(this)) > 0) {
+            // Pay user
+            collateral.safeTransfer(_recipient, _cashoutAmount);
 
-        // Send remainder back to AMM (same behavior as exercise/cancel)
-        uint balance = collateral.balanceOf(address(this));
-        if (balance != 0) {
-            collateral.safeTransfer(address(sportsAMM), balance);
+            // Send remainder back to AMM
+            uint balance = collateral.balanceOf(address(this));
+            if (balance != 0) {
+                collateral.safeTransfer(address(sportsAMM), balance);
+            }
         }
 
         // Resolve as "not cancelled" (cashout is its own thing)
@@ -546,11 +552,15 @@ contract Ticket {
     /// @notice cancel the ticket
     function cancel() external onlyAMM notPaused returns (uint) {
         finalPayout = buyInAmount;
-        collateral.safeTransfer(address(ticketOwner), finalPayout);
 
-        uint balance = collateral.balanceOf(address(this));
-        if (balance != 0) {
-            collateral.safeTransfer(address(sportsAMM), balance);
+        // Only transfer if ticket holds funds (non-default round)
+        if (collateral.balanceOf(address(this)) > 0) {
+            collateral.safeTransfer(address(ticketOwner), finalPayout);
+
+            uint balance = collateral.balanceOf(address(this));
+            if (balance != 0) {
+                collateral.safeTransfer(address(sportsAMM), balance);
+            }
         }
 
         _resolve(true, true);
