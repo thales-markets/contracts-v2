@@ -1,0 +1,823 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import "chainlink-vrf/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol";
+import "chainlink-vrf/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+
+// internal
+import "../../utils/proxy/ProxyReentrancyGuard.sol";
+import "../../utils/proxy/ProxyOwned.sol";
+import "../../utils/proxy/ProxyPausable.sol";
+import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
+
+import "../../interfaces/ISportsAMMV2Manager.sol";
+
+/// @title Roulette
+/// @author Overtime
+/// @notice American roulette contract using Chainlink VRF for single-player spins
+/// @dev Supports USDC, WETH and OVER collateral, with bankroll reservation per collateral
+contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
+    using SafeERC20 for IERC20;
+
+    /* ========== CONSTANTS ========== */
+
+    uint private constant ONE = 1e18;
+    uint private constant USDC_UNIT = 1e6;
+    uint private constant WHEEL_SIZE = 38; // 0..36 and 37 == 00
+
+    /// @notice Minimum allowed bet value expressed in USD, normalized to 18 decimals
+    uint public constant MIN_BET_USD = 3e18;
+
+    /* ========== ERRORS ========== */
+
+    error InvalidAddress();
+    error InvalidSender();
+    error InvalidCollateral();
+    error InvalidPrice();
+    error InvalidAmount();
+    error InvalidBetType();
+    error InvalidSelection();
+    error BetNotFound();
+    error BetNotPending();
+    error BetNotOwner();
+    error CancelTimeoutNotReached();
+    error MaxProfitExceeded();
+    error InsufficientAvailableLiquidity();
+
+    /* ========== ENUMS ========== */
+
+    /// @notice Supported roulette bet types for MVP
+    enum BetType {
+        STRAIGHT,
+        RED_BLACK,
+        ODD_EVEN,
+        LOW_HIGH,
+        DOZEN,
+        COLUMN
+    }
+
+    /// @notice Lifecycle status of a roulette bet
+    enum BetStatus {
+        NONE,
+        PENDING,
+        RESOLVED,
+        CANCELLED
+    }
+
+    /* ========== STRUCTS ========== */
+
+    /// @notice Stored data for an individual roulette bet
+    /// @param user Address of the bettor
+    /// @param collateral Collateral token used for the bet
+    /// @param amount Amount staked
+    /// @param payout Final payout amount, 0 if lost, original amount if cancelled
+    /// @param requestId Chainlink VRF request id
+    /// @param placedAt Timestamp when the bet was placed
+    /// @param resolvedAt Timestamp when the bet was resolved or cancelled
+    /// @param reservedProfit Reserved house-side profit liability for this bet
+    /// @param betType Type of roulette bet
+    /// @param status Current status of the bet
+    /// @param selection Encoded selection for the chosen bet type
+    /// @param result Winning roulette result in range 0..37, where 37 represents 00
+    /// @param won Whether the bet won
+    struct Bet {
+        address user;
+        address collateral;
+        uint amount;
+        uint payout;
+        uint requestId;
+        uint placedAt;
+        uint resolvedAt;
+        uint reservedProfit;
+        BetType betType;
+        BetStatus status;
+        uint8 selection;
+        uint8 result;
+        bool won;
+    }
+
+    struct CoreAddresses {
+        address owner;
+        address manager;
+        address priceFeed;
+        address vrfCoordinator;
+    }
+
+    struct CollateralConfig {
+        address usdc;
+        address weth;
+        address over;
+        bytes32 wethPriceFeedKey;
+        bytes32 overPriceFeedKey;
+    }
+
+    struct VrfConfig {
+        uint256 subscriptionId;
+        bytes32 keyHash;
+        uint32 callbackGasLimit;
+        uint16 requestConfirmations;
+        bool nativePayment;
+    }
+
+    /* ========== STATE VARIABLES ========== */
+
+    /// @notice Manager contract used for whitelist-based role checks
+    ISportsAMMV2Manager public manager;
+
+    /// @notice Price feed used for collateral normalization to USD
+    IPriceFeed public priceFeed;
+
+    /// @notice Chainlink VRF coordinator
+    IVRFCoordinatorV2Plus public vrfCoordinator;
+
+    /// @notice Supported collateral addresses
+    address public usdc;
+    address public weth;
+    address public over;
+
+    /// @notice Maximum allowed profit per bet in USD, normalized to 18 decimals
+    uint public maxProfitUsd;
+
+    /// @notice Timeout after which a pending bet can be cancelled
+    uint public cancelTimeout;
+
+    /// @notice Next bet id to assign
+    uint public nextBetId;
+
+    /// @notice Chainlink VRF v2.5 subscription id
+    uint256 public subscriptionId;
+
+    /// @notice Chainlink VRF key hash / gas lane
+    bytes32 public keyHash;
+
+    /// @notice Gas limit for VRF callback execution
+    uint32 public callbackGasLimit;
+
+    /// @notice Number of confirmations for VRF request
+    uint16 public requestConfirmations;
+
+    /// @notice Whether VRF request is paid in native token
+    bool public nativePayment;
+
+    /// @notice Whether a collateral is supported
+    mapping(address => bool) public supportedCollateral;
+
+    /// @notice Price feed key per collateral for non-USDC assets
+    mapping(address => bytes32) public priceFeedKeyPerCollateral;
+
+    /// @notice Stored bets by bet id
+    mapping(uint => Bet) public bets;
+
+    /// @notice Maps VRF request id to bet id
+    mapping(uint => uint) public requestIdToBetId;
+
+    /// @notice Tracks reserved house-side profit liability for all pending bets per collateral
+    mapping(address => uint) public reservedProfitPerCollateral;
+
+    /* ========== PUBLIC / EXTERNAL METHODS ========== */
+
+    /// @notice Initializes the roulette contract
+    /// @param core Core protocol addresses
+    /// @param collateralConfig Collateral addresses and price feed keys
+    /// @param _maxProfitUsd Maximum allowed profit per bet in USD, normalized to 18 decimals
+    /// @param _cancelTimeout Timeout after which a pending bet can be cancelled
+    /// @param vrfConfig Chainlink VRF configuration
+    function initialize(
+        CoreAddresses calldata core,
+        CollateralConfig calldata collateralConfig,
+        uint _maxProfitUsd,
+        uint _cancelTimeout,
+        VrfConfig calldata vrfConfig
+    ) external initializer {
+        if (
+            core.owner == address(0) ||
+            core.manager == address(0) ||
+            core.priceFeed == address(0) ||
+            core.vrfCoordinator == address(0) ||
+            collateralConfig.usdc == address(0) ||
+            collateralConfig.weth == address(0) ||
+            collateralConfig.over == address(0)
+        ) {
+            revert InvalidAddress();
+        }
+
+        if (_maxProfitUsd == 0) revert InvalidAmount();
+        if (vrfConfig.callbackGasLimit == 0 || vrfConfig.requestConfirmations == 0) revert InvalidAmount();
+
+        setOwner(core.owner);
+        initNonReentrant();
+
+        manager = ISportsAMMV2Manager(core.manager);
+        priceFeed = IPriceFeed(core.priceFeed);
+        vrfCoordinator = IVRFCoordinatorV2Plus(core.vrfCoordinator);
+
+        usdc = collateralConfig.usdc;
+        weth = collateralConfig.weth;
+        over = collateralConfig.over;
+
+        supportedCollateral[collateralConfig.usdc] = true;
+        supportedCollateral[collateralConfig.weth] = true;
+        supportedCollateral[collateralConfig.over] = true;
+
+        priceFeedKeyPerCollateral[collateralConfig.weth] = collateralConfig.wethPriceFeedKey;
+        priceFeedKeyPerCollateral[collateralConfig.over] = collateralConfig.overPriceFeedKey;
+
+        maxProfitUsd = _maxProfitUsd;
+        cancelTimeout = _cancelTimeout;
+
+        subscriptionId = vrfConfig.subscriptionId;
+        keyHash = vrfConfig.keyHash;
+        callbackGasLimit = vrfConfig.callbackGasLimit;
+        requestConfirmations = vrfConfig.requestConfirmations;
+        nativePayment = vrfConfig.nativePayment;
+
+        nextBetId = 1;
+    }
+
+    /// @notice Places a roulette bet and requests randomness from Chainlink VRF
+    /// @param collateral Collateral token address
+    /// @param amount Amount of collateral to stake
+    /// @param betType Type of roulette bet
+    /// @param selection Encoded selection for the chosen bet type
+    /// @return betId Newly created bet id
+    /// @return requestId Chainlink VRF request id
+    function placeBet(
+        address collateral,
+        uint amount,
+        BetType betType,
+        uint8 selection
+    ) external nonReentrant notPaused returns (uint betId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        if (amount == 0) revert InvalidAmount();
+
+        _validateSelection(betType, selection);
+
+        uint amountUsd = _getUsdValue(collateral, amount);
+        if (amountUsd < MIN_BET_USD) revert InvalidAmount();
+
+        uint profitMultiplier = _getProfitMultiplier(betType);
+        uint potentialProfitCollateral = amount * profitMultiplier;
+        uint potentialProfitUsd = _getUsdValue(collateral, potentialProfitCollateral);
+
+        if (potentialProfitUsd > maxProfitUsd) revert MaxProfitExceeded();
+
+        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
+
+        reservedProfitPerCollateral[collateral] += potentialProfitCollateral;
+
+        if (!_hasEnoughLiquidity(collateral)) {
+            reservedProfitPerCollateral[collateral] -= potentialProfitCollateral;
+            revert InsufficientAvailableLiquidity();
+        }
+
+        requestId = _requestRandomWord();
+
+        betId = nextBetId++;
+        bets[betId] = Bet({
+            user: msg.sender,
+            collateral: collateral,
+            amount: amount,
+            payout: 0,
+            requestId: requestId,
+            placedAt: block.timestamp,
+            resolvedAt: 0,
+            reservedProfit: potentialProfitCollateral,
+            betType: betType,
+            status: BetStatus.PENDING,
+            selection: selection,
+            result: 0,
+            won: false
+        });
+
+        requestIdToBetId[requestId] = betId;
+
+        emit BetPlaced(betId, requestId, msg.sender, collateral, amount, betType, selection);
+    }
+
+    /// @notice Cancels a pending bet after timeout and refunds the original stake
+    /// @param betId Bet id to cancel
+    function cancelBet(uint betId) external nonReentrant {
+        Bet storage bet = bets[betId];
+
+        if (bet.status == BetStatus.NONE) revert BetNotFound();
+        if (bet.user != msg.sender) revert BetNotOwner();
+        if (bet.status != BetStatus.PENDING) revert BetNotPending();
+        if (block.timestamp < bet.placedAt + cancelTimeout) revert CancelTimeoutNotReached();
+
+        _cancelBet(betId, false);
+    }
+
+    /// @notice Emergency cancels a pending bet and refunds the original stake
+    /// @dev Callable by owner or manager role with MARKET_RESOLVING permission
+    /// @param betId Bet id to cancel
+    function adminCancelBet(uint betId) external onlyResolver nonReentrant {
+        Bet storage bet = bets[betId];
+
+        if (bet.status == BetStatus.NONE) revert BetNotFound();
+        if (bet.status != BetStatus.PENDING) revert BetNotPending();
+
+        _cancelBet(betId, true);
+    }
+
+    /// @notice Pauses or unpauses the contract using manager-based pauser permissions
+    /// @param _paused True to pause, false to unpause
+    function setPausedByRole(bool _paused) external onlyPauser {
+        if (paused != _paused) {
+            paused = _paused;
+            if (_paused) {
+                lastPauseTime = block.timestamp;
+            }
+            emit PauseChanged(_paused);
+        }
+    }
+
+    /// @notice Coordinator-only VRF entrypoint
+    /// @param requestId Chainlink VRF request id
+    /// @param randomWords Array of VRF random words
+    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
+        if (msg.sender != address(vrfCoordinator)) revert InvalidSender();
+        _fulfillRandomWords(requestId, randomWords);
+    }
+
+    /* ========== INTERNAL / PRIVATE ========== */
+
+    /// @notice Internal roulette resolution logic after VRF fulfillment
+    /// @param requestId Chainlink VRF request id
+    /// @param randomWords Array of VRF random words
+    function _fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal {
+        uint betId = requestIdToBetId[requestId];
+        if (betId == 0) {
+            return;
+        }
+
+        Bet storage bet = bets[betId];
+
+        if (bet.status != BetStatus.PENDING) {
+            return;
+        }
+
+        uint8 result = uint8(randomWords[0] % WHEEL_SIZE);
+        bool won = _isWinning(bet.betType, bet.selection, result);
+
+        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+
+        uint payout = 0;
+        if (won) {
+            payout = bet.amount + bet.reservedProfit;
+            IERC20(bet.collateral).safeTransfer(bet.user, payout);
+        }
+
+        bet.result = result;
+        bet.won = won;
+        bet.payout = payout;
+        bet.status = BetStatus.RESOLVED;
+        bet.resolvedAt = block.timestamp;
+
+        emit BetResolved(betId, requestId, bet.user, result, won, payout);
+    }
+
+    /// @notice Cancels a pending bet, releases reserved liquidity and refunds stake
+    /// @param betId Bet id to cancel
+    /// @param adminCancelled Whether the cancellation was admin-triggered
+    function _cancelBet(uint betId, bool adminCancelled) internal {
+        Bet storage bet = bets[betId];
+
+        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+
+        bet.status = BetStatus.CANCELLED;
+        bet.resolvedAt = block.timestamp;
+        bet.payout = bet.amount;
+        bet.won = false;
+
+        IERC20(bet.collateral).safeTransfer(bet.user, bet.amount);
+
+        emit BetCancelled(betId, bet.requestId, bet.user, bet.amount, adminCancelled);
+    }
+
+    /// @notice Requests one random word from Chainlink VRF
+    /// @return requestId Chainlink VRF request id
+    function _requestRandomWord() internal returns (uint requestId) {
+        requestId = vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: keyHash,
+                subId: subscriptionId,
+                requestConfirmations: requestConfirmations,
+                callbackGasLimit: callbackGasLimit,
+                numWords: 1,
+                extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: nativePayment}))
+            })
+        );
+    }
+
+    /// @notice Checks whether available collateral balance covers all reserved profit
+    /// @param collateral Collateral token address
+    /// @return True if bankroll is sufficient for the collateral
+    function _hasEnoughLiquidity(address collateral) internal view returns (bool) {
+        return IERC20(collateral).balanceOf(address(this)) >= reservedProfitPerCollateral[collateral];
+    }
+
+    /// @notice Returns the normalized price for a supported collateral
+    /// @param collateral Collateral token address
+    /// @return Collateral price normalized to 18 decimals
+    function _getCollateralPrice(address collateral) internal view returns (uint) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+
+        if (collateral == usdc) {
+            return ONE;
+        }
+
+        bytes32 currencyKey = priceFeedKeyPerCollateral[collateral];
+        if (currencyKey == bytes32(0)) revert InvalidCollateral();
+
+        uint price = priceFeed.rateForCurrency(currencyKey);
+        if (price == 0) revert InvalidPrice();
+
+        return price;
+    }
+
+    /// @notice Converts collateral amount into USD value normalized to 18 decimals
+    /// @param collateral Collateral token address
+    /// @param amount Collateral amount
+    /// @return USD value normalized to 18 decimals
+    function _getUsdValue(address collateral, uint amount) internal view returns (uint) {
+        if (collateral == usdc) {
+            return (amount * ONE) / USDC_UNIT;
+        }
+
+        uint price = _getCollateralPrice(collateral);
+        return (amount * price) / ONE;
+    }
+
+    /// @notice Returns profit multiplier for a given roulette bet type
+    /// @param betType Roulette bet type
+    /// @return Profit multiplier excluding original stake
+    function _getProfitMultiplier(BetType betType) internal pure returns (uint) {
+        if (betType == BetType.STRAIGHT) return 35;
+
+        if (betType == BetType.RED_BLACK || betType == BetType.ODD_EVEN || betType == BetType.LOW_HIGH) {
+            return 1;
+        }
+
+        if (betType == BetType.DOZEN || betType == BetType.COLUMN) {
+            return 2;
+        }
+
+        revert InvalidBetType();
+    }
+
+    /// @notice Validates encoded selection for a given bet type
+    /// @param betType Roulette bet type
+    /// @param selection Encoded selection value
+    function _validateSelection(BetType betType, uint8 selection) internal pure {
+        if (betType == BetType.STRAIGHT) {
+            if (selection > 37) revert InvalidSelection();
+            return;
+        }
+
+        if (betType == BetType.RED_BLACK || betType == BetType.ODD_EVEN || betType == BetType.LOW_HIGH) {
+            if (selection > 1) revert InvalidSelection();
+            return;
+        }
+
+        if (betType == BetType.DOZEN || betType == BetType.COLUMN) {
+            if (selection > 2) revert InvalidSelection();
+            return;
+        }
+
+        revert InvalidBetType();
+    }
+
+    /// @notice Returns whether a given bet selection wins for a roulette result
+    /// @param betType Roulette bet type
+    /// @param selection Encoded selection value
+    /// @param result Roulette result in range 0..37, where 37 represents 00
+    /// @return True if the bet wins
+    function _isWinning(BetType betType, uint8 selection, uint8 result) internal pure returns (bool) {
+        if (betType == BetType.STRAIGHT) {
+            return result == selection;
+        }
+
+        if (result == 0 || result == 37) {
+            return false;
+        }
+
+        if (betType == BetType.RED_BLACK) {
+            bool isRed = _isRed(result);
+            return (selection == 0 && isRed) || (selection == 1 && !isRed);
+        }
+
+        if (betType == BetType.ODD_EVEN) {
+            bool isEven = result % 2 == 0;
+            return (selection == 0 && !isEven) || (selection == 1 && isEven);
+        }
+
+        if (betType == BetType.LOW_HIGH) {
+            return (selection == 0 && result >= 1 && result <= 18) || (selection == 1 && result >= 19 && result <= 36);
+        }
+
+        if (betType == BetType.DOZEN) {
+            return
+                (selection == 0 && result >= 1 && result <= 12) ||
+                (selection == 1 && result >= 13 && result <= 24) ||
+                (selection == 2 && result >= 25 && result <= 36);
+        }
+
+        if (betType == BetType.COLUMN) {
+            uint8 column = uint8((result - 1) % 3);
+            return selection == column;
+        }
+
+        revert InvalidBetType();
+    }
+
+    /// @notice Returns whether a roulette number is red
+    /// @param n Roulette number in range 1..36
+    /// @return True if the number is red
+    function _isRed(uint8 n) internal pure returns (bool) {
+        return
+            n == 1 ||
+            n == 3 ||
+            n == 5 ||
+            n == 7 ||
+            n == 9 ||
+            n == 12 ||
+            n == 14 ||
+            n == 16 ||
+            n == 18 ||
+            n == 19 ||
+            n == 21 ||
+            n == 23 ||
+            n == 25 ||
+            n == 27 ||
+            n == 30 ||
+            n == 32 ||
+            n == 34 ||
+            n == 36;
+    }
+
+    /* ========== GETTERS ========== */
+
+    /// @notice Returns potential profit in USD for a given bet
+    /// @param collateral Collateral token address
+    /// @param amount Bet amount
+    /// @param betType Roulette bet type
+    /// @return Potential profit in USD normalized to 18 decimals
+    function getPotentialProfit(address collateral, uint amount, BetType betType) external view returns (uint) {
+        uint potentialProfitCollateral = amount * _getProfitMultiplier(betType);
+        return _getUsdValue(collateral, potentialProfitCollateral);
+    }
+
+    /// @notice Returns total payout in collateral units for a winning bet
+    /// @param amount Bet amount
+    /// @param betType Roulette bet type
+    /// @return Total payout including original stake
+    function getPotentialPayoutCollateral(uint amount, BetType betType) external pure returns (uint) {
+        return amount + (amount * _getProfitMultiplier(betType));
+    }
+
+    /// @notice Returns normalized collateral price
+    /// @param collateral Collateral token address
+    /// @return Collateral price normalized to 18 decimals
+    function getCollateralPrice(address collateral) external view returns (uint) {
+        return _getCollateralPrice(collateral);
+    }
+
+    /// @notice Returns whether a given selection wins for a provided roulette result
+    /// @param betType Roulette bet type
+    /// @param selection Encoded selection value
+    /// @param result Roulette result in range 0..37, where 37 represents 00
+    /// @return True if the bet wins
+    function isWinningBet(BetType betType, uint8 selection, uint8 result) external pure returns (bool) {
+        return _isWinning(betType, selection, result);
+    }
+
+    /// @notice Returns currently available liquidity for a collateral after reserved profit
+    /// @param collateral Collateral token address
+    /// @return Available liquidity amount in collateral units
+    function getAvailableLiquidity(address collateral) external view returns (uint) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        uint balance = IERC20(collateral).balanceOf(address(this));
+        uint reserved = reservedProfitPerCollateral[collateral];
+        return balance > reserved ? balance - reserved : 0;
+    }
+
+    /* ========== SETTERS ========== */
+
+    /// @notice Sets maximum allowed profit per bet in USD
+    /// @dev Callable by owner or manager role with RISK_MANAGING permission
+    /// @param _maxProfitUsd Maximum profit in USD normalized to 18 decimals
+    function setMaxProfitUsd(uint _maxProfitUsd) external onlyRiskManager {
+        if (_maxProfitUsd == 0) revert InvalidAmount();
+        maxProfitUsd = _maxProfitUsd;
+        emit MaxProfitUsdChanged(_maxProfitUsd);
+    }
+
+    /// @notice Sets timeout after which pending bets can be cancelled
+    /// @dev Callable by owner or manager role with RISK_MANAGING permission
+    /// @param _cancelTimeout Timeout in seconds
+    function setCancelTimeout(uint _cancelTimeout) external onlyRiskManager {
+        cancelTimeout = _cancelTimeout;
+        emit CancelTimeoutChanged(_cancelTimeout);
+    }
+
+    /// @notice Adds or removes a supported collateral
+    /// @dev Callable by owner or manager role with RISK_MANAGING permission
+    /// @param collateral Collateral token address
+    /// @param isSupported Whether the collateral is supported
+    function setSupportedCollateral(address collateral, bool isSupported) external onlyRiskManager {
+        if (collateral == address(0)) revert InvalidAddress();
+        supportedCollateral[collateral] = isSupported;
+        emit SupportedCollateralChanged(collateral, isSupported);
+    }
+
+    /// @notice Sets price feed key for a collateral
+    /// @dev Callable by owner or manager role with RISK_MANAGING permission
+    /// @param collateral Collateral token address
+    /// @param currencyKey Price feed currency key
+    function setPriceFeedKeyPerCollateral(address collateral, bytes32 currencyKey) external onlyRiskManager {
+        if (collateral == address(0)) revert InvalidAddress();
+        priceFeedKeyPerCollateral[collateral] = currencyKey;
+        emit PriceFeedKeyPerCollateralChanged(collateral, currencyKey);
+    }
+
+    /// @notice Sets manager contract address
+    /// @param _manager Manager contract address
+    function setManager(address _manager) external onlyOwner {
+        if (_manager == address(0)) revert InvalidAddress();
+        manager = ISportsAMMV2Manager(_manager);
+        emit ManagerChanged(_manager);
+    }
+
+    /// @notice Sets price feed contract address
+    /// @param _priceFeed Price feed contract address
+    function setPriceFeed(address _priceFeed) external onlyOwner {
+        if (_priceFeed == address(0)) revert InvalidAddress();
+        priceFeed = IPriceFeed(_priceFeed);
+        emit PriceFeedChanged(_priceFeed);
+    }
+
+    /// @notice Sets Chainlink VRF coordinator address
+    /// @param _vrfCoordinator Chainlink VRF coordinator address
+    function setVrfCoordinator(address _vrfCoordinator) external onlyOwner {
+        if (_vrfCoordinator == address(0)) revert InvalidAddress();
+        vrfCoordinator = IVRFCoordinatorV2Plus(_vrfCoordinator);
+        emit VrfCoordinatorChanged(_vrfCoordinator);
+    }
+
+    /// @notice Withdraws collateral from the contract bankroll
+    /// @param _collateral The address of the ERC20 token to withdraw
+    /// @param _recipient The address of the recipient, defaults to owner if zero address
+    /// @param _amount The amount of tokens to withdraw
+    function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
+        address recipient = _recipient == address(0) ? owner : _recipient;
+        IERC20(_collateral).safeTransfer(recipient, _amount);
+        emit WithdrawnCollateral(_collateral, recipient, _amount);
+    }
+
+    /// @notice Sets Chainlink VRF configuration
+    /// @param _subscriptionId Chainlink VRF subscription id
+    /// @param _keyHash Chainlink VRF key hash / gas lane
+    /// @param _callbackGasLimit Gas limit for callback
+    /// @param _requestConfirmations Number of confirmations before VRF fulfillment
+    /// @param _nativePayment Whether VRF uses native token payment
+    function setVrfConfig(
+        uint256 _subscriptionId,
+        bytes32 _keyHash,
+        uint32 _callbackGasLimit,
+        uint16 _requestConfirmations,
+        bool _nativePayment
+    ) external onlyOwner {
+        if (_callbackGasLimit == 0 || _requestConfirmations == 0) revert InvalidAmount();
+
+        subscriptionId = _subscriptionId;
+        keyHash = _keyHash;
+        callbackGasLimit = _callbackGasLimit;
+        requestConfirmations = _requestConfirmations;
+        nativePayment = _nativePayment;
+
+        emit VrfConfigChanged(_subscriptionId, _keyHash, _callbackGasLimit, _requestConfirmations, _nativePayment);
+    }
+
+    /* ========== MODIFIERS ========== */
+
+    /// @notice Restricts access to owner or manager addresses whitelisted for risk management
+    modifier onlyRiskManager() {
+        if (msg.sender != owner && !manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.RISK_MANAGING)) {
+            revert InvalidSender();
+        }
+        _;
+    }
+
+    /// @notice Restricts access to owner or manager addresses whitelisted for market resolving
+    modifier onlyResolver() {
+        if (msg.sender != owner && !manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.MARKET_RESOLVING)) {
+            revert InvalidSender();
+        }
+        _;
+    }
+
+    /// @notice Restricts access to owner or manager addresses whitelisted for pausing
+    modifier onlyPauser() {
+        if (msg.sender != owner && !manager.isWhitelistedAddress(msg.sender, ISportsAMMV2Manager.Role.TICKET_PAUSER)) {
+            revert InvalidSender();
+        }
+        _;
+    }
+
+    /* ========== EVENTS ========== */
+
+    /// @notice Emitted when a new bet is placed
+    /// @param betId Bet id
+    /// @param requestId Chainlink VRF request id
+    /// @param user Bettor address
+    /// @param collateral Collateral token address
+    /// @param amount Bet amount
+    /// @param betType Roulette bet type
+    /// @param selection Encoded selection value
+    event BetPlaced(
+        uint indexed betId,
+        uint indexed requestId,
+        address indexed user,
+        address collateral,
+        uint amount,
+        BetType betType,
+        uint8 selection
+    );
+
+    /// @notice Emitted when a bet is resolved
+    /// @param betId Bet id
+    /// @param requestId Chainlink VRF request id
+    /// @param user Bettor address
+    /// @param result Roulette result in range 0..37, where 37 represents 00
+    /// @param won Whether the bet won
+    /// @param payout Final payout amount
+    event BetResolved(uint indexed betId, uint indexed requestId, address indexed user, uint8 result, bool won, uint payout);
+
+    /// @notice Emitted when a bet is cancelled
+    /// @param betId Bet id
+    /// @param requestId Chainlink VRF request id
+    /// @param user Bettor address
+    /// @param refundedAmount Refunded stake amount
+    /// @param adminCancelled Whether the cancellation was admin-triggered
+    event BetCancelled(
+        uint indexed betId,
+        uint indexed requestId,
+        address indexed user,
+        uint refundedAmount,
+        bool adminCancelled
+    );
+
+    /// @notice Emitted when maximum profit per bet is changed
+    /// @param maxProfitUsd New maximum profit in USD normalized to 18 decimals
+    event MaxProfitUsdChanged(uint maxProfitUsd);
+
+    /// @notice Emitted when cancel timeout is changed
+    /// @param cancelTimeout New timeout in seconds
+    event CancelTimeoutChanged(uint cancelTimeout);
+
+    /// @notice Emitted when collateral support is changed
+    /// @param collateral Collateral token address
+    /// @param supported Whether the collateral is supported
+    event SupportedCollateralChanged(address collateral, bool supported);
+
+    /// @notice Emitted when price feed key for a collateral is changed
+    /// @param collateral Collateral token address
+    /// @param key New price feed key
+    event PriceFeedKeyPerCollateralChanged(address collateral, bytes32 key);
+
+    /// @notice Emitted when manager contract is changed
+    /// @param manager New manager contract address
+    event ManagerChanged(address manager);
+
+    /// @notice Emitted when price feed contract is changed
+    /// @param priceFeed New price feed contract address
+    event PriceFeedChanged(address priceFeed);
+
+    /// @notice Emitted when VRF coordinator is changed
+    /// @param vrfCoordinator New Chainlink VRF coordinator address
+    event VrfCoordinatorChanged(address vrfCoordinator);
+
+    /// @notice Emitted when collateral is withdrawn from the bankroll
+    /// @param collateral Collateral token address
+    /// @param recipient Recipient address
+    /// @param amount Amount withdrawn
+    event WithdrawnCollateral(address indexed collateral, address indexed recipient, uint amount);
+
+    /// @notice Emitted when VRF config is changed
+    /// @param subscriptionId New Chainlink VRF subscription id
+    /// @param keyHash New Chainlink VRF key hash
+    /// @param callbackGasLimit New callback gas limit
+    /// @param requestConfirmations New request confirmations value
+    /// @param nativePayment Whether native payment is enabled
+    event VrfConfigChanged(
+        uint256 subscriptionId,
+        bytes32 keyHash,
+        uint32 callbackGasLimit,
+        uint16 requestConfirmations,
+        bool nativePayment
+    );
+}
