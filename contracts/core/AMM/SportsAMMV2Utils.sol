@@ -7,6 +7,8 @@ import "../../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
+/// @title SportsAMMV2 Utils - stateless helper for offloading computation from SportsAMMV2
+/// @author danijel
 contract SportsAMMV2Utils {
     uint private constant ONE = 1e18;
 
@@ -62,6 +64,13 @@ contract SportsAMMV2Utils {
         CollateralParams _collateralParams;
     }
 
+    /// @notice Full trade quote with collateral resolution, used by SportsAMMV2 external quote functions
+    /// @param _tradeData array of market trade data
+    /// @param _buyInAmount buy-in amount in the provided collateral
+    /// @param _collateral collateral token address (address(0) for default)
+    /// @param _isLive whether this is a live bet
+    /// @param _systemBetDenominator system bet denominator (0 or 1 for non-system bets)
+    /// @param _params common parameters including risk manager, AMM reference, and collateral config
     function tradeQuoteCommon(
         ISportsAMMV2.TradeData[] memory _tradeData,
         uint _buyInAmount,
@@ -102,6 +111,11 @@ contract SportsAMMV2Utils {
         );
     }
 
+    /// @notice Core trade quote without collateral resolution, used during trade execution
+    /// @param _tradeData array of market trade data
+    /// @param _tradeDataQuoteInternal internal quote parameters
+    /// @param _systemBetDenominator system bet denominator
+    /// @param _params quote parameters including risk manager and AMM reference
     function tradeQuote(
         ISportsAMMV2.TradeData[] memory _tradeData,
         TradeDataQuoteInternal memory _tradeDataQuoteInternal,
@@ -121,6 +135,12 @@ contract SportsAMMV2Utils {
         return _tradeQuote(_tradeData, _tradeDataQuoteInternal, _systemBetDenominator, _params);
     }
 
+    /// @notice Calculates quote for trade execution (prematch and live), called from SportsAMMV2._trade
+    /// @param _tradeData array of market trade data
+    /// @param _calc trade calculation parameters (buy-in, payout, flags, fees)
+    /// @param _systemBetDenominator system bet denominator
+    /// @param _params quote parameters including risk manager and AMM reference
+    /// @return result processing result with totalQuote, payout, fees, payoutWithFees, and expectedPayout
     function calculateTradeQuote(
         ISportsAMMV2.TradeData[] memory _tradeData,
         CalculateTradeParams memory _calc,
@@ -149,6 +169,19 @@ contract SportsAMMV2Utils {
         result._payoutWithFees = result._payout + result._fees;
     }
 
+    /// @notice Transforms amounts to USD (if non-default collateral) and calls riskManager.checkLimits
+    /// @param _riskManager risk manager contract
+    /// @param _buyInAmount buy-in amount in collateral
+    /// @param _totalQuote total quote
+    /// @param _payout expected payout in collateral
+    /// @param _expectedPayout expected payout for slippage check
+    /// @param _additionalSlippage additional slippage tolerance
+    /// @param _ticketSize number of markets in the ticket
+    /// @param _collateralPriceInUSD collateral price in USD (0 if default collateral)
+    /// @param _collateral collateral token address
+    /// @param _defaultCollateralDecimals decimals of the default collateral
+    /// @return buyInAmountUSD buy-in amount in USD
+    /// @return payoutUSD payout in USD
     function checkLimitsWithTransform(
         ISportsAMMV2RiskManager _riskManager,
         uint _buyInAmount,
@@ -378,6 +411,16 @@ contract SportsAMMV2Utils {
         address safeBoxTarget;
     }
 
+    /// @notice Computes fee distribution: referrer share and safe box amount
+    /// @param _buyInAmount buy-in amount
+    /// @param _ticketOwner ticket owner address
+    /// @param _ammBalance current AMM balance of the collateral
+    /// @param _safeBoxFee safe box fee rate
+    /// @param _freeBetsHolder free bets holder address
+    /// @param _safeBox default safe box address
+    /// @param _safeBoxPerCollateral per-collateral safe box override (address(0) for default)
+    /// @param _referrals referrals contract
+    /// @return result fee result with amounts and target addresses for transfers
     function calculateFees(
         uint _buyInAmount,
         address _ticketOwner,
@@ -412,22 +455,29 @@ contract SportsAMMV2Utils {
         }
     }
 
+    /* ========== PURE MATH HELPERS ========== */
+
+    /// @notice Divides with 18-decimal precision: (ONE * _dividend) / _divisor
     function divWithDecimals(uint _dividend, uint _divisor) external pure returns (uint) {
         return _divWithDecimals(_dividend, _divisor);
     }
 
+    /// @notice Multiplies with 18-decimal precision: (_firstMul * _secondMul) / ONE
     function mulWithDecimals(uint _firstMul, uint _secondMul) external pure returns (uint) {
         return _mulWithDecimals(_firstMul, _secondMul);
     }
 
+    /// @notice Applies bonus payout percentage to an odd: odd / ((1 + a) - a * odd)
     function applyBonusToOdd(uint odd, uint addedPayoutPercentage) external pure returns (uint) {
         return _applyBonusToOdd(odd, addedPayoutPercentage);
     }
 
+    /// @notice Returns the absolute difference between two uints
     function absDiff(uint a, uint b) external pure returns (uint) {
         return _absDiff(a, b);
     }
 
+    /// @notice Calculates fees: (_buyInAmount * _safeBoxFee) / ONE
     function getFees(uint _buyInAmount, uint _safeBoxFee) external pure returns (uint) {
         return (_buyInAmount * _safeBoxFee) / ONE;
     }
