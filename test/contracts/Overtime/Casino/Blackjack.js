@@ -696,7 +696,7 @@ describe('Blackjack', () => {
 			expect(payout).to.equal(MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n);
 		});
 
-		it('getUserHands should return correct hand value', async () => {
+		it('getUserHands should return cards for hand value computation', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
@@ -705,7 +705,8 @@ describe('Blackjack', () => {
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 6n]);
 
 			const views = await blackjack.getUserHands(player.address, 0, 1);
-			expect(views[0].playerHandValue).to.equal(17n);
+			expect(views[0].playerCards.length).to.be.gt(0);
+			// Frontend computes hand value from cards
 		});
 
 		it('getAvailableLiquidity should return bankroll minus reserved', async () => {
@@ -779,7 +780,6 @@ describe('Blackjack', () => {
 			expect(views[0].amount).to.equal(MIN_USDC_BET);
 			expect(views[0].playerCards.length).to.be.gt(0);
 			expect(views[0].dealerCards.length).to.be.gt(0);
-			expect(views[0].playerHandValue).to.be.gt(0n);
 		});
 
 		it('getRecentHands should return full HandView', async () => {

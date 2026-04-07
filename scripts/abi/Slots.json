@@ -130,6 +130,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "FreeBetsHolderChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "houseEdge",
         "type": "uint256"
@@ -628,6 +641,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "freeBetsHolder",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1033,6 +1059,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isFreeBet",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "keyHash",
     "outputs": [
@@ -1305,6 +1350,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "setFreeBetsHolder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_houseEdge",
         "type": "uint256"
@@ -1538,6 +1596,35 @@
       }
     ],
     "name": "spin",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "spinId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "spinWithFreeBet",
     "outputs": [
       {
         "internalType": "uint256",

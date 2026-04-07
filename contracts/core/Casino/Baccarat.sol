@@ -15,6 +15,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
+import "../../interfaces/ICasinoFreeBetsHolder.sol";
 
 /// @title Baccarat
 /// @author Overtime
@@ -242,6 +243,12 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Bet IDs per user for history queries
     mapping(address => uint[]) private userBetIds;
 
+    /// @notice Free bets holder contract address
+    address public freeBetsHolder;
+
+    /// @notice Whether a bet was placed with a free bet
+    mapping(uint => bool) public isFreeBet;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the baccarat contract
@@ -312,16 +319,34 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     }
 
     /// @notice Places a baccarat bet and requests randomness from Chainlink VRF
-    /// @param collateral Collateral token address
-    /// @param amount Amount of collateral to stake
-    /// @param betType Type of baccarat bet
-    /// @return betId Newly created bet id
-    /// @return requestId Chainlink VRF request id
     function placeBet(
         address collateral,
         uint amount,
         BetType betType
     ) external nonReentrant notPaused returns (uint betId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
+        return _placeBet(msg.sender, collateral, amount, betType, false);
+    }
+
+    /// @notice Places a baccarat bet using free bet balance
+    function placeBetWithFreeBet(
+        address collateral,
+        uint amount,
+        BetType betType
+    ) external nonReentrant notPaused returns (uint betId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        ICasinoFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
+        return _placeBet(msg.sender, collateral, amount, betType, true);
+    }
+
+    function _placeBet(
+        address user,
+        address collateral,
+        uint amount,
+        BetType betType,
+        bool _isFreeBet
+    ) internal returns (uint betId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         if (amount == 0) revert InvalidAmount();
 
@@ -333,8 +358,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint reservedProfit = _getReservedProfit(amount, betType);
         if (_getUsdValue(collateral, reservedProfit) > maxProfitUsd) revert MaxProfitExceeded();
 
-        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
-
         reservedProfitPerCollateral[collateral] += reservedProfit;
         if (!_hasEnoughLiquidity(collateral)) {
             reservedProfitPerCollateral[collateral] -= reservedProfit;
@@ -345,7 +368,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         betId = nextBetId++;
 
         Bet storage bet = _bets[betId];
-        bet.user = msg.sender;
+        bet.user = user;
         bet.collateral = collateral;
         bet.amount = amount;
         bet.requestId = requestId;
@@ -354,10 +377,12 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         bet.betType = betType;
         bet.status = BetStatus.PENDING;
 
-        requestIdToBetId[requestId] = betId;
-        userBetIds[msg.sender].push(betId);
+        if (_isFreeBet) isFreeBet[betId] = true;
 
-        emit BetPlaced(betId, requestId, msg.sender, collateral, amount, betType);
+        requestIdToBetId[requestId] = betId;
+        userBetIds[user].push(betId);
+
+        emit BetPlaced(betId, requestId, user, collateral, amount, betType);
     }
 
     /// @notice Cancels a pending bet after timeout and refunds the original stake
@@ -430,7 +455,13 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
 
         if (r.payout > 0) {
-            IERC20(bet.collateral).safeTransfer(bet.user, r.payout);
+            if (isFreeBet[betId] && r.won) {
+                uint profit = r.payout - bet.amount;
+                if (profit > 0) IERC20(bet.collateral).safeTransfer(bet.user, profit);
+                IERC20(bet.collateral).safeTransfer(freeBetsHolder, bet.amount);
+            } else {
+                IERC20(bet.collateral).safeTransfer(bet.user, r.payout);
+            }
         }
 
         bet.result = r.result;
@@ -943,6 +974,12 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         emit VrfCoordinatorChanged(_vrfCoordinator);
     }
 
+    /// @notice Sets the free bets holder contract
+    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+        emit FreeBetsHolderChanged(_freeBetsHolder);
+    }
+
     /// @notice Withdraws collateral from the contract bankroll
     /// @param _collateral The address of the ERC20 token to withdraw
     /// @param _recipient The address of the recipient, defaults to owner if zero address
@@ -1096,6 +1133,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Emitted when VRF coordinator is changed
     /// @param vrfCoordinator New Chainlink VRF coordinator address
     event VrfCoordinatorChanged(address vrfCoordinator);
+    event FreeBetsHolderChanged(address freeBetsHolder);
 
     /// @notice Emitted when collateral is withdrawn from the bankroll
     /// @param collateral Collateral token address

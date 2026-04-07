@@ -15,6 +15,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
+import "../../interfaces/ICasinoFreeBetsHolder.sol";
 
 /// @title Blackjack
 /// @author Overtime
@@ -106,7 +107,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint8[11] dealerCards;
     }
 
-    /// @notice Frontend-friendly view of a blackjack hand with dynamic card arrays and hand values
+    /// @notice Frontend-friendly view of a blackjack hand with dynamic card arrays
+    /// @dev Hand values are omitted to reduce stack depth; compute client-side from cards
     struct HandView {
         uint handId;
         address user;
@@ -122,8 +124,6 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         bool isDoubledDown;
         uint8[] playerCards;
         uint8[] dealerCards;
-        uint8 playerHandValue;
-        uint8 dealerHandValue;
     }
 
     /// @notice Maps a VRF requestId to its hand and action context
@@ -216,6 +216,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     /// @notice Timestamp of last VRF request per hand (for cancel timeout)
     mapping(uint => uint) public lastRequestAt;
 
+    /// @notice Free bets holder contract address
+    address public freeBetsHolder;
+
+    /// @notice Whether a hand was placed with a free bet
+    mapping(uint => bool) public isFreeBet;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the blackjack contract
@@ -282,6 +288,27 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint amount
     ) external nonReentrant notPaused returns (uint handId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
+        return _placeBet(msg.sender, collateral, amount, false);
+    }
+
+    /// @notice Places a blackjack bet using free bet balance
+    function placeBetWithFreeBet(
+        address collateral,
+        uint amount
+    ) external nonReentrant notPaused returns (uint handId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        ICasinoFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
+        return _placeBet(msg.sender, collateral, amount, true);
+    }
+
+    function _placeBet(
+        address user,
+        address collateral,
+        uint amount,
+        bool _isFreeBet
+    ) internal returns (uint handId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
         if (amount == 0) revert InvalidAmount();
 
         uint amountUsd = _getUsdValue(collateral, amount);
@@ -292,8 +319,6 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint potentialProfitUsd = _getUsdValue(collateral, potentialProfitCollateral);
 
         if (potentialProfitUsd > maxProfitUsd) revert MaxProfitExceeded();
-
-        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
 
         reservedProfitPerCollateral[collateral] += potentialProfitCollateral;
 
@@ -306,7 +331,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
         handId = nextHandId++;
         Hand storage hand = hands[handId];
-        hand.user = msg.sender;
+        hand.user = user;
         hand.collateral = collateral;
         hand.amount = amount;
         hand.requestId = requestId;
@@ -315,10 +340,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         hand.reservedProfit = potentialProfitCollateral;
         hand.status = HandStatus.AWAITING_DEAL;
 
-        vrfRequests[requestId] = VrfRequest({handId: handId, action: VrfAction.DEAL});
-        userHandIds[msg.sender].push(handId);
+        if (_isFreeBet) isFreeBet[handId] = true;
 
-        emit HandCreated(handId, requestId, msg.sender, collateral, amount);
+        vrfRequests[requestId] = VrfRequest({handId: handId, action: VrfAction.DEAL});
+        userHandIds[user].push(handId);
+
+        emit HandCreated(handId, requestId, user, collateral, amount);
     }
 
     /// @notice Requests a hit (one additional card) for a player's hand
@@ -373,6 +400,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         if (hand.user != msg.sender) revert HandNotOwner();
         if (hand.status != HandStatus.PLAYER_TURN) revert InvalidHandStatus();
         if (hand.playerCardCount != 2) revert InvalidHandStatus();
+        if (isFreeBet[handId]) revert InvalidHandStatus();
 
         // Transfer additional bet amount
         IERC20(hand.collateral).safeTransferFrom(msg.sender, address(this), hand.amount);
@@ -646,7 +674,13 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         }
 
         if (payout > 0) {
-            IERC20(hand.collateral).safeTransfer(hand.user, payout);
+            if (isFreeBet[handId]) {
+                uint profit = payout > hand.amount ? payout - hand.amount : 0;
+                if (profit > 0) IERC20(hand.collateral).safeTransfer(hand.user, profit);
+                IERC20(hand.collateral).safeTransfer(freeBetsHolder, hand.amount);
+            } else {
+                IERC20(hand.collateral).safeTransfer(hand.user, payout);
+            }
         }
 
         hand.payout = payout;
@@ -843,8 +877,6 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         v.status = h.status;
         v.result = h.result;
         v.isDoubledDown = h.isDoubledDown;
-        v.playerHandValue = _calculateHandValue(h.playerCards, h.playerCardCount);
-        v.dealerHandValue = _calculateHandValue(h.dealerCards, h.dealerCardCount);
         v.playerCards = new uint8[](h.playerCardCount);
         v.dealerCards = new uint8[](h.dealerCardCount);
         for (uint8 i = 0; i < h.playerCardCount; i++) v.playerCards[i] = h.playerCards[i];
@@ -900,6 +932,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         if (_vrfCoordinator == address(0)) revert InvalidAddress();
         vrfCoordinator = IVRFCoordinatorV2Plus(_vrfCoordinator);
         emit VrfCoordinatorChanged(_vrfCoordinator);
+    }
+
+    /// @notice Sets the free bets holder contract
+    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+        emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
     /// @notice Withdraws collateral from the contract bankroll
@@ -985,6 +1023,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     event ManagerChanged(address manager);
     event PriceFeedChanged(address priceFeed);
     event VrfCoordinatorChanged(address vrfCoordinator);
+    event FreeBetsHolderChanged(address freeBetsHolder);
     event WithdrawnCollateral(address indexed collateral, address indexed recipient, uint amount);
     event VrfConfigChanged(
         uint256 subscriptionId,

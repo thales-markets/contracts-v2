@@ -269,6 +269,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "FreeBetsHolderChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "houseEdge",
         "type": "uint256"
@@ -659,6 +672,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "freeBetsHolder",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1180,6 +1206,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isFreeBet",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "enum Dice.BetType",
         "name": "betType",
         "type": "uint8"
@@ -1389,6 +1434,45 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum Dice.BetType",
+        "name": "betType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "target",
+        "type": "uint8"
+      }
+    ],
+    "name": "placeBetWithFreeBet",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "priceFeed",
     "outputs": [
@@ -1498,6 +1582,19 @@
       }
     ],
     "name": "setCancelTimeout",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_freeBetsHolder",
+        "type": "address"
+      }
+    ],
+    "name": "setFreeBetsHolder",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

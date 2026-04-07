@@ -15,6 +15,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
+import "../../interfaces/ICasinoFreeBetsHolder.sol";
 
 /// @title Slots
 /// @author Overtime
@@ -195,6 +196,12 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @notice Spin IDs per user for history queries
     mapping(address => uint[]) private userSpinIds;
 
+    /// @notice Free bets holder contract address
+    address public freeBetsHolder;
+
+    /// @notice Whether a spin was placed with a free bet
+    mapping(uint => bool) public isFreeBet;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the slots contract
@@ -270,6 +277,31 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @return spinId Newly created spin id
     /// @return requestId Chainlink VRF request id
     function spin(address collateral, uint amount) external nonReentrant notPaused returns (uint spinId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
+        return _spin(msg.sender, collateral, amount, false);
+    }
+
+    /// @notice Places a slot spin using free bet balance
+    /// @param collateral Collateral token address
+    /// @param amount Amount of collateral to stake
+    /// @return spinId Newly created spin id
+    /// @return requestId Chainlink VRF request id
+    function spinWithFreeBet(
+        address collateral,
+        uint amount
+    ) external nonReentrant notPaused returns (uint spinId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        ICasinoFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
+        return _spin(msg.sender, collateral, amount, true);
+    }
+
+    function _spin(
+        address user,
+        address collateral,
+        uint amount,
+        bool _isFreeBet
+    ) internal returns (uint spinId, uint requestId) {
         if (symbolCount == 0) revert InvalidConfig();
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         if (amount == 0) revert InvalidAmount();
@@ -282,8 +314,6 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
         if (potentialProfitUsd > maxProfitUsd) revert MaxProfitExceeded();
 
-        IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
-
         reservedProfitPerCollateral[collateral] += reservedProfit;
 
         if (!_hasEnoughLiquidity(collateral)) {
@@ -295,7 +325,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
         spinId = nextSpinId++;
         spins[spinId] = Spin({
-            user: msg.sender,
+            user: user,
             collateral: collateral,
             amount: amount,
             payout: 0,
@@ -308,10 +338,12 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
             won: false
         });
 
-        requestIdToSpinId[requestId] = spinId;
-        userSpinIds[msg.sender].push(spinId);
+        if (_isFreeBet) isFreeBet[spinId] = true;
 
-        emit SpinPlaced(spinId, requestId, msg.sender, collateral, amount);
+        requestIdToSpinId[requestId] = spinId;
+        userSpinIds[user].push(spinId);
+
+        emit SpinPlaced(spinId, requestId, user, collateral, amount);
     }
 
     /// @notice Cancels a pending spin after timeout and refunds the original stake
@@ -384,7 +416,13 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         uint payout = 0;
         if (multiplier > 0) {
             payout = s.amount + (s.amount * multiplier) / ONE;
-            IERC20(s.collateral).safeTransfer(s.user, payout);
+            if (isFreeBet[spinId]) {
+                uint profit = payout > s.amount ? payout - s.amount : 0;
+                if (profit > 0) IERC20(s.collateral).safeTransfer(s.user, profit);
+                IERC20(s.collateral).safeTransfer(freeBetsHolder, s.amount);
+            } else {
+                IERC20(s.collateral).safeTransfer(s.user, payout);
+            }
         }
 
         s.payout = payout;
@@ -660,6 +698,12 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         emit VrfCoordinatorChanged(_vrfCoordinator);
     }
 
+    /// @notice Sets the free bets holder contract
+    function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        freeBetsHolder = _freeBetsHolder;
+        emit FreeBetsHolderChanged(_freeBetsHolder);
+    }
+
     /// @notice Withdraws collateral from the contract bankroll
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
         uint balance = IERC20(_collateral).balanceOf(address(this));
@@ -744,6 +788,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     event ManagerChanged(address manager);
     event PriceFeedChanged(address priceFeed);
     event VrfCoordinatorChanged(address vrfCoordinator);
+    event FreeBetsHolderChanged(address freeBetsHolder);
     event WithdrawnCollateral(address indexed collateral, address indexed recipient, uint amount);
     event VrfConfigChanged(
         uint256 subscriptionId,
