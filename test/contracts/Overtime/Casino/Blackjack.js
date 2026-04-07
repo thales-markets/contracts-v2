@@ -284,9 +284,9 @@ describe('Blackjack', () => {
 			expect(hand.playerCardCount).to.equal(2n);
 			expect(hand.dealerCardCount).to.equal(1n);
 
-			const cards = await blackjack.getHandCards(handId);
-			expect(cards.playerCards.length).to.equal(2);
-			expect(cards.dealerCards.length).to.equal(1);
+			const views = await blackjack.getUserHands(player.address, 0, 1);
+			expect(views[0].playerCards.length).to.equal(2);
+			expect(views[0].dealerCards.length).to.equal(1);
 		});
 
 		it('should auto-resolve player blackjack (6:5 payout)', async () => {
@@ -696,7 +696,7 @@ describe('Blackjack', () => {
 			expect(payout).to.equal(MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n);
 		});
 
-		it('getPlayerHandValue should return correct value', async () => {
+		it('getUserHands should return correct hand value', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
@@ -704,7 +704,8 @@ describe('Blackjack', () => {
 			// word0=12→K(10), word1=6→7. Player: 10+7=17
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 6n]);
 
-			expect(await blackjack.getPlayerHandValue(handId)).to.equal(17n);
+			const views = await blackjack.getUserHands(player.address, 0, 1);
+			expect(views[0].playerHandValue).to.equal(17n);
 		});
 
 		it('getAvailableLiquidity should return bankroll minus reserved', async () => {
@@ -719,6 +720,84 @@ describe('Blackjack', () => {
 			await expect(
 				blackjack.connect(secondAccount).rawFulfillRandomWords(1n, [7n])
 			).to.be.revertedWithCustomError(blackjack, 'InvalidSender');
+		});
+	});
+
+	/* ========== HAND HISTORY ========== */
+
+	describe('Hand History', () => {
+		it('getUserHandCount should return 0 for new user', async () => {
+			expect(await blackjack.getUserHandCount(player.address)).to.equal(0n);
+		});
+
+		it('getUserHandCount should increment after placing bets', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET * 2n);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			expect(await blackjack.getUserHandCount(player.address)).to.equal(1n);
+
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			expect(await blackjack.getUserHandCount(player.address)).to.equal(2n);
+		});
+
+		it('getUserHands should return hands in reverse chronological order', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET * 3n);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+
+			const views = await blackjack.getUserHands(player.address, 0, 10);
+			expect(views.length).to.equal(3);
+			expect(views[0].handId).to.equal(3n);
+			expect(views[1].handId).to.equal(2n);
+			expect(views[2].handId).to.equal(1n);
+		});
+
+		it('getUserHands should return empty for offset beyond length', async () => {
+			const views = await blackjack.getUserHands(player.address, 100, 10);
+			expect(views.length).to.equal(0);
+		});
+
+		it('should not include other users hands in getUserHands', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+
+			expect(await blackjack.getUserHandCount(secondAccount.address)).to.equal(0n);
+		});
+
+		it('getUserHands should return full HandView with cards and values', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			// Deal cards (blackjack needs 2 random words for initial deal)
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
+
+			const views = await blackjack.getUserHands(player.address, 0, 10);
+			expect(views.length).to.equal(1);
+			expect(views[0].handId).to.equal(handId);
+			expect(views[0].user).to.equal(player.address);
+			expect(views[0].amount).to.equal(MIN_USDC_BET);
+			expect(views[0].playerCards.length).to.be.gt(0);
+			expect(views[0].dealerCards.length).to.be.gt(0);
+			expect(views[0].playerHandValue).to.be.gt(0n);
+		});
+
+		it('getRecentHands should return full HandView', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { requestId } = await parseHandCreated(blackjack, tx);
+
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
+
+			const views = await blackjack.getRecentHands(0, 10);
+			expect(views.length).to.equal(1);
+			expect(views[0].handId).to.equal(1n);
+			expect(views[0].collateral).to.equal(usdcAddress);
+		});
+
+		it('getUserHands should return empty for offset beyond length', async () => {
+			const views = await blackjack.getUserHands(player.address, 100, 10);
+			expect(views.length).to.equal(0);
 		});
 	});
 });

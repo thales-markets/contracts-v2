@@ -83,11 +83,6 @@
   },
   {
     "inputs": [],
-    "name": "InvalidHouseEdge",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidInitialization",
     "type": "error"
   },
@@ -287,19 +282,6 @@
       }
     ],
     "name": "CancelTimeoutChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "houseEdge",
-        "type": "uint256"
-      }
-    ],
-    "name": "HouseEdgeChanged",
     "type": "event"
   },
   {
@@ -540,19 +522,6 @@
   },
   {
     "inputs": [],
-    "name": "MAX_HOUSE_EDGE",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MIN_BANKER_PAYOUT",
     "outputs": [
       {
@@ -567,6 +536,19 @@
   {
     "inputs": [],
     "name": "MIN_BET_USD",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_CANCEL_TIMEOUT",
     "outputs": [
       {
         "internalType": "uint256",
@@ -892,13 +874,246 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "houseEdge",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentBets",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "requestId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "reservedProfit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Baccarat.BetType",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum Baccarat.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum Baccarat.GameResult",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[6]",
+            "name": "cards",
+            "type": "uint8[6]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "playerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bankerTotal",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Baccarat.BetView[]",
+        "name": "views",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserBetCount",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserBets",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "requestId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "reservedProfit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Baccarat.BetType",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum Baccarat.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum Baccarat.GameResult",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[6]",
+            "name": "cards",
+            "type": "uint8[6]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "playerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bankerTotal",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Baccarat.BetView[]",
+        "name": "views",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -980,11 +1195,6 @@
       {
         "internalType": "uint256",
         "name": "_cancelTimeout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_houseEdge",
         "type": "uint256"
       },
       {
@@ -1330,19 +1540,6 @@
       }
     ],
     "name": "setCancelTimeout",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_houseEdge",
-        "type": "uint256"
-      }
-    ],
-    "name": "setHouseEdge",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

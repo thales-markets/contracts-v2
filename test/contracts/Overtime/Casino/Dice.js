@@ -643,4 +643,86 @@ describe('Dice', () => {
 			).to.be.revertedWithCustomError(dice, 'InvalidSender');
 		});
 	});
+
+	/* ========== BET HISTORY ========== */
+
+	describe('Bet History', () => {
+		it('getUserBetCount should return 0 for new user', async () => {
+			expect(await dice.getUserBetCount(player.address)).to.equal(0n);
+		});
+
+		it('getUserBetCount should increment after placing bets', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 2n);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			expect(await dice.getUserBetCount(player.address)).to.equal(1n);
+
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+			expect(await dice.getUserBetCount(player.address)).to.equal(2n);
+		});
+
+		it('getUserBets should return bets in reverse chronological order', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
+
+			const bets = await dice.getUserBets(player.address, 0, 10);
+			expect(bets.length).to.equal(3);
+			// Most recent first
+			expect(bets[0].target).to.equal(5n);
+			expect(bets[1].target).to.equal(10n);
+			expect(bets[2].target).to.equal(11n);
+		});
+
+		it('getUserBets should paginate correctly', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
+
+			const page1 = await dice.getUserBets(player.address, 0, 2);
+			expect(page1.length).to.equal(2);
+			expect(page1[0].target).to.equal(5n);
+
+			const page2 = await dice.getUserBets(player.address, 2, 2);
+			expect(page2.length).to.equal(1);
+			expect(page2[0].target).to.equal(11n);
+		});
+
+		it('getUserBets should return empty for offset beyond length', async () => {
+			const bets = await dice.getUserBets(player.address, 100, 10);
+			expect(bets.length).to.equal(0);
+		});
+
+		it('getRecentBets should return bets in reverse chronological order', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 2n);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+
+			const recent = await dice.getRecentBets(0, 10);
+			expect(recent.length).to.equal(2);
+			expect(recent[0].user).to.equal(player.address);
+		});
+
+		it('getRecentBets should paginate correctly', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
+
+			const page = await dice.getRecentBets(1, 1);
+			expect(page.length).to.equal(1);
+			// Skip most recent (bet 3), get bet 2
+			expect(page[0].target).to.equal(10n);
+		});
+
+		it('should not include other users bets in getUserBets', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+
+			expect(await dice.getUserBetCount(secondAccount.address)).to.equal(0n);
+			const bets = await dice.getUserBets(secondAccount.address, 0, 10);
+			expect(bets.length).to.equal(0);
+		});
+	});
 });

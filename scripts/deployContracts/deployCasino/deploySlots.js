@@ -23,7 +23,7 @@ async function main() {
 	const overPriceFeedKey = ethers.encodeBytes32String('OVER');
 
 	const maxProfitUsd = ethers.parseEther('1000');
-	const cancelTimeout = 3600;
+	const cancelTimeout = 60;
 	const houseEdge = ethers.parseEther('0.02'); // 2%
 	const maxPayoutMultiplier = ethers.parseEther('50'); // 50x max reserved profit
 

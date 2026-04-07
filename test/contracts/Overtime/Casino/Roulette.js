@@ -993,4 +993,54 @@ describe('Roulette', () => {
 			});
 		});
 	});
+
+	/* ========== BET HISTORY ========== */
+
+	describe('Bet History', () => {
+		it('getUserBetCount should return 0 for new user', async () => {
+			expect(await roulette.getUserBetCount(player.address)).to.equal(0n);
+		});
+
+		it('getUserBetCount should increment after placing bets', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			expect(await roulette.getUserBetCount(player.address)).to.equal(1n);
+
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+			expect(await roulette.getUserBetCount(player.address)).to.equal(2n);
+		});
+
+		it('getUserBets should return bets in reverse chronological order', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+
+			const bets = await roulette.getUserBets(player.address, 0, 10);
+			expect(bets.length).to.equal(2);
+			expect(bets[0].betType).to.equal(BigInt(BetType.ODD_EVEN));
+			expect(bets[1].betType).to.equal(BigInt(BetType.RED_BLACK));
+		});
+
+		it('getUserBets should return empty for offset beyond length', async () => {
+			const bets = await roulette.getUserBets(player.address, 100, 10);
+			expect(bets.length).to.equal(0);
+		});
+
+		it('getRecentBets should return bets in reverse chronological order', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+
+			const recent = await roulette.getRecentBets(0, 10);
+			expect(recent.length).to.equal(2);
+			expect(recent[0].user).to.equal(player.address);
+		});
+
+		it('should not include other users bets in getUserBets', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+
+			expect(await roulette.getUserBetCount(secondAccount.address)).to.equal(0n);
+		});
+	});
 });

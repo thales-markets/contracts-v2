@@ -39,9 +39,14 @@ const TRIPLE_PAYOUTS = [
 	ethers.parseEther('15'), // symbol 4: 15x profit (jackpot)
 ];
 
-// Helper: derive reel result from a random word segment
-function rollSymbol(r) {
-	const rand = r % TOTAL_WEIGHT;
+// Helper: derive a reel result using keccak256 (matches contract logic)
+function rollSymbol(word, reelIndex) {
+	const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
+		['uint256', 'uint256'],
+		[word, reelIndex]
+	);
+	const hash = BigInt(ethers.keccak256(encoded));
+	const rand = hash % TOTAL_WEIGHT;
 	let acc = 0n;
 	for (let i = 0; i < SYMBOL_COUNT; i++) {
 		acc += SYMBOL_WEIGHTS[i];
@@ -52,10 +57,7 @@ function rollSymbol(r) {
 
 // Helper: derive all 3 reels from a random word
 function deriveReels(word) {
-	const r1 = rollSymbol(word);
-	const r2 = rollSymbol(word >> 16n);
-	const r3 = rollSymbol(word >> 32n);
-	return [r1, r2, r3];
+	return [rollSymbol(word, 0), rollSymbol(word, 1), rollSymbol(word, 2)];
 }
 
 // Helper: compute expected payout for a given random word
@@ -69,32 +71,22 @@ function getExpectedPayout(amount, word) {
 	return 0n;
 }
 
-// Helper: construct a random word that gives triple of a specific symbol
-// With equal weights of 20 and total 100: symbol s wins when rand in [20*s, 20*(s+1))
-// Due to the property that 65536 % 100 = 36, and s*20*36 % 100 = s*20,
-// placing s*20 in the top 32-bit segment naturally propagates to all reels
+// Helper: brute-force find a random word that gives triple of a specific symbol
 function findTripleWord(symbol) {
-	const targetRand = BigInt(symbol) * 20n;
-	const word = targetRand * 2n ** 32n;
-	// Verify
-	const [r1, r2, r3] = deriveReels(word);
-	if (r1 !== symbol || r2 !== symbol || r3 !== symbol) {
-		throw new Error(
-			`Triple word verification failed for symbol ${symbol}: got [${r1},${r2},${r3}]`
-		);
+	for (let i = 0n; i < 100000n; i++) {
+		const [r1, r2, r3] = deriveReels(i);
+		if (r1 === symbol && r2 === symbol && r3 === symbol) return i;
 	}
-	return word;
+	throw new Error(`Could not find triple word for symbol ${symbol}`);
 }
 
 // Helper: find a random word that gives no triple
-// r=20 → reel1=symbol1, reel2=symbol0, reel3=symbol0 → not a triple
 function findLossWord() {
-	const word = 20n;
-	const [r1, r2, r3] = deriveReels(word);
-	if (r1 === r2 && r2 === r3) {
-		throw new Error('Loss word verification failed');
+	for (let i = 0n; i < 100000n; i++) {
+		const [r1, r2, r3] = deriveReels(i);
+		if (r1 !== r2 || r2 !== r3) return i;
 	}
-	return word;
+	throw new Error('Could not find loss word');
 }
 
 async function deploySlotsFixture() {
@@ -748,6 +740,110 @@ describe('Slots', () => {
 			await expect(
 				slots.connect(secondAccount).setPausedByRole(true)
 			).to.be.revertedWithCustomError(slots, 'InvalidSender');
+		});
+	});
+
+	/* ========== SPIN HISTORY ========== */
+
+	describe('Spin History', () => {
+		// Lower payouts and maxPayoutMultiplier so multiple spins can be placed with limited bankroll
+		beforeEach(async () => {
+			for (let i = 0; i < SYMBOL_COUNT; i++) {
+				await slots.connect(owner).setTriplePayout(i, ethers.parseEther('5'));
+			}
+			await slots.connect(owner).setMaxPayoutMultiplier(ethers.parseEther('5'));
+		});
+
+		it('getUserSpinCount should return 0 for new user', async () => {
+			expect(await slots.getUserSpinCount(player.address)).to.equal(0n);
+		});
+
+		it('getUserSpinCount should increment after placing spins', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 2n);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			expect(await slots.getUserSpinCount(player.address)).to.equal(1n);
+
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			expect(await slots.getUserSpinCount(player.address)).to.equal(2n);
+		});
+
+		it('getUserSpins should return spins in reverse chronological order', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 3n);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+
+			const spins = await slots.getUserSpins(player.address, 0, 10);
+			expect(spins.length).to.equal(3);
+			// Most recent first - requestIds should be 3, 2, 1
+			expect(spins[0].requestId).to.equal(3n);
+			expect(spins[1].requestId).to.equal(2n);
+			expect(spins[2].requestId).to.equal(1n);
+		});
+
+		it('getUserSpins should paginate correctly', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 3n);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+
+			const page1 = await slots.getUserSpins(player.address, 0, 2);
+			expect(page1.length).to.equal(2);
+			expect(page1[0].requestId).to.equal(3n);
+
+			const page2 = await slots.getUserSpins(player.address, 2, 2);
+			expect(page2.length).to.equal(1);
+			expect(page2[0].requestId).to.equal(1n);
+		});
+
+		it('getUserSpins should return empty for offset beyond length', async () => {
+			const spins = await slots.getUserSpins(player.address, 100, 10);
+			expect(spins.length).to.equal(0);
+		});
+
+		it('getRecentSpins should return spins in reverse chronological order', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 2n);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+
+			const recent = await slots.getRecentSpins(0, 10);
+			expect(recent.length).to.equal(2);
+			expect(recent[0].user).to.equal(player.address);
+		});
+
+		it('should not include other users spins in getUserSpins', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+
+			expect(await slots.getUserSpinCount(secondAccount.address)).to.equal(0n);
+			const spins = await slots.getUserSpins(secondAccount.address, 0, 10);
+			expect(spins.length).to.equal(0);
+		});
+
+		it('SpinView should include spinId and reels', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			// Resolve so reels are populated
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findTripleWord(0)]);
+
+			const views = await slots.getUserSpins(player.address, 0, 1);
+			expect(views.length).to.equal(1);
+			expect(views[0].spinId).to.equal(spinId);
+			expect(views[0].reels[0]).to.equal(0n);
+			expect(views[0].reels[1]).to.equal(0n);
+			expect(views[0].reels[2]).to.equal(0n);
+			expect(views[0].won).to.equal(true);
+		});
+
+		it('getRecentSpins should include spinId', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+
+			const recent = await slots.getRecentSpins(0, 1);
+			expect(recent[0].spinId).to.equal(1n);
+			expect(recent[0].amount).to.equal(MIN_USDC_BET);
 		});
 	});
 });

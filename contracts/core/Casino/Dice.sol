@@ -35,6 +35,9 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     /// @notice Maximum allowed house edge in 1e18 precision
     uint public constant MAX_HOUSE_EDGE = 5e16; // 5%
 
+    /// @notice Minimum allowed cancel timeout in seconds
+    uint public constant MIN_CANCEL_TIMEOUT = 30;
+
     /* ========== ERRORS ========== */
 
     error InvalidAddress();
@@ -183,6 +186,9 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     /// @notice Tracks reserved house-side profit liability for all pending bets per collateral
     mapping(address => uint) public reservedProfitPerCollateral;
 
+    /// @notice Bet IDs per user for history queries
+    mapping(address => uint[]) private userBetIds;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the dice contract
@@ -234,6 +240,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         priceFeedKeyPerCollateral[collateralConfig.weth] = collateralConfig.wethPriceFeedKey;
         priceFeedKeyPerCollateral[collateralConfig.over] = collateralConfig.overPriceFeedKey;
 
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         maxProfitUsd = _maxProfitUsd;
         cancelTimeout = _cancelTimeout;
         houseEdge = _houseEdge;
@@ -302,6 +309,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         });
 
         requestIdToBetId[requestId] = betId;
+        userBetIds[msg.sender].push(betId);
 
         emit BetPlaced(betId, requestId, msg.sender, collateral, amount, betType, target);
     }
@@ -346,7 +354,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     /// @notice Coordinator-only VRF entrypoint
     /// @param requestId Chainlink VRF request id
     /// @param randomWords Array of VRF random words
-    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
+    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external nonReentrant {
         if (msg.sender != address(vrfCoordinator)) revert InvalidSender();
         _fulfillRandomWords(requestId, randomWords);
     }
@@ -624,6 +632,43 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         return balance > reserved ? balance - reserved : 0;
     }
 
+    /// @notice Returns the number of bets placed by a user
+    function getUserBetCount(address user) external view returns (uint) {
+        return userBetIds[user].length;
+    }
+
+    /// @notice Returns full bet data for a user's bets with pagination
+    /// @param user User address
+    /// @param offset Starting index (0 = most recent)
+    /// @param limit Maximum number of bets to return
+    /// @return betArray Array of Bet structs in reverse chronological order
+    function getUserBets(address user, uint offset, uint limit) external view returns (Bet[] memory betArray) {
+        uint[] storage ids = userBetIds[user];
+        uint len = ids.length;
+        if (offset >= len) return new Bet[](0);
+        uint remaining = len - offset;
+        uint count = remaining < limit ? remaining : limit;
+        betArray = new Bet[](count);
+        for (uint i = 0; i < count; i++) {
+            betArray[i] = bets[ids[len - 1 - offset - i]];
+        }
+    }
+
+    /// @notice Returns full bet data for recent bets with pagination
+    /// @param offset Number of bets to skip from the latest
+    /// @param limit Maximum number of bets to return
+    /// @return betArray Array of Bet structs in reverse chronological order
+    function getRecentBets(uint offset, uint limit) external view returns (Bet[] memory betArray) {
+        uint latest = nextBetId - 1;
+        if (offset >= latest) return new Bet[](0);
+        uint start = latest - offset;
+        uint count = start < limit ? start : limit;
+        betArray = new Bet[](count);
+        for (uint i = 0; i < count; i++) {
+            betArray[i] = bets[start - i];
+        }
+    }
+
     /* ========== SETTERS ========== */
 
     /// @notice Sets maximum allowed profit per bet in USD
@@ -639,6 +684,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     /// @dev Callable by owner or manager role with RISK_MANAGING permission
     /// @param _cancelTimeout Timeout in seconds
     function setCancelTimeout(uint _cancelTimeout) external onlyRiskManager {
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         cancelTimeout = _cancelTimeout;
         emit CancelTimeoutChanged(_cancelTimeout);
     }
@@ -701,6 +747,9 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     /// @param _recipient The address of the recipient, defaults to owner if zero address
     /// @param _amount The amount of tokens to withdraw
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
+        uint balance = IERC20(_collateral).balanceOf(address(this));
+        uint reserved = reservedProfitPerCollateral[_collateral];
+        if (_amount > balance || balance - _amount < reserved) revert InsufficientAvailableLiquidity();
         address recipient = _recipient == address(0) ? owner : _recipient;
         IERC20(_collateral).safeTransfer(recipient, _amount);
         emit WithdrawnCollateral(_collateral, recipient, _amount);

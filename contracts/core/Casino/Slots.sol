@@ -35,6 +35,9 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @notice Maximum allowed house edge in 1e18 precision
     uint public constant MAX_HOUSE_EDGE = 5e16; // 5%
 
+    /// @notice Minimum allowed cancel timeout in seconds
+    uint public constant MIN_CANCEL_TIMEOUT = 30;
+
     /* ========== ERRORS ========== */
 
     error InvalidAddress();
@@ -65,6 +68,22 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
     /// @notice Stored data for an individual slot spin
     struct Spin {
+        address user;
+        address collateral;
+        uint amount;
+        uint payout;
+        uint requestId;
+        uint placedAt;
+        uint resolvedAt;
+        uint reservedProfit;
+        SpinStatus status;
+        uint8[3] reels;
+        bool won;
+    }
+
+    /// @notice Frontend-friendly view of a spin with spinId included
+    struct SpinView {
+        uint spinId;
         address user;
         address collateral;
         uint amount;
@@ -173,6 +192,9 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @notice Maximum payout multiplier (used to calculate reserved profit)
     uint public maxPayoutMultiplier;
 
+    /// @notice Spin IDs per user for history queries
+    mapping(address => uint[]) private userSpinIds;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the slots contract
@@ -227,6 +249,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         priceFeedKeyPerCollateral[collateralConfig.weth] = collateralConfig.wethPriceFeedKey;
         priceFeedKeyPerCollateral[collateralConfig.over] = collateralConfig.overPriceFeedKey;
 
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         maxProfitUsd = _maxProfitUsd;
         cancelTimeout = _cancelTimeout;
         houseEdge = _houseEdge;
@@ -247,6 +270,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @return spinId Newly created spin id
     /// @return requestId Chainlink VRF request id
     function spin(address collateral, uint amount) external nonReentrant notPaused returns (uint spinId, uint requestId) {
+        if (symbolCount == 0) revert InvalidConfig();
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         if (amount == 0) revert InvalidAmount();
 
@@ -285,6 +309,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         });
 
         requestIdToSpinId[requestId] = spinId;
+        userSpinIds[msg.sender].push(spinId);
 
         emit SpinPlaced(spinId, requestId, msg.sender, collateral, amount);
     }
@@ -329,7 +354,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @notice Coordinator-only VRF entrypoint
     /// @param requestId Chainlink VRF request id
     /// @param randomWords Array of VRF random words
-    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
+    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external nonReentrant {
         if (msg.sender != address(vrfCoordinator)) revert InvalidSender();
         _fulfillRandomWords(requestId, randomWords);
     }
@@ -346,9 +371,9 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
         uint r = randomWords[0];
 
-        uint8 r1 = _roll(r);
-        uint8 r2 = _roll(r >> 16);
-        uint8 r3 = _roll(r >> 32);
+        uint8 r1 = _roll(uint256(keccak256(abi.encode(r, uint(0)))));
+        uint8 r2 = _roll(uint256(keccak256(abi.encode(r, uint(1)))));
+        uint8 r3 = _roll(uint256(keccak256(abi.encode(r, uint(2)))));
 
         s.reels = [r1, r2, r3];
 
@@ -488,6 +513,62 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         return symbolWeights;
     }
 
+    /// @notice Returns the number of spins placed by a user
+    function getUserSpinCount(address user) external view returns (uint) {
+        return userSpinIds[user].length;
+    }
+
+    /// @notice Returns full spin data for a user's spins with pagination
+    /// @param user User address
+    /// @param offset Starting index (0 = most recent)
+    /// @param limit Maximum number of spins to return
+    /// @return views Array of SpinView structs in reverse chronological order
+    function getUserSpins(address user, uint offset, uint limit) external view returns (SpinView[] memory views) {
+        uint[] storage ids = userSpinIds[user];
+        uint len = ids.length;
+        if (offset >= len) return new SpinView[](0);
+        uint remaining = len - offset;
+        uint count = remaining < limit ? remaining : limit;
+        views = new SpinView[](count);
+        for (uint i = 0; i < count; i++) {
+            views[i] = _buildSpinView(ids[len - 1 - offset - i]);
+        }
+    }
+
+    /// @notice Returns full spin data for recent spins with pagination
+    /// @param offset Number of spins to skip from the latest
+    /// @param limit Maximum number of spins to return
+    /// @return views Array of SpinView structs in reverse chronological order
+    function getRecentSpins(uint offset, uint limit) external view returns (SpinView[] memory views) {
+        uint latest = nextSpinId - 1;
+        if (offset >= latest) return new SpinView[](0);
+        uint start = latest - offset;
+        uint count = start < limit ? start : limit;
+        views = new SpinView[](count);
+        for (uint i = 0; i < count; i++) {
+            views[i] = _buildSpinView(start - i);
+        }
+    }
+
+    /// @notice Builds a SpinView from storage for a given spin ID
+    function _buildSpinView(uint spinId) internal view returns (SpinView memory v) {
+        Spin storage s = spins[spinId];
+        v = SpinView({
+            spinId: spinId,
+            user: s.user,
+            collateral: s.collateral,
+            amount: s.amount,
+            payout: s.payout,
+            requestId: s.requestId,
+            placedAt: s.placedAt,
+            resolvedAt: s.resolvedAt,
+            reservedProfit: s.reservedProfit,
+            status: s.status,
+            reels: s.reels,
+            won: s.won
+        });
+    }
+
     /* ========== SETTERS ========== */
 
     /// @notice Sets the symbol configuration
@@ -495,6 +576,9 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @param weights Array of weights for each symbol
     function setSymbols(uint8 _count, uint[] calldata weights) external onlyOwner {
         if (_count == 0 || weights.length != _count) revert InvalidConfig();
+        uint total;
+        for (uint i = 0; i < weights.length; i++) total += weights[i];
+        if (total == 0) revert InvalidConfig();
         symbolCount = _count;
         symbolWeights = weights;
         emit SymbolsChanged(_count, weights);
@@ -502,8 +586,10 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
     /// @notice Sets the payout multiplier for a 3-of-a-kind symbol
     /// @param symbol Symbol index
-    /// @param multiplier Payout multiplier in 1e18 precision (net of stake)
+    /// @param multiplier Payout multiplier in 1e18 precision (net of stake), must be <= maxPayoutMultiplier
     function setTriplePayout(uint8 symbol, uint multiplier) external onlyOwner {
+        if (symbol >= symbolCount) revert InvalidConfig();
+        if (multiplier > maxPayoutMultiplier) revert InvalidConfig();
         triplePayout[symbol] = multiplier;
         emit TriplePayoutChanged(symbol, multiplier);
     }
@@ -517,6 +603,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
     /// @notice Sets timeout after which pending spins can be cancelled
     function setCancelTimeout(uint _cancelTimeout) external onlyRiskManager {
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         cancelTimeout = _cancelTimeout;
         emit CancelTimeoutChanged(_cancelTimeout);
     }
@@ -528,9 +615,12 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         emit HouseEdgeChanged(_houseEdge);
     }
 
-    /// @notice Sets maximum payout multiplier
+    /// @notice Sets maximum payout multiplier (must be >= all existing triplePayout values)
     function setMaxPayoutMultiplier(uint _maxPayoutMultiplier) external onlyRiskManager {
         if (_maxPayoutMultiplier == 0) revert InvalidAmount();
+        for (uint8 i = 0; i < symbolCount; i++) {
+            if (triplePayout[i] > _maxPayoutMultiplier) revert InvalidConfig();
+        }
         maxPayoutMultiplier = _maxPayoutMultiplier;
         emit MaxPayoutMultiplierChanged(_maxPayoutMultiplier);
     }
@@ -572,6 +662,9 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
     /// @notice Withdraws collateral from the contract bankroll
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
+        uint balance = IERC20(_collateral).balanceOf(address(this));
+        uint reserved = reservedProfitPerCollateral[_collateral];
+        if (_amount > balance || balance - _amount < reserved) revert InsufficientAvailableLiquidity();
         address recipient = _recipient == address(0) ? owner : _recipient;
         IERC20(_collateral).safeTransfer(recipient, _amount);
         emit WithdrawnCollateral(_collateral, recipient, _amount);

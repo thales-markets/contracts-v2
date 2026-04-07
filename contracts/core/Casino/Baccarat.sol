@@ -31,8 +31,8 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Minimum allowed bet value expressed in USD, normalized to 18 decimals
     uint public constant MIN_BET_USD = 3e18;
 
-    /// @notice Maximum allowed house edge in 1e18 precision
-    uint public constant MAX_HOUSE_EDGE = 5e16; // 5%
+    /// @notice Minimum allowed cancel timeout in seconds
+    uint public constant MIN_CANCEL_TIMEOUT = 30;
 
     /// @notice Default total payout multiplier for winning Banker bets in 1e18 precision
     uint public constant DEFAULT_BANKER_PAYOUT = 195e16; // 1.95x
@@ -42,13 +42,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
 
     /// @notice Maximum allowed total payout multiplier for winning Banker bets in 1e18 precision
     uint public constant MAX_BANKER_PAYOUT = 2e18; // 2.00x
-
-    uint8 private constant PLAYER_CARD_1_INDEX = 0;
-    uint8 private constant BANKER_CARD_1_INDEX = 1;
-    uint8 private constant PLAYER_CARD_2_INDEX = 2;
-    uint8 private constant BANKER_CARD_2_INDEX = 3;
-    uint8 private constant PLAYER_CARD_3_INDEX = 4;
-    uint8 private constant BANKER_CARD_3_INDEX = 5;
 
     uint8 private constant CARD_RANK_MIN = 1;
     uint8 private constant CARD_RANK_MAX = 13;
@@ -61,7 +54,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     error InvalidPrice();
     error InvalidAmount();
     error InvalidBetType();
-    error InvalidHouseEdge();
     error InvalidCardRank();
     error InvalidBankerPayoutMultiplier();
     error BetNotFound();
@@ -133,6 +125,27 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint8[6] cards;
     }
 
+    /// @notice Frontend-friendly view of a baccarat bet with all fields in one struct
+    struct BetView {
+        uint betId;
+        address user;
+        address collateral;
+        uint amount;
+        uint payout;
+        uint requestId;
+        uint placedAt;
+        uint resolvedAt;
+        uint reservedProfit;
+        BetType betType;
+        BetStatus status;
+        GameResult result;
+        bool won;
+        bool isPush;
+        uint8[6] cards;
+        uint8 playerTotal;
+        uint8 bankerTotal;
+    }
+
     struct CoreAddresses {
         address owner;
         address manager;
@@ -189,10 +202,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Timeout after which a pending bet can be cancelled
     uint public cancelTimeout;
 
-    /// @notice House edge in 1e18 precision. Example: 1e16 = 1%
-    /// @dev Must be greater than 0 and capped at MAX_HOUSE_EDGE
-    uint public houseEdge;
-
     /// @notice Total payout multiplier for winning Banker bets in 1e18 precision
     /// @dev Defaults to DEFAULT_BANKER_PAYOUT if initialize receives 0
     uint public bankerPayoutMultiplier;
@@ -230,6 +239,9 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Tracks reserved house-side profit liability for all pending bets per collateral
     mapping(address => uint) public reservedProfitPerCollateral;
 
+    /// @notice Bet IDs per user for history queries
+    mapping(address => uint[]) private userBetIds;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the baccarat contract
@@ -237,7 +249,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @param collateralConfig Collateral addresses and price feed keys
     /// @param _maxProfitUsd Maximum allowed profit per bet in USD, normalized to 18 decimals
     /// @param _cancelTimeout Timeout after which a pending bet can be cancelled
-    /// @param _houseEdge House edge in 1e18 precision. Example: 1e16 = 1%
     /// @param _bankerPayoutMultiplier Total payout multiplier for winning Banker bets in 1e18 precision. Pass 0 to use DEFAULT_BANKER_PAYOUT.
     /// @param vrfConfig Chainlink VRF configuration
     function initialize(
@@ -245,7 +256,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         CollateralConfig calldata collateralConfig,
         uint _maxProfitUsd,
         uint _cancelTimeout,
-        uint _houseEdge,
         uint _bankerPayoutMultiplier,
         VrfConfig calldata vrfConfig
     ) external initializer {
@@ -280,7 +290,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         priceFeedKeyPerCollateral[collateralConfig.over] = collateralConfig.overPriceFeedKey;
 
         if (_maxProfitUsd == 0) revert InvalidAmount();
-        if (_houseEdge == 0 || _houseEdge > MAX_HOUSE_EDGE) revert InvalidHouseEdge();
         if (vrfConfig.callbackGasLimit == 0 || vrfConfig.requestConfirmations == 0) revert InvalidAmount();
 
         uint bankerMultiplierToSet = _bankerPayoutMultiplier == 0 ? DEFAULT_BANKER_PAYOUT : _bankerPayoutMultiplier;
@@ -288,9 +297,9 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
             revert InvalidBankerPayoutMultiplier();
         }
 
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         maxProfitUsd = _maxProfitUsd;
         cancelTimeout = _cancelTimeout;
-        houseEdge = _houseEdge;
         bankerPayoutMultiplier = bankerMultiplierToSet;
 
         subscriptionId = vrfConfig.subscriptionId;
@@ -346,6 +355,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         bet.status = BetStatus.PENDING;
 
         requestIdToBetId[requestId] = betId;
+        userBetIds[msg.sender].push(betId);
 
         emit BetPlaced(betId, requestId, msg.sender, collateral, amount, betType);
     }
@@ -390,7 +400,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Coordinator-only VRF entrypoint
     /// @param requestId Chainlink VRF request id
     /// @param randomWords Array of VRF random words
-    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
+    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external nonReentrant {
         if (msg.sender != address(vrfCoordinator)) revert InvalidSender();
         _fulfillRandomWords(requestId, randomWords);
     }
@@ -803,6 +813,60 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         return _getGameResult(playerTotal, bankerTotal);
     }
 
+    /// @notice Returns the number of bets placed by a user
+    function getUserBetCount(address user) external view returns (uint) {
+        return userBetIds[user].length;
+    }
+
+    /// @notice Returns full bet data for a user's bets with pagination
+    function getUserBets(address user, uint offset, uint limit) external view returns (BetView[] memory views) {
+        uint[] storage allIds = userBetIds[user];
+        uint len = allIds.length;
+        if (offset >= len) return new BetView[](0);
+        uint remaining = len - offset;
+        uint count = remaining < limit ? remaining : limit;
+        views = new BetView[](count);
+        for (uint i = 0; i < count; i++) {
+            views[i] = _buildBetView(allIds[len - 1 - offset - i]);
+        }
+    }
+
+    /// @notice Returns full bet data for recent bets with pagination
+    function getRecentBets(uint offset, uint limit) external view returns (BetView[] memory views) {
+        uint latest = nextBetId - 1;
+        if (offset >= latest) return new BetView[](0);
+        uint start = latest - offset;
+        uint count = start < limit ? start : limit;
+        views = new BetView[](count);
+        for (uint i = 0; i < count; i++) {
+            views[i] = _buildBetView(start - i);
+        }
+    }
+
+    /// @notice Builds a BetView from storage for a given bet ID
+    function _buildBetView(uint betId) internal view returns (BetView memory v) {
+        Bet storage b = _bets[betId];
+        v = BetView({
+            betId: betId,
+            user: b.user,
+            collateral: b.collateral,
+            amount: b.amount,
+            payout: b.payout,
+            requestId: b.requestId,
+            placedAt: b.placedAt,
+            resolvedAt: b.resolvedAt,
+            reservedProfit: b.reservedProfit,
+            betType: b.betType,
+            status: b.status,
+            result: b.result,
+            won: b.won,
+            isPush: b.isPush,
+            cards: b.cards,
+            playerTotal: b.playerTotal,
+            bankerTotal: b.bankerTotal
+        });
+    }
+
     /* ========== SETTERS ========== */
 
     /// @notice Sets maximum allowed profit per bet in USD
@@ -818,17 +882,9 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @dev Callable by owner or manager role with RISK_MANAGING permission
     /// @param _cancelTimeout Timeout in seconds
     function setCancelTimeout(uint _cancelTimeout) external onlyRiskManager {
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         cancelTimeout = _cancelTimeout;
         emit CancelTimeoutChanged(_cancelTimeout);
-    }
-
-    /// @notice Sets house edge
-    /// @dev Callable by owner or manager role with RISK_MANAGING permission
-    /// @param _houseEdge House edge in 1e18 precision
-    function setHouseEdge(uint _houseEdge) external onlyRiskManager {
-        if (_houseEdge == 0 || _houseEdge > MAX_HOUSE_EDGE) revert InvalidHouseEdge();
-        houseEdge = _houseEdge;
-        emit HouseEdgeChanged(_houseEdge);
     }
 
     /// @notice Sets total payout multiplier for winning Banker bets
@@ -892,6 +948,9 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @param _recipient The address of the recipient, defaults to owner if zero address
     /// @param _amount The amount of tokens to withdraw
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
+        uint balance = IERC20(_collateral).balanceOf(address(this));
+        uint reserved = reservedProfitPerCollateral[_collateral];
+        if (_amount > balance || balance - _amount < reserved) revert InsufficientAvailableLiquidity();
         address recipient = _recipient == address(0) ? owner : _recipient;
         IERC20(_collateral).safeTransfer(recipient, _amount);
         emit WithdrawnCollateral(_collateral, recipient, _amount);
@@ -1011,7 +1070,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
 
     /// @notice Emitted when house edge is changed
     /// @param houseEdge New house edge in 1e18 precision
-    event HouseEdgeChanged(uint houseEdge);
 
     /// @notice Emitted when banker payout multiplier is changed
     /// @param bankerPayoutMultiplier New banker payout multiplier in 1e18 precision

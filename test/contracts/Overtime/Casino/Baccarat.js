@@ -10,7 +10,6 @@ const OVER_PRICE = ethers.parseEther('1');
 
 const MAX_PROFIT_USD = ethers.parseEther('1000');
 const CANCEL_TIMEOUT = 3600n;
-const HOUSE_EDGE = ethers.parseEther('0.02'); // 2%
 const BANKER_PAYOUT = ethers.parseEther('1.95'); // 1.95x
 const ONE = ethers.parseEther('1');
 
@@ -164,7 +163,6 @@ async function deployBaccaratFixture() {
 		},
 		MAX_PROFIT_USD,
 		CANCEL_TIMEOUT,
-		HOUSE_EDGE,
 		0, // use DEFAULT_BANKER_PAYOUT
 		{
 			subscriptionId: 1,
@@ -271,7 +269,6 @@ describe('Baccarat', () => {
 			expect(await baccarat.usdc()).to.equal(usdcAddress);
 			expect(await baccarat.maxProfitUsd()).to.equal(MAX_PROFIT_USD);
 			expect(await baccarat.cancelTimeout()).to.equal(CANCEL_TIMEOUT);
-			expect(await baccarat.houseEdge()).to.equal(HOUSE_EDGE);
 			expect(await baccarat.bankerPayoutMultiplier()).to.equal(BANKER_PAYOUT);
 			expect(await baccarat.nextBetId()).to.equal(1n);
 		});
@@ -294,7 +291,6 @@ describe('Baccarat', () => {
 					},
 					MAX_PROFIT_USD,
 					CANCEL_TIMEOUT,
-					HOUSE_EDGE,
 					0,
 					{
 						subscriptionId: 1,
@@ -614,13 +610,6 @@ describe('Baccarat', () => {
 				baccarat.connect(owner).setBankerPayoutMultiplier(tooHigh)
 			).to.be.revertedWithCustomError(baccarat, 'InvalidBankerPayoutMultiplier');
 		});
-
-		it('setHouseEdge should update', async () => {
-			const newEdge = ethers.parseEther('0.03');
-			await expect(baccarat.connect(owner).setHouseEdge(newEdge))
-				.to.emit(baccarat, 'HouseEdgeChanged')
-				.withArgs(newEdge);
-		});
 	});
 
 	/* ========== VRF AUTH ========== */
@@ -630,6 +619,85 @@ describe('Baccarat', () => {
 			await expect(
 				baccarat.connect(secondAccount).rawFulfillRandomWords(1n, [7n])
 			).to.be.revertedWithCustomError(baccarat, 'InvalidSender');
+		});
+	});
+
+	/* ========== BET HISTORY ========== */
+
+	describe('Bet History', () => {
+		it('getUserBetCount should return 0 for new user', async () => {
+			expect(await baccarat.getUserBetCount(player.address)).to.equal(0n);
+		});
+
+		it('getUserBetCount should increment after placing bets', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 2n);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			expect(await baccarat.getUserBetCount(player.address)).to.equal(1n);
+
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			expect(await baccarat.getUserBetCount(player.address)).to.equal(2n);
+		});
+
+		it('getUserBets should return bets in reverse chronological order', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 3n);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+
+			const views = await baccarat.getUserBets(player.address, 0, 10);
+			expect(views.length).to.equal(3);
+			expect(views[0].betId).to.equal(3n);
+			expect(views[1].betId).to.equal(2n);
+			expect(views[2].betId).to.equal(1n);
+		});
+
+		it('getUserBets should return empty for offset beyond length', async () => {
+			const views = await baccarat.getUserBets(player.address, 100, 10);
+			expect(views.length).to.equal(0);
+		});
+
+		it('should not include other users bets in getUserBets', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+
+			expect(await baccarat.getUserBetCount(secondAccount.address)).to.equal(0n);
+		});
+
+		it('getUserBets should return full BetView with cards and totals', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
+
+			// Resolve
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [42n]);
+
+			const views = await baccarat.getUserBets(player.address, 0, 10);
+			expect(views.length).to.equal(1);
+			expect(views[0].betId).to.equal(betId);
+			expect(views[0].user).to.equal(player.address);
+			expect(views[0].amount).to.equal(MIN_USDC_BET);
+			expect(views[0].betType).to.equal(BetType.PLAYER);
+			expect(views[0].status).to.equal(Status.RESOLVED);
+			// cards array should be populated
+			expect(views[0].cards.length).to.equal(6);
+		});
+
+		it('getRecentBets should return full BetView', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			const { requestId } = await parseBetPlaced(baccarat, tx);
+
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [100n]);
+
+			const views = await baccarat.getRecentBets(0, 10);
+			expect(views.length).to.equal(1);
+			expect(views[0].betId).to.equal(1n);
+			expect(views[0].collateral).to.equal(usdcAddress);
+		});
+
+		it('getUserBets should return empty for offset beyond length', async () => {
+			const views = await baccarat.getUserBets(player.address, 100, 10);
+			expect(views.length).to.equal(0);
 		});
 	});
 });

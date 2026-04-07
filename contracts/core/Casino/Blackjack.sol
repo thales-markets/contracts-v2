@@ -34,6 +34,9 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     /// @notice Minimum allowed bet value expressed in USD, normalized to 18 decimals
     uint public constant MIN_BET_USD = 3e18;
 
+    /// @notice Minimum allowed cancel timeout in seconds
+    uint public constant MIN_CANCEL_TIMEOUT = 30;
+
     /* ========== ERRORS ========== */
 
     error InvalidAddress();
@@ -101,6 +104,26 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint8 dealerCardCount;
         uint8[11] playerCards;
         uint8[11] dealerCards;
+    }
+
+    /// @notice Frontend-friendly view of a blackjack hand with dynamic card arrays and hand values
+    struct HandView {
+        uint handId;
+        address user;
+        address collateral;
+        uint amount;
+        uint payout;
+        uint requestId;
+        uint placedAt;
+        uint resolvedAt;
+        uint reservedProfit;
+        HandStatus status;
+        HandResult result;
+        bool isDoubledDown;
+        uint8[] playerCards;
+        uint8[] dealerCards;
+        uint8 playerHandValue;
+        uint8 dealerHandValue;
     }
 
     /// @notice Maps a VRF requestId to its hand and action context
@@ -187,6 +210,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     /// @notice Tracks reserved house-side profit liability for all pending hands per collateral
     mapping(address => uint) public reservedProfitPerCollateral;
 
+    /// @notice Hand IDs per user for history queries
+    mapping(address => uint[]) private userHandIds;
+
+    /// @notice Timestamp of last VRF request per hand (for cancel timeout)
+    mapping(uint => uint) public lastRequestAt;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the blackjack contract
@@ -230,6 +259,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         priceFeedKeyPerCollateral[collateralConfig.weth] = collateralConfig.wethPriceFeedKey;
         priceFeedKeyPerCollateral[collateralConfig.over] = collateralConfig.overPriceFeedKey;
 
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         maxProfitUsd = _maxProfitUsd;
         cancelTimeout = _cancelTimeout;
 
@@ -281,10 +311,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         hand.amount = amount;
         hand.requestId = requestId;
         hand.placedAt = block.timestamp;
+        lastRequestAt[handId] = block.timestamp;
         hand.reservedProfit = potentialProfitCollateral;
         hand.status = HandStatus.AWAITING_DEAL;
 
         vrfRequests[requestId] = VrfRequest({handId: handId, action: VrfAction.DEAL});
+        userHandIds[msg.sender].push(handId);
 
         emit HandCreated(handId, requestId, msg.sender, collateral, amount);
     }
@@ -303,6 +335,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
         hand.status = HandStatus.AWAITING_HIT;
         hand.requestId = requestId;
+        lastRequestAt[handId] = block.timestamp;
 
         vrfRequests[requestId] = VrfRequest({handId: handId, action: VrfAction.HIT});
 
@@ -323,6 +356,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
         hand.status = HandStatus.AWAITING_STAND;
         hand.requestId = requestId;
+        lastRequestAt[handId] = block.timestamp;
 
         vrfRequests[requestId] = VrfRequest({handId: handId, action: VrfAction.STAND});
 
@@ -366,13 +400,14 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
         hand.status = HandStatus.AWAITING_DOUBLE;
         hand.requestId = requestId;
+        lastRequestAt[handId] = block.timestamp;
 
         vrfRequests[requestId] = VrfRequest({handId: handId, action: VrfAction.DOUBLE_DOWN});
 
         emit DoubleDownRequested(handId, requestId, msg.sender, hand.amount / 2);
     }
 
-    /// @notice Cancels a pending hand after timeout and refunds the stake
+    /// @notice Cancels a hand awaiting VRF response after timeout and refunds the stake
     /// @param handId Hand id to cancel
     function cancelHand(uint handId) external nonReentrant {
         Hand storage hand = hands[handId];
@@ -385,7 +420,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             hand.status != HandStatus.AWAITING_STAND &&
             hand.status != HandStatus.AWAITING_DOUBLE
         ) revert InvalidHandStatus();
-        if (block.timestamp < hand.placedAt + cancelTimeout) revert CancelTimeoutNotReached();
+        if (block.timestamp < lastRequestAt[handId] + cancelTimeout) revert CancelTimeoutNotReached();
 
         _cancelHand(handId, false);
     }
@@ -398,6 +433,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         if (hand.status == HandStatus.NONE) revert HandNotFound();
         if (
             hand.status != HandStatus.AWAITING_DEAL &&
+            hand.status != HandStatus.PLAYER_TURN &&
             hand.status != HandStatus.AWAITING_HIT &&
             hand.status != HandStatus.AWAITING_STAND &&
             hand.status != HandStatus.AWAITING_DOUBLE
@@ -419,7 +455,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     }
 
     /// @notice Coordinator-only VRF entrypoint
-    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
+    function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external nonReentrant {
         if (msg.sender != address(vrfCoordinator)) revert InvalidSender();
         _fulfillRandomWords(requestId, randomWords);
     }
@@ -762,30 +798,57 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         return balance > reserved ? balance - reserved : 0;
     }
 
-    /// @notice Returns the player and dealer cards for a hand
-    function getHandCards(uint handId) external view returns (uint8[] memory playerCards, uint8[] memory dealerCards) {
-        Hand storage hand = hands[handId];
-        playerCards = new uint8[](hand.playerCardCount);
-        dealerCards = new uint8[](hand.dealerCardCount);
+    /// @notice Returns the number of hands placed by a user
+    function getUserHandCount(address user) external view returns (uint) {
+        return userHandIds[user].length;
+    }
 
-        for (uint8 i = 0; i < hand.playerCardCount; i++) {
-            playerCards[i] = hand.playerCards[i];
-        }
-        for (uint8 i = 0; i < hand.dealerCardCount; i++) {
-            dealerCards[i] = hand.dealerCards[i];
+    /// @notice Returns full hand data for a user's hands with pagination
+    function getUserHands(address user, uint offset, uint limit) external view returns (HandView[] memory views) {
+        uint[] storage allIds = userHandIds[user];
+        uint len = allIds.length;
+        if (offset >= len) return new HandView[](0);
+        uint remaining = len - offset;
+        uint count = remaining < limit ? remaining : limit;
+        views = new HandView[](count);
+        for (uint i = 0; i < count; i++) {
+            views[i] = _buildHandView(allIds[len - 1 - offset - i]);
         }
     }
 
-    /// @notice Returns the current player hand value for a hand
-    function getPlayerHandValue(uint handId) external view returns (uint8) {
-        Hand storage hand = hands[handId];
-        return _calculateHandValue(hand.playerCards, hand.playerCardCount);
+    /// @notice Returns full hand data for recent hands with pagination
+    function getRecentHands(uint offset, uint limit) external view returns (HandView[] memory views) {
+        uint latest = nextHandId - 1;
+        if (offset >= latest) return new HandView[](0);
+        uint start = latest - offset;
+        uint count = start < limit ? start : limit;
+        views = new HandView[](count);
+        for (uint i = 0; i < count; i++) {
+            views[i] = _buildHandView(start - i);
+        }
     }
 
-    /// @notice Returns the current dealer hand value for a hand (visible cards only)
-    function getDealerHandValue(uint handId) external view returns (uint8) {
-        Hand storage hand = hands[handId];
-        return _calculateHandValue(hand.dealerCards, hand.dealerCardCount);
+    /// @notice Builds a HandView from storage for a given hand ID
+    function _buildHandView(uint handId) internal view returns (HandView memory v) {
+        Hand storage h = hands[handId];
+        v.handId = handId;
+        v.user = h.user;
+        v.collateral = h.collateral;
+        v.amount = h.amount;
+        v.payout = h.payout;
+        v.requestId = h.requestId;
+        v.placedAt = h.placedAt;
+        v.resolvedAt = h.resolvedAt;
+        v.reservedProfit = h.reservedProfit;
+        v.status = h.status;
+        v.result = h.result;
+        v.isDoubledDown = h.isDoubledDown;
+        v.playerHandValue = _calculateHandValue(h.playerCards, h.playerCardCount);
+        v.dealerHandValue = _calculateHandValue(h.dealerCards, h.dealerCardCount);
+        v.playerCards = new uint8[](h.playerCardCount);
+        v.dealerCards = new uint8[](h.dealerCardCount);
+        for (uint8 i = 0; i < h.playerCardCount; i++) v.playerCards[i] = h.playerCards[i];
+        for (uint8 i = 0; i < h.dealerCardCount; i++) v.dealerCards[i] = h.dealerCards[i];
     }
 
     /* ========== SETTERS ========== */
@@ -799,6 +862,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
     /// @notice Sets timeout after which pending hands can be cancelled
     function setCancelTimeout(uint _cancelTimeout) external onlyRiskManager {
+        if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
         cancelTimeout = _cancelTimeout;
         emit CancelTimeoutChanged(_cancelTimeout);
     }
@@ -840,6 +904,9 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
     /// @notice Withdraws collateral from the contract bankroll
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
+        uint balance = IERC20(_collateral).balanceOf(address(this));
+        uint reserved = reservedProfitPerCollateral[_collateral];
+        if (_amount > balance || balance - _amount < reserved) revert InsufficientAvailableLiquidity();
         address recipient = _recipient == address(0) ? owner : _recipient;
         IERC20(_collateral).safeTransfer(recipient, _amount);
         emit WithdrawnCollateral(_collateral, recipient, _amount);

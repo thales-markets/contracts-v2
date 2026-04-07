@@ -23,7 +23,7 @@ async function main() {
 	const overPriceFeedKey = ethers.encodeBytes32String('OVER');
 
 	const maxProfitUsd = ethers.parseEther('1000');
-	const cancelTimeout = 3600;
+	const cancelTimeout = 60;
 
 	const subscriptionId = BigInt(getTargetAddress('VRFSubscriptionId', network));
 	const keyHash = getTargetAddress('VRFKeyHash', network);

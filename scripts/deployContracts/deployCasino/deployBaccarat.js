@@ -23,8 +23,7 @@ async function main() {
 	const overPriceFeedKey = ethers.encodeBytes32String('OVER');
 
 	const maxProfitUsd = ethers.parseEther('1000');
-	const cancelTimeout = 3600;
-	const houseEdge = ethers.parseEther('0.02'); // 2%
+	const cancelTimeout = 60;
 	const bankerPayoutMultiplier = 0; // use default 1.95x
 
 	const subscriptionId = BigInt(getTargetAddress('VRFSubscriptionId', network));
@@ -63,7 +62,6 @@ async function main() {
 		},
 		maxProfitUsd,
 		cancelTimeout,
-		houseEdge,
 		bankerPayoutMultiplier,
 		{
 			subscriptionId: subscriptionId,
