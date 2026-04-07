@@ -17,7 +17,7 @@ const {
 	ADDITIONAL_SLIPPAGE,
 } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
-const { ethers } = require('hardhat');
+const { ethers, network } = require('hardhat');
 
 describe('Ticket Exercise and Expire', () => {
 	let sportsAMMV2,
@@ -335,6 +335,50 @@ describe('Ticket Exercise and Expire', () => {
 
 			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(expectedPayoutWithFees);
 			expect(lpBalanceBefore - lpBalanceAfter).to.equal(expectedPayoutWithFees);
+		});
+
+		it('Expire legacy ticket without isDeferred uses non-deferred path', async () => {
+			const LegacyTicketMock = await ethers.getContractFactory('LegacyTicketMock');
+			const expectedPayout = ethers.parseEther('10');
+			const legacyTicket = await LegacyTicketMock.deploy(
+				owner.address,
+				collateral,
+				expectedPayout,
+				true
+			);
+			const legacyTicketAddress = await legacyTicket.getAddress();
+
+			const sportsAMMAddress = await sportsAMMV2.getAddress();
+			await network.provider.request({
+				method: 'hardhat_setBalance',
+				params: [sportsAMMAddress, '0x1000000000000000000'],
+			});
+			await network.provider.request({
+				method: 'hardhat_impersonateAccount',
+				params: [sportsAMMAddress],
+			});
+			const ammSigner = await ethers.getSigner(sportsAMMAddress);
+			await sportsAMMV2Manager
+				.connect(ammSigner)
+				.addNewKnownTicket([], legacyTicketAddress, owner.address);
+			await network.provider.request({
+				method: 'hardhat_stopImpersonatingAccount',
+				params: [sportsAMMAddress],
+			});
+
+			const defaultLp = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
+			const lpBalanceBefore = await collateral.balanceOf(defaultLp);
+			const ownerBalanceBefore = await collateral.balanceOf(owner.address);
+
+			await sportsAMMV2.connect(owner).expireTickets([legacyTicketAddress]);
+
+			const lpBalanceAfter = await collateral.balanceOf(defaultLp);
+			const ownerBalanceAfter = await collateral.balanceOf(owner.address);
+
+			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0n);
+			expect(lpBalanceAfter - lpBalanceBefore).to.equal(0n);
+			expect(await legacyTicket.resolved()).to.equal(true);
+			expect(await sportsAMMV2Manager.isActiveTicket(legacyTicketAddress)).to.equal(false);
 		});
 
 		it('Auto exercise losing tickets when results are set', async () => {

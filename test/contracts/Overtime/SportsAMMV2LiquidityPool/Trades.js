@@ -1453,6 +1453,46 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			).to.be.revertedWithCustomError(lp, 'DefaultLPNotSet');
 		});
 
+		it('commitTrade reverts DefaultLPNotSet for default-round ticket', async () => {
+			const lp = await deployLpWithoutDefault();
+			const initialDeposit = ethers.parseEther('1000');
+
+			await collateral.connect(firstLiquidityProvider).approve(lp, initialDeposit);
+			await lp.connect(firstLiquidityProvider).deposit(initialDeposit);
+			await lp.start();
+
+			const firstRoundStartTime = Number(await lp.firstRoundStartTime());
+			const roundLength = Number(await lp.roundLength());
+			const market1 = buildMarket(tradeDataCrossRounds[0]);
+			const market2 = buildMarket(tradeDataCrossRounds[1]);
+			market1.maturity = firstRoundStartTime + roundLength;
+			market2.maturity = firstRoundStartTime + roundLength * 2;
+			const expiry = BigInt(Math.max(market1.maturity, market2.maturity)) + 1n;
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.deploy();
+
+			await ticket.initialize({
+				_markets: [market1, market2],
+				_buyInAmount: BUY_IN_AMOUNT,
+				_fees: 0,
+				_totalQuote: 0,
+				_sportsAMM: owner.address,
+				_ticketOwner: firstTrader.address,
+				_collateral: await collateral.getAddress(),
+				_expiry: expiry,
+				_isLive: false,
+				_systemBetDenominator: 0,
+				_isSGP: false,
+			});
+
+			expect(await lp.getTicketRound(ticket.target)).to.equal(1);
+
+			await expect(
+				lp.connect(owner).commitTrade(ticket.target, BUY_IN_AMOUNT)
+			).to.be.revertedWithCustomError(lp, 'DefaultLPNotSet');
+		});
+
 		it('commitTrade reverts InvalidRound when ticketRound is behind and not default', async () => {
 			const lp = await deployLpWithoutDefault();
 			const initialDeposit = ethers.parseEther('1000');
