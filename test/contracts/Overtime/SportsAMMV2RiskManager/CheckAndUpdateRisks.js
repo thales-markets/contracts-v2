@@ -11,6 +11,7 @@ const { ZERO_ADDRESS, ONE_WEEK_IN_SECS } = require('../../../constants/general')
 describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 	let sportsAMMV2RiskManager,
 		sportsAMMV2,
+		sportsAMMV2Utils,
 		sportsAMMV2LiquidityPool,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
@@ -27,6 +28,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 		({
 			sportsAMMV2RiskManager,
 			sportsAMMV2,
+			sportsAMMV2Utils,
 			sportsAMMV2LiquidityPool,
 			tradeDataCurrentRound,
 			tradeDataTenMarketsCurrentRound,
@@ -287,7 +289,7 @@ describe('SportsAMMV2RiskManager Check And Update Risks', () => {
 						ZERO_ADDRESS,
 						false
 					)
-			).to.be.revertedWithCustomError(sportsAMMV2, 'InvalidPosition');
+			).to.be.revertedWithCustomError(sportsAMMV2Utils, 'InvalidPosition');
 		});
 
 		it('Should fail with "Not trading"', async () => {

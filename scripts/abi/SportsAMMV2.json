@@ -58,11 +58,6 @@
   },
   {
     "inputs": [],
-    "name": "InvalidPosition",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidSender",
     "type": "error"
   },
@@ -84,11 +79,6 @@
   {
     "inputs": [],
     "name": "OnlyDedicatedProcessor",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OnlyOwner",
     "type": "error"
   },
   {
@@ -125,11 +115,6 @@
   {
     "inputs": [],
     "name": "UnsupportedSender",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroAmount",
     "type": "error"
   },
   {
@@ -511,6 +496,19 @@
       }
     ],
     "name": "SetMultiCollateralOnOffRamp",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sportsAMMV2Utils",
+        "type": "address"
+      }
+    ],
+    "name": "SetSportsAMMV2Utils",
     "type": "event"
   },
   {
@@ -1224,6 +1222,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_sportsAMMV2Utils",
+        "type": "address"
+      }
+    ],
+    "name": "setSportsAMMV2Utils",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_ticketMastercopy",
         "type": "address"
       }
@@ -1248,10 +1259,10 @@
   },
   {
     "inputs": [],
-    "name": "stakingThalesBettingProxy",
+    "name": "sportsAMMV2Utils",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract SportsAMMV2Utils",
         "name": "",
         "type": "address"
       }
