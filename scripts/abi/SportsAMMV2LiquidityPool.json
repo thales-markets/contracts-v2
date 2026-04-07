@@ -23,6 +23,71 @@
   },
   {
     "inputs": [],
+    "name": "AllUsersProcessed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AmountExceedsLPCap",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AmountExceedsUtilRate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AmountLessThanMinDeposit",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ArraysLengthsMustMatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BatchSizeZero",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CantChangeAfterPoolStart",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CantCloseRound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CantDepositDirectlyAsDefaultLP",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CantDepositDuringWithdrawalRequested",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CantStartWithoutDeposits",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CantWithdrawWhenDepositedForNextRound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DefaultLPNotSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ERC1167FailedCreateClone",
     "type": "error"
   },
@@ -48,7 +113,82 @@
   },
   {
     "inputs": [],
+    "name": "InvalidRound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSender",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidWithdrawalValue",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LPHasStarted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MaxUsersReached",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotAllUsersProcessed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotAllowedWhenRoundClosingPrepared",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NothingToWithdraw",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyDefaultRound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyFromAMM",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PoolNotStarted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RoundAlreadyClosed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RoundClosingNotPrepared",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RoundPoolMastercopyNotSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SafeBoxImpactTooHigh",
     "type": "error"
   },
   {
@@ -60,6 +200,61 @@
       }
     ],
     "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TicketAlreadyExercised",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TicketAlreadyResolved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TicketIndexMustBeGreaterThan0",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TicketNotFound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TicketNotFoundInInputArray",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TicketNotInCurrentRound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TicketNotInRound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UtilRateTooHigh",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WithdrawalAlreadyRequested",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAmount",
     "type": "error"
   },
   {

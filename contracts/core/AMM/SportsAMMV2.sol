@@ -417,7 +417,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
-                _divWithDecimals(_buyInAmount, _expectedQuote), // quote to expected payout
+                (ONE * _buyInAmount) / _expectedQuote, // quote to expected payout
                 _additionalSlippage,
                 _recipient,
                 _tradeTypeData._isLive,
@@ -452,13 +452,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             }
         }
 
-        if (action == ISportsAMMV2.TicketAction.Cancel) {
-            _exerciseTicket(_ticket, address(0), true, false);
-        } else if (action == ISportsAMMV2.TicketAction.MarkLost) {
-            _exerciseTicket(_ticket, address(0), false, true);
-        } else {
-            _exerciseTicket(_ticket, address(0), false, false);
-        }
+        _exerciseTicket(
+            _ticket,
+            address(0),
+            action == ISportsAMMV2.TicketAction.Cancel,
+            action == ISportsAMMV2.TicketAction.MarkLost
+        );
     }
 
     /// @notice exercise specific ticket to an off ramp collateral
@@ -794,7 +793,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 marketTradeData.line,
                 marketTradeData.playerId,
                 marketTradeData.position,
-                (odds * ONE) / ((ONE + _addedPayoutPercentage) - _mulWithDecimals(_addedPayoutPercentage, odds)),
+                (odds * ONE) / ((ONE + _addedPayoutPercentage) - ((_addedPayoutPercentage * odds) / ONE)),
                 marketTradeData.combinedPositions[marketTradeData.position]
             );
         }
@@ -823,20 +822,24 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _divWithDecimals(uint _dividend, uint _divisor) internal pure returns (uint) {
-        return (ONE * _dividend) / _divisor;
-    }
-
-    function _mulWithDecimals(uint _firstMul, uint _secondMul) internal pure returns (uint) {
-        return (_firstMul * _secondMul) / ONE;
-    }
-
     function _setReferrer(address _referrer, address _recipient) internal {
         if (_referrer != address(0) && _recipient != address(freeBetsHolder)) referrals.setReferrer(_referrer, _recipient);
     }
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _cancelTicket, bool _markLost) internal {
         Ticket ticket = Ticket(_ticket);
+        IERC20 ticketCollateral = ticket.collateral();
+        address ticketOwner = ticket.ticketOwner();
+
+        // Determine deferred flag BEFORE exercise() sweeps ticket balance.
+        // Deferred = default-round ticket with no funds on ticket (new collateralization logic).
+        // Old default-round tickets hold funds and follow the standard (non-deferred) flow.
+        bool isDeferred = _isDefaultRoundTicket(_ticket, ticketCollateral) && ticketCollateral.balanceOf(_ticket) == 0;
+
+        // For non-deferred tickets capture the pre-exercise balance so that any surplus
+        // (e.g. malicious top-ups) is correctly routed to the pool rather than stranded in AMM.
+        uint ticketBalanceBefore = isDeferred ? 0 : ticketCollateral.balanceOf(_ticket);
+
         uint userWonAmount;
         if (_markLost) {
             userWonAmount = ticket.markAsLost();
@@ -845,17 +848,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         } else {
             userWonAmount = ticket.exercise(_exerciseCollateral);
         }
-        IERC20 ticketCollateral = ticket.collateral();
-        address ticketOwner = ticket.ticketOwner();
 
         if (ticketOwner == freeBetsHolder) {
             IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
         }
-
-        bool isDefaultRound = _isDefaultRoundTicket(_ticket, ticketCollateral);
-        // Deferred = default round ticket with no funds on ticket (new logic).
-        // Old default round tickets still hold funds and follow the standard flow.
-        bool isDeferred = isDefaultRound && ticketCollateral.balanceOf(_ticket) == 0;
 
         // For deferred tickets: AMM has no funds — pull everything needed from LP
         if (isDeferred) {
@@ -887,9 +883,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             // Non-deferred: ticket already paid user in exercise()
         }
 
-        // Deferred: amountForPool=0 (LP only provided what was needed, keeps the rest)
-        // Non-deferred (including old default round tickets): return full remainder to LP
-        uint amountForPool = isDeferred ? 0 : ticket.expectedFinalPayout() - userWonAmount - feesPaid;
+        // Deferred: amountForPool=0 (LP only provided what was needed, keeps the rest).
+        // Non-deferred: use the pre-exercise ticket balance so any extra funds (including
+        // malicious top-ups) are routed to the pool and don't remain stranded in the AMM.
+        uint amountForPool = isDeferred ? 0 : ticketBalanceBefore - userWonAmount - feesPaid;
         _finalizeTicketResolution(_ticket, ticketOwner, ticketCollateral, ticket.isUserTheWinner(), amountForPool);
     }
 
