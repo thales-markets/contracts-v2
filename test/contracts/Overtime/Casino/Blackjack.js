@@ -256,9 +256,10 @@ describe('Blackjack', () => {
 				.to.emit(blackjack, 'HandCreated')
 				.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET);
 
-			const hand = await blackjack.hands(1n);
-			expect(hand.user).to.equal(player.address);
-			expect(hand.status).to.equal(Status.AWAITING_DEAL);
+			const handBase = await blackjack.getHandBase(1n);
+			const handDetails = await blackjack.getHandDetails(1n);
+			expect(handBase.user).to.equal(player.address);
+			expect(handDetails.status).to.equal(Status.AWAITING_DEAL);
 			expect(await blackjack.nextHandId()).to.equal(2n);
 		});
 	});
@@ -279,14 +280,14 @@ describe('Blackjack', () => {
 			// word1 = 5 → playerCard2 = (5%13)+1 = 6, dealerHidden = 1
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.PLAYER_TURN);
-			expect(hand.playerCardCount).to.equal(2n);
-			expect(hand.dealerCardCount).to.equal(1n);
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.PLAYER_TURN);
+			expect(handDetails.playerCardCount).to.equal(2n);
+			expect(handDetails.dealerCardCount).to.equal(1n);
 
-			const views = await blackjack.getUserHands(player.address, 0, 1);
-			expect(views[0].playerCards.length).to.equal(2);
-			expect(views[0].dealerCards.length).to.equal(1);
+			const handCards = await blackjack.getHandCards(handId);
+			expect(handCards.playerCards.length).to.equal(2);
+			expect(handCards.dealerCards.length).to.equal(1);
 		});
 
 		it('should auto-resolve player blackjack (6:5 payout)', async () => {
@@ -304,13 +305,14 @@ describe('Blackjack', () => {
 			// So player has BJ (A+10=21), dealer has A+A=12 → player blackjack wins
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [0n, 9n]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.PLAYER_BLACKJACK);
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PLAYER_BLACKJACK);
 
 			// 6:5 payout = amount + amount*6/5 = 3 + 3.6 = 6.6 USDC
 			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n;
-			expect(hand.payout).to.equal(expectedPayout);
+			expect(handBase.payout).to.equal(expectedPayout);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalanceBefore + expectedPayout);
 		});
 
@@ -332,10 +334,11 @@ describe('Blackjack', () => {
 
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [word0, word1]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.PUSH);
-			expect(hand.payout).to.equal(MIN_USDC_BET); // bet returned
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PUSH);
+			expect(handBase.payout).to.equal(MIN_USDC_BET); // bet returned
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalanceBefore + MIN_USDC_BET);
 		});
 	});
@@ -381,9 +384,9 @@ describe('Blackjack', () => {
 			// Hit card: word=1 → rank 2 (value 2). Total = 5+3+2=10
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitRequestId, [1n]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.PLAYER_TURN);
-			expect(hand.playerCardCount).to.equal(3n);
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.PLAYER_TURN);
+			expect(handDetails.playerCardCount).to.equal(3n);
 		});
 
 		it('should auto-resolve on bust', async () => {
@@ -401,10 +404,11 @@ describe('Blackjack', () => {
 			// Hit card: word=4 → rank 5 (value 5). Total = 10+10+5=25 → bust
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitRequestId, [4n]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.PLAYER_BUST);
-			expect(hand.payout).to.equal(0n);
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PLAYER_BUST);
+			expect(handBase.payout).to.equal(0n);
 		});
 	});
 
@@ -447,10 +451,11 @@ describe('Blackjack', () => {
 				0n,
 			]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.PLAYER_WIN);
-			expect(hand.payout).to.equal(MIN_USDC_BET * 2n);
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PLAYER_WIN);
+			expect(handBase.payout).to.equal(MIN_USDC_BET * 2n);
 			expect(await usdc.balanceOf(player.address)).to.equal(
 				playerBalanceBefore + MIN_USDC_BET * 2n
 			);
@@ -479,10 +484,11 @@ describe('Blackjack', () => {
 				0n,
 			]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.DEALER_WIN);
-			expect(hand.payout).to.equal(0n);
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.DEALER_WIN);
+			expect(handBase.payout).to.equal(0n);
 		});
 
 		it('should resolve as dealer bust when dealer exceeds 21', async () => {
@@ -511,10 +517,11 @@ describe('Blackjack', () => {
 				0n,
 			]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.DEALER_BUST);
-			expect(hand.payout).to.equal(MIN_USDC_BET * 2n);
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.DEALER_BUST);
+			expect(handBase.payout).to.equal(MIN_USDC_BET * 2n);
 		});
 
 		it('should resolve as push when tied', async () => {
@@ -543,10 +550,11 @@ describe('Blackjack', () => {
 				0n,
 			]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.PUSH);
-			expect(hand.payout).to.equal(MIN_USDC_BET);
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PUSH);
+			expect(handBase.payout).to.equal(MIN_USDC_BET);
 		});
 	});
 
@@ -583,11 +591,12 @@ describe('Blackjack', () => {
 				0n,
 			]);
 
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.RESOLVED);
-			expect(hand.result).to.equal(Result.PLAYER_WIN);
-			expect(hand.amount).to.equal(MIN_USDC_BET * 2n); // doubled
-			expect(hand.payout).to.equal(MIN_USDC_BET * 4n); // 2x doubled amount
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PLAYER_WIN);
+			expect(handBase.amount).to.equal(MIN_USDC_BET * 2n); // doubled
+			expect(handBase.payout).to.equal(MIN_USDC_BET * 4n); // 2x doubled amount
 		});
 
 		it('should revert if player has more than 2 cards', async () => {
@@ -639,8 +648,8 @@ describe('Blackjack', () => {
 			);
 
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore + MIN_USDC_BET);
-			const hand = await blackjack.hands(handId);
-			expect(hand.status).to.equal(Status.CANCELLED);
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.CANCELLED);
 		});
 	});
 
@@ -696,7 +705,7 @@ describe('Blackjack', () => {
 			expect(payout).to.equal(MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n);
 		});
 
-		it('getUserHands should return cards for hand value computation', async () => {
+		it('getUserHandIds should return hand IDs for card retrieval', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
@@ -704,8 +713,9 @@ describe('Blackjack', () => {
 			// word0=12→K(10), word1=6→7. Player: 10+7=17
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 6n]);
 
-			const views = await blackjack.getUserHands(player.address, 0, 1);
-			expect(views[0].playerCards.length).to.be.gt(0);
+			const ids = await blackjack.getUserHandIds(player.address, 0, 1);
+			const handCards = await blackjack.getHandCards(ids[0]);
+			expect(handCards.playerCards.length).to.be.gt(0);
 			// Frontend computes hand value from cards
 		});
 
@@ -740,32 +750,32 @@ describe('Blackjack', () => {
 			expect(await blackjack.getUserHandCount(player.address)).to.equal(2n);
 		});
 
-		it('getUserHands should return hands in reverse chronological order', async () => {
+		it('getUserHandIds should return hand IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET * 3n);
 			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 
-			const views = await blackjack.getUserHands(player.address, 0, 10);
-			expect(views.length).to.equal(3);
-			expect(views[0].handId).to.equal(3n);
-			expect(views[1].handId).to.equal(2n);
-			expect(views[2].handId).to.equal(1n);
+			const ids = await blackjack.getUserHandIds(player.address, 0, 10);
+			expect(ids.length).to.equal(3);
+			expect(ids[0]).to.equal(3n);
+			expect(ids[1]).to.equal(2n);
+			expect(ids[2]).to.equal(1n);
 		});
 
-		it('getUserHands should return empty for offset beyond length', async () => {
-			const views = await blackjack.getUserHands(player.address, 100, 10);
-			expect(views.length).to.equal(0);
+		it('getUserHandIds should return empty for offset beyond length', async () => {
+			const ids = await blackjack.getUserHandIds(player.address, 100, 10);
+			expect(ids.length).to.equal(0);
 		});
 
-		it('should not include other users hands in getUserHands', async () => {
+		it('should not include other users hands in getUserHandIds', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 
 			expect(await blackjack.getUserHandCount(secondAccount.address)).to.equal(0n);
 		});
 
-		it('getUserHands should return full HandView with cards and values', async () => {
+		it('getUserHandIds should return IDs with full details via getters', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
@@ -773,31 +783,34 @@ describe('Blackjack', () => {
 			// Deal cards (blackjack needs 2 random words for initial deal)
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
 
-			const views = await blackjack.getUserHands(player.address, 0, 10);
-			expect(views.length).to.equal(1);
-			expect(views[0].handId).to.equal(handId);
-			expect(views[0].user).to.equal(player.address);
-			expect(views[0].amount).to.equal(MIN_USDC_BET);
-			expect(views[0].playerCards.length).to.be.gt(0);
-			expect(views[0].dealerCards.length).to.be.gt(0);
+			const ids = await blackjack.getUserHandIds(player.address, 0, 10);
+			expect(ids.length).to.equal(1);
+			expect(ids[0]).to.equal(handId);
+			const handBase = await blackjack.getHandBase(ids[0]);
+			const handCards = await blackjack.getHandCards(ids[0]);
+			expect(handBase.user).to.equal(player.address);
+			expect(handBase.amount).to.equal(MIN_USDC_BET);
+			expect(handCards.playerCards.length).to.be.gt(0);
+			expect(handCards.dealerCards.length).to.be.gt(0);
 		});
 
-		it('getRecentHands should return full HandView', async () => {
+		it('getRecentHandIds should return hand IDs', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
 			const { requestId } = await parseHandCreated(blackjack, tx);
 
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
 
-			const views = await blackjack.getRecentHands(0, 10);
-			expect(views.length).to.equal(1);
-			expect(views[0].handId).to.equal(1n);
-			expect(views[0].collateral).to.equal(usdcAddress);
+			const ids = await blackjack.getRecentHandIds(0, 10);
+			expect(ids.length).to.equal(1);
+			expect(ids[0]).to.equal(1n);
+			const handBase = await blackjack.getHandBase(ids[0]);
+			expect(handBase.collateral).to.equal(usdcAddress);
 		});
 
-		it('getUserHands should return empty for offset beyond length', async () => {
-			const views = await blackjack.getUserHands(player.address, 100, 10);
-			expect(views.length).to.equal(0);
+		it('getUserHandIds should return empty for offset beyond length', async () => {
+			const ids = await blackjack.getUserHandIds(player.address, 100, 10);
+			expect(ids.length).to.equal(0);
 		});
 	});
 });

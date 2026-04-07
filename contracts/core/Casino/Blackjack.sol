@@ -107,25 +107,6 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint8[11] dealerCards;
     }
 
-    /// @notice Frontend-friendly view of a blackjack hand with dynamic card arrays
-    /// @dev Hand values are omitted to reduce stack depth; compute client-side from cards
-    struct HandView {
-        uint handId;
-        address user;
-        address collateral;
-        uint amount;
-        uint payout;
-        uint requestId;
-        uint placedAt;
-        uint resolvedAt;
-        uint reservedProfit;
-        HandStatus status;
-        HandResult result;
-        bool isDoubledDown;
-        uint8[] playerCards;
-        uint8[] dealerCards;
-    }
-
     /// @notice Maps a VRF requestId to its hand and action context
     struct VrfRequest {
         uint handId;
@@ -202,7 +183,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     mapping(address => bytes32) public priceFeedKeyPerCollateral;
 
     /// @notice Stored hands by hand id
-    mapping(uint => Hand) public hands;
+    mapping(uint => Hand) internal hands;
 
     /// @notice Maps VRF request id to its context
     mapping(uint => VrfRequest) public vrfRequests;
@@ -814,6 +795,39 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
     /* ========== GETTERS ========== */
 
+    /// @notice Returns core hand data
+    function getHandBase(
+        uint handId
+    )
+        external
+        view
+        returns (
+            address user,
+            address collateral,
+            uint amount,
+            uint payout,
+            uint requestId,
+            uint placedAt,
+            uint resolvedAt,
+            uint reservedProfit
+        )
+    {
+        Hand storage h = hands[handId];
+        return (h.user, h.collateral, h.amount, h.payout, h.requestId, h.placedAt, h.resolvedAt, h.reservedProfit);
+    }
+
+    /// @notice Returns hand status and result details
+    function getHandDetails(
+        uint handId
+    )
+        external
+        view
+        returns (HandStatus status, HandResult result, bool isDoubledDown, uint8 playerCardCount, uint8 dealerCardCount)
+    {
+        Hand storage h = hands[handId];
+        return (h.status, h.result, h.isDoubledDown, h.playerCardCount, h.dealerCardCount);
+    }
+
     /// @notice Returns the maximum potential payout for a bet amount (blackjack 6:5)
     function getMaxPayout(address collateral, uint amount) external pure returns (uint) {
         return amount + (amount * BLACKJACK_PAYOUT_NUMERATOR) / BLACKJACK_PAYOUT_DENOMINATOR;
@@ -837,50 +851,38 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         return userHandIds[user].length;
     }
 
-    /// @notice Returns full hand data for a user's hands with pagination
-    function getUserHands(address user, uint offset, uint limit) external view returns (HandView[] memory views) {
+    /// @notice Returns hand IDs for a user's hands with pagination (reverse chronological)
+    function getUserHandIds(address user, uint offset, uint limit) external view returns (uint[] memory ids) {
         uint[] storage allIds = userHandIds[user];
         uint len = allIds.length;
-        if (offset >= len) return new HandView[](0);
+        if (offset >= len) return new uint[](0);
         uint remaining = len - offset;
         uint count = remaining < limit ? remaining : limit;
-        views = new HandView[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            views[i] = _buildHandView(allIds[len - 1 - offset - i]);
+            ids[i] = allIds[len - 1 - offset - i];
         }
     }
 
-    /// @notice Returns full hand data for recent hands with pagination
-    function getRecentHands(uint offset, uint limit) external view returns (HandView[] memory views) {
+    /// @notice Returns recent hand IDs with pagination (reverse chronological)
+    function getRecentHandIds(uint offset, uint limit) external view returns (uint[] memory ids) {
         uint latest = nextHandId - 1;
-        if (offset >= latest) return new HandView[](0);
+        if (offset >= latest) return new uint[](0);
         uint start = latest - offset;
         uint count = start < limit ? start : limit;
-        views = new HandView[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            views[i] = _buildHandView(start - i);
+            ids[i] = start - i;
         }
     }
 
-    /// @notice Builds a HandView from storage for a given hand ID
-    function _buildHandView(uint handId) internal view returns (HandView memory v) {
+    /// @notice Returns player and dealer cards for a hand
+    function getHandCards(uint handId) external view returns (uint8[] memory playerCards, uint8[] memory dealerCards) {
         Hand storage h = hands[handId];
-        v.handId = handId;
-        v.user = h.user;
-        v.collateral = h.collateral;
-        v.amount = h.amount;
-        v.payout = h.payout;
-        v.requestId = h.requestId;
-        v.placedAt = h.placedAt;
-        v.resolvedAt = h.resolvedAt;
-        v.reservedProfit = h.reservedProfit;
-        v.status = h.status;
-        v.result = h.result;
-        v.isDoubledDown = h.isDoubledDown;
-        v.playerCards = new uint8[](h.playerCardCount);
-        v.dealerCards = new uint8[](h.dealerCardCount);
-        for (uint8 i = 0; i < h.playerCardCount; i++) v.playerCards[i] = h.playerCards[i];
-        for (uint8 i = 0; i < h.dealerCardCount; i++) v.dealerCards[i] = h.dealerCards[i];
+        playerCards = new uint8[](h.playerCardCount);
+        dealerCards = new uint8[](h.dealerCardCount);
+        for (uint8 i = 0; i < h.playerCardCount; i++) playerCards[i] = h.playerCards[i];
+        for (uint8 i = 0; i < h.dealerCardCount; i++) dealerCards[i] = h.dealerCards[i];
     }
 
     /* ========== SETTERS ========== */

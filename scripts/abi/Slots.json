@@ -704,74 +704,95 @@
         "type": "uint256"
       }
     ],
-    "name": "getRecentSpins",
+    "name": "getRecentSpinIds",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "spinId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "collateral",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "requestId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "placedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "resolvedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservedProfit",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum Slots.SpinStatus",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8[3]",
-            "name": "reels",
-            "type": "uint8[3]"
-          },
-          {
-            "internalType": "bool",
-            "name": "won",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct Slots.SpinView[]",
-        "name": "views",
-        "type": "tuple[]"
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "spinId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSpinBase",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "placedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "resolvedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "reservedProfit",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "spinId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSpinDetails",
+    "outputs": [
+      {
+        "internalType": "enum Slots.SpinStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8[3]",
+        "name": "reels",
+        "type": "uint8[3]"
+      },
+      {
+        "internalType": "bool",
+        "name": "won",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -846,74 +867,12 @@
         "type": "uint256"
       }
     ],
-    "name": "getUserSpins",
+    "name": "getUserSpinIds",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "spinId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "collateral",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "requestId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "placedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "resolvedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "reservedProfit",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum Slots.SpinStatus",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8[3]",
-            "name": "reels",
-            "type": "uint8[3]"
-          },
-          {
-            "internalType": "bool",
-            "name": "won",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct Slots.SpinView[]",
-        "name": "views",
-        "type": "tuple[]"
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -1638,70 +1597,6 @@
       }
     ],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "spins",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "payout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "requestId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "placedAt",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "resolvedAt",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "reservedProfit",
-        "type": "uint256"
-      },
-      {
-        "internalType": "enum Slots.SpinStatus",
-        "name": "status",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bool",
-        "name": "won",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

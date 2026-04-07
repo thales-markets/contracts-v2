@@ -367,9 +367,10 @@ describe('Slots', () => {
 				.to.emit(slots, 'SpinPlaced')
 				.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET);
 
-			const spin = await slots.spins(1n);
-			expect(spin.user).to.equal(player.address);
-			expect(spin.status).to.equal(Status.PENDING);
+			const spinBase = await slots.getSpinBase(1n);
+			const spinDetails = await slots.getSpinDetails(1n);
+			expect(spinBase.user).to.equal(player.address);
+			expect(spinDetails.status).to.equal(Status.PENDING);
 			expect(await slots.nextSpinId()).to.equal(2n);
 		});
 
@@ -402,12 +403,13 @@ describe('Slots', () => {
 			const tripleWord = findTripleWord(0);
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [tripleWord]);
 
-			const spin = await slots.spins(spinId);
-			expect(spin.status).to.equal(Status.RESOLVED);
-			expect(spin.won).to.equal(true);
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.status).to.equal(Status.RESOLVED);
+			expect(spinDetails.won).to.equal(true);
 
 			const expectedPayout = getExpectedPayout(MIN_USDC_BET, tripleWord);
-			expect(spin.payout).to.equal(expectedPayout);
+			expect(spinBase.payout).to.equal(expectedPayout);
 			expect(expectedPayout).to.be.gt(0n);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore + expectedPayout);
 		});
@@ -420,11 +422,12 @@ describe('Slots', () => {
 			const tripleWord = findTripleWord(4);
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [tripleWord]);
 
-			const spin = await slots.spins(spinId);
-			expect(spin.won).to.equal(true);
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.won).to.equal(true);
 
 			const expectedPayout = getExpectedPayout(MIN_USDC_BET, tripleWord);
-			expect(spin.payout).to.equal(expectedPayout);
+			expect(spinBase.payout).to.equal(expectedPayout);
 		});
 
 		it('should resolve as loss on non-matching reels', async () => {
@@ -435,10 +438,11 @@ describe('Slots', () => {
 			const lossWord = findLossWord();
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [lossWord]);
 
-			const spin = await slots.spins(spinId);
-			expect(spin.status).to.equal(Status.RESOLVED);
-			expect(spin.won).to.equal(false);
-			expect(spin.payout).to.equal(0n);
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.status).to.equal(Status.RESOLVED);
+			expect(spinDetails.won).to.equal(false);
+			expect(spinBase.payout).to.equal(0n);
 		});
 
 		it('should release reserved profit on resolution', async () => {
@@ -474,8 +478,8 @@ describe('Slots', () => {
 			// Second fulfillment should be no-op
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findTripleWord(4)]);
 
-			const spin = await slots.spins(spinId);
-			expect(spin.won).to.equal(false); // still loss from first resolution
+			const spinDetails = await slots.getSpinDetails(spinId);
+			expect(spinDetails.won).to.equal(false); // still loss from first resolution
 		});
 	});
 
@@ -516,9 +520,10 @@ describe('Slots', () => {
 			await expect(slots.connect(player).cancelSpin(spinId)).to.emit(slots, 'SpinCancelled');
 
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore + MIN_USDC_BET);
-			const spin = await slots.spins(spinId);
-			expect(spin.status).to.equal(Status.CANCELLED);
-			expect(spin.payout).to.equal(MIN_USDC_BET);
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.status).to.equal(Status.CANCELLED);
+			expect(spinBase.payout).to.equal(MIN_USDC_BET);
 		});
 
 		it('should release reserved profit on cancel', async () => {
@@ -767,60 +772,61 @@ describe('Slots', () => {
 			expect(await slots.getUserSpinCount(player.address)).to.equal(2n);
 		});
 
-		it('getUserSpins should return spins in reverse chronological order', async () => {
+		it('getUserSpinIds should return spin IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 3n);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 
-			const spins = await slots.getUserSpins(player.address, 0, 10);
-			expect(spins.length).to.equal(3);
-			// Most recent first - requestIds should be 3, 2, 1
-			expect(spins[0].requestId).to.equal(3n);
-			expect(spins[1].requestId).to.equal(2n);
-			expect(spins[2].requestId).to.equal(1n);
+			const ids = await slots.getUserSpinIds(player.address, 0, 10);
+			expect(ids.length).to.equal(3);
+			// Most recent first - IDs should be 3, 2, 1
+			expect(ids[0]).to.equal(3n);
+			expect(ids[1]).to.equal(2n);
+			expect(ids[2]).to.equal(1n);
 		});
 
-		it('getUserSpins should paginate correctly', async () => {
+		it('getUserSpinIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 3n);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 
-			const page1 = await slots.getUserSpins(player.address, 0, 2);
+			const page1 = await slots.getUserSpinIds(player.address, 0, 2);
 			expect(page1.length).to.equal(2);
-			expect(page1[0].requestId).to.equal(3n);
+			expect(page1[0]).to.equal(3n);
 
-			const page2 = await slots.getUserSpins(player.address, 2, 2);
+			const page2 = await slots.getUserSpinIds(player.address, 2, 2);
 			expect(page2.length).to.equal(1);
-			expect(page2[0].requestId).to.equal(1n);
+			expect(page2[0]).to.equal(1n);
 		});
 
-		it('getUserSpins should return empty for offset beyond length', async () => {
-			const spins = await slots.getUserSpins(player.address, 100, 10);
-			expect(spins.length).to.equal(0);
+		it('getUserSpinIds should return empty for offset beyond length', async () => {
+			const ids = await slots.getUserSpinIds(player.address, 100, 10);
+			expect(ids.length).to.equal(0);
 		});
 
-		it('getRecentSpins should return spins in reverse chronological order', async () => {
+		it('getRecentSpinIds should return spin IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 2n);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 
-			const recent = await slots.getRecentSpins(0, 10);
-			expect(recent.length).to.equal(2);
-			expect(recent[0].user).to.equal(player.address);
+			const ids = await slots.getRecentSpinIds(0, 10);
+			expect(ids.length).to.equal(2);
+			const spinBase = await slots.getSpinBase(ids[0]);
+			expect(spinBase.user).to.equal(player.address);
 		});
 
-		it('should not include other users spins in getUserSpins', async () => {
+		it('should not include other users spins in getUserSpinIds', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 
 			expect(await slots.getUserSpinCount(secondAccount.address)).to.equal(0n);
-			const spins = await slots.getUserSpins(secondAccount.address, 0, 10);
-			expect(spins.length).to.equal(0);
+			const ids = await slots.getUserSpinIds(secondAccount.address, 0, 10);
+			expect(ids.length).to.equal(0);
 		});
 
-		it('SpinView should include spinId and reels', async () => {
+		it('getSpinDetails should include reels after resolution', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
 			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
@@ -828,22 +834,24 @@ describe('Slots', () => {
 			// Resolve so reels are populated
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findTripleWord(0)]);
 
-			const views = await slots.getUserSpins(player.address, 0, 1);
-			expect(views.length).to.equal(1);
-			expect(views[0].spinId).to.equal(spinId);
-			expect(views[0].reels[0]).to.equal(0n);
-			expect(views[0].reels[1]).to.equal(0n);
-			expect(views[0].reels[2]).to.equal(0n);
-			expect(views[0].won).to.equal(true);
+			const ids = await slots.getUserSpinIds(player.address, 0, 1);
+			expect(ids.length).to.equal(1);
+			expect(ids[0]).to.equal(spinId);
+			const spinDetails = await slots.getSpinDetails(ids[0]);
+			expect(spinDetails.reels[0]).to.equal(0n);
+			expect(spinDetails.reels[1]).to.equal(0n);
+			expect(spinDetails.reels[2]).to.equal(0n);
+			expect(spinDetails.won).to.equal(true);
 		});
 
-		it('getRecentSpins should include spinId', async () => {
+		it('getRecentSpinIds should return IDs with details via getters', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
 
-			const recent = await slots.getRecentSpins(0, 1);
-			expect(recent[0].spinId).to.equal(1n);
-			expect(recent[0].amount).to.equal(MIN_USDC_BET);
+			const ids = await slots.getRecentSpinIds(0, 1);
+			expect(ids[0]).to.equal(1n);
+			const spinBase = await slots.getSpinBase(ids[0]);
+			expect(spinBase.amount).to.equal(MIN_USDC_BET);
 		});
 	});
 });

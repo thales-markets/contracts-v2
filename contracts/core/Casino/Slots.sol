@@ -82,22 +82,6 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         bool won;
     }
 
-    /// @notice Frontend-friendly view of a spin with spinId included
-    struct SpinView {
-        uint spinId;
-        address user;
-        address collateral;
-        uint amount;
-        uint payout;
-        uint requestId;
-        uint placedAt;
-        uint resolvedAt;
-        uint reservedProfit;
-        SpinStatus status;
-        uint8[3] reels;
-        bool won;
-    }
-
     struct CoreAddresses {
         address owner;
         address manager;
@@ -171,7 +155,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     mapping(address => bytes32) public priceFeedKeyPerCollateral;
 
     /// @notice Stored spins by spin id
-    mapping(uint => Spin) public spins;
+    mapping(uint => Spin) internal spins;
 
     /// @notice Maps VRF request id to spin id
     mapping(uint => uint) public requestIdToSpinId;
@@ -551,60 +535,61 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         return symbolWeights;
     }
 
+    /// @notice Returns core spin data
+    function getSpinBase(
+        uint spinId
+    )
+        external
+        view
+        returns (
+            address user,
+            address collateral,
+            uint amount,
+            uint payout,
+            uint requestId,
+            uint placedAt,
+            uint resolvedAt,
+            uint reservedProfit
+        )
+    {
+        Spin storage s = spins[spinId];
+        return (s.user, s.collateral, s.amount, s.payout, s.requestId, s.placedAt, s.resolvedAt, s.reservedProfit);
+    }
+
+    /// @notice Returns spin game details
+    function getSpinDetails(uint spinId) external view returns (SpinStatus status, uint8[3] memory reels, bool won) {
+        Spin storage s = spins[spinId];
+        return (s.status, s.reels, s.won);
+    }
+
     /// @notice Returns the number of spins placed by a user
     function getUserSpinCount(address user) external view returns (uint) {
         return userSpinIds[user].length;
     }
 
-    /// @notice Returns full spin data for a user's spins with pagination
-    /// @param user User address
-    /// @param offset Starting index (0 = most recent)
-    /// @param limit Maximum number of spins to return
-    /// @return views Array of SpinView structs in reverse chronological order
-    function getUserSpins(address user, uint offset, uint limit) external view returns (SpinView[] memory views) {
-        uint[] storage ids = userSpinIds[user];
-        uint len = ids.length;
-        if (offset >= len) return new SpinView[](0);
+    /// @notice Returns spin IDs for a user's spins with pagination (reverse chronological)
+    function getUserSpinIds(address user, uint offset, uint limit) external view returns (uint[] memory ids) {
+        uint[] storage allIds = userSpinIds[user];
+        uint len = allIds.length;
+        if (offset >= len) return new uint[](0);
         uint remaining = len - offset;
         uint count = remaining < limit ? remaining : limit;
-        views = new SpinView[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            views[i] = _buildSpinView(ids[len - 1 - offset - i]);
+            ids[i] = allIds[len - 1 - offset - i];
         }
     }
 
-    /// @notice Returns full spin data for recent spins with pagination
-    /// @param offset Number of spins to skip from the latest
-    /// @param limit Maximum number of spins to return
-    /// @return views Array of SpinView structs in reverse chronological order
-    function getRecentSpins(uint offset, uint limit) external view returns (SpinView[] memory views) {
+    /// @notice Returns recent spin IDs with pagination (reverse chronological)
+    function getRecentSpinIds(uint offset, uint limit) external view returns (uint[] memory ids) {
         uint latest = nextSpinId - 1;
-        if (offset >= latest) return new SpinView[](0);
+        if (offset >= latest) return new uint[](0);
         uint start = latest - offset;
         uint count = start < limit ? start : limit;
-        views = new SpinView[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            views[i] = _buildSpinView(start - i);
+            ids[i] = start - i;
         }
-    }
-
-    /// @notice Builds a SpinView from storage for a given spin ID
-    function _buildSpinView(uint spinId) internal view returns (SpinView memory v) {
-        Spin storage s = spins[spinId];
-        v = SpinView({
-            spinId: spinId,
-            user: s.user,
-            collateral: s.collateral,
-            amount: s.amount,
-            payout: s.payout,
-            requestId: s.requestId,
-            placedAt: s.placedAt,
-            resolvedAt: s.resolvedAt,
-            reservedProfit: s.reservedProfit,
-            status: s.status,
-            reels: s.reels,
-            won: s.won
-        });
     }
 
     /* ========== SETTERS ========== */

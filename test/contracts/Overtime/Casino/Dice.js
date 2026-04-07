@@ -293,10 +293,11 @@ describe('Dice', () => {
 				.to.emit(dice, 'BetPlaced')
 				.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
 
-			const bet = await dice.bets(1n);
-			expect(bet.user).to.equal(player.address);
-			expect(bet.status).to.equal(Status.PENDING);
-			expect(bet.target).to.equal(11n);
+			const betBase = await dice.getBetBase(1n);
+			const betDetails = await dice.getBetDetails(1n);
+			expect(betBase.user).to.equal(player.address);
+			expect(betDetails.status).to.equal(Status.PENDING);
+			expect(betDetails.target).to.equal(11n);
 			expect(await dice.nextBetId()).to.equal(2n);
 		});
 
@@ -307,9 +308,9 @@ describe('Dice', () => {
 				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
 			const { betId } = await parseBetPlaced(dice, tx);
 
-			const bet = await dice.bets(betId);
-			expect(bet.betType).to.equal(BetType.ROLL_OVER);
-			expect(bet.target).to.equal(10n);
+			const betDetails = await dice.getBetDetails(betId);
+			expect(betDetails.betType).to.equal(BetType.ROLL_OVER);
+			expect(betDetails.target).to.equal(10n);
 		});
 	});
 
@@ -328,13 +329,14 @@ describe('Dice', () => {
 			// randomWord=4 → result = (4%20)+1 = 5, which is < 11 → win
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.status).to.equal(Status.RESOLVED);
-			expect(bet.result).to.equal(5n);
-			expect(bet.won).to.equal(true);
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.status).to.equal(Status.RESOLVED);
+			expect(betDetails.result).to.equal(5n);
+			expect(betDetails.won).to.equal(true);
 
 			const expectedPayout = getExpectedPayout(MIN_USDC_BET, BetType.ROLL_UNDER, 11);
-			expect(bet.payout).to.equal(expectedPayout);
+			expect(betBase.payout).to.equal(expectedPayout);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore + expectedPayout);
 		});
 
@@ -348,11 +350,12 @@ describe('Dice', () => {
 			// randomWord=14 → result = (14%20)+1 = 15, which is >= 11 → loss
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.status).to.equal(Status.RESOLVED);
-			expect(bet.result).to.equal(15n);
-			expect(bet.won).to.equal(false);
-			expect(bet.payout).to.equal(0n);
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.status).to.equal(Status.RESOLVED);
+			expect(betDetails.result).to.equal(15n);
+			expect(betDetails.won).to.equal(false);
+			expect(betBase.payout).to.equal(0n);
 		});
 
 		it('should resolve ROLL_UNDER as loss when result equals target', async () => {
@@ -365,9 +368,9 @@ describe('Dice', () => {
 			// randomWord=10 → result = (10%20)+1 = 11, which is NOT < 11 → loss
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [10n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.result).to.equal(11n);
-			expect(bet.won).to.equal(false);
+			const betDetails = await dice.getBetDetails(betId);
+			expect(betDetails.result).to.equal(11n);
+			expect(betDetails.won).to.equal(false);
 		});
 
 		it('should resolve ROLL_OVER as win when result > target', async () => {
@@ -382,13 +385,14 @@ describe('Dice', () => {
 			// randomWord=14 → result = 15, which is > 10 → win
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.status).to.equal(Status.RESOLVED);
-			expect(bet.result).to.equal(15n);
-			expect(bet.won).to.equal(true);
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.status).to.equal(Status.RESOLVED);
+			expect(betDetails.result).to.equal(15n);
+			expect(betDetails.won).to.equal(true);
 
 			const expectedPayout = getExpectedPayout(MIN_USDC_BET, BetType.ROLL_OVER, 10);
-			expect(bet.payout).to.equal(expectedPayout);
+			expect(betBase.payout).to.equal(expectedPayout);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore + expectedPayout);
 		});
 
@@ -402,10 +406,11 @@ describe('Dice', () => {
 			// randomWord=4 → result = 5, which is <= 10 → loss
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.result).to.equal(5n);
-			expect(bet.won).to.equal(false);
-			expect(bet.payout).to.equal(0n);
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.result).to.equal(5n);
+			expect(betDetails.won).to.equal(false);
+			expect(betBase.payout).to.equal(0n);
 		});
 
 		it('should resolve ROLL_OVER as loss when result equals target', async () => {
@@ -418,9 +423,9 @@ describe('Dice', () => {
 			// randomWord=9 → result = 10, which is NOT > 10 → loss
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [9n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.result).to.equal(10n);
-			expect(bet.won).to.equal(false);
+			const betDetails = await dice.getBetDetails(betId);
+			expect(betDetails.result).to.equal(10n);
+			expect(betDetails.won).to.equal(false);
 		});
 
 		it('should handle extreme low target (ROLL_UNDER 2, only result=1 wins)', async () => {
@@ -435,13 +440,14 @@ describe('Dice', () => {
 			// randomWord=0 → result = 1, which is < 2 → win
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [0n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.result).to.equal(1n);
-			expect(bet.won).to.equal(true);
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.result).to.equal(1n);
+			expect(betDetails.won).to.equal(true);
 
 			// 1/20 chance, multiplier = 0.98 * 20 = 19.6x
 			const expectedPayout = getExpectedPayout(MIN_USDC_BET, BetType.ROLL_UNDER, 2);
-			expect(bet.payout).to.equal(expectedPayout);
+			expect(betBase.payout).to.equal(expectedPayout);
 		});
 
 		it('should handle extreme high target (ROLL_OVER 19, only result=20 wins)', async () => {
@@ -454,12 +460,13 @@ describe('Dice', () => {
 			// randomWord=19 → result = 20, which is > 19 → win
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [19n]);
 
-			const bet = await dice.bets(betId);
-			expect(bet.result).to.equal(20n);
-			expect(bet.won).to.equal(true);
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.result).to.equal(20n);
+			expect(betDetails.won).to.equal(true);
 
 			const expectedPayout = getExpectedPayout(MIN_USDC_BET, BetType.ROLL_OVER, 19);
-			expect(bet.payout).to.equal(expectedPayout);
+			expect(betBase.payout).to.equal(expectedPayout);
 		});
 	});
 
@@ -506,9 +513,10 @@ describe('Dice', () => {
 			await expect(dice.connect(player).cancelBet(betId)).to.emit(dice, 'BetCancelled');
 
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore + MIN_USDC_BET);
-			const bet = await dice.bets(betId);
-			expect(bet.status).to.equal(Status.CANCELLED);
-			expect(bet.payout).to.equal(MIN_USDC_BET);
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.status).to.equal(Status.CANCELLED);
+			expect(betBase.payout).to.equal(MIN_USDC_BET);
 		});
 	});
 
@@ -660,69 +668,76 @@ describe('Dice', () => {
 			expect(await dice.getUserBetCount(player.address)).to.equal(2n);
 		});
 
-		it('getUserBets should return bets in reverse chronological order', async () => {
+		it('getUserBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
 
-			const bets = await dice.getUserBets(player.address, 0, 10);
-			expect(bets.length).to.equal(3);
+			const ids = await dice.getUserBetIds(player.address, 0, 10);
+			expect(ids.length).to.equal(3);
 			// Most recent first
-			expect(bets[0].target).to.equal(5n);
-			expect(bets[1].target).to.equal(10n);
-			expect(bets[2].target).to.equal(11n);
+			const bet0 = await dice.getBetDetails(ids[0]);
+			const bet1 = await dice.getBetDetails(ids[1]);
+			const bet2 = await dice.getBetDetails(ids[2]);
+			expect(bet0.target).to.equal(5n);
+			expect(bet1.target).to.equal(10n);
+			expect(bet2.target).to.equal(11n);
 		});
 
-		it('getUserBets should paginate correctly', async () => {
+		it('getUserBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
 
-			const page1 = await dice.getUserBets(player.address, 0, 2);
+			const page1 = await dice.getUserBetIds(player.address, 0, 2);
 			expect(page1.length).to.equal(2);
-			expect(page1[0].target).to.equal(5n);
+			const bet0 = await dice.getBetDetails(page1[0]);
+			expect(bet0.target).to.equal(5n);
 
-			const page2 = await dice.getUserBets(player.address, 2, 2);
+			const page2 = await dice.getUserBetIds(player.address, 2, 2);
 			expect(page2.length).to.equal(1);
-			expect(page2[0].target).to.equal(11n);
+			const bet2 = await dice.getBetDetails(page2[0]);
+			expect(bet2.target).to.equal(11n);
 		});
 
-		it('getUserBets should return empty for offset beyond length', async () => {
-			const bets = await dice.getUserBets(player.address, 100, 10);
-			expect(bets.length).to.equal(0);
+		it('getUserBetIds should return empty for offset beyond length', async () => {
+			const ids = await dice.getUserBetIds(player.address, 100, 10);
+			expect(ids.length).to.equal(0);
 		});
 
-		it('getRecentBets should return bets in reverse chronological order', async () => {
+		it('getRecentBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 2n);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
 
-			const recent = await dice.getRecentBets(0, 10);
-			expect(recent.length).to.equal(2);
-			expect(recent[0].user).to.equal(player.address);
+			const ids = await dice.getRecentBetIds(0, 10);
+			expect(ids.length).to.equal(2);
+			const bet0 = await dice.getBetBase(ids[0]);
+			expect(bet0.user).to.equal(player.address);
 		});
 
-		it('getRecentBets should paginate correctly', async () => {
+		it('getRecentBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
 
-			const page = await dice.getRecentBets(1, 1);
+			const page = await dice.getRecentBetIds(1, 1);
 			expect(page.length).to.equal(1);
 			// Skip most recent (bet 3), get bet 2
-			expect(page[0].target).to.equal(10n);
+			const bet = await dice.getBetDetails(page[0]);
+			expect(bet.target).to.equal(10n);
 		});
 
-		it('should not include other users bets in getUserBets', async () => {
+		it('should not include other users bets in getUserBetIds', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
 
 			expect(await dice.getUserBetCount(secondAccount.address)).to.equal(0n);
-			const bets = await dice.getUserBets(secondAccount.address, 0, 10);
-			expect(bets.length).to.equal(0);
+			const ids = await dice.getUserBetIds(secondAccount.address, 0, 10);
+			expect(ids.length).to.equal(0);
 		});
 	});
 });

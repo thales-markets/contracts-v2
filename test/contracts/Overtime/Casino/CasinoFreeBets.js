@@ -234,12 +234,13 @@ describe('CasinoFreeBets', () => {
 			// Win: randomWord=4 → result=5, ROLL_UNDER target=11 → win
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
 
-			const bet = await dice.bets(1);
-			expect(bet.won).to.equal(true);
+			const betDetails = await dice.getBetDetails(1);
+			const betBase = await dice.getBetBase(1);
+			expect(betDetails.won).to.equal(true);
 
 			// Player gets profit only (payout - amount)
 			const playerBalAfter = await usdc.balanceOf(player.address);
-			const profit = bet.payout - MIN_USDC_BET;
+			const profit = betBase.payout - MIN_USDC_BET;
 			expect(playerBalAfter - playerBalBefore).to.equal(profit);
 
 			// Holder gets stake back
@@ -266,8 +267,8 @@ describe('CasinoFreeBets', () => {
 			// Lose: randomWord=14 → result=15, ROLL_UNDER target=11 → loss
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]);
 
-			const bet = await dice.bets(1);
-			expect(bet.won).to.equal(false);
+			const betDetails = await dice.getBetDetails(1);
+			expect(betDetails.won).to.equal(false);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
 		});
 

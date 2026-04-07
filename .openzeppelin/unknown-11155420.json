@@ -410,6 +410,31 @@
       "address": "0xc4C7D964Ef26C17Dc4d616eC2524A8b9eB712f54",
       "txHash": "0xd71277233a2f12bcfab94f5d8e4d55c3bbd6e74afb163343a294520cb4b63c5b",
       "kind": "transparent"
+    },
+    {
+      "address": "0x1865E4885607BEe26F401aEbEAD91D1e59234F97",
+      "txHash": "0xa620b13c9e87eb85080a5737e0dedf1e655838262044f604cd8b519f8ce9acb1",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x5e2bD8757b6CE8A98FcE9cD3bB12008B7045e266",
+      "txHash": "0x77eda2023341460dcf33996cf140198c9bf694c86c4977f17a927a8a921dba24",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0Ce6e5782916f572686bF30fe4259c78C0ec71C1",
+      "txHash": "0xf96aa7b46d25ecf4735ff159a44561c5d48f8532ab599678b53063a48fb739d6",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x6B3E5F361FA069EB71bDB726A0a5ab6452Eea3D1",
+      "txHash": "0x351e74a6b07f56a4c08f9d4acc9393d84f762ad746e0950b6db715edf4e89923",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x504db61a2fcD382373a82cFaB279e8Ea7a235Ee4",
+      "txHash": "0x29ccb507e0531102c83a5d98130ee1627bb0760b7bf1a64aeb59c451cbc6e7b8",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -78458,7 +78483,7 @@
             "label": "manager",
             "offset": 1,
             "slot": "5",
-            "type": "t_contract(ISportsAMMV2Manager)54434",
+            "type": "t_contract(ISportsAMMV2Manager)54517",
             "contract": "Roulette",
             "src": "contracts\\core\\Casino\\Roulette.sol:133"
           },
@@ -78586,7 +78611,7 @@
             "label": "bets",
             "offset": 0,
             "slot": "19",
-            "type": "t_mapping(t_uint256,t_struct(Bet)31826_storage)",
+            "type": "t_mapping(t_uint256,t_struct(Bet)31909_storage)",
             "contract": "Roulette",
             "src": "contracts\\core\\Casino\\Roulette.sol:177"
           },
@@ -78674,7 +78699,7 @@
             "label": "contract IPriceFeed",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2Manager)54434": {
+          "t_contract(ISportsAMMV2Manager)54517": {
             "label": "contract ISportsAMMV2Manager",
             "numberOfBytes": "20"
           },
@@ -78682,7 +78707,7 @@
             "label": "contract IVRFCoordinatorV2Plus",
             "numberOfBytes": "20"
           },
-          "t_enum(BetStatus)31796": {
+          "t_enum(BetStatus)31879": {
             "label": "enum Roulette.BetStatus",
             "members": [
               "NONE",
@@ -78692,7 +78717,7 @@
             ],
             "numberOfBytes": "1"
           },
-          "t_enum(BetType)31790": {
+          "t_enum(BetType)31873": {
             "label": "enum Roulette.BetType",
             "members": [
               "STRAIGHT",
@@ -78724,7 +78749,7 @@
             "label": "mapping(uint256 => bool)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_struct(Bet)31826_storage)": {
+          "t_mapping(t_uint256,t_struct(Bet)31909_storage)": {
             "label": "mapping(uint256 => struct Roulette.Bet)",
             "numberOfBytes": "32"
           },
@@ -78732,7 +78757,7 @@
             "label": "mapping(uint256 => uint256)",
             "numberOfBytes": "32"
           },
-          "t_struct(Bet)31826_storage": {
+          "t_struct(Bet)31909_storage": {
             "label": "struct Roulette.Bet",
             "members": [
               {
@@ -78785,13 +78810,13 @@
               },
               {
                 "label": "betType",
-                "type": "t_enum(BetType)31790",
+                "type": "t_enum(BetType)31873",
                 "offset": 0,
                 "slot": "8"
               },
               {
                 "label": "status",
-                "type": "t_enum(BetStatus)31796",
+                "type": "t_enum(BetStatus)31879",
                 "offset": 1,
                 "slot": "8"
               },
@@ -79462,7 +79487,7 @@
             "label": "manager",
             "offset": 1,
             "slot": "5",
-            "type": "t_contract(ISportsAMMV2Manager)54434",
+            "type": "t_contract(ISportsAMMV2Manager)54517",
             "contract": "Baccarat",
             "src": "contracts\\core\\Casino\\Baccarat.sol:187"
           },
@@ -79690,7 +79715,7 @@
             "label": "contract IPriceFeed",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2Manager)54434": {
+          "t_contract(ISportsAMMV2Manager)54517": {
             "label": "contract ISportsAMMV2Manager",
             "numberOfBytes": "20"
           },
@@ -79969,7 +79994,7 @@
             "label": "manager",
             "offset": 1,
             "slot": "5",
-            "type": "t_contract(ISportsAMMV2Manager)54434",
+            "type": "t_contract(ISportsAMMV2Manager)54517",
             "contract": "Slots",
             "src": "contracts\\core\\Casino\\Slots.sol:127"
           },
@@ -80105,7 +80130,7 @@
             "label": "spins",
             "offset": 0,
             "slot": "20",
-            "type": "t_mapping(t_uint256,t_struct(Spin)34309_storage)",
+            "type": "t_mapping(t_uint256,t_struct(Spin)34392_storage)",
             "contract": "Slots",
             "src": "contracts\\core\\Casino\\Slots.sol:174"
           },
@@ -80229,7 +80254,7 @@
             "label": "contract IPriceFeed",
             "numberOfBytes": "20"
           },
-          "t_contract(ISportsAMMV2Manager)54434": {
+          "t_contract(ISportsAMMV2Manager)54517": {
             "label": "contract ISportsAMMV2Manager",
             "numberOfBytes": "20"
           },
@@ -80237,7 +80262,7 @@
             "label": "contract IVRFCoordinatorV2Plus",
             "numberOfBytes": "20"
           },
-          "t_enum(SpinStatus)34282": {
+          "t_enum(SpinStatus)34365": {
             "label": "enum Slots.SpinStatus",
             "members": [
               "NONE",
@@ -80267,7 +80292,7 @@
             "label": "mapping(uint256 => bool)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_uint256,t_struct(Spin)34309_storage)": {
+          "t_mapping(t_uint256,t_struct(Spin)34392_storage)": {
             "label": "mapping(uint256 => struct Slots.Spin)",
             "numberOfBytes": "32"
           },
@@ -80279,7 +80304,7 @@
             "label": "mapping(uint8 => uint256)",
             "numberOfBytes": "32"
           },
-          "t_struct(Spin)34309_storage": {
+          "t_struct(Spin)34392_storage": {
             "label": "struct Slots.Spin",
             "members": [
               {
@@ -80332,7 +80357,2488 @@
               },
               {
                 "label": "status",
-                "type": "t_enum(SpinStatus)34282",
+                "type": "t_enum(SpinStatus)34365",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "reels",
+                "type": "t_array(t_uint8)3_storage",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "won",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "10"
+              }
+            ],
+            "numberOfBytes": "352"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "5b1c43d5f0d7c7b42f323dab2676cc9bf8784992844ac625aa347c981ef0a3bd": {
+      "address": "0xd8FF0aD77c1b4304A52721eD3fdbf8EB10Da7B19",
+      "txHash": "0x2d4ed2995ef0fc752cdae3dc6775169b3e6f278c472a709bb41dd1fa0d3b6743",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "manager",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Manager)54436",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:134"
+          },
+          {
+            "label": "priceFeed",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IPriceFeed)7358",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:137"
+          },
+          {
+            "label": "vrfCoordinator",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(IVRFCoordinatorV2Plus)9099",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:140"
+          },
+          {
+            "label": "usdc",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:143"
+          },
+          {
+            "label": "weth",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:144"
+          },
+          {
+            "label": "over",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_address",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:145"
+          },
+          {
+            "label": "maxProfitUsd",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:148"
+          },
+          {
+            "label": "cancelTimeout",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:151"
+          },
+          {
+            "label": "houseEdge",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:155"
+          },
+          {
+            "label": "nextBetId",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:158"
+          },
+          {
+            "label": "subscriptionId",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:161"
+          },
+          {
+            "label": "keyHash",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_bytes32",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:164"
+          },
+          {
+            "label": "callbackGasLimit",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint32",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:167"
+          },
+          {
+            "label": "requestConfirmations",
+            "offset": 4,
+            "slot": "17",
+            "type": "t_uint16",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:170"
+          },
+          {
+            "label": "nativePayment",
+            "offset": 6,
+            "slot": "17",
+            "type": "t_bool",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:173"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:176"
+          },
+          {
+            "label": "priceFeedKeyPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_bytes32)",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:179"
+          },
+          {
+            "label": "_bets",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_mapping(t_uint256,t_struct(Bet)29187_storage)",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:182"
+          },
+          {
+            "label": "requestIdToBetId",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:185"
+          },
+          {
+            "label": "reservedProfitPerCollateral",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:188"
+          },
+          {
+            "label": "userBetIds",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:191"
+          },
+          {
+            "label": "freeBetsHolder",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_address",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:194"
+          },
+          {
+            "label": "isFreeBet",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Dice",
+            "src": "contracts\\core\\Casino\\Dice.sol:197"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IPriceFeed)7358": {
+            "label": "contract IPriceFeed",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)54436": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IVRFCoordinatorV2Plus)9099": {
+            "label": "contract IVRFCoordinatorV2Plus",
+            "numberOfBytes": "20"
+          },
+          "t_enum(BetStatus)29157": {
+            "label": "enum Dice.BetStatus",
+            "members": [
+              "NONE",
+              "PENDING",
+              "RESOLVED",
+              "CANCELLED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(BetType)29151": {
+            "label": "enum Dice.BetType",
+            "members": [
+              "ROLL_UNDER",
+              "ROLL_OVER"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bytes32)": {
+            "label": "mapping(address => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Bet)29187_storage)": {
+            "label": "mapping(uint256 => struct Dice.Bet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Bet)29187_storage": {
+            "label": "struct Dice.Bet",
+            "members": [
+              {
+                "label": "user",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collateral",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "payout",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "requestId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "placedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "resolvedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "reservedProfit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "betType",
+                "type": "t_enum(BetType)29151",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(BetStatus)29157",
+                "offset": 1,
+                "slot": "8"
+              },
+              {
+                "label": "target",
+                "type": "t_uint8",
+                "offset": 2,
+                "slot": "8"
+              },
+              {
+                "label": "result",
+                "type": "t_uint8",
+                "offset": 3,
+                "slot": "8"
+              },
+              {
+                "label": "won",
+                "type": "t_bool",
+                "offset": 4,
+                "slot": "8"
+              }
+            ],
+            "numberOfBytes": "288"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "e8696dccbf9d6afa6169674ce17f79811752f454edc0f2b1e7e297a602dc891e": {
+      "address": "0xFC4EA80ee2FD9b53D994e648cf7Cc0804e456897",
+      "txHash": "0x097580bfd224c36f970b25016c3069b3878d9e7b74cc31cea7c25304ffc20191",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "manager",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Manager)54436",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:133"
+          },
+          {
+            "label": "priceFeed",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IPriceFeed)7358",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:136"
+          },
+          {
+            "label": "vrfCoordinator",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(IVRFCoordinatorV2Plus)9099",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:139"
+          },
+          {
+            "label": "usdc",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:142"
+          },
+          {
+            "label": "weth",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:143"
+          },
+          {
+            "label": "over",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_address",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:144"
+          },
+          {
+            "label": "maxProfitUsd",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:147"
+          },
+          {
+            "label": "cancelTimeout",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:150"
+          },
+          {
+            "label": "nextBetId",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:153"
+          },
+          {
+            "label": "subscriptionId",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:156"
+          },
+          {
+            "label": "keyHash",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_bytes32",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:159"
+          },
+          {
+            "label": "callbackGasLimit",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint32",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:162"
+          },
+          {
+            "label": "requestConfirmations",
+            "offset": 4,
+            "slot": "16",
+            "type": "t_uint16",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:165"
+          },
+          {
+            "label": "nativePayment",
+            "offset": 6,
+            "slot": "16",
+            "type": "t_bool",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:168"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:171"
+          },
+          {
+            "label": "priceFeedKeyPerCollateral",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_address,t_bytes32)",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:174"
+          },
+          {
+            "label": "_bets",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_uint256,t_struct(Bet)31757_storage)",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:177"
+          },
+          {
+            "label": "requestIdToBetId",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:180"
+          },
+          {
+            "label": "reservedProfitPerCollateral",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:183"
+          },
+          {
+            "label": "userBetIds",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:186"
+          },
+          {
+            "label": "freeBetsHolder",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_address",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:189"
+          },
+          {
+            "label": "isFreeBet",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Roulette",
+            "src": "contracts\\core\\Casino\\Roulette.sol:192"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IPriceFeed)7358": {
+            "label": "contract IPriceFeed",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)54436": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IVRFCoordinatorV2Plus)9099": {
+            "label": "contract IVRFCoordinatorV2Plus",
+            "numberOfBytes": "20"
+          },
+          "t_enum(BetStatus)31727": {
+            "label": "enum Roulette.BetStatus",
+            "members": [
+              "NONE",
+              "PENDING",
+              "RESOLVED",
+              "CANCELLED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(BetType)31721": {
+            "label": "enum Roulette.BetType",
+            "members": [
+              "STRAIGHT",
+              "RED_BLACK",
+              "ODD_EVEN",
+              "LOW_HIGH",
+              "DOZEN",
+              "COLUMN"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bytes32)": {
+            "label": "mapping(address => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Bet)31757_storage)": {
+            "label": "mapping(uint256 => struct Roulette.Bet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Bet)31757_storage": {
+            "label": "struct Roulette.Bet",
+            "members": [
+              {
+                "label": "user",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collateral",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "payout",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "requestId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "placedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "resolvedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "reservedProfit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "betType",
+                "type": "t_enum(BetType)31721",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(BetStatus)31727",
+                "offset": 1,
+                "slot": "8"
+              },
+              {
+                "label": "selection",
+                "type": "t_uint8",
+                "offset": 2,
+                "slot": "8"
+              },
+              {
+                "label": "result",
+                "type": "t_uint8",
+                "offset": 3,
+                "slot": "8"
+              },
+              {
+                "label": "won",
+                "type": "t_bool",
+                "offset": 4,
+                "slot": "8"
+              }
+            ],
+            "numberOfBytes": "288"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "10edee860e9f8540aebc8a22b96695a78d5c61de67a3c22d2b8a739d549ddc09": {
+      "address": "0x56c857B30CFaa4a964A3270e701Cd2f894DaF2B6",
+      "txHash": "0x415b9b20af929fe2915ea37ca9620689948b82c3fa9e8a455fe28dbdc536c298",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "manager",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Manager)54436",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:142"
+          },
+          {
+            "label": "priceFeed",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IPriceFeed)7358",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:145"
+          },
+          {
+            "label": "vrfCoordinator",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(IVRFCoordinatorV2Plus)9099",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:148"
+          },
+          {
+            "label": "usdc",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:151"
+          },
+          {
+            "label": "weth",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:152"
+          },
+          {
+            "label": "over",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_address",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:153"
+          },
+          {
+            "label": "maxProfitUsd",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:156"
+          },
+          {
+            "label": "cancelTimeout",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:159"
+          },
+          {
+            "label": "nextHandId",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:162"
+          },
+          {
+            "label": "subscriptionId",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:165"
+          },
+          {
+            "label": "keyHash",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_bytes32",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:168"
+          },
+          {
+            "label": "callbackGasLimit",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint32",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:171"
+          },
+          {
+            "label": "requestConfirmations",
+            "offset": 4,
+            "slot": "16",
+            "type": "t_uint16",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:174"
+          },
+          {
+            "label": "nativePayment",
+            "offset": 6,
+            "slot": "16",
+            "type": "t_bool",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:177"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:180"
+          },
+          {
+            "label": "priceFeedKeyPerCollateral",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_address,t_bytes32)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:183"
+          },
+          {
+            "label": "_hands",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_uint256,t_struct(Hand)24862_storage)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:186"
+          },
+          {
+            "label": "vrfRequests",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_mapping(t_uint256,t_struct(VrfRequest)24869_storage)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:189"
+          },
+          {
+            "label": "reservedProfitPerCollateral",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:192"
+          },
+          {
+            "label": "userHandIds",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:195"
+          },
+          {
+            "label": "lastRequestAt",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:198"
+          },
+          {
+            "label": "freeBetsHolder",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_address",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:201"
+          },
+          {
+            "label": "isFreeBet",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Blackjack",
+            "src": "contracts\\core\\Casino\\Blackjack.sol:204"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint8)11_storage": {
+            "label": "uint8[11]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IPriceFeed)7358": {
+            "label": "contract IPriceFeed",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)54436": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IVRFCoordinatorV2Plus)9099": {
+            "label": "contract IVRFCoordinatorV2Plus",
+            "numberOfBytes": "20"
+          },
+          "t_enum(HandResult)24817": {
+            "label": "enum Blackjack.HandResult",
+            "members": [
+              "NONE",
+              "PLAYER_BLACKJACK",
+              "PLAYER_WIN",
+              "DEALER_WIN",
+              "PUSH",
+              "PLAYER_BUST",
+              "DEALER_BUST"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(HandStatus)24808": {
+            "label": "enum Blackjack.HandStatus",
+            "members": [
+              "NONE",
+              "AWAITING_DEAL",
+              "PLAYER_TURN",
+              "AWAITING_HIT",
+              "AWAITING_STAND",
+              "AWAITING_DOUBLE",
+              "RESOLVED",
+              "CANCELLED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(VrfAction)24824": {
+            "label": "enum Blackjack.VrfAction",
+            "members": [
+              "NONE",
+              "DEAL",
+              "HIT",
+              "STAND",
+              "DOUBLE_DOWN"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bytes32)": {
+            "label": "mapping(address => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Hand)24862_storage)": {
+            "label": "mapping(uint256 => struct Blackjack.Hand)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(VrfRequest)24869_storage)": {
+            "label": "mapping(uint256 => struct Blackjack.VrfRequest)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Hand)24862_storage": {
+            "label": "struct Blackjack.Hand",
+            "members": [
+              {
+                "label": "user",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collateral",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "payout",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "requestId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "placedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "resolvedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "reservedProfit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(HandStatus)24808",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "result",
+                "type": "t_enum(HandResult)24817",
+                "offset": 1,
+                "slot": "8"
+              },
+              {
+                "label": "isDoubledDown",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "8"
+              },
+              {
+                "label": "playerCardCount",
+                "type": "t_uint8",
+                "offset": 3,
+                "slot": "8"
+              },
+              {
+                "label": "dealerCardCount",
+                "type": "t_uint8",
+                "offset": 4,
+                "slot": "8"
+              },
+              {
+                "label": "playerCards",
+                "type": "t_array(t_uint8)11_storage",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "dealerCards",
+                "type": "t_array(t_uint8)11_storage",
+                "offset": 0,
+                "slot": "10"
+              }
+            ],
+            "numberOfBytes": "352"
+          },
+          "t_struct(VrfRequest)24869_storage": {
+            "label": "struct Blackjack.VrfRequest",
+            "members": [
+              {
+                "label": "handId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "action",
+                "type": "t_enum(VrfAction)24824",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "f24c1738e52dd4296f3cca858b2e19f3f232bd40d6db07d08b71f24b8cd8dcba": {
+      "address": "0xFa66D5a8A39CEf38E1E9F59a30a51aE4C4aA6869",
+      "txHash": "0xd155e3a1dee2f9b71e76eafa12f545a2db9ab6240d5e03e3046ae9c10119b41c",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "manager",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Manager)54436",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:166"
+          },
+          {
+            "label": "priceFeed",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IPriceFeed)7358",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:169"
+          },
+          {
+            "label": "vrfCoordinator",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(IVRFCoordinatorV2Plus)9099",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:172"
+          },
+          {
+            "label": "usdc",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:175"
+          },
+          {
+            "label": "weth",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:176"
+          },
+          {
+            "label": "over",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_address",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:177"
+          },
+          {
+            "label": "maxProfitUsd",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:180"
+          },
+          {
+            "label": "cancelTimeout",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:183"
+          },
+          {
+            "label": "bankerPayoutMultiplier",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:187"
+          },
+          {
+            "label": "nextBetId",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:190"
+          },
+          {
+            "label": "subscriptionId",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:193"
+          },
+          {
+            "label": "keyHash",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_bytes32",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:196"
+          },
+          {
+            "label": "callbackGasLimit",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint32",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:199"
+          },
+          {
+            "label": "requestConfirmations",
+            "offset": 4,
+            "slot": "17",
+            "type": "t_uint16",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:202"
+          },
+          {
+            "label": "nativePayment",
+            "offset": 6,
+            "slot": "17",
+            "type": "t_bool",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:205"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:208"
+          },
+          {
+            "label": "priceFeedKeyPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_bytes32)",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:211"
+          },
+          {
+            "label": "_bets",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_mapping(t_uint256,t_struct(Bet)21801_storage)",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:214"
+          },
+          {
+            "label": "requestIdToBetId",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:217"
+          },
+          {
+            "label": "reservedProfitPerCollateral",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:220"
+          },
+          {
+            "label": "userBetIds",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:223"
+          },
+          {
+            "label": "freeBetsHolder",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_address",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:226"
+          },
+          {
+            "label": "isFreeBet",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Baccarat",
+            "src": "contracts\\core\\Casino\\Baccarat.sol:229"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint8)6_storage": {
+            "label": "uint8[6]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IPriceFeed)7358": {
+            "label": "contract IPriceFeed",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)54436": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IVRFCoordinatorV2Plus)9099": {
+            "label": "contract IVRFCoordinatorV2Plus",
+            "numberOfBytes": "20"
+          },
+          "t_enum(BetStatus)21762": {
+            "label": "enum Baccarat.BetStatus",
+            "members": [
+              "NONE",
+              "PENDING",
+              "RESOLVED",
+              "CANCELLED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(BetType)21751": {
+            "label": "enum Baccarat.BetType",
+            "members": [
+              "PLAYER",
+              "BANKER",
+              "TIE"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(GameResult)21756": {
+            "label": "enum Baccarat.GameResult",
+            "members": [
+              "PLAYER",
+              "BANKER",
+              "TIE"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bytes32)": {
+            "label": "mapping(address => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Bet)21801_storage)": {
+            "label": "mapping(uint256 => struct Baccarat.Bet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Bet)21801_storage": {
+            "label": "struct Baccarat.Bet",
+            "members": [
+              {
+                "label": "user",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collateral",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "payout",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "requestId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "placedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "resolvedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "reservedProfit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "betType",
+                "type": "t_enum(BetType)21751",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(BetStatus)21762",
+                "offset": 1,
+                "slot": "8"
+              },
+              {
+                "label": "result",
+                "type": "t_enum(GameResult)21756",
+                "offset": 2,
+                "slot": "8"
+              },
+              {
+                "label": "won",
+                "type": "t_bool",
+                "offset": 3,
+                "slot": "8"
+              },
+              {
+                "label": "isPush",
+                "type": "t_bool",
+                "offset": 4,
+                "slot": "8"
+              },
+              {
+                "label": "playerTotal",
+                "type": "t_uint8",
+                "offset": 5,
+                "slot": "8"
+              },
+              {
+                "label": "bankerTotal",
+                "type": "t_uint8",
+                "offset": 6,
+                "slot": "8"
+              },
+              {
+                "label": "cards",
+                "type": "t_array(t_uint8)6_storage",
+                "offset": 0,
+                "slot": "9"
+              }
+            ],
+            "numberOfBytes": "320"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "7f4bdd31b0f9ea02fb0b7b5a69deeb47ad20b513214599f6b6b610824d856268": {
+      "address": "0xc57f519F7576316C5e01F3911a1Df558745ae76C",
+      "txHash": "0x35fc38f4f61a72e9e7ad710e9a3e062c7ac1327ef5e8ef3dda4f94b8432ca5bd",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "lastPauseTime",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:9"
+          },
+          {
+            "label": "paused",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ProxyPausable",
+            "src": "contracts\\utils\\proxy\\ProxyPausable.sol:10"
+          },
+          {
+            "label": "_guardCounter",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:18"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "ProxyReentrancyGuard",
+            "src": "contracts\\utils\\proxy\\ProxyReentrancyGuard.sol:19"
+          },
+          {
+            "label": "manager",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_contract(ISportsAMMV2Manager)54436",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:111"
+          },
+          {
+            "label": "priceFeed",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IPriceFeed)7358",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:114"
+          },
+          {
+            "label": "vrfCoordinator",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(IVRFCoordinatorV2Plus)9099",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:117"
+          },
+          {
+            "label": "usdc",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:120"
+          },
+          {
+            "label": "weth",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:121"
+          },
+          {
+            "label": "over",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_address",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:122"
+          },
+          {
+            "label": "maxProfitUsd",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:125"
+          },
+          {
+            "label": "cancelTimeout",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:128"
+          },
+          {
+            "label": "houseEdge",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:131"
+          },
+          {
+            "label": "nextSpinId",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:134"
+          },
+          {
+            "label": "subscriptionId",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:137"
+          },
+          {
+            "label": "keyHash",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_bytes32",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:140"
+          },
+          {
+            "label": "callbackGasLimit",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint32",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:143"
+          },
+          {
+            "label": "requestConfirmations",
+            "offset": 4,
+            "slot": "17",
+            "type": "t_uint16",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:146"
+          },
+          {
+            "label": "nativePayment",
+            "offset": 6,
+            "slot": "17",
+            "type": "t_bool",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:149"
+          },
+          {
+            "label": "supportedCollateral",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:152"
+          },
+          {
+            "label": "priceFeedKeyPerCollateral",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_mapping(t_address,t_bytes32)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:155"
+          },
+          {
+            "label": "_spins",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_mapping(t_uint256,t_struct(Spin)34316_storage)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:158"
+          },
+          {
+            "label": "requestIdToSpinId",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:161"
+          },
+          {
+            "label": "reservedProfitPerCollateral",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:164"
+          },
+          {
+            "label": "symbolCount",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_uint8",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:169"
+          },
+          {
+            "label": "symbolWeights",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_array(t_uint256)dyn_storage",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:172"
+          },
+          {
+            "label": "triplePayout",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_uint8,t_uint256)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:175"
+          },
+          {
+            "label": "maxPayoutMultiplier",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_uint256",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:178"
+          },
+          {
+            "label": "userSpinIds",
+            "offset": 0,
+            "slot": "27",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:181"
+          },
+          {
+            "label": "freeBetsHolder",
+            "offset": 0,
+            "slot": "28",
+            "type": "t_address",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:184"
+          },
+          {
+            "label": "isFreeBet",
+            "offset": 0,
+            "slot": "29",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Slots",
+            "src": "contracts\\core\\Casino\\Slots.sol:187"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint8)3_storage": {
+            "label": "uint8[3]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IPriceFeed)7358": {
+            "label": "contract IPriceFeed",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISportsAMMV2Manager)54436": {
+            "label": "contract ISportsAMMV2Manager",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IVRFCoordinatorV2Plus)9099": {
+            "label": "contract IVRFCoordinatorV2Plus",
+            "numberOfBytes": "20"
+          },
+          "t_enum(SpinStatus)34289": {
+            "label": "enum Slots.SpinStatus",
+            "members": [
+              "NONE",
+              "PENDING",
+              "RESOLVED",
+              "CANCELLED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bytes32)": {
+            "label": "mapping(address => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Spin)34316_storage)": {
+            "label": "mapping(uint256 => struct Slots.Spin)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint8,t_uint256)": {
+            "label": "mapping(uint8 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Spin)34316_storage": {
+            "label": "struct Slots.Spin",
+            "members": [
+              {
+                "label": "user",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "collateral",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "payout",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "requestId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "placedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "resolvedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "reservedProfit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(SpinStatus)34289",
                 "offset": 0,
                 "slot": "8"
               },

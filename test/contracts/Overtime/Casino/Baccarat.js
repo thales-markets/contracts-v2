@@ -638,32 +638,32 @@ describe('Baccarat', () => {
 			expect(await baccarat.getUserBetCount(player.address)).to.equal(2n);
 		});
 
-		it('getUserBets should return bets in reverse chronological order', async () => {
+		it('getUserBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 3n);
 			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
 			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
 			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
 
-			const views = await baccarat.getUserBets(player.address, 0, 10);
-			expect(views.length).to.equal(3);
-			expect(views[0].betId).to.equal(3n);
-			expect(views[1].betId).to.equal(2n);
-			expect(views[2].betId).to.equal(1n);
+			const ids = await baccarat.getUserBetIds(player.address, 0, 10);
+			expect(ids.length).to.equal(3);
+			expect(ids[0]).to.equal(3n);
+			expect(ids[1]).to.equal(2n);
+			expect(ids[2]).to.equal(1n);
 		});
 
-		it('getUserBets should return empty for offset beyond length', async () => {
-			const views = await baccarat.getUserBets(player.address, 100, 10);
-			expect(views.length).to.equal(0);
+		it('getUserBetIds should return empty for offset beyond length', async () => {
+			const ids = await baccarat.getUserBetIds(player.address, 100, 10);
+			expect(ids.length).to.equal(0);
 		});
 
-		it('should not include other users bets in getUserBets', async () => {
+		it('should not include other users bets in getUserBetIds', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
 			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
 
 			expect(await baccarat.getUserBetCount(secondAccount.address)).to.equal(0n);
 		});
 
-		it('getUserBets should return full BetView with cards and totals', async () => {
+		it('getUserBetIds should return IDs with full details via getters', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
 			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
@@ -671,33 +671,35 @@ describe('Baccarat', () => {
 			// Resolve
 			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [42n]);
 
-			const views = await baccarat.getUserBets(player.address, 0, 10);
-			expect(views.length).to.equal(1);
-			expect(views[0].betId).to.equal(betId);
-			expect(views[0].user).to.equal(player.address);
-			expect(views[0].amount).to.equal(MIN_USDC_BET);
-			expect(views[0].betType).to.equal(BetType.PLAYER);
-			expect(views[0].status).to.equal(Status.RESOLVED);
+			const ids = await baccarat.getUserBetIds(player.address, 0, 10);
+			expect(ids.length).to.equal(1);
+			expect(ids[0]).to.equal(betId);
+			const bet = await getBet(baccarat, ids[0]);
+			expect(bet.user).to.equal(player.address);
+			expect(bet.amount).to.equal(MIN_USDC_BET);
+			expect(bet.betType).to.equal(BetType.PLAYER);
+			expect(bet.status).to.equal(Status.RESOLVED);
 			// cards array should be populated
-			expect(views[0].cards.length).to.equal(6);
+			expect(bet.cards.length).to.equal(6);
 		});
 
-		it('getRecentBets should return full BetView', async () => {
+		it('getRecentBetIds should return bet IDs', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
 			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
 			const { requestId } = await parseBetPlaced(baccarat, tx);
 
 			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [100n]);
 
-			const views = await baccarat.getRecentBets(0, 10);
-			expect(views.length).to.equal(1);
-			expect(views[0].betId).to.equal(1n);
-			expect(views[0].collateral).to.equal(usdcAddress);
+			const ids = await baccarat.getRecentBetIds(0, 10);
+			expect(ids.length).to.equal(1);
+			expect(ids[0]).to.equal(1n);
+			const betBase = await baccarat.getBetBase(ids[0]);
+			expect(betBase.collateral).to.equal(usdcAddress);
 		});
 
-		it('getUserBets should return empty for offset beyond length', async () => {
-			const views = await baccarat.getUserBets(player.address, 100, 10);
-			expect(views.length).to.equal(0);
+		it('getUserBetIds should return empty for offset beyond length', async () => {
+			const ids = await baccarat.getUserBetIds(player.address, 100, 10);
+			expect(ids.length).to.equal(0);
 		});
 	});
 });

@@ -1,3 +1,1 @@
-module.exports = {
-	skipFiles: ['utils'],
-};
+module.exports = { skipFiles: ['utils'] };

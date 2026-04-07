@@ -126,27 +126,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint8[6] cards;
     }
 
-    /// @notice Frontend-friendly view of a baccarat bet with all fields in one struct
-    struct BetView {
-        uint betId;
-        address user;
-        address collateral;
-        uint amount;
-        uint payout;
-        uint requestId;
-        uint placedAt;
-        uint resolvedAt;
-        uint reservedProfit;
-        BetType betType;
-        BetStatus status;
-        GameResult result;
-        bool won;
-        bool isPush;
-        uint8[6] cards;
-        uint8 playerTotal;
-        uint8 bankerTotal;
-    }
-
     struct CoreAddresses {
         address owner;
         address manager;
@@ -849,53 +828,29 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         return userBetIds[user].length;
     }
 
-    /// @notice Returns full bet data for a user's bets with pagination
-    function getUserBets(address user, uint offset, uint limit) external view returns (BetView[] memory views) {
+    /// @notice Returns bet IDs for a user's bets with pagination (reverse chronological)
+    function getUserBetIds(address user, uint offset, uint limit) external view returns (uint[] memory ids) {
         uint[] storage allIds = userBetIds[user];
         uint len = allIds.length;
-        if (offset >= len) return new BetView[](0);
+        if (offset >= len) return new uint[](0);
         uint remaining = len - offset;
         uint count = remaining < limit ? remaining : limit;
-        views = new BetView[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            views[i] = _buildBetView(allIds[len - 1 - offset - i]);
+            ids[i] = allIds[len - 1 - offset - i];
         }
     }
 
-    /// @notice Returns full bet data for recent bets with pagination
-    function getRecentBets(uint offset, uint limit) external view returns (BetView[] memory views) {
+    /// @notice Returns recent bet IDs with pagination (reverse chronological)
+    function getRecentBetIds(uint offset, uint limit) external view returns (uint[] memory ids) {
         uint latest = nextBetId - 1;
-        if (offset >= latest) return new BetView[](0);
+        if (offset >= latest) return new uint[](0);
         uint start = latest - offset;
         uint count = start < limit ? start : limit;
-        views = new BetView[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            views[i] = _buildBetView(start - i);
+            ids[i] = start - i;
         }
-    }
-
-    /// @notice Builds a BetView from storage for a given bet ID
-    function _buildBetView(uint betId) internal view returns (BetView memory v) {
-        Bet storage b = _bets[betId];
-        v = BetView({
-            betId: betId,
-            user: b.user,
-            collateral: b.collateral,
-            amount: b.amount,
-            payout: b.payout,
-            requestId: b.requestId,
-            placedAt: b.placedAt,
-            resolvedAt: b.resolvedAt,
-            reservedProfit: b.reservedProfit,
-            betType: b.betType,
-            status: b.status,
-            result: b.result,
-            won: b.won,
-            isPush: b.isPush,
-            cards: b.cards,
-            playerTotal: b.playerTotal,
-            bankerTotal: b.bankerTotal
-        });
     }
 
     /* ========== SETTERS ========== */

@@ -396,13 +396,14 @@ describe('Roulette', () => {
 			expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(MIN_USDC_BET);
 
 			// Bet stored
-			const bet = await roulette.bets(1n);
-			expect(bet.user).to.equal(player.address);
-			expect(bet.collateral).to.equal(usdcAddress);
-			expect(bet.amount).to.equal(MIN_USDC_BET);
-			expect(bet.status).to.equal(1n); // PENDING
-			expect(bet.betType).to.equal(BetType.RED_BLACK);
-			expect(bet.selection).to.equal(0n);
+			const betBase = await roulette.getBetBase(1n);
+			const betDetails = await roulette.getBetDetails(1n);
+			expect(betBase.user).to.equal(player.address);
+			expect(betBase.collateral).to.equal(usdcAddress);
+			expect(betBase.amount).to.equal(MIN_USDC_BET);
+			expect(betDetails.status).to.equal(1n); // PENDING
+			expect(betDetails.betType).to.equal(BetType.RED_BLACK);
+			expect(betDetails.selection).to.equal(0n);
 
 			// nextBetId incremented
 			expect(await roulette.nextBetId()).to.equal(2n);
@@ -471,11 +472,12 @@ describe('Roulette', () => {
 			expect(await weth.balanceOf(player.address)).to.equal(playerBalanceBefore + expectedPayout);
 
 			// Bet state updated
-			const bet = await roulette.bets(betId);
-			expect(bet.won).to.equal(true);
-			expect(bet.payout).to.equal(expectedPayout);
-			expect(bet.status).to.equal(2n); // RESOLVED
-			expect(bet.result).to.equal(7n);
+			const betDetails = await roulette.getBetDetails(betId);
+			const betBase = await roulette.getBetBase(betId);
+			expect(betDetails.won).to.equal(true);
+			expect(betBase.payout).to.equal(expectedPayout);
+			expect(betDetails.status).to.equal(2n); // RESOLVED
+			expect(betDetails.result).to.equal(7n);
 
 			// Reservation released
 			expect(await roulette.reservedProfitPerCollateral(wethAddress)).to.equal(0n);
@@ -498,10 +500,11 @@ describe('Roulette', () => {
 			// No payout
 			expect(await weth.balanceOf(player.address)).to.equal(playerBalanceBefore);
 
-			const bet = await roulette.bets(betId);
-			expect(bet.won).to.equal(false);
-			expect(bet.payout).to.equal(0n);
-			expect(bet.status).to.equal(2n); // RESOLVED
+			const betDetails = await roulette.getBetDetails(betId);
+			const betBase = await roulette.getBetBase(betId);
+			expect(betDetails.won).to.equal(false);
+			expect(betBase.payout).to.equal(0n);
+			expect(betDetails.status).to.equal(2n); // RESOLVED
 		});
 
 		it('should silently skip an unknown requestId', async () => {
@@ -519,12 +522,12 @@ describe('Roulette', () => {
 
 			// First fulfillment resolves the bet
 			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [8n]);
-			expect((await roulette.bets(betId)).status).to.equal(2n); // RESOLVED
+			expect((await roulette.getBetDetails(betId)).status).to.equal(2n); // RESOLVED
 
 			// Second fulfillment is a no-op (no revert, no double-payout)
 			await expect(vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [7n])).to.not.be
 				.reverted;
-			expect((await roulette.bets(betId)).won).to.equal(false); // unchanged
+			expect((await roulette.getBetDetails(betId)).won).to.equal(false); // unchanged
 		});
 
 		it('should revert if rawFulfillRandomWords is called by non-coordinator', async () => {
@@ -595,9 +598,10 @@ describe('Roulette', () => {
 			);
 
 			// Bet status updated
-			const bet = await roulette.bets(betId);
-			expect(bet.status).to.equal(3n); // CANCELLED
-			expect(bet.payout).to.equal(MIN_USDC_BET);
+			const betDetails = await roulette.getBetDetails(betId);
+			const betBase = await roulette.getBetBase(betId);
+			expect(betDetails.status).to.equal(3n); // CANCELLED
+			expect(betBase.payout).to.equal(MIN_USDC_BET);
 		});
 	});
 
@@ -1010,33 +1014,36 @@ describe('Roulette', () => {
 			expect(await roulette.getUserBetCount(player.address)).to.equal(2n);
 		});
 
-		it('getUserBets should return bets in reverse chronological order', async () => {
+		it('getUserBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
 			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
 			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
 
-			const bets = await roulette.getUserBets(player.address, 0, 10);
-			expect(bets.length).to.equal(2);
-			expect(bets[0].betType).to.equal(BigInt(BetType.ODD_EVEN));
-			expect(bets[1].betType).to.equal(BigInt(BetType.RED_BLACK));
+			const ids = await roulette.getUserBetIds(player.address, 0, 10);
+			expect(ids.length).to.equal(2);
+			const bet0 = await roulette.getBetDetails(ids[0]);
+			const bet1 = await roulette.getBetDetails(ids[1]);
+			expect(bet0.betType).to.equal(BigInt(BetType.ODD_EVEN));
+			expect(bet1.betType).to.equal(BigInt(BetType.RED_BLACK));
 		});
 
-		it('getUserBets should return empty for offset beyond length', async () => {
-			const bets = await roulette.getUserBets(player.address, 100, 10);
-			expect(bets.length).to.equal(0);
+		it('getUserBetIds should return empty for offset beyond length', async () => {
+			const ids = await roulette.getUserBetIds(player.address, 100, 10);
+			expect(ids.length).to.equal(0);
 		});
 
-		it('getRecentBets should return bets in reverse chronological order', async () => {
+		it('getRecentBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
 			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
 			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
 
-			const recent = await roulette.getRecentBets(0, 10);
-			expect(recent.length).to.equal(2);
-			expect(recent[0].user).to.equal(player.address);
+			const ids = await roulette.getRecentBetIds(0, 10);
+			expect(ids.length).to.equal(2);
+			const bet0 = await roulette.getBetBase(ids[0]);
+			expect(bet0.user).to.equal(player.address);
 		});
 
-		it('should not include other users bets in getUserBets', async () => {
+		it('should not include other users bets in getUserBetIds', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
 

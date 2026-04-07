@@ -179,7 +179,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     mapping(address => bytes32) public priceFeedKeyPerCollateral;
 
     /// @notice Stored bets by bet id
-    mapping(uint => Bet) public bets;
+    mapping(uint => Bet) internal bets;
 
     /// @notice Maps VRF request id to bet id
     mapping(uint => uint) public requestIdToBetId;
@@ -295,42 +295,31 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     ) internal returns (uint betId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         if (amount == 0) revert InvalidAmount();
-
         _validateTarget(betType, target);
-
-        uint amountUsd = _getUsdValue(collateral, amount);
-        if (amountUsd < MIN_BET_USD) revert InvalidAmount();
+        if (_getUsdValue(collateral, amount) < MIN_BET_USD) revert InvalidAmount();
 
         uint reservedProfit = _getReservedProfit(amount, betType, target);
-        uint potentialProfitUsd = _getUsdValue(collateral, reservedProfit);
-
-        if (potentialProfitUsd > maxProfitUsd) revert MaxProfitExceeded();
+        if (_getUsdValue(collateral, reservedProfit) > maxProfitUsd) revert MaxProfitExceeded();
 
         reservedProfitPerCollateral[collateral] += reservedProfit;
-
         if (!_hasEnoughLiquidity(collateral)) {
             reservedProfitPerCollateral[collateral] -= reservedProfit;
             revert InsufficientAvailableLiquidity();
         }
 
         requestId = _requestRandomWord();
-
         betId = nextBetId++;
-        bets[betId] = Bet({
-            user: user,
-            collateral: collateral,
-            amount: amount,
-            payout: 0,
-            requestId: requestId,
-            placedAt: block.timestamp,
-            resolvedAt: 0,
-            reservedProfit: reservedProfit,
-            betType: betType,
-            status: BetStatus.PENDING,
-            target: target,
-            result: 0,
-            won: false
-        });
+
+        Bet storage bet = bets[betId];
+        bet.user = user;
+        bet.collateral = collateral;
+        bet.amount = amount;
+        bet.requestId = requestId;
+        bet.placedAt = block.timestamp;
+        bet.reservedProfit = reservedProfit;
+        bet.betType = betType;
+        bet.status = BetStatus.PENDING;
+        bet.target = target;
 
         if (_isFreeBet) isFreeBet[betId] = true;
 
@@ -669,35 +658,57 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         return userBetIds[user].length;
     }
 
-    /// @notice Returns full bet data for a user's bets with pagination
-    /// @param user User address
-    /// @param offset Starting index (0 = most recent)
-    /// @param limit Maximum number of bets to return
-    /// @return betArray Array of Bet structs in reverse chronological order
-    function getUserBets(address user, uint offset, uint limit) external view returns (Bet[] memory betArray) {
-        uint[] storage ids = userBetIds[user];
-        uint len = ids.length;
-        if (offset >= len) return new Bet[](0);
+    /// @notice Returns core bet data
+    function getBetBase(
+        uint betId
+    )
+        external
+        view
+        returns (
+            address user,
+            address collateral,
+            uint amount,
+            uint payout,
+            uint requestId,
+            uint placedAt,
+            uint resolvedAt,
+            uint reservedProfit
+        )
+    {
+        Bet storage b = bets[betId];
+        return (b.user, b.collateral, b.amount, b.payout, b.requestId, b.placedAt, b.resolvedAt, b.reservedProfit);
+    }
+
+    /// @notice Returns bet game details
+    function getBetDetails(
+        uint betId
+    ) external view returns (BetType betType, BetStatus status, uint8 target, uint8 result, bool won) {
+        Bet storage b = bets[betId];
+        return (b.betType, b.status, b.target, b.result, b.won);
+    }
+
+    /// @notice Returns bet IDs for a user's bets with pagination (reverse chronological)
+    function getUserBetIds(address user, uint offset, uint limit) external view returns (uint[] memory ids) {
+        uint[] storage allIds = userBetIds[user];
+        uint len = allIds.length;
+        if (offset >= len) return new uint[](0);
         uint remaining = len - offset;
         uint count = remaining < limit ? remaining : limit;
-        betArray = new Bet[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            betArray[i] = bets[ids[len - 1 - offset - i]];
+            ids[i] = allIds[len - 1 - offset - i];
         }
     }
 
-    /// @notice Returns full bet data for recent bets with pagination
-    /// @param offset Number of bets to skip from the latest
-    /// @param limit Maximum number of bets to return
-    /// @return betArray Array of Bet structs in reverse chronological order
-    function getRecentBets(uint offset, uint limit) external view returns (Bet[] memory betArray) {
+    /// @notice Returns recent bet IDs with pagination (reverse chronological)
+    function getRecentBetIds(uint offset, uint limit) external view returns (uint[] memory ids) {
         uint latest = nextBetId - 1;
-        if (offset >= latest) return new Bet[](0);
+        if (offset >= latest) return new uint[](0);
         uint start = latest - offset;
         uint count = start < limit ? start : limit;
-        betArray = new Bet[](count);
+        ids = new uint[](count);
         for (uint i = 0; i < count; i++) {
-            betArray[i] = bets[start - i];
+            ids[i] = start - i;
         }
     }
 
