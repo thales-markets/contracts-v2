@@ -43,6 +43,7 @@ describe('Ticket Exercise and Expire', () => {
 		priceFeed,
 		firstLiquidityProvider,
 		firstTrader,
+		owner,
 		secondAccount,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
@@ -79,7 +80,7 @@ describe('Ticket Exercise and Expire', () => {
 			tradeDataTenMarketsCurrentRound,
 			collateralAddress,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader, secondAccount } =
+		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
@@ -278,6 +279,62 @@ describe('Ticket Exercise and Expire', () => {
 			expect(numOfActiveTicketsAfter.toString() * 1).to.be.equal(
 				numOfActiveTicketsBefore.toString() * 1 - 1
 			);
+		});
+
+		it('Expire default-round winner pulls payout from default LP', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+				[tradeDataCrossRounds[0].typeId, tradeDataCrossRounds[1].typeId],
+				[RESULT_TYPE.ExactPosition, RESULT_TYPE.Spread]
+			);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+			const expectedPayoutWithFees = quote.payout + quote.fees;
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCrossRounds,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			for (const leg of tradeDataCrossRounds) {
+				await sportsAMMV2ResultManager.setResultsPerMarkets(
+					[leg.gameId],
+					[leg.typeId],
+					[leg.playerId],
+					[[leg.position]]
+				);
+			}
+
+			const expireTimestamp = await userTicket.expiry();
+			await time.increaseTo(expireTimestamp + 1n);
+
+			const defaultLp = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
+			const lpBalanceBefore = await collateral.balanceOf(defaultLp);
+			const ownerBalanceBefore = await collateral.balanceOf(owner.address);
+
+			await sportsAMMV2.connect(owner).expireTickets([ticketAddress]);
+
+			const lpBalanceAfter = await collateral.balanceOf(defaultLp);
+			const ownerBalanceAfter = await collateral.balanceOf(owner.address);
+
+			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(expectedPayoutWithFees);
+			expect(lpBalanceBefore - lpBalanceAfter).to.equal(expectedPayoutWithFees);
 		});
 
 		it('Auto exercise losing tickets when results are set', async () => {

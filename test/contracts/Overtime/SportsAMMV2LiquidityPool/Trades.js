@@ -1,10 +1,12 @@
 const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
+const { ethers, upgrades } = require('hardhat');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
 const { ZERO_ADDRESS } = require('../../../constants/general');
+const { SPORTS_AMM_LP_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
 const {
 	BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
@@ -22,8 +24,11 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2Manager,
 		sportsAMMV2RiskManager,
+		addressManager,
+		sportsAMMV2LiquidityPoolRoundMastercopy,
 		collateral,
 		safeBox,
+		owner,
 		firstLiquidityProvider,
 		firstTrader,
 		tradeDataCurrentRound,
@@ -37,13 +42,15 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
+			addressManager,
+			sportsAMMV2LiquidityPoolRoundMastercopy,
 			collateral,
 			safeBox,
 			tradeDataCurrentRound,
 			tradeDataNextRound,
 			tradeDataCrossRounds,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
+		({ owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
 			[0, TYPE_ID_TOTAL, TYPE_ID_SPREAD, TYPE_ID_WINNER_TOTAL],
@@ -54,6 +61,19 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				RESULT_TYPE.CombinedPositions,
 			]
 		);
+	});
+
+	const buildMarket = (tradeData) => ({
+		gameId: tradeData.gameId,
+		sportId: tradeData.sportId,
+		typeId: tradeData.typeId,
+		maturity: tradeData.maturity,
+		status: tradeData.status,
+		line: tradeData.line,
+		playerId: tradeData.playerId,
+		position: tradeData.position,
+		odd: tradeData.odds[tradeData.position],
+		combinedPositions: tradeData.combinedPositions[tradeData.position],
 	});
 
 	describe('Trades', () => {
@@ -1375,6 +1395,99 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(await sportsAMMV2LiquidityPool.roundPerTicket(ticketAddress)).to.equal(1);
 			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(1);
 			expect(await sportsAMMV2LiquidityPool.tradingTicketsPerRound(1, 0)).to.equal(ticketAddress);
+		});
+	});
+
+	describe('LP error branches', () => {
+		const deployLpWithoutDefault = async () => {
+			const SportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
+			const lp = await upgrades.deployProxy(SportsAMMV2LiquidityPool, [
+				{
+					_owner: owner.address,
+					_sportsAMM: owner.address,
+					_addressManager: await addressManager.getAddress(),
+					_collateral: await collateral.getAddress(),
+					_collateralKey: ethers.encodeBytes32String('SUSD'),
+					_roundLength: SPORTS_AMM_LP_INITAL_PARAMS.roundLength,
+					_maxAllowedDeposit: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit,
+					_minDepositAmount: SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount,
+					_maxAllowedUsers: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedUsers,
+					_utilizationRate: SPORTS_AMM_LP_INITAL_PARAMS.utilizationRate,
+					_safeBox: safeBox.address,
+					_safeBoxImpact: SPORTS_AMM_LP_INITAL_PARAMS.safeBoxImpact,
+				},
+			]);
+
+			await lp.setPoolRoundMastercopy(await sportsAMMV2LiquidityPoolRoundMastercopy.getAddress());
+			return lp;
+		};
+
+		it('commitTrade reverts DefaultLPNotSet when default LP is missing', async () => {
+			const lp = await deployLpWithoutDefault();
+			const initialDeposit = ethers.parseEther('1000');
+
+			await collateral.connect(firstLiquidityProvider).approve(lp, initialDeposit);
+			await lp.connect(firstLiquidityProvider).deposit(initialDeposit);
+			await lp.start();
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.deploy();
+			const market = buildMarket(tradeDataNextRound[0]);
+
+			await ticket.initialize({
+				_markets: [market],
+				_buyInAmount: BUY_IN_AMOUNT,
+				_fees: 0,
+				_totalQuote: 0,
+				_sportsAMM: owner.address,
+				_ticketOwner: firstTrader.address,
+				_collateral: await collateral.getAddress(),
+				_expiry: BigInt(market.maturity) + 1n,
+				_isLive: false,
+				_systemBetDenominator: 0,
+				_isSGP: false,
+			});
+
+			await expect(
+				lp.connect(owner).commitTrade(ticket.target, BUY_IN_AMOUNT)
+			).to.be.revertedWithCustomError(lp, 'DefaultLPNotSet');
+		});
+
+		it('commitTrade reverts InvalidRound when ticketRound is behind and not default', async () => {
+			const lp = await deployLpWithoutDefault();
+			const initialDeposit = ethers.parseEther('1000');
+
+			await collateral.connect(firstLiquidityProvider).approve(lp, initialDeposit);
+			await lp.connect(firstLiquidityProvider).deposit(initialDeposit);
+			await lp.start();
+
+			const roundEndTime = await lp.getRoundEndTime(2);
+			await time.increaseTo(roundEndTime);
+			await lp.prepareRoundClosing();
+			await lp.processRoundClosingBatch(10);
+			await lp.closeRound();
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.deploy();
+			const market = buildMarket(tradeDataCurrentRound[0]);
+
+			await ticket.initialize({
+				_markets: [market],
+				_buyInAmount: BUY_IN_AMOUNT,
+				_fees: 0,
+				_totalQuote: 0,
+				_sportsAMM: owner.address,
+				_ticketOwner: firstTrader.address,
+				_collateral: await collateral.getAddress(),
+				_expiry: BigInt(market.maturity) + 1n,
+				_isLive: false,
+				_systemBetDenominator: 0,
+				_isSGP: false,
+			});
+
+			await expect(
+				lp.connect(owner).commitTrade(ticket.target, BUY_IN_AMOUNT)
+			).to.be.revertedWithCustomError(lp, 'InvalidRound');
 		});
 	});
 });
