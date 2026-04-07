@@ -303,6 +303,11 @@ async function deploySportsAMMV2Fixture() {
 
 	await sportsAMMV2.setMultiCollateralOnOffRamp(multiCollateralAddress);
 
+	// deploy SportsAMMV2Utils
+	const SportsAMMV2Utils = await ethers.getContractFactory('SportsAMMV2Utils');
+	const sportsAMMV2Utils = await SportsAMMV2Utils.deploy();
+	await sportsAMMV2.setSportsAMMV2Utils(await sportsAMMV2Utils.getAddress());
+
 	// deploy Sports AMM Data
 	const SportsAMMV2Data = await ethers.getContractFactory('SportsAMMV2Data');
 	const sportsAMMV2Data = await upgrades.deployProxy(SportsAMMV2Data, [
@@ -934,6 +939,7 @@ async function deploySportsAMMV2Fixture() {
 		thalesToOverMigration,
 		overToken,
 		thalesToken,
+		sportsAMMV2Utils,
 	};
 }
 
