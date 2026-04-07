@@ -466,8 +466,8 @@ contract Ticket {
 
             finalPayout = isCancelled ? buyInAmount : (isSystem ? _getSystemBetPayout() : finalPayout);
 
-            // Only transfer if ticket holds funds (non-default round)
-            if (collateral.balanceOf(address(this)) > 0) {
+            // Only transfer if non-deferred ticket
+            if (!isDeferred) {
                 collateral.safeTransfer(
                     _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
                         ? address(ticketOwner)
@@ -477,7 +477,7 @@ contract Ticket {
             }
         }
 
-        // Send any remaining ticket balance to AMM (non-default round cleanup)
+        // Send any remaining ticket balance to AMM
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
             collateral.safeTransfer(address(sportsAMM), balance);
@@ -509,16 +509,16 @@ contract Ticket {
         finalPayout = _cashoutAmount;
         cashedOut = true;
 
-        // Only transfer if ticket holds funds (non-default round)
-        if (collateral.balanceOf(address(this)) > 0) {
+        // Only transfer if non-deferred ticket
+        if (!isDeferred) {
             // Pay user
             collateral.safeTransfer(_recipient, _cashoutAmount);
+        }
 
-            // Send remainder back to AMM
-            uint balance = collateral.balanceOf(address(this));
-            if (balance != 0) {
-                collateral.safeTransfer(address(sportsAMM), balance);
-            }
+        // Send remainder back to AMM (same behavior as exercise/cancel)
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
         }
 
         // Resolve as "not cancelled" (cashout is its own thing)
@@ -563,14 +563,14 @@ contract Ticket {
     function cancel() external onlyAMM notPaused returns (uint) {
         finalPayout = buyInAmount;
 
-        // Only transfer if ticket holds funds (non-default round)
-        if (collateral.balanceOf(address(this)) > 0) {
+        // Only transfer if non-deferred ticket
+        if (!isDeferred) {
             collateral.safeTransfer(address(ticketOwner), finalPayout);
+        }
 
-            uint balance = collateral.balanceOf(address(this));
-            if (balance != 0) {
-                collateral.safeTransfer(address(sportsAMM), balance);
-            }
+        uint balance = collateral.balanceOf(address(this));
+        if (balance != 0) {
+            collateral.safeTransfer(address(sportsAMM), balance);
         }
 
         _resolve(true, true);
