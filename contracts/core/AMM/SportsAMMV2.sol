@@ -490,8 +490,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 if (ticketOwner == freeBetsHolder) continue;
 
                 IERC20 ticketCollateral = ticket.collateral();
-                bool isDeferred = _isDefaultRoundTicket(ticketAddress, ticketCollateral) &&
-                    ticketCollateral.balanceOf(ticketAddress) == 0;
+                bool isDeferred = _isDeferredTicket(ticketAddress);
 
                 // For deferred winning tickets: record payout before expire clears ticket state.
                 // For all other tickets (lost/non-deferred): nothing extra to do.
@@ -545,7 +544,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
     function _resolveCashout(address _ticket, address _recipient, Ticket ticket, uint cashoutAmount) internal {
         IERC20 collateral = ticket.collateral();
 
-        bool isDeferred = _isDefaultRoundTicket(_ticket, collateral) && collateral.balanceOf(_ticket) == 0;
+        bool isDeferred = _isDeferredTicket(_ticket);
 
         // For deferred tickets: AMM has no funds — pull everything needed from LP
         if (isDeferred) {
@@ -589,6 +588,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         address pool = liquidityPoolForCollateral[address(_collateral)];
         if (pool == address(0)) return true;
         return ISportsAMMV2LiquidityPool(pool).getTicketRound(_ticket) == 1;
+    }
+
+    function _isDeferredTicket(address _ticket) internal view returns (bool) {
+        try Ticket(_ticket).isDeferred() returns (bool stored) {
+            return stored;
+        } catch {
+            return false;
+        }
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -714,6 +721,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             // Default round: deferred collateralization.
             // Only send buyIn to LP for safekeeping. LP does NOT provide profit upfront.
             collateralPool.commitTradeDeferred(address(ticket), _tradeDataInternal._buyInAmount);
+            // Try setting deferred flag (new tickets support this, old ones don't)
+            try ticket.setIsDeferred() {} catch {}
         } else {
             // Non-default round: full collateralization as before.
             collateralPool.commitTrade(address(ticket), processingParams._payoutWithFees - _tradeDataInternal._buyInAmount);
@@ -834,7 +843,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // Determine deferred flag BEFORE exercise() sweeps ticket balance.
         // Deferred = default-round ticket with no funds on ticket (new collateralization logic).
         // Old default-round tickets hold funds and follow the standard (non-deferred) flow.
-        bool isDeferred = _isDefaultRoundTicket(_ticket, ticketCollateral) && ticketCollateral.balanceOf(_ticket) == 0;
+        bool isDeferred = _isDeferredTicket(_ticket);
 
         // For non-deferred tickets capture the pre-exercise balance so that any surplus
         // (e.g. malicious top-ups) is correctly routed to the pool rather than stranded in AMM.

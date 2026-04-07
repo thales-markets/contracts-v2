@@ -78,6 +78,10 @@ contract Ticket {
     bool public cashedOut;
     uint public cashoutPayout;
 
+    /// @notice True for default-round (cross-round) tickets using deferred collateralization.
+    ///         Set by AMM at creation; immutable after that.
+    bool public isDeferred;
+
     // Snapshot of approved cashout odds at the moment of cashout
     mapping(uint => uint) private cashoutOddsPerLeg;
 
@@ -128,6 +132,12 @@ contract Ticket {
     function setExpectedFinalPayout(uint amount) external onlyAMM {
         expectedFinalPayout = amount;
         emit ExpectedFinalPayoutSet(amount);
+    }
+
+    /// @notice Mark this ticket as deferred (default-round, no upfront LP collateral).
+    /// @dev Called once by the AMM immediately after commitTradeDeferred.
+    function setIsDeferred() external onlyAMM {
+        isDeferred = true;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
