@@ -281,7 +281,7 @@ describe('Ticket Exercise and Expire', () => {
 			);
 		});
 
-		it('Expire default-round winner pulls payout from default LP', async () => {
+		it('Expire default-round winner leaves funds in default LP', async () => {
 			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
 				[tradeDataCrossRounds[0].typeId, tradeDataCrossRounds[1].typeId],
 				[RESULT_TYPE.ExactPosition, RESULT_TYPE.Spread]
@@ -293,7 +293,6 @@ describe('Ticket Exercise and Expire', () => {
 				ZERO_ADDRESS,
 				false
 			);
-			const expectedPayoutWithFees = quote.payout + quote.fees;
 
 			await sportsAMMV2
 				.connect(firstTrader)
@@ -333,8 +332,8 @@ describe('Ticket Exercise and Expire', () => {
 			const lpBalanceAfter = await collateral.balanceOf(defaultLp);
 			const ownerBalanceAfter = await collateral.balanceOf(owner.address);
 
-			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(expectedPayoutWithFees);
-			expect(lpBalanceBefore - lpBalanceAfter).to.equal(expectedPayoutWithFees);
+			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0n);
+			expect(lpBalanceAfter - lpBalanceBefore).to.equal(0n);
 		});
 
 		it('Expire legacy ticket without isDeferred uses non-deferred path', async () => {
