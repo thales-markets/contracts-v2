@@ -169,7 +169,15 @@ async function parseRequestId(blackjack, tx, eventName) {
 }
 
 describe('Blackjack', () => {
-	let blackjack, blackjackAddress, usdc, usdcAddress, vrfCoordinator;
+	let blackjack,
+		blackjackAddress,
+		usdc,
+		usdcAddress,
+		weth,
+		wethAddress,
+		over,
+		overAddress,
+		vrfCoordinator;
 	let owner, secondAccount, resolver, riskManager, pauser, player;
 
 	beforeEach(async () => {
@@ -178,6 +186,10 @@ describe('Blackjack', () => {
 			blackjackAddress,
 			usdc,
 			usdcAddress,
+			weth,
+			wethAddress,
+			over,
+			overAddress,
 			vrfCoordinator,
 			owner,
 			secondAccount,
@@ -697,6 +709,230 @@ describe('Blackjack', () => {
 		});
 	});
 
+	/* ========== SPLIT GETTERS ========== */
+
+	describe('Split Getters', () => {
+		it('getHandBase returns correct values after placing a bet', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId } = await parseHandCreated(blackjack, tx);
+
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handBase.user).to.equal(player.address);
+			expect(handBase.collateral).to.equal(usdcAddress);
+			expect(handBase.amount).to.equal(MIN_USDC_BET);
+			expect(handBase.payout).to.equal(0n);
+		});
+
+		it('getHandDetails returns correct values after deal', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.PLAYER_TURN);
+			expect(handDetails.playerCardCount).to.equal(2n);
+			expect(handDetails.dealerCardCount).to.equal(1n);
+		});
+
+		it('getHandCards returns player and dealer cards after deal', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
+
+			const handCards = await blackjack.getHandCards(handId);
+			expect(handCards.playerCards.length).to.equal(2);
+			expect(handCards.dealerCards.length).to.equal(1);
+			// cards should be non-zero rank values
+			expect(handCards.playerCards[0]).to.be.gt(0n);
+			expect(handCards.playerCards[1]).to.be.gt(0n);
+			expect(handCards.dealerCards[0]).to.be.gt(0n);
+		});
+	});
+
+	/* ========== LAST REQUEST AT ========== */
+
+	describe('lastRequestAt', () => {
+		it('should be set on placeBet', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId } = await parseHandCreated(blackjack, tx);
+
+			const lastReq = await blackjack.lastRequestAt(handId);
+			expect(lastReq).to.be.gt(0n);
+		});
+
+		it('should be updated on stand', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			const lastReqBefore = await blackjack.lastRequestAt(handId);
+
+			// Deal cards: player gets 10+10=20
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 11n]);
+
+			await time.increase(10);
+
+			await blackjack.connect(player).stand(handId);
+
+			const lastReqAfter = await blackjack.lastRequestAt(handId);
+			expect(lastReqAfter).to.be.gt(lastReqBefore);
+		});
+	});
+
+	/* ========== CANCEL EDGE CASES ========== */
+
+	describe('Cancel edge cases', () => {
+		it('user cancel should revert on PLAYER_TURN', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			// Deal cards to reach PLAYER_TURN
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.PLAYER_TURN);
+
+			// Even after timeout, user cannot cancel during PLAYER_TURN
+			await time.increase(CANCEL_TIMEOUT);
+			await expect(blackjack.connect(player).cancelHand(handId)).to.be.revertedWithCustomError(
+				blackjack,
+				'InvalidHandStatus'
+			);
+		});
+
+		it('admin cancel should work on PLAYER_TURN', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			// Deal cards to reach PLAYER_TURN
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.PLAYER_TURN);
+
+			// Admin can cancel during PLAYER_TURN
+			await expect(blackjack.connect(owner).adminCancelHand(handId)).to.emit(
+				blackjack,
+				'HandCancelled'
+			);
+		});
+
+		it('cancel timeout uses lastRequestAt not placedAt', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			// Wait partial timeout
+			await time.increase(CANCEL_TIMEOUT - 100n);
+
+			// Deal cards, then hit => this updates lastRequestAt
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [4n, 2n]);
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitRequestId = await parseRequestId(blackjack, hitTx, 'HitRequested');
+
+			// Even though we waited nearly CANCEL_TIMEOUT since placeBet,
+			// the cancel timeout should reset from lastRequestAt (the hit)
+			await expect(blackjack.connect(player).cancelHand(handId)).to.be.revertedWithCustomError(
+				blackjack,
+				'CancelTimeoutNotReached'
+			);
+
+			// Now wait the full timeout from the hit
+			await time.increase(CANCEL_TIMEOUT);
+			await expect(blackjack.connect(player).cancelHand(handId)).to.emit(
+				blackjack,
+				'HandCancelled'
+			);
+		});
+	});
+
+	/* ========== AUDIT FIXES ========== */
+
+	describe('Audit Fixes', () => {
+		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+
+			const balance = await usdc.balanceOf(blackjackAddress);
+			await expect(
+				blackjack.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, balance)
+			).to.be.revertedWithCustomError(blackjack, 'InsufficientAvailableLiquidity');
+		});
+
+		it('setCancelTimeout should revert below MIN_CANCEL_TIMEOUT (30)', async () => {
+			await expect(blackjack.connect(owner).setCancelTimeout(29)).to.be.revertedWithCustomError(
+				blackjack,
+				'InvalidAmount'
+			);
+		});
+
+		it('setCancelTimeout should succeed at MIN_CANCEL_TIMEOUT', async () => {
+			await expect(blackjack.connect(owner).setCancelTimeout(30))
+				.to.emit(blackjack, 'CancelTimeoutChanged')
+				.withArgs(30);
+		});
+	});
+
+	/* ========== FREE BET PATHS ========== */
+
+	describe('FreeBet Paths', () => {
+		it('placeBetWithFreeBet should revert when freeBetsHolder is not set', async () => {
+			await expect(blackjack.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET)).to.be
+				.reverted;
+		});
+
+		it('setFreeBetsHolder should emit event', async () => {
+			await expect(blackjack.connect(owner).setFreeBetsHolder(secondAccount.address))
+				.to.emit(blackjack, 'FreeBetsHolderChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('normal bet isFreeBet should be false', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			expect(await blackjack.isFreeBet(1)).to.equal(false);
+		});
+
+		it('doubleDown should revert for freebets', async () => {
+			// Deploy a holder and set it up
+			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+			await holder.initialize(owner.address, 86400);
+			const holderAddress = await holder.getAddress();
+
+			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);
+			await holder.setWhitelistedCasino(blackjackAddress, true);
+
+			// Fund player with free bet
+			await usdc.connect(owner).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(owner).fund(player.address, usdcAddress, MIN_USDC_BET);
+
+			// Place free bet
+			const tx = await blackjack.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			expect(await blackjack.isFreeBet(handId)).to.equal(true);
+
+			// Deal cards: player gets 5+6=11 (good double down hand)
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [4n, 5n]);
+
+			// Double down should revert for free bets
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await expect(blackjack.connect(player).doubleDown(handId)).to.be.revertedWithCustomError(
+				blackjack,
+				'InvalidHandStatus'
+			);
+		});
+	});
+
 	/* ========== GETTERS ========== */
 
 	describe('Getters', () => {
@@ -811,6 +1047,138 @@ describe('Blackjack', () => {
 		it('getUserHandIds should return empty for offset beyond length', async () => {
 			const ids = await blackjack.getUserHandIds(player.address, 100, 10);
 			expect(ids.length).to.equal(0);
+		});
+
+		it('getRecentHandIds should return empty when offset >= total', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+
+			const ids = await blackjack.getRecentHandIds(100, 10);
+			expect(ids.length).to.equal(0);
+		});
+	});
+
+	/* ========== SETTER ZERO-ADDRESS VALIDATIONS ========== */
+
+	describe('Setter Zero-Address Validations', () => {
+		it('setManager should revert for zero address', async () => {
+			await expect(blackjack.connect(owner).setManager(ZERO_ADDRESS)).to.be.revertedWithCustomError(
+				blackjack,
+				'InvalidAddress'
+			);
+		});
+
+		it('setPriceFeed should revert for zero address', async () => {
+			await expect(
+				blackjack.connect(owner).setPriceFeed(ZERO_ADDRESS)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
+		});
+
+		it('setVrfCoordinator should revert for zero address', async () => {
+			await expect(
+				blackjack.connect(owner).setVrfCoordinator(ZERO_ADDRESS)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
+		});
+
+		it('setSupportedCollateral should revert for zero address', async () => {
+			await expect(
+				blackjack.connect(owner).setSupportedCollateral(ZERO_ADDRESS, true)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
+		});
+
+		it('setPriceFeedKeyPerCollateral should revert for zero address', async () => {
+			await expect(
+				blackjack.connect(owner).setPriceFeedKeyPerCollateral(ZERO_ADDRESS, WETH_KEY)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
+		});
+
+		it('setMaxProfitUsd should revert for zero', async () => {
+			await expect(blackjack.connect(owner).setMaxProfitUsd(0)).to.be.revertedWithCustomError(
+				blackjack,
+				'InvalidAmount'
+			);
+		});
+	});
+
+	/* ========== VRF CONFIG ========== */
+
+	describe('setVrfConfig', () => {
+		it('should update config and emit', async () => {
+			await expect(blackjack.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+				.to.emit(blackjack, 'VrfConfigChanged')
+				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+			expect(await blackjack.callbackGasLimit()).to.equal(300000n);
+			expect(await blackjack.requestConfirmations()).to.equal(5n);
+		});
+
+		it('should revert for zero callbackGasLimit', async () => {
+			await expect(
+				blackjack.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidAmount');
+		});
+
+		it('should revert for zero requestConfirmations', async () => {
+			await expect(
+				blackjack.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidAmount');
+		});
+	});
+
+	/* ========== COLLATERAL PRICE ========== */
+
+	describe('getCollateralPrice', () => {
+		it('should return ONE for USDC', async () => {
+			expect(await blackjack.getCollateralPrice(usdcAddress)).to.equal(ethers.parseEther('1'));
+		});
+
+		it('should return the price feed value for WETH', async () => {
+			expect(await blackjack.getCollateralPrice(wethAddress)).to.equal(WETH_PRICE);
+		});
+
+		it('should revert for unsupported collateral', async () => {
+			await expect(
+				blackjack.getCollateralPrice(secondAccount.address)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidCollateral');
+		});
+	});
+
+	/* ========== VRF UNKNOWN REQUEST ========== */
+
+	describe('VRF unknown requestId', () => {
+		it('should silently skip an unknown requestId', async () => {
+			await expect(vrfCoordinator.fulfillRandomWords(blackjackAddress, 999n, [42n])).to.not.be
+				.reverted;
+		});
+	});
+
+	/* ========== FREE BET PLACEMENT ========== */
+
+	describe('FreeBet Placement with Holder', () => {
+		it('should place a freebet via holder and mark isFreeBet', async () => {
+			// Deploy CasinoFreeBetsHolder inline
+			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+			await holder.initialize(owner.address, 86400);
+			const holderAddress = await holder.getAddress();
+
+			// Set holder on blackjack
+			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);
+			// Whitelist blackjack in holder
+			await holder.setWhitelistedCasino(blackjackAddress, true);
+
+			// Fund holder with USDC
+			await usdc.connect(owner).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(owner).fund(player.address, usdcAddress, MIN_USDC_BET);
+
+			// Place freebet
+			const tx = await blackjack.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET);
+			const { handId } = await parseHandCreated(blackjack, tx);
+
+			expect(await blackjack.isFreeBet(handId)).to.equal(true);
+
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handBase.user).to.equal(player.address);
+			expect(handBase.amount).to.equal(MIN_USDC_BET);
 		});
 	});
 });

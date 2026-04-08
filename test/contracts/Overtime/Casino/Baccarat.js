@@ -237,7 +237,15 @@ async function parseBetPlaced(baccarat, tx) {
 }
 
 describe('Baccarat', () => {
-	let baccarat, baccaratAddress, usdc, usdcAddress, vrfCoordinator;
+	let baccarat,
+		baccaratAddress,
+		usdc,
+		usdcAddress,
+		weth,
+		wethAddress,
+		over,
+		overAddress,
+		vrfCoordinator;
 	let owner, secondAccount, resolver, riskManager, pauser, player;
 
 	// Pre-compute test words
@@ -251,6 +259,10 @@ describe('Baccarat', () => {
 			baccaratAddress,
 			usdc,
 			usdcAddress,
+			weth,
+			wethAddress,
+			over,
+			overAddress,
 			vrfCoordinator,
 			owner,
 			secondAccount,
@@ -612,6 +624,97 @@ describe('Baccarat', () => {
 		});
 	});
 
+	/* ========== AUDIT FIXES ========== */
+
+	describe('Audit Fixes', () => {
+		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+
+			const balance = await usdc.balanceOf(baccaratAddress);
+			await expect(
+				baccarat.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, balance)
+			).to.be.revertedWithCustomError(baccarat, 'InsufficientAvailableLiquidity');
+		});
+
+		it('setCancelTimeout should revert below MIN_CANCEL_TIMEOUT (30)', async () => {
+			await expect(baccarat.connect(owner).setCancelTimeout(29)).to.be.revertedWithCustomError(
+				baccarat,
+				'InvalidAmount'
+			);
+		});
+
+		it('setCancelTimeout should succeed at MIN_CANCEL_TIMEOUT', async () => {
+			await expect(baccarat.connect(owner).setCancelTimeout(30))
+				.to.emit(baccarat, 'CancelTimeoutChanged')
+				.withArgs(30);
+		});
+	});
+
+	/* ========== FREE BET PATHS ========== */
+
+	describe('FreeBet Paths', () => {
+		it('placeBetWithFreeBet should revert for unsupported collateral', async () => {
+			await expect(
+				baccarat
+					.connect(player)
+					.placeBetWithFreeBet(secondAccount.address, MIN_USDC_BET, BetType.PLAYER)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidCollateral');
+		});
+
+		it('placeBetWithFreeBet should revert when freeBetsHolder is not set', async () => {
+			await expect(
+				baccarat.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER)
+			).to.be.reverted;
+		});
+
+		it('setFreeBetsHolder should emit event', async () => {
+			await expect(baccarat.connect(owner).setFreeBetsHolder(secondAccount.address))
+				.to.emit(baccarat, 'FreeBetsHolderChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('normal bet isFreeBet should be false', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			expect(await baccarat.isFreeBet(1)).to.equal(false);
+		});
+
+		it('isFreeBet returns false for non-existent bet', async () => {
+			expect(await baccarat.isFreeBet(999)).to.equal(false);
+		});
+	});
+
+	/* ========== PAGINATION ========== */
+
+	describe('Pagination', () => {
+		it('getUserBetIds should paginate correctly', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 3n);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+
+			const page1 = await baccarat.getUserBetIds(player.address, 0, 2);
+			expect(page1.length).to.equal(2);
+			expect(page1[0]).to.equal(3n); // most recent first
+
+			const page2 = await baccarat.getUserBetIds(player.address, 2, 2);
+			expect(page2.length).to.equal(1);
+			expect(page2[0]).to.equal(1n);
+		});
+
+		it('getRecentBetIds should paginate correctly', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 3n);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+
+			const page = await baccarat.getRecentBetIds(1, 1);
+			expect(page.length).to.equal(1);
+			expect(page[0]).to.equal(2n); // skip bet 3, get bet 2
+		});
+	});
+
 	/* ========== VRF AUTH ========== */
 
 	describe('VRF auth', () => {
@@ -700,6 +803,155 @@ describe('Baccarat', () => {
 		it('getUserBetIds should return empty for offset beyond length', async () => {
 			const ids = await baccarat.getUserBetIds(player.address, 100, 10);
 			expect(ids.length).to.equal(0);
+		});
+
+		it('getRecentBetIds should return empty when offset >= total', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+
+			const ids = await baccarat.getRecentBetIds(100, 10);
+			expect(ids.length).to.equal(0);
+		});
+	});
+
+	/* ========== SETTER ZERO-ADDRESS VALIDATIONS ========== */
+
+	describe('Setter Zero-Address Validations', () => {
+		it('setManager should revert for zero address', async () => {
+			await expect(baccarat.connect(owner).setManager(ZERO_ADDRESS)).to.be.revertedWithCustomError(
+				baccarat,
+				'InvalidAddress'
+			);
+		});
+
+		it('setPriceFeed should revert for zero address', async () => {
+			await expect(
+				baccarat.connect(owner).setPriceFeed(ZERO_ADDRESS)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidAddress');
+		});
+
+		it('setVrfCoordinator should revert for zero address', async () => {
+			await expect(
+				baccarat.connect(owner).setVrfCoordinator(ZERO_ADDRESS)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidAddress');
+		});
+
+		it('setSupportedCollateral should revert for zero address', async () => {
+			await expect(
+				baccarat.connect(owner).setSupportedCollateral(ZERO_ADDRESS, true)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidAddress');
+		});
+
+		it('setPriceFeedKeyPerCollateral should revert for zero address', async () => {
+			await expect(
+				baccarat.connect(owner).setPriceFeedKeyPerCollateral(ZERO_ADDRESS, WETH_KEY)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidAddress');
+		});
+
+		it('setMaxProfitUsd should revert for zero', async () => {
+			await expect(baccarat.connect(owner).setMaxProfitUsd(0)).to.be.revertedWithCustomError(
+				baccarat,
+				'InvalidAmount'
+			);
+		});
+	});
+
+	/* ========== VRF CONFIG ========== */
+
+	describe('setVrfConfig', () => {
+		it('should update config and emit', async () => {
+			await expect(baccarat.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+				.to.emit(baccarat, 'VrfConfigChanged')
+				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+			expect(await baccarat.callbackGasLimit()).to.equal(300000n);
+			expect(await baccarat.requestConfirmations()).to.equal(5n);
+		});
+
+		it('should revert for zero callbackGasLimit', async () => {
+			await expect(
+				baccarat.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidAmount');
+		});
+
+		it('should revert for zero requestConfirmations', async () => {
+			await expect(
+				baccarat.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidAmount');
+		});
+	});
+
+	/* ========== COLLATERAL PRICE ========== */
+
+	describe('getCollateralPrice', () => {
+		it('should return ONE for USDC', async () => {
+			expect(await baccarat.getCollateralPrice(usdcAddress)).to.equal(ethers.parseEther('1'));
+		});
+
+		it('should return the price feed value for WETH', async () => {
+			expect(await baccarat.getCollateralPrice(wethAddress)).to.equal(WETH_PRICE);
+		});
+
+		it('should revert for unsupported collateral', async () => {
+			await expect(
+				baccarat.getCollateralPrice(secondAccount.address)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidCollateral');
+		});
+	});
+
+	/* ========== VRF UNKNOWN REQUEST ========== */
+
+	describe('VRF unknown requestId', () => {
+		it('should silently skip an unknown requestId', async () => {
+			await expect(vrfCoordinator.fulfillRandomWords(baccaratAddress, 999n, [42n])).to.not.be
+				.reverted;
+		});
+	});
+
+	/* ========== FREE BET WIN RESOLUTION ========== */
+
+	describe('FreeBet Win Resolution', () => {
+		it('should send profit to user and stake to holder on freebet PLAYER win', async () => {
+			// Deploy CasinoFreeBetsHolder inline
+			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+			await holder.initialize(owner.address, 86400);
+			const holderAddress = await holder.getAddress();
+
+			// Set holder on baccarat
+			await baccarat.connect(owner).setFreeBetsHolder(holderAddress);
+			// Whitelist baccarat in holder
+			await holder.setWhitelistedCasino(baccaratAddress, true);
+
+			// Fund holder with USDC
+			await usdc.connect(owner).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(owner).fund(player.address, usdcAddress, MIN_USDC_BET);
+
+			// Place freebet: PLAYER bet
+			const tx = await baccarat
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
+
+			expect(await baccarat.isFreeBet(betId)).to.equal(true);
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			// Use the pre-computed player win word
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [playerWinWord.word]);
+
+			const bet = await getBet(baccarat, betId);
+			expect(bet.won).to.equal(true);
+			expect(bet.result).to.equal(GameResult.PLAYER);
+
+			// Player gets profit (payout - amount)
+			const profit = bet.payout - MIN_USDC_BET;
+			const playerBalAfter = await usdc.balanceOf(player.address);
+			expect(playerBalAfter - playerBalBefore).to.equal(profit);
+
+			// Holder gets stake back
+			const holderBalAfter = await usdc.balanceOf(holderAddress);
+			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
 		});
 	});
 });

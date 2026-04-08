@@ -192,6 +192,106 @@ describe('CasinoFreeBets', () => {
 		});
 	});
 
+	describe('Holder: Funding Reverts', () => {
+		it('fund should revert with zero address user', async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await expect(
+				holder.connect(funder).fund(ethers.ZeroAddress, usdcAddress, MIN_USDC_BET)
+			).to.be.revertedWithCustomError(holder, 'InvalidAddress');
+		});
+
+		it('fund should revert with zero address collateral', async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await expect(
+				holder.connect(funder).fund(player.address, ethers.ZeroAddress, MIN_USDC_BET)
+			).to.be.revertedWithCustomError(holder, 'InvalidAddress');
+		});
+
+		it('fund should revert with zero amount', async () => {
+			await expect(
+				holder.connect(funder).fund(player.address, usdcAddress, 0)
+			).to.be.revertedWithCustomError(holder, 'InvalidAmount');
+		});
+
+		it('fundBatch should revert with zero address in array', async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET * 2n);
+			await expect(
+				holder
+					.connect(funder)
+					.fundBatch([player.address, ethers.ZeroAddress], usdcAddress, MIN_USDC_BET)
+			).to.be.revertedWithCustomError(holder, 'InvalidAddress');
+		});
+	});
+
+	describe('Holder: Setters', () => {
+		it('setExpirationPeriod should update period', async () => {
+			const newPeriod = 172800n; // 2 days
+			await expect(holder.connect(owner).setExpirationPeriod(newPeriod))
+				.to.emit(holder, 'ExpirationPeriodChanged')
+				.withArgs(newPeriod);
+			expect(await holder.expirationPeriod()).to.equal(newPeriod);
+		});
+
+		it('setExpirationPeriod should revert for non-owner', async () => {
+			await expect(holder.connect(funder).setExpirationPeriod(172800n)).to.be.reverted;
+		});
+
+		it('withdrawCollateral by owner works', async () => {
+			// Transfer USDC directly to the holder (simulates returned stakes accumulating)
+			await usdc.transfer(holderAddress, MIN_USDC_BET);
+
+			const recipientBalBefore = await usdc.balanceOf(secondAccount.address);
+			await expect(
+				holder.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, MIN_USDC_BET)
+			)
+				.to.emit(holder, 'WithdrawnCollateral')
+				.withArgs(usdcAddress, secondAccount.address, MIN_USDC_BET);
+			expect(await usdc.balanceOf(secondAccount.address)).to.equal(
+				recipientBalBefore + MIN_USDC_BET
+			);
+		});
+	});
+
+	describe('Holder: Pause', () => {
+		it('setPausedByOwner should pause', async () => {
+			await expect(holder.connect(owner).setPausedByOwner(true))
+				.to.emit(holder, 'PauseChanged')
+				.withArgs(true);
+			expect(await holder.paused()).to.equal(true);
+		});
+
+		it('setPausedByOwner should unpause', async () => {
+			await holder.connect(owner).setPausedByOwner(true);
+			await expect(holder.connect(owner).setPausedByOwner(false))
+				.to.emit(holder, 'PauseChanged')
+				.withArgs(false);
+			expect(await holder.paused()).to.equal(false);
+		});
+
+		it('fund should revert when paused', async () => {
+			await holder.connect(owner).setPausedByOwner(true);
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await expect(holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET)).to.be
+				.reverted;
+		});
+	});
+
+	describe('Holder: useFreeBet deduction', () => {
+		it('useFreeBet deducts balance correctly', async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET * 2n);
+			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET * 2n);
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET * 2n
+			);
+
+			// Use one free bet via dice
+			await dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, 0, 11);
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET
+			);
+		});
+	});
+
 	describe('Holder: Whitelist', () => {
 		it('should revert useFreeBet from non-whitelisted', async () => {
 			await expect(

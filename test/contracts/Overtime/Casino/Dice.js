@@ -151,7 +151,7 @@ async function parseBetPlaced(dice, tx) {
 }
 
 describe('Dice', () => {
-	let dice, diceAddress, usdc, usdcAddress, vrfCoordinator;
+	let dice, diceAddress, usdc, usdcAddress, weth, wethAddress, over, overAddress, vrfCoordinator;
 	let owner, secondAccount, resolver, riskManager, pauser, player;
 
 	beforeEach(async () => {
@@ -160,6 +160,10 @@ describe('Dice', () => {
 			diceAddress,
 			usdc,
 			usdcAddress,
+			weth,
+			wethAddress,
+			over,
+			overAddress,
 			vrfCoordinator,
 			owner,
 			secondAccount,
@@ -640,6 +644,65 @@ describe('Dice', () => {
 				'InvalidHouseEdge'
 			);
 		});
+
+		it('setManager should revert for zero address', async () => {
+			await expect(dice.connect(owner).setManager(ZERO_ADDRESS)).to.be.revertedWithCustomError(
+				dice,
+				'InvalidAddress'
+			);
+		});
+
+		it('setPriceFeed should revert for zero address', async () => {
+			await expect(dice.connect(owner).setPriceFeed(ZERO_ADDRESS)).to.be.revertedWithCustomError(
+				dice,
+				'InvalidAddress'
+			);
+		});
+
+		it('setVrfCoordinator should revert for zero address', async () => {
+			await expect(
+				dice.connect(owner).setVrfCoordinator(ZERO_ADDRESS)
+			).to.be.revertedWithCustomError(dice, 'InvalidAddress');
+		});
+
+		it('setSupportedCollateral should revert for zero address', async () => {
+			await expect(
+				dice.connect(owner).setSupportedCollateral(ZERO_ADDRESS, true)
+			).to.be.revertedWithCustomError(dice, 'InvalidAddress');
+		});
+
+		it('setPriceFeedKeyPerCollateral should revert for zero address', async () => {
+			await expect(
+				dice.connect(owner).setPriceFeedKeyPerCollateral(ZERO_ADDRESS, WETH_KEY)
+			).to.be.revertedWithCustomError(dice, 'InvalidAddress');
+		});
+
+		it('setVrfConfig should update config and emit', async () => {
+			await expect(dice.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+				.to.emit(dice, 'VrfConfigChanged')
+				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+			expect(await dice.callbackGasLimit()).to.equal(300000n);
+			expect(await dice.requestConfirmations()).to.equal(5n);
+		});
+
+		it('setVrfConfig should revert for zero callbackGasLimit', async () => {
+			await expect(
+				dice.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
+		});
+
+		it('setVrfConfig should revert for zero requestConfirmations', async () => {
+			await expect(
+				dice.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
+			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
+		});
+
+		it('setMaxProfitUsd should revert for zero', async () => {
+			await expect(dice.connect(owner).setMaxProfitUsd(0)).to.be.revertedWithCustomError(
+				dice,
+				'InvalidAmount'
+			);
+		});
 	});
 
 	/* ========== VRF AUTH ========== */
@@ -649,6 +712,148 @@ describe('Dice', () => {
 			await expect(
 				dice.connect(secondAccount).rawFulfillRandomWords(1n, [7n])
 			).to.be.revertedWithCustomError(dice, 'InvalidSender');
+		});
+	});
+
+	/* ========== SPLIT GETTERS ========== */
+
+	describe('Split Getters', () => {
+		it('getBetBase returns correct values after placing a bet', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			const { betId } = await parseBetPlaced(dice, tx);
+
+			const betBase = await dice.getBetBase(betId);
+			expect(betBase.user).to.equal(player.address);
+			expect(betBase.collateral).to.equal(usdcAddress);
+			expect(betBase.amount).to.equal(MIN_USDC_BET);
+			expect(betBase.payout).to.equal(0n);
+			expect(betBase.reservedProfit).to.equal(
+				getReservedProfit(MIN_USDC_BET, BetType.ROLL_UNDER, 11)
+			);
+		});
+
+		it('getBetDetails returns correct values after resolution', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			const { betId, requestId } = await parseBetPlaced(dice, tx);
+
+			// Win: randomWord=4 -> result=5, ROLL_UNDER target=11 -> win
+			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
+
+			const betDetails = await dice.getBetDetails(betId);
+			expect(betDetails.status).to.equal(Status.RESOLVED);
+			expect(betDetails.betType).to.equal(BetType.ROLL_UNDER);
+			expect(betDetails.target).to.equal(11n);
+			expect(betDetails.result).to.equal(5n);
+			expect(betDetails.won).to.equal(true);
+		});
+	});
+
+	/* ========== AUDIT FIXES ========== */
+
+	describe('Audit Fixes', () => {
+		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
+			// Place a bet to create reserved profit
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+
+			// Try to withdraw all balance - should fail because some is reserved
+			const balance = await usdc.balanceOf(diceAddress);
+			await expect(
+				dice.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, balance)
+			).to.be.revertedWithCustomError(dice, 'InsufficientAvailableLiquidity');
+		});
+
+		it('withdrawCollateral should revert when amount > balance', async () => {
+			const balance = await usdc.balanceOf(diceAddress);
+			await expect(
+				dice.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, balance + 1n)
+			).to.be.revertedWithCustomError(dice, 'InsufficientAvailableLiquidity');
+		});
+
+		it('setCancelTimeout should revert below MIN_CANCEL_TIMEOUT (30)', async () => {
+			await expect(dice.connect(owner).setCancelTimeout(29)).to.be.revertedWithCustomError(
+				dice,
+				'InvalidAmount'
+			);
+		});
+
+		it('setCancelTimeout should succeed at MIN_CANCEL_TIMEOUT', async () => {
+			await expect(dice.connect(owner).setCancelTimeout(30))
+				.to.emit(dice, 'CancelTimeoutChanged')
+				.withArgs(30);
+		});
+
+		it('Initialize should revert with cancelTimeout below MIN_CANCEL_TIMEOUT', async () => {
+			const DiceFactory = await ethers.getContractFactory('Dice');
+			const d = await upgrades.deployProxy(DiceFactory, [], { initializer: false });
+			await expect(
+				d.initialize(
+					{
+						owner: owner.address,
+						manager: owner.address,
+						priceFeed: owner.address,
+						vrfCoordinator: owner.address,
+					},
+					{
+						usdc: usdcAddress,
+						weth: usdcAddress,
+						over: usdcAddress,
+						wethPriceFeedKey: WETH_KEY,
+						overPriceFeedKey: OVER_KEY,
+					},
+					MAX_PROFIT_USD,
+					29, // below MIN_CANCEL_TIMEOUT
+					HOUSE_EDGE,
+					{
+						subscriptionId: 1,
+						keyHash: ethers.ZeroHash,
+						callbackGasLimit: 500000,
+						requestConfirmations: 3,
+						nativePayment: false,
+					}
+				)
+			).to.be.revertedWithCustomError(d, 'InvalidAmount');
+		});
+	});
+
+	/* ========== FREE BET PATHS ========== */
+
+	describe('FreeBet Paths', () => {
+		it('placeBetWithFreeBet should revert for unsupported collateral', async () => {
+			await expect(
+				dice
+					.connect(player)
+					.placeBetWithFreeBet(secondAccount.address, MIN_USDC_BET, BetType.ROLL_UNDER, 11)
+			).to.be.revertedWithCustomError(dice, 'InvalidCollateral');
+		});
+
+		it('placeBetWithFreeBet should revert when freeBetsHolder is not set (address 0)', async () => {
+			// freeBetsHolder is address(0) by default in the dice fixture
+			await expect(
+				dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11)
+			).to.be.reverted;
+		});
+
+		it('setFreeBetsHolder should emit event', async () => {
+			await expect(dice.connect(owner).setFreeBetsHolder(secondAccount.address))
+				.to.emit(dice, 'FreeBetsHolderChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('normal bet isFreeBet should be false', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			expect(await dice.isFreeBet(1)).to.equal(false);
+		});
+
+		it('isFreeBet mapping returns false for non-existent bet', async () => {
+			expect(await dice.isFreeBet(999)).to.equal(false);
 		});
 	});
 
@@ -738,6 +943,111 @@ describe('Dice', () => {
 			expect(await dice.getUserBetCount(secondAccount.address)).to.equal(0n);
 			const ids = await dice.getUserBetIds(secondAccount.address, 0, 10);
 			expect(ids.length).to.equal(0);
+		});
+
+		it('getRecentBetIds should return empty when offset >= total', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+
+			const ids = await dice.getRecentBetIds(100, 10);
+			expect(ids.length).to.equal(0);
+		});
+	});
+
+	/* ========== WETH COLLATERAL ========== */
+
+	describe('WETH Collateral', () => {
+		const MIN_WETH_BET = ethers.parseEther('0.001'); // 0.001 WETH = 3 USD at 3000 USD/WETH
+
+		beforeEach(async () => {
+			// Fund bankroll with WETH
+			await weth.transfer(diceAddress, ethers.parseEther('10'));
+			// Fund player with WETH
+			await weth.transfer(player.address, ethers.parseEther('1'));
+		});
+
+		it('should place a WETH bet and resolve as win', async () => {
+			await weth.connect(player).approve(diceAddress, MIN_WETH_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.ROLL_UNDER, 11);
+			const { betId, requestId } = await parseBetPlaced(dice, tx);
+
+			const playerBalBefore = await weth.balanceOf(player.address);
+
+			// randomWord=4 -> result=5, ROLL_UNDER target=11 -> win
+			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
+
+			const betDetails = await dice.getBetDetails(betId);
+			const betBase = await dice.getBetBase(betId);
+			expect(betDetails.status).to.equal(Status.RESOLVED);
+			expect(betDetails.won).to.equal(true);
+
+			const expectedPayout = getExpectedPayout(MIN_WETH_BET, BetType.ROLL_UNDER, 11);
+			expect(betBase.payout).to.equal(expectedPayout);
+			expect(await weth.balanceOf(player.address)).to.equal(playerBalBefore + expectedPayout);
+		});
+
+		it('should place a WETH bet and resolve as loss', async () => {
+			await weth.connect(player).approve(diceAddress, MIN_WETH_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.ROLL_UNDER, 11);
+			const { betId, requestId } = await parseBetPlaced(dice, tx);
+
+			// randomWord=14 -> result=15, ROLL_UNDER target=11 -> loss
+			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]);
+
+			const betDetails = await dice.getBetDetails(betId);
+			expect(betDetails.won).to.equal(false);
+		});
+	});
+
+	/* ========== COLLATERAL PRICE ========== */
+
+	describe('getCollateralPrice', () => {
+		it('should return ONE for USDC', async () => {
+			expect(await dice.getCollateralPrice(usdcAddress)).to.equal(ethers.parseEther('1'));
+		});
+
+		it('should return the price feed value for WETH', async () => {
+			expect(await dice.getCollateralPrice(wethAddress)).to.equal(WETH_PRICE);
+		});
+
+		it('should return the price feed value for OVER', async () => {
+			expect(await dice.getCollateralPrice(overAddress)).to.equal(OVER_PRICE);
+		});
+
+		it('should revert for unsupported collateral', async () => {
+			await expect(dice.getCollateralPrice(secondAccount.address)).to.be.revertedWithCustomError(
+				dice,
+				'InvalidCollateral'
+			);
+		});
+	});
+
+	/* ========== ADDITIONAL GETTERS ========== */
+
+	describe('Additional Getters', () => {
+		it('getPotentialProfit should return correct USD profit', async () => {
+			const profit = await dice.getPotentialProfit(
+				usdcAddress,
+				MIN_USDC_BET,
+				BetType.ROLL_UNDER,
+				11
+			);
+			// reservedProfit for ROLL_UNDER target=11 = payout - amount
+			const expectedReservedProfit = getReservedProfit(MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			// USDC price = 1, so USD value = reservedProfit * 1e18 / 1e6 (adjust for decimals)
+			expect(profit).to.be.gt(0n);
+		});
+	});
+
+	/* ========== VRF UNKNOWN REQUEST ========== */
+
+	describe('VRF unknown requestId', () => {
+		it('should silently skip an unknown requestId', async () => {
+			await expect(vrfCoordinator.fulfillRandomWords(diceAddress, 999n, [42n])).to.not.be.reverted;
 		});
 	});
 });

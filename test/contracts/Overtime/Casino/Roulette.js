@@ -824,6 +824,12 @@ describe('Roulette', () => {
 				).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
 			});
 
+			it('should revert when requestConfirmations is zero', async () => {
+				await expect(
+					roulette.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 200000n, 0n, false)
+				).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
+			});
+
 			it('should update VRF config and emit event', async () => {
 				await expect(roulette.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
 					.to.emit(roulette, 'VrfConfigChanged')
@@ -831,6 +837,30 @@ describe('Roulette', () => {
 				expect(await roulette.subscriptionId()).to.equal(2n);
 				expect(await roulette.callbackGasLimit()).to.equal(300000n);
 				expect(await roulette.nativePayment()).to.equal(true);
+			});
+		});
+
+		describe('setPriceFeed', () => {
+			it('should revert for zero address', async () => {
+				await expect(
+					roulette.connect(owner).setPriceFeed(ZERO_ADDRESS)
+				).to.be.revertedWithCustomError(roulette, 'InvalidAddress');
+			});
+		});
+
+		describe('setVrfCoordinator', () => {
+			it('should revert for zero address', async () => {
+				await expect(
+					roulette.connect(owner).setVrfCoordinator(ZERO_ADDRESS)
+				).to.be.revertedWithCustomError(roulette, 'InvalidAddress');
+			});
+		});
+
+		describe('setPriceFeedKeyPerCollateral', () => {
+			it('should revert for zero address', async () => {
+				await expect(
+					roulette.connect(owner).setPriceFeedKeyPerCollateral(ZERO_ADDRESS, WETH_KEY)
+				).to.be.revertedWithCustomError(roulette, 'InvalidAddress');
 			});
 		});
 	});
@@ -998,6 +1028,138 @@ describe('Roulette', () => {
 		});
 	});
 
+	/* ========== SPLIT GETTERS ========== */
+
+	describe('Split Getters', () => {
+		it('getBetBase returns correct values after placing a bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			const { betId } = await parseBetPlaced(roulette, tx);
+
+			const betBase = await roulette.getBetBase(betId);
+			expect(betBase.user).to.equal(player.address);
+			expect(betBase.collateral).to.equal(usdcAddress);
+			expect(betBase.amount).to.equal(MIN_USDC_BET);
+			expect(betBase.payout).to.equal(0n);
+			expect(betBase.reservedProfit).to.equal(MIN_USDC_BET); // RED_BLACK 1x
+		});
+
+		it('getBetDetails returns correct values after resolution', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+			// 1 is red, so selection=0 (red) wins
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]);
+
+			const betDetails = await roulette.getBetDetails(betId);
+			expect(betDetails.status).to.equal(2n); // RESOLVED
+			expect(betDetails.betType).to.equal(BigInt(BetType.RED_BLACK));
+			expect(betDetails.selection).to.equal(0n);
+			expect(betDetails.result).to.equal(1n);
+			expect(betDetails.won).to.equal(true);
+		});
+	});
+
+	/* ========== AUDIT FIXES ========== */
+
+	describe('Audit Fixes', () => {
+		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
+			// Place a bet to create reserved profit
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+
+			// Try to withdraw all balance - should fail because some is reserved
+			const balance = await usdc.balanceOf(rouletteAddress);
+			await expect(
+				roulette.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, balance)
+			).to.be.revertedWithCustomError(roulette, 'InsufficientAvailableLiquidity');
+		});
+
+		it('setCancelTimeout should revert below MIN_CANCEL_TIMEOUT (30)', async () => {
+			await expect(roulette.connect(owner).setCancelTimeout(29)).to.be.revertedWithCustomError(
+				roulette,
+				'InvalidAmount'
+			);
+		});
+
+		it('setCancelTimeout should succeed at MIN_CANCEL_TIMEOUT', async () => {
+			await expect(roulette.connect(owner).setCancelTimeout(30))
+				.to.emit(roulette, 'CancelTimeoutChanged')
+				.withArgs(30);
+		});
+	});
+
+	/* ========== FREE BET PATHS ========== */
+
+	describe('FreeBet Paths', () => {
+		it('placeBetWithFreeBet should revert for unsupported collateral', async () => {
+			await expect(
+				roulette
+					.connect(player)
+					.placeBetWithFreeBet(secondAccount.address, MIN_USDC_BET, BetType.RED_BLACK, 0)
+			).to.be.revertedWithCustomError(roulette, 'InvalidCollateral');
+		});
+
+		it('placeBetWithFreeBet should revert when freeBetsHolder is not set (address 0)', async () => {
+			await expect(
+				roulette
+					.connect(player)
+					.placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0)
+			).to.be.reverted;
+		});
+
+		it('setFreeBetsHolder should emit event', async () => {
+			await expect(roulette.connect(owner).setFreeBetsHolder(secondAccount.address))
+				.to.emit(roulette, 'FreeBetsHolderChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('normal bet isFreeBet should be false', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			expect(await roulette.isFreeBet(1)).to.equal(false);
+		});
+
+		it('isFreeBet mapping returns false for non-existent bet', async () => {
+			expect(await roulette.isFreeBet(999)).to.equal(false);
+		});
+	});
+
+	/* ========== PAGINATION ========== */
+
+	describe('Pagination', () => {
+		it('getUserBetIds should paginate correctly', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 3n);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.LOW_HIGH, 0);
+
+			const page1 = await roulette.getUserBetIds(player.address, 0, 2);
+			expect(page1.length).to.equal(2);
+
+			const page2 = await roulette.getUserBetIds(player.address, 2, 2);
+			expect(page2.length).to.equal(1);
+		});
+
+		it('getRecentBetIds should paginate correctly', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 3n);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.LOW_HIGH, 0);
+
+			const page = await roulette.getRecentBetIds(1, 1);
+			expect(page.length).to.equal(1);
+			// Skip most recent (bet 3), get bet 2
+			const bet = await roulette.getBetDetails(page[0]);
+			expect(bet.betType).to.equal(BigInt(BetType.ODD_EVEN));
+		});
+	});
+
 	/* ========== BET HISTORY ========== */
 
 	describe('Bet History', () => {
@@ -1048,6 +1210,62 @@ describe('Roulette', () => {
 			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
 
 			expect(await roulette.getUserBetCount(secondAccount.address)).to.equal(0n);
+		});
+
+		it('getRecentBetIds should return empty when offset >= total', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+
+			const ids = await roulette.getRecentBetIds(100, 10);
+			expect(ids.length).to.equal(0);
+		});
+	});
+
+	/* ========== FREE BET WIN RESOLUTION ========== */
+
+	describe('FreeBet Win Resolution', () => {
+		it('should send profit to user and stake to holder on freebet win', async () => {
+			// Deploy CasinoFreeBetsHolder inline
+			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+			await holder.initialize(owner.address, 86400);
+			const holderAddress = await holder.getAddress();
+
+			// Set holder on roulette
+			await roulette.connect(owner).setFreeBetsHolder(holderAddress);
+			// Whitelist roulette in holder
+			await holder.setWhitelistedCasino(rouletteAddress, true);
+
+			// Fund holder with USDC
+			await usdc.connect(owner).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(owner).fund(player.address, usdcAddress, MIN_USDC_BET);
+
+			// Place freebet: RED_BLACK selection=0 (red)
+			const tx = await roulette
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+			expect(await roulette.isFreeBet(betId)).to.equal(true);
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			// RED_BLACK selection=0 (red): result=1 is red -> win. randomWord % 38 = 1
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]);
+
+			const betDetails = await roulette.getBetDetails(betId);
+			const betBase = await roulette.getBetBase(betId);
+			expect(betDetails.won).to.equal(true);
+
+			// Player gets profit (payout - amount)
+			const profit = betBase.payout - MIN_USDC_BET;
+			const playerBalAfter = await usdc.balanceOf(player.address);
+			expect(playerBalAfter - playerBalBefore).to.equal(profit);
+
+			// Holder gets stake back
+			const holderBalAfter = await usdc.balanceOf(holderAddress);
+			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
 		});
 	});
 });

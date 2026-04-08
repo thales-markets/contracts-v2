@@ -200,7 +200,7 @@ async function parseSpinPlaced(slots, tx) {
 }
 
 describe('Slots', () => {
-	let slots, slotsAddress, usdc, usdcAddress, vrfCoordinator;
+	let slots, slotsAddress, usdc, usdcAddress, weth, wethAddress, over, overAddress, vrfCoordinator;
 	let owner, secondAccount, resolver, riskManager, pauser, player;
 
 	beforeEach(async () => {
@@ -209,6 +209,10 @@ describe('Slots', () => {
 			slotsAddress,
 			usdc,
 			usdcAddress,
+			weth,
+			wethAddress,
+			over,
+			overAddress,
 			vrfCoordinator,
 			owner,
 			secondAccount,
@@ -608,6 +612,116 @@ describe('Slots', () => {
 		});
 	});
 
+	/* ========== SPLIT GETTERS ========== */
+
+	describe('Split Getters', () => {
+		it('getSpinBase returns correct values after placing a spin', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const { spinId } = await parseSpinPlaced(slots, tx);
+
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinBase.user).to.equal(player.address);
+			expect(spinBase.collateral).to.equal(usdcAddress);
+			expect(spinBase.amount).to.equal(MIN_USDC_BET);
+			expect(spinBase.payout).to.equal(0n);
+			const expectedReserved = (MIN_USDC_BET * MAX_PAYOUT_MULTIPLIER) / ONE;
+			expect(spinBase.reservedProfit).to.equal(expectedReserved);
+		});
+
+		it('getSpinDetails returns correct values after resolution', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const tripleWord = findTripleWord(0);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [tripleWord]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			expect(spinDetails.status).to.equal(Status.RESOLVED);
+			expect(spinDetails.won).to.equal(true);
+			expect(spinDetails.reels[0]).to.equal(0n);
+			expect(spinDetails.reels[1]).to.equal(0n);
+			expect(spinDetails.reels[2]).to.equal(0n);
+		});
+	});
+
+	/* ========== AUDIT FIXES ========== */
+
+	describe('Audit Fixes', () => {
+		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+
+			const balance = await usdc.balanceOf(slotsAddress);
+			await expect(
+				slots.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, balance)
+			).to.be.revertedWithCustomError(slots, 'InsufficientAvailableLiquidity');
+		});
+
+		it('setCancelTimeout should revert below MIN_CANCEL_TIMEOUT (30)', async () => {
+			await expect(slots.connect(owner).setCancelTimeout(29)).to.be.revertedWithCustomError(
+				slots,
+				'InvalidAmount'
+			);
+		});
+
+		it('setCancelTimeout should succeed at MIN_CANCEL_TIMEOUT', async () => {
+			await expect(slots.connect(owner).setCancelTimeout(30))
+				.to.emit(slots, 'CancelTimeoutChanged')
+				.withArgs(30);
+		});
+
+		it('setMaxPayoutMultiplier should revert when below existing triplePayout', async () => {
+			// TRIPLE_PAYOUTS[4] = 15e18, so setting maxPayoutMultiplier to 10e18 should fail
+			await expect(
+				slots.connect(owner).setMaxPayoutMultiplier(ethers.parseEther('10'))
+			).to.be.revertedWithCustomError(slots, 'InvalidConfig');
+		});
+
+		it('setTriplePayout should revert for symbol >= symbolCount', async () => {
+			await expect(
+				slots.connect(owner).setTriplePayout(SYMBOL_COUNT, ethers.parseEther('5'))
+			).to.be.revertedWithCustomError(slots, 'InvalidConfig');
+		});
+
+		it('setTriplePayout should revert for multiplier > maxPayoutMultiplier', async () => {
+			await expect(
+				slots.connect(owner).setTriplePayout(0, ethers.parseEther('100'))
+			).to.be.revertedWithCustomError(slots, 'InvalidConfig');
+		});
+	});
+
+	/* ========== FREE BET PATHS ========== */
+
+	describe('FreeBet Paths', () => {
+		it('spinWithFreeBet should revert for unsupported collateral', async () => {
+			await expect(
+				slots.connect(player).spinWithFreeBet(secondAccount.address, MIN_USDC_BET)
+			).to.be.revertedWithCustomError(slots, 'InvalidCollateral');
+		});
+
+		it('spinWithFreeBet should revert when freeBetsHolder is not set', async () => {
+			await expect(slots.connect(player).spinWithFreeBet(usdcAddress, MIN_USDC_BET)).to.be.reverted;
+		});
+
+		it('setFreeBetsHolder should emit event', async () => {
+			await expect(slots.connect(owner).setFreeBetsHolder(secondAccount.address))
+				.to.emit(slots, 'FreeBetsHolderChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('normal spin isFreeBet should be false', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			expect(await slots.isFreeBet(1)).to.equal(false);
+		});
+
+		it('isFreeBet returns false for non-existent spin', async () => {
+			expect(await slots.isFreeBet(999)).to.equal(false);
+		});
+	});
+
 	/* ========== GETTERS ========== */
 
 	describe('Getters', () => {
@@ -719,6 +833,58 @@ describe('Slots', () => {
 			await expect(
 				slots.connect(secondAccount).setMaxProfitUsd(ethers.parseEther('500'))
 			).to.be.revertedWithCustomError(slots, 'InvalidSender');
+		});
+
+		it('setManager should revert for zero address', async () => {
+			await expect(slots.connect(owner).setManager(ZERO_ADDRESS)).to.be.revertedWithCustomError(
+				slots,
+				'InvalidAddress'
+			);
+		});
+
+		it('setPriceFeed should revert for zero address', async () => {
+			await expect(slots.connect(owner).setPriceFeed(ZERO_ADDRESS)).to.be.revertedWithCustomError(
+				slots,
+				'InvalidAddress'
+			);
+		});
+
+		it('setVrfCoordinator should revert for zero address', async () => {
+			await expect(
+				slots.connect(owner).setVrfCoordinator(ZERO_ADDRESS)
+			).to.be.revertedWithCustomError(slots, 'InvalidAddress');
+		});
+
+		it('setSupportedCollateral should revert for zero address', async () => {
+			await expect(
+				slots.connect(owner).setSupportedCollateral(ZERO_ADDRESS, true)
+			).to.be.revertedWithCustomError(slots, 'InvalidAddress');
+		});
+
+		it('setPriceFeedKeyPerCollateral should revert for zero address', async () => {
+			await expect(
+				slots.connect(owner).setPriceFeedKeyPerCollateral(ZERO_ADDRESS, WETH_KEY)
+			).to.be.revertedWithCustomError(slots, 'InvalidAddress');
+		});
+
+		it('setVrfConfig should update config and emit', async () => {
+			await expect(slots.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+				.to.emit(slots, 'VrfConfigChanged')
+				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+			expect(await slots.callbackGasLimit()).to.equal(300000n);
+			expect(await slots.requestConfirmations()).to.equal(5n);
+		});
+
+		it('setVrfConfig should revert for zero callbackGasLimit', async () => {
+			await expect(
+				slots.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+			).to.be.revertedWithCustomError(slots, 'InvalidAmount');
+		});
+
+		it('setVrfConfig should revert for zero requestConfirmations', async () => {
+			await expect(
+				slots.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
+			).to.be.revertedWithCustomError(slots, 'InvalidAmount');
 		});
 	});
 
@@ -852,6 +1018,117 @@ describe('Slots', () => {
 			expect(ids[0]).to.equal(1n);
 			const spinBase = await slots.getSpinBase(ids[0]);
 			expect(spinBase.amount).to.equal(MIN_USDC_BET);
+		});
+
+		it('getRecentSpinIds should return empty when offset >= total', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+
+			const ids = await slots.getRecentSpinIds(100, 10);
+			expect(ids.length).to.equal(0);
+		});
+	});
+
+	/* ========== COLLATERAL PRICE ========== */
+
+	describe('getCollateralPrice', () => {
+		it('should return ONE for USDC', async () => {
+			expect(await slots.getCollateralPrice(usdcAddress)).to.equal(ethers.parseEther('1'));
+		});
+
+		it('should return the price feed value for WETH', async () => {
+			expect(await slots.getCollateralPrice(wethAddress)).to.equal(WETH_PRICE);
+		});
+
+		it('should revert for unsupported collateral', async () => {
+			await expect(slots.getCollateralPrice(secondAccount.address)).to.be.revertedWithCustomError(
+				slots,
+				'InvalidCollateral'
+			);
+		});
+	});
+
+	/* ========== GET SPIN REELS ========== */
+
+	describe('getSpinReels', () => {
+		it('should return correct reel symbols after resolution', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const tripleWord = findTripleWord(2);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [tripleWord]);
+
+			const reels = await slots.getSpinReels(spinId);
+			expect(reels[0]).to.equal(2n);
+			expect(reels[1]).to.equal(2n);
+			expect(reels[2]).to.equal(2n);
+		});
+
+		it('should return zeros for unresolved spin', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const { spinId } = await parseSpinPlaced(slots, tx);
+
+			const reels = await slots.getSpinReels(spinId);
+			expect(reels[0]).to.equal(0n);
+			expect(reels[1]).to.equal(0n);
+			expect(reels[2]).to.equal(0n);
+		});
+	});
+
+	/* ========== VRF UNKNOWN REQUEST ========== */
+
+	describe('VRF unknown requestId', () => {
+		it('should silently skip an unknown requestId', async () => {
+			await expect(vrfCoordinator.fulfillRandomWords(slotsAddress, 999n, [42n])).to.not.be.reverted;
+		});
+	});
+
+	/* ========== FREE BET WIN RESOLUTION ========== */
+
+	describe('FreeBet Win Resolution', () => {
+		it('should send profit to user and stake to holder on freebet triple win', async () => {
+			// Deploy CasinoFreeBetsHolder inline
+			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+			await holder.initialize(owner.address, 86400);
+			const holderAddress = await holder.getAddress();
+
+			// Set holder on slots
+			await slots.connect(owner).setFreeBetsHolder(holderAddress);
+			// Whitelist slots in holder
+			await holder.setWhitelistedCasino(slotsAddress, true);
+
+			// Fund holder with USDC (use player's USDC since owner has limited supply after fixture)
+			await usdc.connect(player).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(player).fund(player.address, usdcAddress, MIN_USDC_BET);
+
+			// Place freebet spin
+			const tx = await slots.connect(player).spinWithFreeBet(usdcAddress, MIN_USDC_BET);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			expect(await slots.isFreeBet(spinId)).to.equal(true);
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			// Use a triple word for symbol 0 (lowest payout to stay within bankroll)
+			const tripleWord = findTripleWord(0);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [tripleWord]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.won).to.equal(true);
+
+			// Player gets profit (payout - amount)
+			const profit = spinBase.payout - MIN_USDC_BET;
+			const playerBalAfter = await usdc.balanceOf(player.address);
+			expect(playerBalAfter - playerBalBefore).to.equal(profit);
+
+			// Holder gets stake back
+			const holderBalAfter = await usdc.balanceOf(holderAddress);
+			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
 		});
 	});
 });
