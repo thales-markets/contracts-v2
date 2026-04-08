@@ -7,10 +7,13 @@ contract LegacyTicketMock {
     IERC20 public collateral;
     address public ticketOwner;
     uint public expectedFinalPayout;
+    uint public buyInAmount;
     bool public isSystem;
     bool public isSGP;
     bool public paused;
     bool public resolved;
+    bool public cancelled;
+    bool public isMarkedAsLost;
 
     bool private winner;
 
@@ -36,6 +39,12 @@ contract LegacyTicketMock {
     function expire(address _beneficiary) external {
         resolved = true;
         emit Expired(_beneficiary);
+    }
+
+    function markAsLost() external returns (uint) {
+        resolved = true;
+        isMarkedAsLost = true;
+        return 0;
     }
 
     event Expired(address beneficiary);
