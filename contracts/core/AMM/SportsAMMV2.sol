@@ -704,8 +704,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             // Default round: deferred collateralization.
             // Only send buyIn to LP for safekeeping. LP does NOT provide profit upfront.
             collateralPool.commitTradeDeferred(address(ticket), _tradeDataInternal._buyInAmount);
-            // Try setting deferred flag (new tickets support this, old ones don't)
-            try ticket.setIsDeferred() {} catch {}
+            // Setting deferred flag
+            ticket.setIsDeferred();
         } else {
             // Non-default round: full collateralization as before.
             collateralPool.commitTrade(address(ticket), processingParams._payoutWithFees - _tradeDataInternal._buyInAmount);
@@ -820,9 +820,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
     function _exerciseTicket(address _ticket, address _exerciseCollateral, bool _cancelTicket, bool _markLost) internal {
         Ticket ticket = Ticket(_ticket);
-        IERC20 ticketCollateral = ticket.collateral();
-        address ticketOwner = ticket.ticketOwner();
-
         uint userWonAmount;
         if (_markLost) {
             userWonAmount = ticket.markAsLost();
@@ -831,6 +828,8 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         } else {
             userWonAmount = ticket.exercise(_exerciseCollateral);
         }
+        IERC20 ticketCollateral = ticket.collateral();
+        address ticketOwner = ticket.ticketOwner();
 
         if (ticketOwner == freeBetsHolder) {
             IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
@@ -853,8 +852,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
 
         if (userWonAmount > 0) {
-            bool needsOfframp = _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral);
-            if (needsOfframp) {
+            if (_exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
                 if (ticketCollateral != defaultCollateral) revert OfframpOnlyDefaultCollateralAllowed();
                 IERC20(_exerciseCollateral).safeTransfer(
                     ticketOwner,
@@ -864,7 +862,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 // Deferred: AMM pays user directly (ticket has no funds)
                 ticketCollateral.safeTransfer(ticketOwner, userWonAmount);
             }
-            // Non-deferred: ticket already paid user in exercise()
         }
 
         _finalizeTicketResolution(_ticket, ticketOwner, ticketCollateral, ticket.isUserTheWinner());
