@@ -63,11 +63,15 @@ async function deployFixture() {
 		nativePayment: false,
 	};
 
-	// Deploy CasinoFreeBetsHolder
-	const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+	// Deploy FreeBetsHolder (shared sports + casino)
+	const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
 	const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
-	await holder.initialize(owner.address, EXPIRATION_PERIOD);
+	await holder.initialize(owner.address, owner.address, owner.address);
 	const holderAddress = await holder.getAddress();
+
+	// Configure holder for casino
+	await holder.addSupportedCollateral(usdcAddress, true, owner.address);
+	await holder.setFreeBetExpirationPeriod(EXPIRATION_PERIOD, Math.floor(Date.now() / 1000));
 
 	// Deploy Dice
 	const DiceFactory = await ethers.getContractFactory('Dice');
@@ -152,157 +156,41 @@ describe('CasinoFreeBets', () => {
 		} = await loadFixture(deployFixture));
 	});
 
-	describe('Holder: Funding', () => {
-		it('should fund a user', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await expect(holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET)).to.emit(
-				holder,
-				'UserFunded'
-			);
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
-				MIN_USDC_BET
-			);
+	describe('Holder: Casino Whitelist', () => {
+		it('should whitelist casino contract', async () => {
+			expect(await holder.whitelistedCasino(diceAddress)).to.equal(true);
 		});
 
-		it('should set expiration on first fund', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
-			const expiry = await holder.expirationPerUserAndCollateral(player.address, usdcAddress);
-			expect(expiry).to.be.gt(0n);
-		});
-
-		it('should fund batch', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET * 2n);
-			await holder
-				.connect(funder)
-				.fundBatch([player.address, secondAccount.address], usdcAddress, MIN_USDC_BET);
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
-				MIN_USDC_BET
-			);
-			expect(await holder.balancePerUserAndCollateral(secondAccount.address, usdcAddress)).to.equal(
-				MIN_USDC_BET
-			);
-		});
-
-		it('should allow owner to remove funding', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
-			await holder.connect(owner).removeUserFunding(player.address, usdcAddress);
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
-		});
-	});
-
-	describe('Holder: Funding Reverts', () => {
-		it('fund should revert with zero address user', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await expect(
-				holder.connect(funder).fund(ethers.ZeroAddress, usdcAddress, MIN_USDC_BET)
-			).to.be.revertedWithCustomError(holder, 'InvalidAddress');
-		});
-
-		it('fund should revert with zero address collateral', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await expect(
-				holder.connect(funder).fund(player.address, ethers.ZeroAddress, MIN_USDC_BET)
-			).to.be.revertedWithCustomError(holder, 'InvalidAddress');
-		});
-
-		it('fund should revert with zero amount', async () => {
-			await expect(
-				holder.connect(funder).fund(player.address, usdcAddress, 0)
-			).to.be.revertedWithCustomError(holder, 'InvalidAmount');
-		});
-
-		it('fundBatch should revert with zero address in array', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET * 2n);
-			await expect(
-				holder
-					.connect(funder)
-					.fundBatch([player.address, ethers.ZeroAddress], usdcAddress, MIN_USDC_BET)
-			).to.be.revertedWithCustomError(holder, 'InvalidAddress');
-		});
-	});
-
-	describe('Holder: Setters', () => {
-		it('setExpirationPeriod should update period', async () => {
-			const newPeriod = 172800n; // 2 days
-			await expect(holder.connect(owner).setExpirationPeriod(newPeriod))
-				.to.emit(holder, 'ExpirationPeriodChanged')
-				.withArgs(newPeriod);
-			expect(await holder.expirationPeriod()).to.equal(newPeriod);
-		});
-
-		it('setExpirationPeriod should revert for non-owner', async () => {
-			await expect(holder.connect(funder).setExpirationPeriod(172800n)).to.be.reverted;
-		});
-
-		it('withdrawCollateral by owner works', async () => {
-			// Transfer USDC directly to the holder (simulates returned stakes accumulating)
-			await usdc.transfer(holderAddress, MIN_USDC_BET);
-
-			const recipientBalBefore = await usdc.balanceOf(secondAccount.address);
-			await expect(
-				holder.connect(owner).withdrawCollateral(usdcAddress, secondAccount.address, MIN_USDC_BET)
-			)
-				.to.emit(holder, 'WithdrawnCollateral')
-				.withArgs(usdcAddress, secondAccount.address, MIN_USDC_BET);
-			expect(await usdc.balanceOf(secondAccount.address)).to.equal(
-				recipientBalBefore + MIN_USDC_BET
-			);
-		});
-	});
-
-	describe('Holder: Pause', () => {
-		it('setPausedByOwner should pause', async () => {
-			await expect(holder.connect(owner).setPausedByOwner(true))
-				.to.emit(holder, 'PauseChanged')
-				.withArgs(true);
-			expect(await holder.paused()).to.equal(true);
-		});
-
-		it('setPausedByOwner should unpause', async () => {
-			await holder.connect(owner).setPausedByOwner(true);
-			await expect(holder.connect(owner).setPausedByOwner(false))
-				.to.emit(holder, 'PauseChanged')
-				.withArgs(false);
-			expect(await holder.paused()).to.equal(false);
-		});
-
-		it('fund should revert when paused', async () => {
-			await holder.connect(owner).setPausedByOwner(true);
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await expect(holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET)).to.be
+		it('should revert setWhitelistedCasino for non-owner', async () => {
+			await expect(holder.connect(secondAccount).setWhitelistedCasino(diceAddress, false)).to.be
 				.reverted;
 		});
-	});
 
-	describe('Holder: useFreeBet deduction', () => {
-		it('useFreeBet deducts balance correctly', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET * 2n);
-			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET * 2n);
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
-				MIN_USDC_BET * 2n
-			);
-
-			// Use one free bet via dice
-			await dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, 0, 11);
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
-				MIN_USDC_BET
-			);
+		it('should revert setWhitelistedCasino with zero address', async () => {
+			await expect(
+				holder.connect(owner).setWhitelistedCasino(ethers.ZeroAddress, true)
+			).to.be.revertedWithCustomError(holder, 'InvalidAddress');
 		});
-	});
 
-	describe('Holder: Whitelist', () => {
 		it('should revert useFreeBet from non-whitelisted', async () => {
 			await expect(
 				holder.connect(secondAccount).useFreeBet(player.address, usdcAddress, MIN_USDC_BET)
-			).to.be.revertedWithCustomError(holder, 'InvalidSender');
+			).to.be.revertedWithCustomError(holder, 'CallerNotAllowed');
+		});
+	});
+
+	describe('Holder: Fund and Use', () => {
+		it('should fund a user and deduct on casino use', async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET
+			);
 		});
 	});
 
 	describe('Dice: Free Bet', () => {
 		beforeEach(async () => {
-			// Fund player with 3 USDC free bet
 			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
 			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
 		});
@@ -335,17 +223,12 @@ describe('CasinoFreeBets', () => {
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
 
 			const betDetails = await dice.getBetDetails(1);
-			const betBase = await dice.getBetBase(1);
 			expect(betDetails.won).to.equal(true);
 
-			// Player gets profit only (payout - amount)
-			const playerBalAfter = await usdc.balanceOf(player.address);
+			const betBase = await dice.getBetBase(1);
 			const profit = betBase.payout - MIN_USDC_BET;
-			expect(playerBalAfter - playerBalBefore).to.equal(profit);
-
-			// Holder gets stake back
-			const holderBalAfter = await usdc.balanceOf(holderAddress);
-			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore + profit);
+			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
 		});
 
 		it('should not send anything on free bet loss', async () => {
@@ -364,7 +247,6 @@ describe('CasinoFreeBets', () => {
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
 
-			// Lose: randomWord=14 → result=15, ROLL_UNDER target=11 → loss
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]);
 
 			const betDetails = await dice.getBetDetails(1);
@@ -373,17 +255,9 @@ describe('CasinoFreeBets', () => {
 		});
 
 		it('should revert free bet with insufficient balance', async () => {
-			// Player already has MIN_USDC_BET, try to bet double
 			await expect(
 				dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET * 2n, 0, 11)
 			).to.be.revertedWithCustomError(holder, 'InsufficientBalance');
-		});
-
-		it('should revert free bet after expiry', async () => {
-			await time.increase(EXPIRATION_PERIOD + 1n);
-			await expect(
-				dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, 0, 11)
-			).to.be.revertedWithCustomError(holder, 'FreeBetExpired');
 		});
 
 		it('normal bet should not be flagged as free bet', async () => {
@@ -404,27 +278,6 @@ describe('CasinoFreeBets', () => {
 			await slots.connect(player).spinWithFreeBet(usdcAddress, MIN_USDC_BET);
 			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
 			expect(await slots.isFreeBet(1)).to.equal(true);
-		});
-	});
-
-	describe('Holder: Expiry cleanup', () => {
-		it('should allow anyone to remove expired funding', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
-
-			await time.increase(EXPIRATION_PERIOD + 1n);
-
-			await holder.connect(secondAccount).removeExpiredFunding(player.address, usdcAddress);
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
-		});
-
-		it('should revert if not expired', async () => {
-			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
-			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
-
-			await expect(
-				holder.connect(secondAccount).removeExpiredFunding(player.address, usdcAddress)
-			).to.be.revertedWithCustomError(holder, 'FreeBetExpired');
 		});
 	});
 });

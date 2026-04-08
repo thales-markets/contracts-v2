@@ -902,11 +902,13 @@ describe('Blackjack', () => {
 		});
 
 		it('doubleDown should revert for freebets', async () => {
-			// Deploy a holder and set it up
-			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			// Deploy FreeBetsHolder and set it up
+			const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
 			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
-			await holder.initialize(owner.address, 86400);
+			await holder.initialize(owner.address, owner.address, owner.address);
 			const holderAddress = await holder.getAddress();
+			await holder.addSupportedCollateral(usdcAddress, true, owner.address);
+			await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
 
 			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);
 			await holder.setWhitelistedCasino(blackjackAddress, true);
@@ -1155,11 +1157,13 @@ describe('Blackjack', () => {
 
 	describe('FreeBet Placement with Holder', () => {
 		it('should place a freebet via holder and mark isFreeBet', async () => {
-			// Deploy CasinoFreeBetsHolder inline
-			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			// Deploy FreeBetsHolder inline
+			const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
 			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
-			await holder.initialize(owner.address, 86400);
+			await holder.initialize(owner.address, owner.address, owner.address);
 			const holderAddress = await holder.getAddress();
+			await holder.addSupportedCollateral(usdcAddress, true, owner.address);
+			await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
 
 			// Set holder on blackjack
 			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);

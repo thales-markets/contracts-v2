@@ -94,6 +94,9 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     // stores resolved chained speed markets per user
     mapping(address => AddressSetLib.AddressSet) internal resolvedChainedSpeedMarketsPerUser;
 
+    /// @notice Whether an address is a whitelisted casino contract that can call useFreeBet
+    mapping(address => bool) public whitelistedCasino;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(address _owner, address _sportsAMMV2, address _liveTradingProcessor) external initializer {
@@ -766,6 +769,30 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
                 freeBetExpirationUpgrade + freeBetExpirationPeriod > block.timestamp);
     }
 
+    /* ========== CASINO ========== */
+
+    /// @notice Called by whitelisted casino contracts to consume a user's free bet
+    /// @dev Validates balance, expiry, and caller whitelist. Transfers tokens to caller.
+    function useFreeBet(address _user, address _collateral, uint _amount) external nonReentrant {
+        if (!whitelistedCasino[msg.sender]) revert CallerNotAllowed();
+        if (!supportedCollateral[_collateral]) revert UnsupportedCollateral();
+        if (balancePerUserAndCollateral[_user][_collateral] < _amount) revert InsufficientBalance();
+        if (!_isFreeBetValid(_user, _collateral)) revert FreeBetExpired();
+
+        balancePerUserAndCollateral[_user][_collateral] -= _amount;
+
+        IERC20(_collateral).safeTransfer(msg.sender, _amount);
+
+        emit FreeBetUsedByCasino(_user, _collateral, _amount, msg.sender);
+    }
+
+    /// @notice Sets whether an address is a whitelisted casino contract
+    function setWhitelistedCasino(address _casino, bool _enabled) external onlyOwner {
+        if (_casino == address(0)) revert InvalidAddress();
+        whitelistedCasino[_casino] = _enabled;
+        emit WhitelistedCasinoChanged(_casino, _enabled);
+    }
+
     /* ========== MODIFIERS ========== */
     modifier canTrade(
         address _user,
@@ -811,4 +838,6 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event UserFundingRemoved(address _user, address _collateral, address _receiver, uint _amount);
     event SetFreeBetExpirationPeriod(uint freeBetExpirationPeriod, uint freeBetExpirationUpgrade);
     event UpdateMaxApprovalSpeedMarketsAMM(address collateral);
+    event FreeBetUsedByCasino(address indexed user, address indexed collateral, uint amount, address indexed casino);
+    event WhitelistedCasinoChanged(address indexed casino, bool enabled);
 }

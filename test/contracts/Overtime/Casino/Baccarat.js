@@ -911,11 +911,13 @@ describe('Baccarat', () => {
 
 	describe('FreeBet Win Resolution', () => {
 		it('should send profit to user and stake to holder on freebet PLAYER win', async () => {
-			// Deploy CasinoFreeBetsHolder inline
-			const HolderFactory = await ethers.getContractFactory('CasinoFreeBetsHolder');
+			// Deploy FreeBetsHolder inline
+			const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
 			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
-			await holder.initialize(owner.address, 86400);
+			await holder.initialize(owner.address, owner.address, owner.address);
 			const holderAddress = await holder.getAddress();
+			await holder.addSupportedCollateral(usdcAddress, true, owner.address);
+			await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
 
 			// Set holder on baccarat
 			await baccarat.connect(owner).setFreeBetsHolder(holderAddress);
