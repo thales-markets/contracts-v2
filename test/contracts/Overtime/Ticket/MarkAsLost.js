@@ -20,6 +20,7 @@ describe('Admin MarkAsLost Functionality', () => {
 		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
 		collateral,
+		owner,
 		firstLiquidityProvider,
 		firstTrader,
 		secondAccount,
@@ -35,7 +36,7 @@ describe('Admin MarkAsLost Functionality', () => {
 			tradeDataCurrentRound,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 
-		({ firstLiquidityProvider, firstTrader, secondAccount } =
+		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
