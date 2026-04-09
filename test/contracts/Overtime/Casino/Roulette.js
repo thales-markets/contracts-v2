@@ -427,6 +427,36 @@ describe('Roulette', () => {
 			expect(await roulette.requestIdToBetId(requestId)).to.equal(betId);
 		});
 
+		it('should place a DOZEN bet successfully', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0);
+			const betDetails = await roulette.getBetDetails(1n);
+			expect(betDetails.status).to.equal(1n); // PENDING
+			expect(betDetails.betType).to.equal(BigInt(BetType.DOZEN));
+		});
+
+		it('should place a COLUMN bet successfully', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0);
+			const betDetails = await roulette.getBetDetails(1n);
+			expect(betDetails.status).to.equal(1n); // PENDING
+			expect(betDetails.betType).to.equal(BigInt(BetType.COLUMN));
+		});
+
+		it('should revert DOZEN with invalid selection (>= 3)', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await expect(
+				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 3)
+			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
+		});
+
+		it('should revert COLUMN with invalid selection (>= 3)', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await expect(
+				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 3)
+			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
+		});
+
 		it('should increment betId per bet', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 3n);
 
@@ -505,6 +535,64 @@ describe('Roulette', () => {
 			expect(betDetails.won).to.equal(false);
 			expect(betBase.payout).to.equal(0n);
 			expect(betDetails.status).to.equal(2n); // RESOLVED
+		});
+
+		it('should resolve a winning DOZEN bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0); // first dozen (1-12)
+			const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+			// randomWord % 38 == 5 -> result=5, in first dozen -> win. Payout = stake + 2x profit
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [5n]);
+
+			const betDetails = await roulette.getBetDetails(betId);
+			expect(betDetails.won).to.equal(true);
+			expect(betDetails.status).to.equal(2n); // RESOLVED
+		});
+
+		it('should resolve a losing DOZEN bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0); // first dozen (1-12)
+			const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+			// randomWord % 38 == 13 -> result=13, in second dozen -> loss for selection 0
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [13n]);
+
+			const betDetails = await roulette.getBetDetails(betId);
+			expect(betDetails.won).to.equal(false);
+		});
+
+		it('should resolve a winning COLUMN bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0); // column 0 (1,4,7,10,...)
+			const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+			// randomWord % 38 == 1 -> result=1, (1-1)%3=0 -> column 0 -> win
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]);
+
+			const betDetails = await roulette.getBetDetails(betId);
+			expect(betDetails.won).to.equal(true);
+			expect(betDetails.status).to.equal(2n); // RESOLVED
+		});
+
+		it('should resolve a losing COLUMN bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0); // column 0 (1,4,7,10,...)
+			const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+			// randomWord % 38 == 2 -> result=2, (2-1)%3=1 -> column 1 -> loss for selection 0
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [2n]);
+
+			const betDetails = await roulette.getBetDetails(betId);
+			expect(betDetails.won).to.equal(false);
 		});
 
 		it('should silently skip an unknown requestId', async () => {
@@ -846,6 +934,12 @@ describe('Roulette', () => {
 					roulette.connect(owner).setPriceFeed(ZERO_ADDRESS)
 				).to.be.revertedWithCustomError(roulette, 'InvalidAddress');
 			});
+
+			it('should update priceFeed and emit event', async () => {
+				await expect(roulette.connect(owner).setPriceFeed(secondAccount.address))
+					.to.emit(roulette, 'PriceFeedChanged')
+					.withArgs(secondAccount.address);
+			});
 		});
 
 		describe('setVrfCoordinator', () => {
@@ -854,6 +948,12 @@ describe('Roulette', () => {
 					roulette.connect(owner).setVrfCoordinator(ZERO_ADDRESS)
 				).to.be.revertedWithCustomError(roulette, 'InvalidAddress');
 			});
+
+			it('should update vrfCoordinator and emit event', async () => {
+				await expect(roulette.connect(owner).setVrfCoordinator(secondAccount.address))
+					.to.emit(roulette, 'VrfCoordinatorChanged')
+					.withArgs(secondAccount.address);
+			});
 		});
 
 		describe('setPriceFeedKeyPerCollateral', () => {
@@ -861,6 +961,15 @@ describe('Roulette', () => {
 				await expect(
 					roulette.connect(owner).setPriceFeedKeyPerCollateral(ZERO_ADDRESS, WETH_KEY)
 				).to.be.revertedWithCustomError(roulette, 'InvalidAddress');
+			});
+
+			it('should update key and emit event', async () => {
+				const testKey = ethers.encodeBytes32String('TEST');
+				await expect(
+					roulette.connect(owner).setPriceFeedKeyPerCollateral(secondAccount.address, testKey)
+				)
+					.to.emit(roulette, 'PriceFeedKeyPerCollateralChanged')
+					.withArgs(secondAccount.address, testKey);
 			});
 		});
 	});

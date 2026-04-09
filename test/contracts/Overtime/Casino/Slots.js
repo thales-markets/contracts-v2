@@ -867,6 +867,39 @@ describe('Slots', () => {
 			).to.be.revertedWithCustomError(slots, 'InvalidAddress');
 		});
 
+		it('setSupportedCollateral should emit', async () => {
+			await expect(slots.connect(owner).setSupportedCollateral(secondAccount.address, true))
+				.to.emit(slots, 'SupportedCollateralChanged')
+				.withArgs(secondAccount.address, true);
+		});
+
+		it('setPriceFeedKeyPerCollateral should emit', async () => {
+			const testKey = ethers.encodeBytes32String('TEST');
+			await expect(
+				slots.connect(owner).setPriceFeedKeyPerCollateral(secondAccount.address, testKey)
+			)
+				.to.emit(slots, 'PriceFeedKeyPerCollateralChanged')
+				.withArgs(secondAccount.address, testKey);
+		});
+
+		it('setManager should emit', async () => {
+			await expect(slots.connect(owner).setManager(secondAccount.address))
+				.to.emit(slots, 'ManagerChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setPriceFeed should emit', async () => {
+			await expect(slots.connect(owner).setPriceFeed(secondAccount.address))
+				.to.emit(slots, 'PriceFeedChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setVrfCoordinator should emit', async () => {
+			await expect(slots.connect(owner).setVrfCoordinator(secondAccount.address))
+				.to.emit(slots, 'VrfCoordinatorChanged')
+				.withArgs(secondAccount.address);
+		});
+
 		it('setVrfConfig should update config and emit', async () => {
 			await expect(slots.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
 				.to.emit(slots, 'VrfConfigChanged')
@@ -1082,6 +1115,62 @@ describe('Slots', () => {
 	describe('VRF unknown requestId', () => {
 		it('should silently skip an unknown requestId', async () => {
 			await expect(vrfCoordinator.fulfillRandomWords(slotsAddress, 999n, [42n])).to.not.be.reverted;
+		});
+	});
+
+	/* ========== WETH COLLATERAL ========== */
+
+	describe('WETH Collateral', () => {
+		const MIN_WETH_BET = ethers.parseEther('0.001'); // 0.001 WETH = 3 USD at 3000 USD/WETH
+
+		beforeEach(async () => {
+			// Fund bankroll with WETH
+			await weth.transfer(slotsAddress, ethers.parseEther('10'));
+			// Fund player with WETH
+			await weth.transfer(player.address, ethers.parseEther('1'));
+		});
+
+		it('should place a WETH spin and resolve as win', async () => {
+			await weth.connect(player).approve(slotsAddress, MIN_WETH_BET);
+			const tx = await slots.connect(player).spin(wethAddress, MIN_WETH_BET);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const playerBalBefore = await weth.balanceOf(player.address);
+
+			const tripleWord = findTripleWord(0);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [tripleWord]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.status).to.equal(Status.RESOLVED);
+			expect(spinDetails.won).to.equal(true);
+
+			const expectedPayout = getExpectedPayout(MIN_WETH_BET, tripleWord);
+			expect(spinBase.payout).to.equal(expectedPayout);
+			expect(await weth.balanceOf(player.address)).to.equal(playerBalBefore + expectedPayout);
+		});
+	});
+
+	/* ========== TRIPLE WITH ZERO PAYOUT ========== */
+
+	describe('Triple match with zero payout', () => {
+		it('should resolve as loss when triple matches but payout is 0', async () => {
+			// Set triple payout for symbol 0 to 0
+			await slots.connect(owner).setTriplePayout(0, 0);
+
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const tripleWord = findTripleWord(0);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [tripleWord]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.status).to.equal(Status.RESOLVED);
+			// With 0 payout multiplier, the spin resolves but with 0 payout (loss)
+			expect(spinBase.payout).to.equal(0n);
+			expect(spinDetails.won).to.equal(false);
 		});
 	});
 

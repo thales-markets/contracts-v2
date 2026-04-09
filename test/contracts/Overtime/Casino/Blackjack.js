@@ -1100,6 +1100,45 @@ describe('Blackjack', () => {
 				'InvalidAmount'
 			);
 		});
+
+		it('setMaxProfitUsd should update and emit', async () => {
+			await expect(blackjack.connect(owner).setMaxProfitUsd(ethers.parseEther('500')))
+				.to.emit(blackjack, 'MaxProfitUsdChanged')
+				.withArgs(ethers.parseEther('500'));
+		});
+
+		it('setSupportedCollateral should emit', async () => {
+			await expect(blackjack.connect(owner).setSupportedCollateral(secondAccount.address, true))
+				.to.emit(blackjack, 'SupportedCollateralChanged')
+				.withArgs(secondAccount.address, true);
+		});
+
+		it('setPriceFeedKeyPerCollateral should emit', async () => {
+			const testKey = ethers.encodeBytes32String('TEST');
+			await expect(
+				blackjack.connect(owner).setPriceFeedKeyPerCollateral(secondAccount.address, testKey)
+			)
+				.to.emit(blackjack, 'PriceFeedKeyPerCollateralChanged')
+				.withArgs(secondAccount.address, testKey);
+		});
+
+		it('setManager should emit', async () => {
+			await expect(blackjack.connect(owner).setManager(secondAccount.address))
+				.to.emit(blackjack, 'ManagerChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setPriceFeed should emit', async () => {
+			await expect(blackjack.connect(owner).setPriceFeed(secondAccount.address))
+				.to.emit(blackjack, 'PriceFeedChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setVrfCoordinator should emit', async () => {
+			await expect(blackjack.connect(owner).setVrfCoordinator(secondAccount.address))
+				.to.emit(blackjack, 'VrfCoordinatorChanged')
+				.withArgs(secondAccount.address);
+		});
 	});
 
 	/* ========== VRF CONFIG ========== */
@@ -1183,6 +1222,134 @@ describe('Blackjack', () => {
 			const handBase = await blackjack.getHandBase(handId);
 			expect(handBase.user).to.equal(player.address);
 			expect(handBase.amount).to.equal(MIN_USDC_BET);
+		});
+	});
+
+	/* ========== FREE BET WIN RESOLUTION ========== */
+
+	describe('FreeBet Win Resolution', () => {
+		it('freebet win should send profit to user and stake to holder', async () => {
+			// Deploy FreeBetsHolder inline
+			const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
+			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+			await holder.initialize(owner.address, owner.address, owner.address);
+			const holderAddress = await holder.getAddress();
+			await holder.addSupportedCollateral(usdcAddress, true, owner.address);
+			await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
+
+			// Set holder on blackjack
+			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);
+			// Whitelist blackjack in holder
+			await holder.setWhitelistedCasino(blackjackAddress, true);
+
+			// Fund holder with USDC
+			await usdc.connect(owner).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(owner).fund(player.address, usdcAddress, MIN_USDC_BET);
+
+			// Place freebet
+			const tx = await blackjack.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			expect(await blackjack.isFreeBet(handId)).to.equal(true);
+
+			// Deal: player gets Ace + 10 = blackjack
+			// word0=0 -> rank 1 (Ace), dealerFaceUp = 0>>128 %13+1 = 1 (Ace)
+			// word1=9 -> rank 10, dealerHidden = 0>>128 %13+1 = 1 (Ace)
+			// Player: Ace+10=21 (BJ), Dealer: Ace+Ace=12 -> player blackjack wins
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [0n, 9n]);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PLAYER_BLACKJACK);
+
+			// 6:5 payout = amount + amount*6/5
+			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n;
+			expect(handBase.payout).to.equal(expectedPayout);
+
+			// Player gets profit (payout - amount)
+			const profit = expectedPayout - MIN_USDC_BET;
+			const playerBalAfter = await usdc.balanceOf(player.address);
+			expect(playerBalAfter - playerBalBefore).to.equal(profit);
+
+			// Holder gets stake back
+			const holderBalAfter = await usdc.balanceOf(holderAddress);
+			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
+		});
+	});
+
+	/* ========== VRF CANCELLED HAND ========== */
+
+	describe('VRF cancelled hand', () => {
+		it('should silently skip VRF deal callback for cancelled hand', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			// Wait for cancel timeout and cancel
+			await time.increase(CANCEL_TIMEOUT);
+			await blackjack.connect(player).cancelHand(handId);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.CANCELLED);
+
+			// VRF fulfillment after cancel should silently return
+			await expect(vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n])).to.not
+				.be.reverted;
+
+			// Status should still be CANCELLED
+			const handDetailsAfter = await blackjack.getHandDetails(handId);
+			expect(handDetailsAfter.status).to.equal(Status.CANCELLED);
+		});
+	});
+
+	/* ========== WETH COLLATERAL ========== */
+
+	describe('WETH Collateral', () => {
+		const MIN_WETH_BET = ethers.parseEther('0.001'); // 0.001 WETH = 3 USD at 3000 USD/WETH
+
+		beforeEach(async () => {
+			// Fund bankroll with WETH
+			await weth.transfer(blackjackAddress, ethers.parseEther('10'));
+			// Fund player with WETH
+			await weth.transfer(player.address, ethers.parseEther('1'));
+		});
+
+		it('should place a WETH bet and resolve with player win', async () => {
+			await weth.connect(player).approve(blackjackAddress, MIN_WETH_BET);
+			const tx = await blackjack.connect(player).placeBet(wethAddress, MIN_WETH_BET);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			// Deal: player gets 10+10=20
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 11n]);
+
+			const playerBalBefore = await weth.balanceOf(player.address);
+
+			const standTx = await blackjack.connect(player).stand(handId);
+			const standRequestId = await parseRequestId(blackjack, standTx, 'StandRequested');
+
+			// Dealer: faceUp=Ace, hidden word[0]=5 -> rank 6. Dealer: 11+6=17 soft hit
+			// word[1]=1 -> rank 2. Dealer: 11+6+2=19. Stop.
+			// Player=20 > Dealer=19 -> win
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, standRequestId, [
+				5n,
+				1n,
+				0n,
+				0n,
+				0n,
+				0n,
+				0n,
+			]);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			const handBase = await blackjack.getHandBase(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PLAYER_WIN);
+			expect(handBase.payout).to.equal(MIN_WETH_BET * 2n);
+			expect(await weth.balanceOf(player.address)).to.equal(playerBalBefore + MIN_WETH_BET * 2n);
 		});
 	});
 });

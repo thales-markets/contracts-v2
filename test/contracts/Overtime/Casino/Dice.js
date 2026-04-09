@@ -703,6 +703,46 @@ describe('Dice', () => {
 				'InvalidAmount'
 			);
 		});
+
+		it('setMaxProfitUsd should update and emit', async () => {
+			await expect(dice.connect(owner).setMaxProfitUsd(ethers.parseEther('500')))
+				.to.emit(dice, 'MaxProfitUsdChanged')
+				.withArgs(ethers.parseEther('500'));
+		});
+
+		it('setSupportedCollateral should emit', async () => {
+			await expect(dice.connect(owner).setSupportedCollateral(secondAccount.address, true))
+				.to.emit(dice, 'SupportedCollateralChanged')
+				.withArgs(secondAccount.address, true);
+		});
+
+		it('setPriceFeedKeyPerCollateral should emit', async () => {
+			await expect(
+				dice
+					.connect(owner)
+					.setPriceFeedKeyPerCollateral(secondAccount.address, ethers.encodeBytes32String('TEST'))
+			)
+				.to.emit(dice, 'PriceFeedKeyPerCollateralChanged')
+				.withArgs(secondAccount.address, ethers.encodeBytes32String('TEST'));
+		});
+
+		it('setManager should emit', async () => {
+			await expect(dice.connect(owner).setManager(secondAccount.address))
+				.to.emit(dice, 'ManagerChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setPriceFeed should emit', async () => {
+			await expect(dice.connect(owner).setPriceFeed(secondAccount.address))
+				.to.emit(dice, 'PriceFeedChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setVrfCoordinator should emit', async () => {
+			await expect(dice.connect(owner).setVrfCoordinator(secondAccount.address))
+				.to.emit(dice, 'VrfCoordinatorChanged')
+				.withArgs(secondAccount.address);
+		});
 	});
 
 	/* ========== VRF AUTH ========== */
@@ -1048,6 +1088,32 @@ describe('Dice', () => {
 	describe('VRF unknown requestId', () => {
 		it('should silently skip an unknown requestId', async () => {
 			await expect(vrfCoordinator.fulfillRandomWords(diceAddress, 999n, [42n])).to.not.be.reverted;
+		});
+	});
+
+	/* ========== VRF ALREADY RESOLVED ========== */
+
+	describe('VRF already-resolved bet', () => {
+		it('should silently skip already-resolved bet', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			const { betId, requestId } = await parseBetPlaced(dice, tx);
+
+			// First fulfillment: randomWord=4 -> result=5, win
+			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
+			const detailsAfterFirst = await dice.getBetDetails(betId);
+			expect(detailsAfterFirst.status).to.equal(Status.RESOLVED);
+			expect(detailsAfterFirst.won).to.equal(true);
+
+			// Second fulfillment should silently return (no revert, no state change)
+			await expect(vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n])).to.not.be
+				.reverted;
+
+			// Bet should still show first result
+			const detailsAfterSecond = await dice.getBetDetails(betId);
+			expect(detailsAfterSecond.won).to.equal(true);
 		});
 	});
 });

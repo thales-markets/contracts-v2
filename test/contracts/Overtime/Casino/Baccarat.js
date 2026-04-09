@@ -622,6 +622,45 @@ describe('Baccarat', () => {
 				baccarat.connect(owner).setBankerPayoutMultiplier(tooHigh)
 			).to.be.revertedWithCustomError(baccarat, 'InvalidBankerPayoutMultiplier');
 		});
+
+		it('setMaxProfitUsd should update and emit', async () => {
+			await expect(baccarat.connect(owner).setMaxProfitUsd(ethers.parseEther('500')))
+				.to.emit(baccarat, 'MaxProfitUsdChanged')
+				.withArgs(ethers.parseEther('500'));
+		});
+
+		it('setSupportedCollateral should emit', async () => {
+			await expect(baccarat.connect(owner).setSupportedCollateral(secondAccount.address, true))
+				.to.emit(baccarat, 'SupportedCollateralChanged')
+				.withArgs(secondAccount.address, true);
+		});
+
+		it('setPriceFeedKeyPerCollateral should emit', async () => {
+			const testKey = ethers.encodeBytes32String('TEST');
+			await expect(
+				baccarat.connect(owner).setPriceFeedKeyPerCollateral(secondAccount.address, testKey)
+			)
+				.to.emit(baccarat, 'PriceFeedKeyPerCollateralChanged')
+				.withArgs(secondAccount.address, testKey);
+		});
+
+		it('setManager should emit', async () => {
+			await expect(baccarat.connect(owner).setManager(secondAccount.address))
+				.to.emit(baccarat, 'ManagerChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setPriceFeed should emit', async () => {
+			await expect(baccarat.connect(owner).setPriceFeed(secondAccount.address))
+				.to.emit(baccarat, 'PriceFeedChanged')
+				.withArgs(secondAccount.address);
+		});
+
+		it('setVrfCoordinator should emit', async () => {
+			await expect(baccarat.connect(owner).setVrfCoordinator(secondAccount.address))
+				.to.emit(baccarat, 'VrfCoordinatorChanged')
+				.withArgs(secondAccount.address);
+		});
 	});
 
 	/* ========== AUDIT FIXES ========== */
@@ -904,6 +943,80 @@ describe('Baccarat', () => {
 		it('should silently skip an unknown requestId', async () => {
 			await expect(vrfCoordinator.fulfillRandomWords(baccaratAddress, 999n, [42n])).to.not.be
 				.reverted;
+		});
+	});
+
+	/* ========== VRF ALREADY RESOLVED ========== */
+
+	describe('VRF already-resolved bet', () => {
+		it('should silently skip already-resolved bet', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
+
+			// First fulfillment resolves the bet
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [playerWinWord.word]);
+			const bet = await getBet(baccarat, betId);
+			expect(bet.status).to.equal(Status.RESOLVED);
+			expect(bet.won).to.equal(true);
+
+			// Second fulfillment should silently return (no revert)
+			await expect(
+				vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [bankerWinWord.word])
+			).to.not.be.reverted;
+
+			// Bet should still show first result
+			const betAfter = await getBet(baccarat, betId);
+			expect(betAfter.won).to.equal(true);
+		});
+	});
+
+	/* ========== GET POTENTIAL PROFIT ========== */
+
+	describe('getPotentialProfit', () => {
+		it('should return correct USD profit for PLAYER bet', async () => {
+			const profit = await baccarat.getPotentialProfit(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			// PLAYER: 2x payout, profit = amount. USDC price = 1, so USD = amount * 1e18 / 1e6
+			expect(profit).to.be.gt(0n);
+		});
+
+		it('should return correct USD profit for BANKER bet', async () => {
+			const profit = await baccarat.getPotentialProfit(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			expect(profit).to.be.gt(0n);
+		});
+
+		it('should return correct USD profit for TIE bet', async () => {
+			const profit = await baccarat.getPotentialProfit(usdcAddress, MIN_USDC_BET, BetType.TIE);
+			expect(profit).to.be.gt(0n);
+		});
+	});
+
+	/* ========== WETH COLLATERAL ========== */
+
+	describe('WETH Collateral', () => {
+		const MIN_WETH_BET = ethers.parseEther('0.001'); // 0.001 WETH = 3 USD at 3000 USD/WETH
+
+		beforeEach(async () => {
+			// Fund bankroll with WETH
+			await weth.transfer(baccaratAddress, ethers.parseEther('10'));
+			// Fund player with WETH
+			await weth.transfer(player.address, ethers.parseEther('1'));
+		});
+
+		it('should place a WETH PLAYER bet and resolve as win', async () => {
+			await weth.connect(player).approve(baccaratAddress, MIN_WETH_BET);
+			const tx = await baccarat.connect(player).placeBet(wethAddress, MIN_WETH_BET, BetType.PLAYER);
+			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
+
+			const playerBalBefore = await weth.balanceOf(player.address);
+
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [playerWinWord.word]);
+
+			const bet = await getBet(baccarat, betId);
+			expect(bet.status).to.equal(Status.RESOLVED);
+			expect(bet.won).to.equal(true);
+			expect(bet.payout).to.equal(MIN_WETH_BET * 2n);
+			expect(await weth.balanceOf(player.address)).to.equal(playerBalBefore + MIN_WETH_BET * 2n);
 		});
 	});
 
