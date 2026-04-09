@@ -334,6 +334,11 @@
             "internalType": "address",
             "name": "_collateral",
             "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "_isLive",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -483,6 +488,11 @@
             "internalType": "address",
             "name": "_collateral",
             "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "_isLive",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -764,6 +774,11 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLive",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -876,6 +891,11 @@
             "internalType": "address",
             "name": "_collateral",
             "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "_isLive",
+            "type": "bool"
           }
         ],
         "internalType": "struct ISGPTradingProcessor.SGPTradeData",

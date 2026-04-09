@@ -62,8 +62,10 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     ) external whenNotPaused returns (bytes32 requestId) {
         require(_sgpTradeData._tradeData.length > 1, "SGP not possible for a single game");
 
-        // **Verify Merkle Proofs**
-        _verifyMerkleProofs(_sgpTradeData._tradeData);
+        if (!_sgpTradeData._isLive) {
+            // **Verify Merkle Proofs**
+            _verifyMerkleProofs(_sgpTradeData._tradeData);
+        }
 
         // **Process trade data**
         (
@@ -90,6 +92,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         req.addUint("buyInAmount", _sgpTradeData._buyInAmount);
         req.addUint("expectedQuote", _sgpTradeData._expectedQuote);
         req.addUint("additionalSlippage", _sgpTradeData._additionalSlippage);
+        req.add("isLive", _sgpTradeData._isLive ? "true" : "false");
 
         requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;

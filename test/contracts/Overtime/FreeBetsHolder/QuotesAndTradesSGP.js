@@ -86,6 +86,7 @@ describe('SportsAMMV2 Quotes And Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: collateralAddress,
+				_isLive: false,
 			});
 
 			let requestId = await sgpTradingProcessor.counterToRequestId(0);

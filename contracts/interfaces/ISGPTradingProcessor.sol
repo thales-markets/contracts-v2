@@ -11,6 +11,7 @@ interface ISGPTradingProcessor {
         uint _additionalSlippage;
         address _referrer;
         address _collateral;
+        bool _isLive;
     }
 
     function fulfillSGPTrade(bytes32 _requestId, bool allow, uint approvedAmount) external;
