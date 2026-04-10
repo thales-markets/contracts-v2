@@ -321,27 +321,34 @@ describe('Baccarat', () => {
 	describe('placeBet', () => {
 		it('should revert for unsupported collateral', async () => {
 			await expect(
-				baccarat.connect(player).placeBet(secondAccount.address, MIN_USDC_BET, BetType.PLAYER)
+				baccarat
+					.connect(player)
+					.placeBet(secondAccount.address, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(baccarat, 'InvalidCollateral');
 		});
 
 		it('should revert for zero amount', async () => {
 			await expect(
-				baccarat.connect(player).placeBet(usdcAddress, 0, BetType.PLAYER)
+				baccarat.connect(player).placeBet(usdcAddress, 0, BetType.PLAYER, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(baccarat, 'InvalidAmount');
 		});
 
 		it('should revert when paused', async () => {
 			await baccarat.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			await expect(baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER)).to
-				.be.reverted;
+			await expect(
+				baccarat
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress)
+			).to.be.reverted;
 		});
 
 		it('should place a PLAYER bet and emit BetPlaced', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
 			await expect(
-				baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER)
+				baccarat
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress)
 			).to.emit(baccarat, 'BetPlaced');
 
 			const bet = await getBet(baccarat, 1n);
@@ -353,7 +360,9 @@ describe('Baccarat', () => {
 
 		it('should place a BANKER bet', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(baccarat, tx);
 
 			const bet = await getBet(baccarat, betId);
@@ -362,7 +371,9 @@ describe('Baccarat', () => {
 
 		it('should place a TIE bet', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(baccarat, tx);
 
 			const bet = await getBet(baccarat, betId);
@@ -375,7 +386,9 @@ describe('Baccarat', () => {
 	describe('Resolution', () => {
 		it('should resolve PLAYER bet as win when player wins', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -395,7 +408,9 @@ describe('Baccarat', () => {
 
 		it('should resolve PLAYER bet as loss when banker wins', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [bankerWinWord.word]);
@@ -409,7 +424,9 @@ describe('Baccarat', () => {
 
 		it('should push PLAYER bet on tie (refund)', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -426,7 +443,9 @@ describe('Baccarat', () => {
 
 		it('should resolve BANKER bet as win with 1.95x payout', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -443,7 +462,9 @@ describe('Baccarat', () => {
 
 		it('should push BANKER bet on tie (refund)', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -458,7 +479,9 @@ describe('Baccarat', () => {
 
 		it('should resolve TIE bet as win with 9x payout', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -474,7 +497,9 @@ describe('Baccarat', () => {
 
 		it('should resolve TIE bet as loss when player wins', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [playerWinWord.word]);
@@ -491,7 +516,9 @@ describe('Baccarat', () => {
 	describe('cancelBet', () => {
 		it('should revert if timeout not reached', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(baccarat, tx);
 
 			await expect(baccarat.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
@@ -502,7 +529,9 @@ describe('Baccarat', () => {
 
 		it('should cancel after timeout and refund', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(baccarat, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -521,7 +550,9 @@ describe('Baccarat', () => {
 	describe('adminCancelBet', () => {
 		it('should revert for non-resolver', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(baccarat, tx);
 
 			await expect(
@@ -531,7 +562,9 @@ describe('Baccarat', () => {
 
 		it('should allow owner to admin cancel', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(baccarat, tx);
 
 			await expect(baccarat.connect(owner).adminCancelBet(betId)).to.emit(baccarat, 'BetCancelled');
@@ -668,7 +701,9 @@ describe('Baccarat', () => {
 	describe('Audit Fixes', () => {
 		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 
 			const balance = await usdc.balanceOf(baccaratAddress);
 			await expect(
@@ -715,7 +750,9 @@ describe('Baccarat', () => {
 
 		it('normal bet isFreeBet should be false', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			expect(await baccarat.isFreeBet(1)).to.equal(false);
 		});
 
@@ -729,9 +766,15 @@ describe('Baccarat', () => {
 	describe('Pagination', () => {
 		it('getUserBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 3n);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE, ethers.ZeroAddress);
 
 			const page1 = await baccarat.getUserBetIds(player.address, 0, 2);
 			expect(page1.length).to.equal(2);
@@ -744,9 +787,15 @@ describe('Baccarat', () => {
 
 		it('getRecentBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 3n);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE, ethers.ZeroAddress);
 
 			const page = await baccarat.getRecentBetIds(1, 1);
 			expect(page.length).to.equal(1);
@@ -773,18 +822,28 @@ describe('Baccarat', () => {
 
 		it('getUserBetCount should increment after placing bets', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 2n);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			expect(await baccarat.getUserBetCount(player.address)).to.equal(1n);
 
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
 			expect(await baccarat.getUserBetCount(player.address)).to.equal(2n);
 		});
 
 		it('getUserBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET * 3n);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE, ethers.ZeroAddress);
 
 			const ids = await baccarat.getUserBetIds(player.address, 0, 10);
 			expect(ids.length).to.equal(3);
@@ -800,14 +859,18 @@ describe('Baccarat', () => {
 
 		it('should not include other users bets in getUserBetIds', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 
 			expect(await baccarat.getUserBetCount(secondAccount.address)).to.equal(0n);
 		});
 
 		it('getUserBetIds should return IDs with full details via getters', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			// Resolve
@@ -827,7 +890,9 @@ describe('Baccarat', () => {
 
 		it('getRecentBetIds should return bet IDs', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.BANKER, ethers.ZeroAddress);
 			const { requestId } = await parseBetPlaced(baccarat, tx);
 
 			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [100n]);
@@ -846,7 +911,9 @@ describe('Baccarat', () => {
 
 		it('getRecentBetIds should return empty when offset >= total', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 
 			const ids = await baccarat.getRecentBetIds(100, 10);
 			expect(ids.length).to.equal(0);
@@ -951,7 +1018,9 @@ describe('Baccarat', () => {
 	describe('VRF already-resolved bet', () => {
 		it('should silently skip already-resolved bet', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
-			const tx = await baccarat.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			// First fulfillment resolves the bet
@@ -1005,7 +1074,9 @@ describe('Baccarat', () => {
 
 		it('should place a WETH PLAYER bet and resolve as win', async () => {
 			await weth.connect(player).approve(baccaratAddress, MIN_WETH_BET);
-			const tx = await baccarat.connect(player).placeBet(wethAddress, MIN_WETH_BET, BetType.PLAYER);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.PLAYER, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
 
 			const playerBalBefore = await weth.balanceOf(player.address);

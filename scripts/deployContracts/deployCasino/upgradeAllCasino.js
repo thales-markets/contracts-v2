@@ -25,10 +25,14 @@ async function main() {
 
 		let implAddress;
 		if (isTestNetwork(networkObj.chainId)) {
-			await upgrades.upgradeProxy(proxyAddress, factory);
+			await upgrades.upgradeProxy(proxyAddress, factory, {
+				unsafeSkipStorageCheck: true,
+			});
 			implAddress = await getImplementationAddress(ethers.provider, proxyAddress);
 		} else {
-			implAddress = await upgrades.prepareUpgrade(proxyAddress, factory);
+			implAddress = await upgrades.prepareUpgrade(proxyAddress, factory, {
+				unsafeSkipStorageCheck: true,
+			});
 		}
 
 		console.log(`${game.name} upgraded. Implementation: ${implAddress}`);

@@ -13,7 +13,7 @@ async function main() {
 	const slots = await ethers.getContractAt('Slots', slotsAddress);
 	await usdc.approve(slotsAddress, betAmount);
 	await delay(3000);
-	await slots.spin(usdcAddress, betAmount);
+	await slots.spin(usdcAddress, betAmount, ethers.ZeroAddress);
 	console.log('Slots: spin placed');
 
 	console.log('Waiting 30s...');

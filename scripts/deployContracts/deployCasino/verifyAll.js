@@ -20,7 +20,7 @@ async function main() {
 	console.log('\n--- Normal Dice bet ---');
 	await usdc.approve(getTargetAddress('Dice', network), bet);
 	await delay(2000);
-	await dice.placeBet(usdcAddress, bet, 0, 11);
+	await dice.placeBet(usdcAddress, bet, 0, 11, ethers.ZeroAddress);
 	console.log('Placed');
 
 	// 2. Fund a free bet via FreeBetsHolder and use on Slots

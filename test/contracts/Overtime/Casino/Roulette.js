@@ -320,13 +320,15 @@ describe('Roulette', () => {
 	describe('placeBet', () => {
 		it('should revert for unsupported collateral', async () => {
 			await expect(
-				roulette.connect(player).placeBet(secondAccount.address, MIN_USDC_BET, BetType.RED_BLACK, 0)
+				roulette
+					.connect(player)
+					.placeBet(secondAccount.address, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidCollateral');
 		});
 
 		it('should revert for zero amount', async () => {
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, 0, BetType.RED_BLACK, 0)
+				roulette.connect(player).placeBet(usdcAddress, 0, BetType.RED_BLACK, 0, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
 		});
 
@@ -334,21 +336,27 @@ describe('Roulette', () => {
 			// 1 USDC = 1 USD < MIN_BET_USD (3 USD)
 			await usdc.connect(player).approve(rouletteAddress, 1_000_000n);
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, 1_000_000n, BetType.RED_BLACK, 0)
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, 1_000_000n, BetType.RED_BLACK, 0, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
 		});
 
 		it('should revert for invalid selection on RED_BLACK (selection > 1)', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 2)
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 2, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
 		});
 
 		it('should revert for invalid selection on STRAIGHT (selection > 37)', async () => {
 			await weth.connect(player).approve(rouletteAddress, MIN_WETH_BET);
 			await expect(
-				roulette.connect(player).placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 38)
+				roulette
+					.connect(player)
+					.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 38, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
 		});
 
@@ -357,7 +365,9 @@ describe('Roulette', () => {
 			const largeBet = ethers.parseEther('0.01');
 			await weth.connect(player).approve(rouletteAddress, largeBet);
 			await expect(
-				roulette.connect(player).placeBet(wethAddress, largeBet, BetType.STRAIGHT, 7)
+				roulette
+					.connect(player)
+					.placeBet(wethAddress, largeBet, BetType.STRAIGHT, 7, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'MaxProfitExceeded');
 		});
 
@@ -365,7 +375,9 @@ describe('Roulette', () => {
 			// USDC bankroll is 50 USDC. Straight bet (35x) on 3 USDC needs 105 USDC profit — exceeds bankroll.
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.STRAIGHT, 7)
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.STRAIGHT, 7, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InsufficientAvailableLiquidity');
 		});
 
@@ -373,7 +385,9 @@ describe('Roulette', () => {
 			await roulette.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0)
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress)
 			).to.be.reverted;
 		});
 
@@ -383,7 +397,9 @@ describe('Roulette', () => {
 			const rouletteBalanceBefore = await usdc.balanceOf(rouletteAddress);
 
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0)
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress)
 			)
 				.to.emit(roulette, 'BetPlaced')
 				.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
@@ -414,7 +430,7 @@ describe('Roulette', () => {
 
 			const tx = await roulette
 				.connect(player)
-				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7);
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			expect(betId).to.equal(1n);
@@ -429,7 +445,9 @@ describe('Roulette', () => {
 
 		it('should place a DOZEN bet successfully', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0, ethers.ZeroAddress);
 			const betDetails = await roulette.getBetDetails(1n);
 			expect(betDetails.status).to.equal(1n); // PENDING
 			expect(betDetails.betType).to.equal(BigInt(BetType.DOZEN));
@@ -437,7 +455,9 @@ describe('Roulette', () => {
 
 		it('should place a COLUMN bet successfully', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0, ethers.ZeroAddress);
 			const betDetails = await roulette.getBetDetails(1n);
 			expect(betDetails.status).to.equal(1n); // PENDING
 			expect(betDetails.betType).to.equal(BigInt(BetType.COLUMN));
@@ -446,14 +466,18 @@ describe('Roulette', () => {
 		it('should revert DOZEN with invalid selection (>= 3)', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 3)
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 3, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
 		});
 
 		it('should revert COLUMN with invalid selection (>= 3)', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			await expect(
-				roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 3)
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 3, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
 		});
 
@@ -462,13 +486,13 @@ describe('Roulette', () => {
 
 			const tx1 = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const tx2 = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 1);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 1, ethers.ZeroAddress);
 			const tx3 = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 0, ethers.ZeroAddress);
 
 			const { betId: id1 } = await parseBetPlaced(roulette, tx1);
 			const { betId: id2 } = await parseBetPlaced(roulette, tx2);
@@ -487,7 +511,7 @@ describe('Roulette', () => {
 			await weth.connect(player).approve(rouletteAddress, MIN_WETH_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7);
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			const playerBalanceBefore = await weth.balanceOf(player.address);
@@ -517,7 +541,7 @@ describe('Roulette', () => {
 			await weth.connect(player).approve(rouletteAddress, MIN_WETH_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7);
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			const playerBalanceBefore = await weth.balanceOf(player.address);
@@ -541,7 +565,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0); // first dozen (1-12)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0, ethers.ZeroAddress); // first dozen (1-12)
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			// randomWord % 38 == 5 -> result=5, in first dozen -> win. Payout = stake + 2x profit
@@ -556,7 +580,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0); // first dozen (1-12)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0, ethers.ZeroAddress); // first dozen (1-12)
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			// randomWord % 38 == 13 -> result=13, in second dozen -> loss for selection 0
@@ -570,7 +594,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0); // column 0 (1,4,7,10,...)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0, ethers.ZeroAddress); // column 0 (1,4,7,10,...)
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			// randomWord % 38 == 1 -> result=1, (1-1)%3=0 -> column 0 -> win
@@ -585,7 +609,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0); // column 0 (1,4,7,10,...)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0, ethers.ZeroAddress); // column 0 (1,4,7,10,...)
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			// randomWord % 38 == 2 -> result=2, (2-1)%3=1 -> column 1 -> loss for selection 0
@@ -605,7 +629,7 @@ describe('Roulette', () => {
 			await weth.connect(player).approve(rouletteAddress, MIN_WETH_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7);
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			// First fulfillment resolves the bet
@@ -639,7 +663,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(roulette, tx);
 
 			await expect(roulette.connect(secondAccount).cancelBet(betId)).to.be.revertedWithCustomError(
@@ -652,7 +676,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(roulette, tx);
 
 			await expect(roulette.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
@@ -665,7 +689,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			const playerBalanceBefore = await usdc.balanceOf(player.address);
@@ -700,7 +724,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(roulette, tx);
 
 			await expect(
@@ -712,7 +736,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			await expect(roulette.connect(owner).adminCancelBet(betId))
@@ -724,7 +748,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(roulette, tx);
 
 			await expect(roulette.connect(resolver).adminCancelBet(betId)).to.emit(
@@ -737,7 +761,7 @@ describe('Roulette', () => {
 			await weth.connect(player).approve(rouletteAddress, MIN_WETH_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7);
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 7, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [8n]);
@@ -1122,7 +1146,9 @@ describe('Roulette', () => {
 
 			it('should deduct reserved profit from available liquidity', async () => {
 				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
-				await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				await roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 
 				// Reservation = MIN_USDC_BET (1x), balance grew by MIN_USDC_BET
 				// Available = (50e6 + MIN_USDC_BET) - MIN_USDC_BET = 50e6
@@ -1144,7 +1170,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(roulette, tx);
 
 			const betBase = await roulette.getBetBase(betId);
@@ -1159,7 +1185,7 @@ describe('Roulette', () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
 			const tx = await roulette
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
 			// 1 is red, so selection=0 (red) wins
@@ -1180,7 +1206,9 @@ describe('Roulette', () => {
 		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
 			// Place a bet to create reserved profit
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 
 			// Try to withdraw all balance - should fail because some is reserved
 			const balance = await usdc.balanceOf(rouletteAddress);
@@ -1230,7 +1258,9 @@ describe('Roulette', () => {
 
 		it('normal bet isFreeBet should be false', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			expect(await roulette.isFreeBet(1)).to.equal(false);
 		});
 
@@ -1244,9 +1274,15 @@ describe('Roulette', () => {
 	describe('Pagination', () => {
 		it('getUserBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 3n);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.LOW_HIGH, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1, ethers.ZeroAddress);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.LOW_HIGH, 0, ethers.ZeroAddress);
 
 			const page1 = await roulette.getUserBetIds(player.address, 0, 2);
 			expect(page1.length).to.equal(2);
@@ -1257,9 +1293,15 @@ describe('Roulette', () => {
 
 		it('getRecentBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 3n);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.LOW_HIGH, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1, ethers.ZeroAddress);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.LOW_HIGH, 0, ethers.ZeroAddress);
 
 			const page = await roulette.getRecentBetIds(1, 1);
 			expect(page.length).to.equal(1);
@@ -1278,17 +1320,25 @@ describe('Roulette', () => {
 
 		it('getUserBetCount should increment after placing bets', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 			expect(await roulette.getUserBetCount(player.address)).to.equal(1n);
 
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1, ethers.ZeroAddress);
 			expect(await roulette.getUserBetCount(player.address)).to.equal(2n);
 		});
 
 		it('getUserBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1, ethers.ZeroAddress);
 
 			const ids = await roulette.getUserBetIds(player.address, 0, 10);
 			expect(ids.length).to.equal(2);
@@ -1305,8 +1355,12 @@ describe('Roulette', () => {
 
 		it('getRecentBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ODD_EVEN, 1, ethers.ZeroAddress);
 
 			const ids = await roulette.getRecentBetIds(0, 10);
 			expect(ids.length).to.equal(2);
@@ -1316,14 +1370,18 @@ describe('Roulette', () => {
 
 		it('should not include other users bets in getUserBetIds', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 
 			expect(await roulette.getUserBetCount(secondAccount.address)).to.equal(0n);
 		});
 
 		it('getRecentBetIds should return empty when offset >= total', async () => {
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
-			await roulette.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 
 			const ids = await roulette.getRecentBetIds(100, 10);
 			expect(ids.length).to.equal(0);

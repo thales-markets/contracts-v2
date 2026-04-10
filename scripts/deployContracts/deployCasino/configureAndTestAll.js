@@ -155,7 +155,7 @@ async function main() {
 	await usdc.approve(getTargetAddress('Roulette', network), betAmount);
 	await delay(2000);
 	const roulette = await ethers.getContractAt('Roulette', getTargetAddress('Roulette', network));
-	await roulette.placeBet(usdcAddress, betAmount, 1, 0);
+	await roulette.placeBet(usdcAddress, betAmount, 1, 0, ethers.ZeroAddress);
 	console.log('Roulette: bet placed');
 	await delay(2000);
 
@@ -163,7 +163,7 @@ async function main() {
 	await usdc.approve(getTargetAddress('Blackjack', network), betAmount);
 	await delay(2000);
 	const blackjack = await ethers.getContractAt('Blackjack', getTargetAddress('Blackjack', network));
-	await blackjack.placeBet(usdcAddress, betAmount);
+	await blackjack.placeBet(usdcAddress, betAmount, ethers.ZeroAddress);
 	console.log('Blackjack: bet placed');
 	await delay(2000);
 
@@ -171,14 +171,14 @@ async function main() {
 	await usdc.approve(getTargetAddress('Baccarat', network), betAmount);
 	await delay(2000);
 	const baccarat = await ethers.getContractAt('Baccarat', getTargetAddress('Baccarat', network));
-	await baccarat.placeBet(usdcAddress, betAmount, 0);
+	await baccarat.placeBet(usdcAddress, betAmount, 0, ethers.ZeroAddress);
 	console.log('Baccarat: bet placed');
 	await delay(2000);
 
 	// Slots
 	await usdc.approve(getTargetAddress('Slots', network), betAmount);
 	await delay(2000);
-	await slots.spin(usdcAddress, betAmount);
+	await slots.spin(usdcAddress, betAmount, ethers.ZeroAddress);
 	console.log('Slots: spin placed');
 
 	console.log('\nWaiting 30s for VRF resolution...');

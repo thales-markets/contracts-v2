@@ -16,6 +16,7 @@ import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoFreeBetsHolder.sol";
+import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
 /// @title Roulette
 /// @author Overtime
@@ -191,6 +192,9 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Whether a bet was placed with a free bet
     mapping(uint => bool) public isFreeBet;
 
+    /// @notice Referrals contract
+    IReferrals public referrals;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the roulette contract
@@ -257,10 +261,12 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         address collateral,
         uint amount,
         BetType betType,
-        uint8 selection
+        uint8 selection,
+        address _referrer
     ) external nonReentrant notPaused returns (uint betId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
+        _setReferrer(_referrer, msg.sender);
         return _placeBet(msg.sender, collateral, amount, betType, selection, false);
     }
 
@@ -411,6 +417,10 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
             }
         }
 
+        if (!won) {
+            _payReferrer(bet.user, bet.collateral, bet.amount);
+        }
+
         bet.result = result;
         bet.won = won;
         bet.payout = payout;
@@ -420,9 +430,25 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         emit BetResolved(betId, requestId, bet.user, result, won, payout);
     }
 
-    /// @notice Cancels a pending bet, releases reserved liquidity and refunds stake
-    /// @param betId Bet id to cancel
-    /// @param adminCancelled Whether the cancellation was admin-triggered
+    function _setReferrer(address _referrer, address _user) internal {
+        if (_referrer != address(0) && address(referrals) != address(0)) {
+            referrals.setReferrer(_referrer, _user);
+        }
+    }
+
+    function _payReferrer(address _user, address _collateral, uint _amount) internal {
+        if (address(referrals) == address(0)) return;
+        address referrer = referrals.referrals(_user);
+        if (referrer == address(0)) return;
+        uint referrerFee = referrals.getReferrerFee(referrer);
+        if (referrerFee == 0) return;
+        uint referrerAmount = (_amount * referrerFee) / ONE;
+        if (referrerAmount > 0) {
+            IERC20(_collateral).safeTransfer(referrer, referrerAmount);
+            emit ReferrerPaid(referrer, _user, referrerAmount, _amount, _collateral);
+        }
+    }
+
     function _cancelBet(uint betId, bool adminCancelled) internal {
         Bet storage bet = bets[betId];
 
@@ -430,10 +456,15 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
 
         bet.status = BetStatus.CANCELLED;
         bet.resolvedAt = block.timestamp;
-        bet.payout = bet.amount;
         bet.won = false;
 
-        IERC20(bet.collateral).safeTransfer(bet.user, bet.amount);
+        if (isFreeBet[betId]) {
+            bet.payout = 0;
+            IERC20(bet.collateral).safeTransfer(freeBetsHolder, bet.amount);
+        } else {
+            bet.payout = bet.amount;
+            IERC20(bet.collateral).safeTransfer(bet.user, bet.amount);
+        }
 
         emit BetCancelled(betId, bet.requestId, bet.user, bet.amount, adminCancelled);
     }
@@ -774,6 +805,12 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
+    /// @notice Sets the referrals contract
+    function setReferrals(address _referrals) external onlyOwner {
+        referrals = IReferrals(_referrals);
+        emit ReferralsChanged(_referrals);
+    }
+
     /// @notice Withdraws collateral from the contract bankroll
     /// @param _collateral The address of the ERC20 token to withdraw
     /// @param _recipient The address of the recipient, defaults to owner if zero address
@@ -910,6 +947,8 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @param vrfCoordinator New Chainlink VRF coordinator address
     event VrfCoordinatorChanged(address vrfCoordinator);
     event FreeBetsHolderChanged(address freeBetsHolder);
+    event ReferralsChanged(address referrals);
+    event ReferrerPaid(address indexed referrer, address indexed user, uint amount, uint betAmount, address collateral);
 
     /// @notice Emitted when collateral is withdrawn from the bankroll
     /// @param collateral Collateral token address

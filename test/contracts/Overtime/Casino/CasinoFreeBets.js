@@ -263,7 +263,7 @@ describe('CasinoFreeBets', () => {
 		it('normal bet should not be flagged as free bet', async () => {
 			await usdc.transfer(player.address, MIN_USDC_BET);
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, 0, 11);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, 0, 11, ethers.ZeroAddress);
 			expect(await dice.isFreeBet(1)).to.equal(false);
 		});
 	});
@@ -278,6 +278,82 @@ describe('CasinoFreeBets', () => {
 			await slots.connect(player).spinWithFreeBet(usdcAddress, MIN_USDC_BET);
 			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
 			expect(await slots.isFreeBet(1)).to.equal(true);
+		});
+	});
+
+	describe('Dice: Free Bet Cancel', () => {
+		beforeEach(async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
+		});
+
+		it('should return stake to holder on cancel, user gets nothing', async () => {
+			const tx = await dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, 0, 11);
+			const receipt = await tx.wait();
+			const betEvent = receipt.logs
+				.map((l) => {
+					try {
+						return dice.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			const betId = betEvent.args.betId;
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			await time.increase(CANCEL_TIMEOUT);
+			await dice.connect(player).cancelBet(betId);
+
+			const betDetails = await dice.getBetDetails(betId);
+			expect(betDetails.status).to.equal(3n); // CANCELLED
+
+			// Stake returned to holder, not user
+			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
+
+			// User freebet balance NOT restored
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+		});
+	});
+
+	describe('Slots: Free Bet Cancel', () => {
+		beforeEach(async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
+		});
+
+		it('should return stake to holder on cancel, user gets nothing', async () => {
+			const tx = await slots.connect(player).spinWithFreeBet(usdcAddress, MIN_USDC_BET);
+			const receipt = await tx.wait();
+			const spinEvent = receipt.logs
+				.map((l) => {
+					try {
+						return slots.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'SpinPlaced');
+			const spinId = spinEvent.args.spinId;
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			await time.increase(CANCEL_TIMEOUT);
+			await slots.connect(player).cancelSpin(spinId);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			expect(spinDetails.status).to.equal(3n); // CANCELLED
+
+			// Stake returned to holder, not user
+			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
+
+			// User freebet balance NOT restored
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
 		});
 	});
 });

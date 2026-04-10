@@ -254,46 +254,63 @@ describe('Dice', () => {
 	describe('placeBet', () => {
 		it('should revert for unsupported collateral', async () => {
 			await expect(
-				dice.connect(player).placeBet(secondAccount.address, MIN_USDC_BET, BetType.ROLL_UNDER, 11)
+				dice
+					.connect(player)
+					.placeBet(secondAccount.address, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(dice, 'InvalidCollateral');
 		});
 
 		it('should revert for zero amount', async () => {
 			await expect(
-				dice.connect(player).placeBet(usdcAddress, 0, BetType.ROLL_UNDER, 11)
+				dice.connect(player).placeBet(usdcAddress, 0, BetType.ROLL_UNDER, 11, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
 		});
 
 		it('should revert for invalid ROLL_UNDER target (1 or 21)', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			await expect(
-				dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 1)
+				dice
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 1, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(dice, 'InvalidTarget');
 			await expect(
-				dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 21)
+				dice
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 21, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(dice, 'InvalidTarget');
 		});
 
 		it('should revert for invalid ROLL_OVER target (0 or 20)', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			await expect(
-				dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 0)
+				dice
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 0, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(dice, 'InvalidTarget');
 			await expect(
-				dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 20)
+				dice
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 20, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(dice, 'InvalidTarget');
 		});
 
 		it('should revert when paused', async () => {
 			await dice.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
-			await expect(dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11))
-				.to.be.reverted;
+			await expect(
+				dice
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress)
+			).to.be.reverted;
 		});
 
 		it('should place a ROLL_UNDER bet and emit BetPlaced', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
-			await expect(dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11))
+			await expect(
+				dice
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress)
+			)
 				.to.emit(dice, 'BetPlaced')
 				.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
 
@@ -309,7 +326,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(dice, tx);
 
 			const betDetails = await dice.getBetDetails(betId);
@@ -325,7 +342,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
@@ -348,7 +365,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// randomWord=14 → result = (14%20)+1 = 15, which is >= 11 → loss
@@ -366,7 +383,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// randomWord=10 → result = (10%20)+1 = 11, which is NOT < 11 → loss
@@ -381,7 +398,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
@@ -404,7 +421,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// randomWord=4 → result = 5, which is <= 10 → loss
@@ -421,7 +438,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// randomWord=9 → result = 10, which is NOT > 10 → loss
@@ -436,7 +453,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 2);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 2, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
@@ -458,7 +475,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 19);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 19, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// randomWord=19 → result = 20, which is > 19 → win
@@ -481,7 +498,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(dice, tx);
 
 			await expect(dice.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
@@ -494,7 +511,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(dice, tx);
 
 			await time.increase(CANCEL_TIMEOUT);
@@ -508,7 +525,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(dice, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -531,7 +548,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(dice, tx);
 
 			await expect(dice.connect(secondAccount).adminCancelBet(betId)).to.be.revertedWithCustomError(
@@ -544,7 +561,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(dice, tx);
 
 			await expect(dice.connect(owner).adminCancelBet(betId)).to.emit(dice, 'BetCancelled');
@@ -762,7 +779,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId } = await parseBetPlaced(dice, tx);
 
 			const betBase = await dice.getBetBase(betId);
@@ -779,7 +796,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// Win: randomWord=4 -> result=5, ROLL_UNDER target=11 -> win
@@ -800,7 +817,9 @@ describe('Dice', () => {
 		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
 			// Place a bet to create reserved profit
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 
 			// Try to withdraw all balance - should fail because some is reserved
 			const balance = await usdc.balanceOf(diceAddress);
@@ -888,7 +907,9 @@ describe('Dice', () => {
 
 		it('normal bet isFreeBet should be false', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			expect(await dice.isFreeBet(1)).to.equal(false);
 		});
 
@@ -906,18 +927,28 @@ describe('Dice', () => {
 
 		it('getUserBetCount should increment after placing bets', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 2n);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			expect(await dice.getUserBetCount(player.address)).to.equal(1n);
 
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
 			expect(await dice.getUserBetCount(player.address)).to.equal(2n);
 		});
 
 		it('getUserBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5, ethers.ZeroAddress);
 
 			const ids = await dice.getUserBetIds(player.address, 0, 10);
 			expect(ids.length).to.equal(3);
@@ -932,9 +963,15 @@ describe('Dice', () => {
 
 		it('getUserBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5, ethers.ZeroAddress);
 
 			const page1 = await dice.getUserBetIds(player.address, 0, 2);
 			expect(page1.length).to.equal(2);
@@ -954,8 +991,12 @@ describe('Dice', () => {
 
 		it('getRecentBetIds should return bet IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 2n);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
 
 			const ids = await dice.getRecentBetIds(0, 10);
 			expect(ids.length).to.equal(2);
@@ -965,9 +1006,15 @@ describe('Dice', () => {
 
 		it('getRecentBetIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET * 3n);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 5, ethers.ZeroAddress);
 
 			const page = await dice.getRecentBetIds(1, 1);
 			expect(page.length).to.equal(1);
@@ -978,7 +1025,9 @@ describe('Dice', () => {
 
 		it('should not include other users bets in getUserBetIds', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 
 			expect(await dice.getUserBetCount(secondAccount.address)).to.equal(0n);
 			const ids = await dice.getUserBetIds(secondAccount.address, 0, 10);
@@ -987,7 +1036,9 @@ describe('Dice', () => {
 
 		it('getRecentBetIds should return empty when offset >= total', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
-			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+			await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 
 			const ids = await dice.getRecentBetIds(100, 10);
 			expect(ids.length).to.equal(0);
@@ -1010,7 +1061,7 @@ describe('Dice', () => {
 			await weth.connect(player).approve(diceAddress, MIN_WETH_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(wethAddress, MIN_WETH_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			const playerBalBefore = await weth.balanceOf(player.address);
@@ -1032,7 +1083,7 @@ describe('Dice', () => {
 			await weth.connect(player).approve(diceAddress, MIN_WETH_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(wethAddress, MIN_WETH_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(wethAddress, MIN_WETH_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// randomWord=14 -> result=15, ROLL_UNDER target=11 -> loss
@@ -1098,7 +1149,7 @@ describe('Dice', () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice
 				.connect(player)
-				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11);
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 11, ethers.ZeroAddress);
 			const { betId, requestId } = await parseBetPlaced(dice, tx);
 
 			// First fulfillment: randomWord=4 -> result=5, win
@@ -1114,6 +1165,102 @@ describe('Dice', () => {
 			// Bet should still show first result
 			const detailsAfterSecond = await dice.getBetDetails(betId);
 			expect(detailsAfterSecond.won).to.equal(true);
+		});
+	});
+
+	/* ========== REFERRALS ========== */
+
+	describe('Referrals', () => {
+		let mockReferrals, mockReferralsAddress;
+		const REFERRER_FEE = ethers.parseEther('0.005'); // 0.5%
+
+		beforeEach(async () => {
+			const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+			mockReferrals = await MockReferralsFactory.deploy();
+			mockReferralsAddress = await mockReferrals.getAddress();
+			await mockReferrals.setReferrerFees(REFERRER_FEE, REFERRER_FEE, REFERRER_FEE);
+			await dice.setReferrals(mockReferralsAddress);
+		});
+
+		it('should set referrer on placeBet', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, 0, 11, secondAccount.address);
+			expect(await mockReferrals.referrals(player.address)).to.equal(secondAccount.address);
+		});
+
+		it('should NOT set referrer when zero address', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			await dice.connect(player).placeBet(usdcAddress, MIN_USDC_BET, 0, 11, ethers.ZeroAddress);
+			expect(await mockReferrals.referrals(player.address)).to.equal(ethers.ZeroAddress);
+		});
+
+		it('should pay referrer on losing bet', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, 0, 11, secondAccount.address);
+			const { betId, requestId } = await parseBetPlaced(dice, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			// randomWord=14 -> result=15, ROLL_UNDER target=11 -> loss
+			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]);
+
+			const details = await dice.getBetDetails(betId);
+			expect(details.won).to.equal(false);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			expect(referrerBalAfter - referrerBalBefore).to.equal(expectedFee);
+		});
+
+		it('should emit ReferrerPaid on losing bet', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, 0, 11, secondAccount.address);
+			const { requestId } = await parseBetPlaced(dice, tx);
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			await expect(vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]))
+				.to.emit(dice, 'ReferrerPaid')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+		});
+
+		it('should NOT pay referrer on winning bet', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, 0, 11, secondAccount.address);
+			const { betId, requestId } = await parseBetPlaced(dice, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			// randomWord=4 -> result=5, ROLL_UNDER target=11 -> win
+			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
+
+			const details = await dice.getBetDetails(betId);
+			expect(details.won).to.equal(true);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
+		it('should NOT pay if no referrer set', async () => {
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, 0, 11, ethers.ZeroAddress);
+			const { requestId } = await parseBetPlaced(dice, tx);
+
+			await expect(vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n])).to.not.be
+				.reverted;
+		});
+
+		it('setReferrals should emit event', async () => {
+			await expect(dice.connect(owner).setReferrals(secondAccount.address))
+				.to.emit(dice, 'ReferralsChanged')
+				.withArgs(secondAccount.address);
 		});
 	});
 });

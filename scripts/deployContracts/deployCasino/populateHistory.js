@@ -38,23 +38,23 @@ async function main() {
 	// === BATCH 1 ===
 	console.log('=== Batch 1: Placing 5 bets (one per game) ===');
 
-	await dice.placeBet(usdcAddress, bet, 0, 11); // ROLL_UNDER target 11
+	await dice.placeBet(usdcAddress, bet, 0, 11, ethers.ZeroAddress); // ROLL_UNDER target 11
 	console.log('Dice: ROLL_UNDER target=11');
 	await delay(2000);
 
-	await roulette.placeBet(usdcAddress, bet, 1, 0); // RED_BLACK, red
+	await roulette.placeBet(usdcAddress, bet, 1, 0, ethers.ZeroAddress); // RED_BLACK, red
 	console.log('Roulette: RED_BLACK red');
 	await delay(2000);
 
-	await blackjack.placeBet(usdcAddress, bet);
+	await blackjack.placeBet(usdcAddress, bet, ethers.ZeroAddress);
 	console.log('Blackjack: deal');
 	await delay(2000);
 
-	await baccarat.placeBet(usdcAddress, bet, 0); // PLAYER
+	await baccarat.placeBet(usdcAddress, bet, 0, ethers.ZeroAddress); // PLAYER
 	console.log('Baccarat: PLAYER');
 	await delay(2000);
 
-	await slots.spin(usdcAddress, bet);
+	await slots.spin(usdcAddress, bet, ethers.ZeroAddress);
 	console.log('Slots: spin');
 
 	console.log('\nWaiting 30s for VRF...');
@@ -91,23 +91,23 @@ async function main() {
 	// === BATCH 2 ===
 	console.log('\n=== Batch 2: More variety ===');
 
-	await dice.placeBet(usdcAddress, bet, 1, 10); // ROLL_OVER target 10
+	await dice.placeBet(usdcAddress, bet, 1, 10, ethers.ZeroAddress); // ROLL_OVER target 10
 	console.log('Dice: ROLL_OVER target=10');
 	await delay(2000);
 
-	await roulette.placeBet(usdcAddress, bet, 0, 7); // STRAIGHT on 7
+	await roulette.placeBet(usdcAddress, bet, 0, 7, ethers.ZeroAddress); // STRAIGHT on 7
 	console.log('Roulette: STRAIGHT on 7');
 	await delay(2000);
 
-	await baccarat.placeBet(usdcAddress, bet, 1); // BANKER
+	await baccarat.placeBet(usdcAddress, bet, 1, ethers.ZeroAddress); // BANKER
 	console.log('Baccarat: BANKER');
 	await delay(2000);
 
-	await slots.spin(usdcAddress, bet);
+	await slots.spin(usdcAddress, bet, ethers.ZeroAddress);
 	console.log('Slots: spin');
 	await delay(2000);
 
-	await dice.placeBet(usdcAddress, bet, 0, 5); // ROLL_UNDER target 5
+	await dice.placeBet(usdcAddress, bet, 0, 5, ethers.ZeroAddress); // ROLL_UNDER target 5
 	console.log('Dice: ROLL_UNDER target=5 (high risk)');
 
 	console.log('\nWaiting 30s for VRF...');
@@ -143,23 +143,23 @@ async function main() {
 	// === BATCH 3 ===
 	console.log('\n=== Batch 3: More bets ===');
 
-	await roulette.placeBet(usdcAddress, bet, 2, 0); // ODD_EVEN, odd
+	await roulette.placeBet(usdcAddress, bet, 2, 0, ethers.ZeroAddress); // ODD_EVEN, odd
 	console.log('Roulette: ODD_EVEN odd');
 	await delay(2000);
 
-	await roulette.placeBet(usdcAddress, bet, 3, 1); // LOW_HIGH, high
+	await roulette.placeBet(usdcAddress, bet, 3, 1, ethers.ZeroAddress); // LOW_HIGH, high
 	console.log('Roulette: LOW_HIGH high');
 	await delay(2000);
 
-	await baccarat.placeBet(usdcAddress, bet, 2); // TIE
+	await baccarat.placeBet(usdcAddress, bet, 2, ethers.ZeroAddress); // TIE
 	console.log('Baccarat: TIE');
 	await delay(2000);
 
-	await dice.placeBet(usdcAddress, bet, 1, 15); // ROLL_OVER target 15
+	await dice.placeBet(usdcAddress, bet, 1, 15, ethers.ZeroAddress); // ROLL_OVER target 15
 	console.log('Dice: ROLL_OVER target=15');
 	await delay(2000);
 
-	await slots.spin(usdcAddress, bet);
+	await slots.spin(usdcAddress, bet, ethers.ZeroAddress);
 	console.log('Slots: spin');
 
 	console.log('\nWaiting 30s for VRF...');

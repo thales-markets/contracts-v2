@@ -73,7 +73,7 @@ async function main() {
 			} catch (staticErr) {
 				console.log('Static call revert reason:', staticErr.reason || staticErr.message);
 			}
-			const spinTx = await slots.spin(usdcAddress, betAmount);
+			const spinTx = await slots.spin(usdcAddress, betAmount, ethers.ZeroAddress);
 			const receipt = await spinTx.wait();
 			console.log('Spin tx hash:', receipt.hash);
 

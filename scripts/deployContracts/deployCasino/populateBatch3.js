@@ -15,23 +15,23 @@ async function main() {
 	const blackjack = await ethers.getContractAt('Blackjack', getTargetAddress('Blackjack', network));
 
 	console.log('=== Batch 3 ===');
-	await dice.placeBet(usdcAddress, bet, 1, 15);
+	await dice.placeBet(usdcAddress, bet, 1, 15, ethers.ZeroAddress);
 	console.log('Dice: ROLL_OVER target=15');
 	await delay(3000);
 
-	await slots.spin(usdcAddress, bet);
+	await slots.spin(usdcAddress, bet, ethers.ZeroAddress);
 	console.log('Slots: spin');
 	await delay(3000);
 
-	await roulette.placeBet(usdcAddress, bet, 4, 0); // DOZEN, first dozen
+	await roulette.placeBet(usdcAddress, bet, 4, 0, ethers.ZeroAddress); // DOZEN, first dozen
 	console.log('Roulette: DOZEN first');
 	await delay(3000);
 
-	await baccarat.placeBet(usdcAddress, bet, 2); // TIE
+	await baccarat.placeBet(usdcAddress, bet, 2, ethers.ZeroAddress); // TIE
 	console.log('Baccarat: TIE');
 	await delay(3000);
 
-	await blackjack.placeBet(usdcAddress, bet);
+	await blackjack.placeBet(usdcAddress, bet, ethers.ZeroAddress);
 	console.log('Blackjack: deal');
 
 	console.log('\nWaiting 35s for VRF...');

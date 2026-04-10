@@ -340,34 +340,33 @@ describe('Slots', () => {
 	describe('spin', () => {
 		it('should revert for unsupported collateral', async () => {
 			await expect(
-				slots.connect(player).spin(secondAccount.address, MIN_USDC_BET)
+				slots.connect(player).spin(secondAccount.address, MIN_USDC_BET, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(slots, 'InvalidCollateral');
 		});
 
 		it('should revert for zero amount', async () => {
-			await expect(slots.connect(player).spin(usdcAddress, 0)).to.be.revertedWithCustomError(
-				slots,
-				'InvalidAmount'
-			);
+			await expect(
+				slots.connect(player).spin(usdcAddress, 0, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(slots, 'InvalidAmount');
 		});
 
 		it('should revert for below min bet', async () => {
 			await usdc.connect(player).approve(slotsAddress, 1n);
-			await expect(slots.connect(player).spin(usdcAddress, 1n)).to.be.revertedWithCustomError(
-				slots,
-				'InvalidAmount'
-			);
+			await expect(
+				slots.connect(player).spin(usdcAddress, 1n, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(slots, 'InvalidAmount');
 		});
 
 		it('should revert when paused', async () => {
 			await slots.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await expect(slots.connect(player).spin(usdcAddress, MIN_USDC_BET)).to.be.reverted;
+			await expect(slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress)).to.be
+				.reverted;
 		});
 
 		it('should place a spin and emit SpinPlaced', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await expect(slots.connect(player).spin(usdcAddress, MIN_USDC_BET))
+			await expect(slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress))
 				.to.emit(slots, 'SpinPlaced')
 				.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET);
 
@@ -381,13 +380,13 @@ describe('Slots', () => {
 		it('should transfer collateral from player', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
 			const balBefore = await usdc.balanceOf(player.address);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - MIN_USDC_BET);
 		});
 
 		it('should reserve profit', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const reserved = await slots.reservedProfitPerCollateral(usdcAddress);
 			const expectedReserved = (MIN_USDC_BET * MAX_PAYOUT_MULTIPLIER) / ONE;
 			expect(reserved).to.equal(expectedReserved);
@@ -399,7 +398,7 @@ describe('Slots', () => {
 	describe('Resolution', () => {
 		it('should resolve as win on triple match (symbol 0)', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
@@ -420,7 +419,7 @@ describe('Slots', () => {
 
 		it('should resolve as win on jackpot triple (symbol 4)', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			const tripleWord = findTripleWord(4);
@@ -436,7 +435,7 @@ describe('Slots', () => {
 
 		it('should resolve as loss on non-matching reels', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			const lossWord = findLossWord();
@@ -451,7 +450,7 @@ describe('Slots', () => {
 
 		it('should release reserved profit on resolution', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { requestId } = await parseSpinPlaced(slots, tx);
 
 			const reservedBefore = await slots.reservedProfitPerCollateral(usdcAddress);
@@ -464,7 +463,7 @@ describe('Slots', () => {
 
 		it('should emit SpinResolved event', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { requestId } = await parseSpinPlaced(slots, tx);
 
 			await expect(
@@ -474,7 +473,7 @@ describe('Slots', () => {
 
 		it('should not resolve already resolved spin', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findLossWord()]);
@@ -492,7 +491,7 @@ describe('Slots', () => {
 	describe('cancelSpin', () => {
 		it('should revert if timeout not reached', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			await expect(slots.connect(player).cancelSpin(spinId)).to.be.revertedWithCustomError(
@@ -503,7 +502,7 @@ describe('Slots', () => {
 
 		it('should revert if not spin owner', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			await time.increase(CANCEL_TIMEOUT);
@@ -515,7 +514,7 @@ describe('Slots', () => {
 
 		it('should cancel after timeout and refund', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -532,7 +531,7 @@ describe('Slots', () => {
 
 		it('should release reserved profit on cancel', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			await time.increase(CANCEL_TIMEOUT);
@@ -550,7 +549,7 @@ describe('Slots', () => {
 
 		it('should revert cancel on already resolved spin', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findLossWord()]);
@@ -568,7 +567,7 @@ describe('Slots', () => {
 	describe('adminCancelSpin', () => {
 		it('should revert for non-resolver', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			await expect(
@@ -578,7 +577,7 @@ describe('Slots', () => {
 
 		it('should allow owner to admin cancel', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			await expect(slots.connect(owner).adminCancelSpin(spinId)).to.emit(slots, 'SpinCancelled');
@@ -586,7 +585,7 @@ describe('Slots', () => {
 
 		it('should allow resolver to admin cancel', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			await expect(slots.connect(resolver).adminCancelSpin(spinId)).to.emit(slots, 'SpinCancelled');
@@ -617,7 +616,7 @@ describe('Slots', () => {
 	describe('Split Getters', () => {
 		it('getSpinBase returns correct values after placing a spin', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			const spinBase = await slots.getSpinBase(spinId);
@@ -631,7 +630,7 @@ describe('Slots', () => {
 
 		it('getSpinDetails returns correct values after resolution', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			const tripleWord = findTripleWord(0);
@@ -651,7 +650,7 @@ describe('Slots', () => {
 	describe('Audit Fixes', () => {
 		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const balance = await usdc.balanceOf(slotsAddress);
 			await expect(
@@ -713,7 +712,7 @@ describe('Slots', () => {
 
 		it('normal spin isFreeBet should be false', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			expect(await slots.isFreeBet(1)).to.equal(false);
 		});
 
@@ -732,7 +731,7 @@ describe('Slots', () => {
 		it('getAvailableLiquidity should decrease after spin', async () => {
 			const before = await slots.getAvailableLiquidity(usdcAddress);
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const after = await slots.getAvailableLiquidity(usdcAddress);
 			expect(after).to.be.lt(before);
 		});
@@ -964,18 +963,18 @@ describe('Slots', () => {
 
 		it('getUserSpinCount should increment after placing spins', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 2n);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			expect(await slots.getUserSpinCount(player.address)).to.equal(1n);
 
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			expect(await slots.getUserSpinCount(player.address)).to.equal(2n);
 		});
 
 		it('getUserSpinIds should return spin IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 3n);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const ids = await slots.getUserSpinIds(player.address, 0, 10);
 			expect(ids.length).to.equal(3);
@@ -987,9 +986,9 @@ describe('Slots', () => {
 
 		it('getUserSpinIds should paginate correctly', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 3n);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const page1 = await slots.getUserSpinIds(player.address, 0, 2);
 			expect(page1.length).to.equal(2);
@@ -1007,8 +1006,8 @@ describe('Slots', () => {
 
 		it('getRecentSpinIds should return spin IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET * 2n);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const ids = await slots.getRecentSpinIds(0, 10);
 			expect(ids.length).to.equal(2);
@@ -1018,7 +1017,7 @@ describe('Slots', () => {
 
 		it('should not include other users spins in getUserSpinIds', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			expect(await slots.getUserSpinCount(secondAccount.address)).to.equal(0n);
 			const ids = await slots.getUserSpinIds(secondAccount.address, 0, 10);
@@ -1027,7 +1026,7 @@ describe('Slots', () => {
 
 		it('getSpinDetails should include reels after resolution', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			// Resolve so reels are populated
@@ -1045,7 +1044,7 @@ describe('Slots', () => {
 
 		it('getRecentSpinIds should return IDs with details via getters', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const ids = await slots.getRecentSpinIds(0, 1);
 			expect(ids[0]).to.equal(1n);
@@ -1055,7 +1054,7 @@ describe('Slots', () => {
 
 		it('getRecentSpinIds should return empty when offset >= total', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const ids = await slots.getRecentSpinIds(100, 10);
 			expect(ids.length).to.equal(0);
@@ -1086,7 +1085,7 @@ describe('Slots', () => {
 	describe('getSpinReels', () => {
 		it('should return correct reel symbols after resolution', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			const tripleWord = findTripleWord(2);
@@ -1100,7 +1099,7 @@ describe('Slots', () => {
 
 		it('should return zeros for unresolved spin', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId } = await parseSpinPlaced(slots, tx);
 
 			const reels = await slots.getSpinReels(spinId);
@@ -1132,7 +1131,7 @@ describe('Slots', () => {
 
 		it('should place a WETH spin and resolve as win', async () => {
 			await weth.connect(player).approve(slotsAddress, MIN_WETH_BET);
-			const tx = await slots.connect(player).spin(wethAddress, MIN_WETH_BET);
+			const tx = await slots.connect(player).spin(wethAddress, MIN_WETH_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			const playerBalBefore = await weth.balanceOf(player.address);
@@ -1159,7 +1158,7 @@ describe('Slots', () => {
 			await slots.connect(owner).setTriplePayout(0, 0);
 
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
-			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
 
 			const tripleWord = findTripleWord(0);

@@ -246,25 +246,29 @@ describe('Blackjack', () => {
 	describe('placeBet', () => {
 		it('should revert for unsupported collateral', async () => {
 			await expect(
-				blackjack.connect(player).placeBet(secondAccount.address, MIN_USDC_BET)
+				blackjack.connect(player).placeBet(secondAccount.address, MIN_USDC_BET, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(blackjack, 'InvalidCollateral');
 		});
 
 		it('should revert for zero amount', async () => {
 			await expect(
-				blackjack.connect(player).placeBet(usdcAddress, 0)
+				blackjack.connect(player).placeBet(usdcAddress, 0, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(blackjack, 'InvalidAmount');
 		});
 
 		it('should revert when paused', async () => {
 			await blackjack.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			await expect(blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET)).to.be.reverted;
+			await expect(
+				blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress)
+			).to.be.reverted;
 		});
 
 		it('should place a bet and emit HandCreated', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			await expect(blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET))
+			await expect(
+				blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress)
+			)
 				.to.emit(blackjack, 'HandCreated')
 				.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET);
 
@@ -281,7 +285,9 @@ describe('Blackjack', () => {
 	describe('Deal', () => {
 		it('should deal initial cards and set PLAYER_TURN', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Use words that produce non-blackjack hands
@@ -304,7 +310,9 @@ describe('Blackjack', () => {
 
 		it('should auto-resolve player blackjack (6:5 payout)', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			const playerBalanceBefore = await usdc.balanceOf(player.address);
@@ -330,7 +338,9 @@ describe('Blackjack', () => {
 
 		it('should push when both player and dealer have blackjack', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			const playerBalanceBefore = await usdc.balanceOf(player.address);
@@ -360,7 +370,9 @@ describe('Blackjack', () => {
 	describe('Hit', () => {
 		it('should revert if not hand owner', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
 
@@ -372,7 +384,9 @@ describe('Blackjack', () => {
 
 		it('should revert if not PLAYER_TURN', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId } = await parseHandCreated(blackjack, tx);
 			// Still AWAITING_DEAL
 			await expect(blackjack.connect(player).hit(handId)).to.be.revertedWithCustomError(
@@ -383,7 +397,9 @@ describe('Blackjack', () => {
 
 		it('should deal one card on hit and stay in PLAYER_TURN if not bust', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets 5+3=8 (safe hand)
@@ -403,7 +419,9 @@ describe('Blackjack', () => {
 
 		it('should auto-resolve on bust', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets King(10) + Queen(10) = 20
@@ -429,7 +447,9 @@ describe('Blackjack', () => {
 	describe('Stand', () => {
 		it('should resolve with player win when player > dealer', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets 10+10=20
@@ -475,7 +495,9 @@ describe('Blackjack', () => {
 
 		it('should resolve with dealer win when dealer > player', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets 6+5=11
@@ -505,7 +527,9 @@ describe('Blackjack', () => {
 
 		it('should resolve as dealer bust when dealer exceeds 21', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets 10+8=18
@@ -538,7 +562,9 @@ describe('Blackjack', () => {
 
 		it('should resolve as push when tied', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets 10+7=17
@@ -575,7 +601,9 @@ describe('Blackjack', () => {
 	describe('Double Down', () => {
 		it('should double bet and resolve', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET * 2n);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets 5+6=11 (great double down hand)
@@ -613,7 +641,9 @@ describe('Blackjack', () => {
 
 		it('should revert if player has more than 2 cards', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET * 2n);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal low cards so player won't bust
@@ -637,7 +667,9 @@ describe('Blackjack', () => {
 	describe('cancelHand', () => {
 		it('should revert if timeout not reached', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId } = await parseHandCreated(blackjack, tx);
 
 			await expect(blackjack.connect(player).cancelHand(handId)).to.be.revertedWithCustomError(
@@ -648,7 +680,9 @@ describe('Blackjack', () => {
 
 		it('should cancel after timeout and refund', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId } = await parseHandCreated(blackjack, tx);
 
 			const balBefore = await usdc.balanceOf(player.address);
@@ -670,7 +704,9 @@ describe('Blackjack', () => {
 	describe('adminCancelHand', () => {
 		it('should revert for non-resolver', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId } = await parseHandCreated(blackjack, tx);
 
 			await expect(
@@ -680,7 +716,9 @@ describe('Blackjack', () => {
 
 		it('should allow owner to admin cancel', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId } = await parseHandCreated(blackjack, tx);
 
 			await expect(blackjack.connect(owner).adminCancelHand(handId)).to.emit(
@@ -714,7 +752,9 @@ describe('Blackjack', () => {
 	describe('Split Getters', () => {
 		it('getHandBase returns correct values after placing a bet', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId } = await parseHandCreated(blackjack, tx);
 
 			const handBase = await blackjack.getHandBase(handId);
@@ -726,7 +766,9 @@ describe('Blackjack', () => {
 
 		it('getHandDetails returns correct values after deal', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
@@ -739,7 +781,9 @@ describe('Blackjack', () => {
 
 		it('getHandCards returns player and dealer cards after deal', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
@@ -759,7 +803,9 @@ describe('Blackjack', () => {
 	describe('lastRequestAt', () => {
 		it('should be set on placeBet', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId } = await parseHandCreated(blackjack, tx);
 
 			const lastReq = await blackjack.lastRequestAt(handId);
@@ -768,7 +814,9 @@ describe('Blackjack', () => {
 
 		it('should be updated on stand', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			const lastReqBefore = await blackjack.lastRequestAt(handId);
@@ -790,7 +838,9 @@ describe('Blackjack', () => {
 	describe('Cancel edge cases', () => {
 		it('user cancel should revert on PLAYER_TURN', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal cards to reach PLAYER_TURN
@@ -809,7 +859,9 @@ describe('Blackjack', () => {
 
 		it('admin cancel should work on PLAYER_TURN', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal cards to reach PLAYER_TURN
@@ -827,7 +879,9 @@ describe('Blackjack', () => {
 
 		it('cancel timeout uses lastRequestAt not placedAt', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Wait partial timeout
@@ -859,7 +913,7 @@ describe('Blackjack', () => {
 	describe('Audit Fixes', () => {
 		it('withdrawCollateral should revert when amount exceeds available (reserved funds protection)', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const balance = await usdc.balanceOf(blackjackAddress);
 			await expect(
@@ -897,7 +951,7 @@ describe('Blackjack', () => {
 
 		it('normal bet isFreeBet should be false', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			expect(await blackjack.isFreeBet(1)).to.equal(false);
 		});
 
@@ -945,7 +999,9 @@ describe('Blackjack', () => {
 
 		it('getUserHandIds should return hand IDs for card retrieval', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// word0=12→K(10), word1=6→7. Player: 10+7=17
@@ -981,18 +1037,18 @@ describe('Blackjack', () => {
 
 		it('getUserHandCount should increment after placing bets', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET * 2n);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			expect(await blackjack.getUserHandCount(player.address)).to.equal(1n);
 
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			expect(await blackjack.getUserHandCount(player.address)).to.equal(2n);
 		});
 
 		it('getUserHandIds should return hand IDs in reverse chronological order', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET * 3n);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const ids = await blackjack.getUserHandIds(player.address, 0, 10);
 			expect(ids.length).to.equal(3);
@@ -1008,14 +1064,16 @@ describe('Blackjack', () => {
 
 		it('should not include other users hands in getUserHandIds', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			expect(await blackjack.getUserHandCount(secondAccount.address)).to.equal(0n);
 		});
 
 		it('getUserHandIds should return IDs with full details via getters', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal cards (blackjack needs 2 random words for initial deal)
@@ -1034,7 +1092,9 @@ describe('Blackjack', () => {
 
 		it('getRecentHandIds should return hand IDs', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { requestId } = await parseHandCreated(blackjack, tx);
 
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [9n, 5n]);
@@ -1053,7 +1113,7 @@ describe('Blackjack', () => {
 
 		it('getRecentHandIds should return empty when offset >= total', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 
 			const ids = await blackjack.getRecentHandIds(100, 10);
 			expect(ids.length).to.equal(0);
@@ -1286,7 +1346,9 @@ describe('Blackjack', () => {
 	describe('VRF cancelled hand', () => {
 		it('should silently skip VRF deal callback for cancelled hand', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
-			const tx = await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Wait for cancel timeout and cancel
@@ -1320,7 +1382,9 @@ describe('Blackjack', () => {
 
 		it('should place a WETH bet and resolve with player win', async () => {
 			await weth.connect(player).approve(blackjackAddress, MIN_WETH_BET);
-			const tx = await blackjack.connect(player).placeBet(wethAddress, MIN_WETH_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(wethAddress, MIN_WETH_BET, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
 
 			// Deal: player gets 10+10=20

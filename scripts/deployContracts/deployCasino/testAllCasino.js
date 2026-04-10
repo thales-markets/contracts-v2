@@ -18,7 +18,7 @@ async function main() {
 	const dice = await ethers.getContractAt('Dice', diceAddress);
 	await usdc.approve(diceAddress, betAmount);
 	await delay(2000);
-	const diceTx = await dice.placeBet(usdcAddress, betAmount, 0, 11); // ROLL_UNDER, target 11
+	const diceTx = await dice.placeBet(usdcAddress, betAmount, 0, 11, ethers.ZeroAddress); // ROLL_UNDER, target 11
 	const diceReceipt = await diceTx.wait();
 	console.log('\nDice bet placed, tx:', diceReceipt.hash);
 
@@ -27,7 +27,7 @@ async function main() {
 	const roulette = await ethers.getContractAt('Roulette', rouletteAddress);
 	await usdc.approve(rouletteAddress, betAmount);
 	await delay(2000);
-	const rouletteTx = await roulette.placeBet(usdcAddress, betAmount, 1, 0); // RED_BLACK, red
+	const rouletteTx = await roulette.placeBet(usdcAddress, betAmount, 1, 0, ethers.ZeroAddress); // RED_BLACK, red
 	const rouletteReceipt = await rouletteTx.wait();
 	console.log('Roulette bet placed, tx:', rouletteReceipt.hash);
 
@@ -36,7 +36,7 @@ async function main() {
 	const blackjack = await ethers.getContractAt('Blackjack', blackjackAddress);
 	await usdc.approve(blackjackAddress, betAmount);
 	await delay(2000);
-	const bjTx = await blackjack.placeBet(usdcAddress, betAmount);
+	const bjTx = await blackjack.placeBet(usdcAddress, betAmount, ethers.ZeroAddress);
 	const bjReceipt = await bjTx.wait();
 	console.log('Blackjack bet placed, tx:', bjReceipt.hash);
 
@@ -45,7 +45,7 @@ async function main() {
 	const baccarat = await ethers.getContractAt('Baccarat', baccaratAddress);
 	await usdc.approve(baccaratAddress, betAmount);
 	await delay(2000);
-	const baccaratTx = await baccarat.placeBet(usdcAddress, betAmount, 0); // PLAYER
+	const baccaratTx = await baccarat.placeBet(usdcAddress, betAmount, 0, ethers.ZeroAddress); // PLAYER
 	const baccaratReceipt = await baccaratTx.wait();
 	console.log('Baccarat bet placed, tx:', baccaratReceipt.hash);
 
@@ -54,7 +54,7 @@ async function main() {
 	const slots = await ethers.getContractAt('Slots', slotsAddress);
 	await usdc.approve(slotsAddress, betAmount);
 	await delay(2000);
-	const slotsTx = await slots.spin(usdcAddress, betAmount);
+	const slotsTx = await slots.spin(usdcAddress, betAmount, ethers.ZeroAddress);
 	const slotsReceipt = await slotsTx.wait();
 	console.log('Slots spin placed, tx:', slotsReceipt.hash);
 

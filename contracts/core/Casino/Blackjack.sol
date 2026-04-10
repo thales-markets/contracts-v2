@@ -16,6 +16,7 @@ import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoFreeBetsHolder.sol";
+import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
 /// @title Blackjack
 /// @author Overtime
@@ -203,6 +204,9 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     /// @notice Whether a hand was placed with a free bet
     mapping(uint => bool) public isFreeBet;
 
+    /// @notice Referrals contract
+    IReferrals public referrals;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the blackjack contract
@@ -266,10 +270,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     /// @return requestId Chainlink VRF request id
     function placeBet(
         address collateral,
-        uint amount
+        uint amount,
+        address _referrer
     ) external nonReentrant notPaused returns (uint handId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
+        _setReferrer(_referrer, msg.sender);
         return _placeBet(msg.sender, collateral, amount, false);
     }
 
@@ -664,6 +670,10 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             }
         }
 
+        if (payout == 0) {
+            _payReferrer(hand.user, hand.collateral, hand.amount);
+        }
+
         hand.payout = payout;
         hand.result = _result;
         hand.status = HandStatus.RESOLVED;
@@ -673,6 +683,25 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     }
 
     /// @notice Cancels a pending hand, releases reserved liquidity and refunds stake
+    function _setReferrer(address _referrer, address _user) internal {
+        if (_referrer != address(0) && address(referrals) != address(0)) {
+            referrals.setReferrer(_referrer, _user);
+        }
+    }
+
+    function _payReferrer(address _user, address _collateral, uint _amount) internal {
+        if (address(referrals) == address(0)) return;
+        address referrer = referrals.referrals(_user);
+        if (referrer == address(0)) return;
+        uint referrerFee = referrals.getReferrerFee(referrer);
+        if (referrerFee == 0) return;
+        uint referrerAmount = (_amount * referrerFee) / ONE;
+        if (referrerAmount > 0) {
+            IERC20(_collateral).safeTransfer(referrer, referrerAmount);
+            emit ReferrerPaid(referrer, _user, referrerAmount, _amount, _collateral);
+        }
+    }
+
     function _cancelHand(uint handId, bool adminCancelled) internal {
         Hand storage hand = hands[handId];
 
@@ -680,9 +709,14 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
         hand.status = HandStatus.CANCELLED;
         hand.resolvedAt = block.timestamp;
-        hand.payout = hand.amount;
 
-        IERC20(hand.collateral).safeTransfer(hand.user, hand.amount);
+        if (isFreeBet[handId]) {
+            hand.payout = 0;
+            IERC20(hand.collateral).safeTransfer(freeBetsHolder, hand.amount);
+        } else {
+            hand.payout = hand.amount;
+            IERC20(hand.collateral).safeTransfer(hand.user, hand.amount);
+        }
 
         emit HandCancelled(handId, hand.requestId, hand.user, hand.amount, adminCancelled);
     }
@@ -942,6 +976,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
+    /// @notice Sets the referrals contract
+    function setReferrals(address _referrals) external onlyOwner {
+        referrals = IReferrals(_referrals);
+        emit ReferralsChanged(_referrals);
+    }
+
     /// @notice Withdraws collateral from the contract bankroll
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
         uint balance = IERC20(_collateral).balanceOf(address(this));
@@ -1026,6 +1066,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     event PriceFeedChanged(address priceFeed);
     event VrfCoordinatorChanged(address vrfCoordinator);
     event FreeBetsHolderChanged(address freeBetsHolder);
+    event ReferralsChanged(address referrals);
+    event ReferrerPaid(address indexed referrer, address indexed user, uint amount, uint betAmount, address collateral);
     event WithdrawnCollateral(address indexed collateral, address indexed recipient, uint amount);
     event VrfConfigChanged(
         uint256 subscriptionId,

@@ -16,6 +16,7 @@ import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoFreeBetsHolder.sol";
+import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
 /// @title Slots
 /// @author Overtime
@@ -186,6 +187,9 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @notice Whether a spin was placed with a free bet
     mapping(uint => bool) public isFreeBet;
 
+    /// @notice Referrals contract
+    IReferrals public referrals;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the slots contract
@@ -260,9 +264,14 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @param amount Amount of collateral to stake
     /// @return spinId Newly created spin id
     /// @return requestId Chainlink VRF request id
-    function spin(address collateral, uint amount) external nonReentrant notPaused returns (uint spinId, uint requestId) {
+    function spin(
+        address collateral,
+        uint amount,
+        address _referrer
+    ) external nonReentrant notPaused returns (uint spinId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
+        _setReferrer(_referrer, msg.sender);
         return _spin(msg.sender, collateral, amount, false);
     }
 
@@ -409,6 +418,10 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
             }
         }
 
+        if (multiplier == 0) {
+            _payReferrer(s.user, s.collateral, s.amount);
+        }
+
         s.payout = payout;
         s.won = multiplier > 0;
         s.status = SpinStatus.RESOLVED;
@@ -418,6 +431,25 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     }
 
     /// @notice Cancels a pending spin, releases reserved liquidity and refunds stake
+    function _setReferrer(address _referrer, address _user) internal {
+        if (_referrer != address(0) && address(referrals) != address(0)) {
+            referrals.setReferrer(_referrer, _user);
+        }
+    }
+
+    function _payReferrer(address _user, address _collateral, uint _amount) internal {
+        if (address(referrals) == address(0)) return;
+        address referrer = referrals.referrals(_user);
+        if (referrer == address(0)) return;
+        uint referrerFee = referrals.getReferrerFee(referrer);
+        if (referrerFee == 0) return;
+        uint referrerAmount = (_amount * referrerFee) / ONE;
+        if (referrerAmount > 0) {
+            IERC20(_collateral).safeTransfer(referrer, referrerAmount);
+            emit ReferrerPaid(referrer, _user, referrerAmount, _amount, _collateral);
+        }
+    }
+
     function _cancelSpin(uint spinId, bool adminCancelled) internal {
         Spin storage s = spins[spinId];
 
@@ -425,10 +457,15 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
         s.status = SpinStatus.CANCELLED;
         s.resolvedAt = block.timestamp;
-        s.payout = s.amount;
         s.won = false;
 
-        IERC20(s.collateral).safeTransfer(s.user, s.amount);
+        if (isFreeBet[spinId]) {
+            s.payout = 0;
+            IERC20(s.collateral).safeTransfer(freeBetsHolder, s.amount);
+        } else {
+            s.payout = s.amount;
+            IERC20(s.collateral).safeTransfer(s.user, s.amount);
+        }
 
         emit SpinCancelled(spinId, s.requestId, s.user, s.amount, adminCancelled);
     }
@@ -689,6 +726,12 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
+    /// @notice Sets the referrals contract
+    function setReferrals(address _referrals) external onlyOwner {
+        referrals = IReferrals(_referrals);
+        emit ReferralsChanged(_referrals);
+    }
+
     /// @notice Withdraws collateral from the contract bankroll
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner {
         uint balance = IERC20(_collateral).balanceOf(address(this));
@@ -774,6 +817,8 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     event PriceFeedChanged(address priceFeed);
     event VrfCoordinatorChanged(address vrfCoordinator);
     event FreeBetsHolderChanged(address freeBetsHolder);
+    event ReferralsChanged(address referrals);
+    event ReferrerPaid(address indexed referrer, address indexed user, uint amount, uint betAmount, address collateral);
     event WithdrawnCollateral(address indexed collateral, address indexed recipient, uint amount);
     event VrfConfigChanged(
         uint256 subscriptionId,
