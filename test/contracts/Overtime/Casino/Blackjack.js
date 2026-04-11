@@ -239,6 +239,37 @@ describe('Blackjack', () => {
 				)
 			).to.be.reverted;
 		});
+
+		it('should revert with zero collateral address', async () => {
+			const BlackjackFactory = await ethers.getContractFactory('Blackjack');
+			const b = await upgrades.deployProxy(BlackjackFactory, [], { initializer: false });
+			await expect(
+				b.initialize(
+					{
+						owner: owner.address,
+						manager: owner.address,
+						priceFeed: owner.address,
+						vrfCoordinator: owner.address,
+					},
+					{
+						usdc: ethers.ZeroAddress,
+						weth: usdcAddress,
+						over: usdcAddress,
+						wethPriceFeedKey: WETH_KEY,
+						overPriceFeedKey: OVER_KEY,
+					},
+					MAX_PROFIT_USD,
+					CANCEL_TIMEOUT,
+					{
+						subscriptionId: 1,
+						keyHash: ethers.ZeroHash,
+						callbackGasLimit: 500000,
+						requestConfirmations: 3,
+						nativePayment: false,
+					}
+				)
+			).to.be.revertedWithCustomError(b, 'InvalidAddress');
+		});
 	});
 
 	/* ========== PLACE BET ========== */
@@ -1167,6 +1198,33 @@ describe('Blackjack', () => {
 				.withArgs(ethers.parseEther('500'));
 		});
 
+		it('setMaxProfitUsd should revert from non-risk-manager', async () => {
+			await expect(
+				blackjack.connect(secondAccount).setMaxProfitUsd(ethers.parseEther('500'))
+			).to.be.revertedWithCustomError(blackjack, 'InvalidSender');
+		});
+
+		it('setPausedByRole should revert from non-pauser', async () => {
+			await expect(
+				blackjack.connect(secondAccount).setPausedByRole(true)
+			).to.be.revertedWithCustomError(blackjack, 'InvalidSender');
+		});
+
+		it('placeBet should revert and rollback reservedProfit on insufficient liquidity', async () => {
+			const balance = await usdc.balanceOf(blackjackAddress);
+			await blackjack.connect(owner).withdrawCollateral(usdcAddress, owner.address, balance);
+
+			const reservedBefore = await blackjack.reservedProfitPerCollateral(usdcAddress);
+
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await expect(
+				blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(blackjack, 'InsufficientAvailableLiquidity');
+
+			const reservedAfter = await blackjack.reservedProfitPerCollateral(usdcAddress);
+			expect(reservedAfter).to.equal(reservedBefore);
+		});
+
 		it('setSupportedCollateral should emit', async () => {
 			await expect(blackjack.connect(owner).setSupportedCollateral(secondAccount.address, true))
 				.to.emit(blackjack, 'SupportedCollateralChanged')
@@ -1414,6 +1472,118 @@ describe('Blackjack', () => {
 			expect(handDetails.result).to.equal(Result.PLAYER_WIN);
 			expect(handBase.payout).to.equal(MIN_WETH_BET * 2n);
 			expect(await weth.balanceOf(player.address)).to.equal(playerBalBefore + MIN_WETH_BET * 2n);
+		});
+	});
+
+	/* ========== REFERRALS ========== */
+
+	describe('Referrals', () => {
+		let mockReferrals, mockReferralsAddress;
+		const REFERRER_FEE = ethers.parseEther('0.005'); // 0.5%
+		const ONE = ethers.parseEther('1');
+
+		beforeEach(async () => {
+			const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+			mockReferrals = await MockReferralsFactory.deploy();
+			mockReferralsAddress = await mockReferrals.getAddress();
+			await mockReferrals.setReferrerFees(REFERRER_FEE, REFERRER_FEE, REFERRER_FEE);
+			await blackjack.setReferrals(mockReferralsAddress);
+		});
+
+		it('should set referrer on placeBet', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			expect(await mockReferrals.referrals(player.address)).to.equal(secondAccount.address);
+		});
+
+		it('should NOT set referrer when zero address', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			await blackjack.connect(player).placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			expect(await mockReferrals.referrals(player.address)).to.equal(ethers.ZeroAddress);
+		});
+
+		it('should pay referrer on losing hand (player bust)', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			// Deal: player gets King(10) + Queen(10) = 20
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 11n]);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitRequestId = await parseRequestId(blackjack, hitTx, 'HitRequested');
+			// Hit: word=4 → rank 5. Total = 10+10+5=25 → bust → loss
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitRequestId, [4n]);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.result).to.equal(Result.PLAYER_BUST);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			expect(referrerBalAfter - referrerBalBefore).to.equal(expectedFee);
+		});
+
+		it('should emit ReferrerPaid on losing hand', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 11n]);
+
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitRequestId = await parseRequestId(blackjack, hitTx, 'HitRequested');
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			await expect(vrfCoordinator.fulfillRandomWords(blackjackAddress, hitRequestId, [4n]))
+				.to.emit(blackjack, 'ReferrerPaid')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+		});
+
+		it('should NOT pay referrer on winning hand (blackjack)', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			// Deal: player gets Ace + 10 = blackjack 21
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [0n, 9n]);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.result).to.equal(Result.PLAYER_BLACKJACK);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
+		it('should NOT pay if no referrer set', async () => {
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 11n]);
+
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitRequestId = await parseRequestId(blackjack, hitTx, 'HitRequested');
+
+			await expect(vrfCoordinator.fulfillRandomWords(blackjackAddress, hitRequestId, [4n])).to.not
+				.be.reverted;
+		});
+
+		it('setReferrals should emit event', async () => {
+			await expect(blackjack.connect(owner).setReferrals(secondAccount.address))
+				.to.emit(blackjack, 'ReferralsChanged')
+				.withArgs(secondAccount.address);
 		});
 	});
 });

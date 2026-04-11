@@ -786,6 +786,33 @@ describe('Slots', () => {
 			);
 		});
 
+		it('setMaxProfitUsd should revert from non-risk-manager', async () => {
+			await expect(
+				slots.connect(secondAccount).setMaxProfitUsd(ethers.parseEther('500'))
+			).to.be.revertedWithCustomError(slots, 'InvalidSender');
+		});
+
+		it('setPausedByRole should revert from non-pauser', async () => {
+			await expect(
+				slots.connect(secondAccount).setPausedByRole(true)
+			).to.be.revertedWithCustomError(slots, 'InvalidSender');
+		});
+
+		it('spin should revert and rollback reservedProfit on insufficient liquidity', async () => {
+			const balance = await usdc.balanceOf(slotsAddress);
+			await slots.connect(owner).withdrawCollateral(usdcAddress, owner.address, balance);
+
+			const reservedBefore = await slots.reservedProfitPerCollateral(usdcAddress);
+
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await expect(
+				slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(slots, 'InsufficientAvailableLiquidity');
+
+			const reservedAfter = await slots.reservedProfitPerCollateral(usdcAddress);
+			expect(reservedAfter).to.equal(reservedBefore);
+		});
+
 		it('setCancelTimeout should update and emit', async () => {
 			await expect(slots.connect(owner).setCancelTimeout(7200))
 				.to.emit(slots, 'CancelTimeoutChanged')
@@ -1219,6 +1246,85 @@ describe('Slots', () => {
 			// Holder gets stake back
 			const holderBalAfter = await usdc.balanceOf(holderAddress);
 			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
+		});
+	});
+
+	/* ========== REFERRALS ========== */
+
+	describe('Referrals', () => {
+		let mockReferrals, mockReferralsAddress;
+		const REFERRER_FEE = ethers.parseEther('0.005'); // 0.5%
+		const ONE = ethers.parseEther('1');
+
+		beforeEach(async () => {
+			const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+			mockReferrals = await MockReferralsFactory.deploy();
+			mockReferralsAddress = await mockReferrals.getAddress();
+			await mockReferrals.setReferrerFees(REFERRER_FEE, REFERRER_FEE, REFERRER_FEE);
+			await slots.setReferrals(mockReferralsAddress);
+		});
+
+		it('should set referrer on spin', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			expect(await mockReferrals.referrals(player.address)).to.equal(secondAccount.address);
+		});
+
+		it('should NOT set referrer when zero address', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			expect(await mockReferrals.referrals(player.address)).to.equal(ethers.ZeroAddress);
+		});
+
+		it('should pay referrer on losing spin', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { requestId } = await parseSpinPlaced(slots, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findLossWord()]);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			expect(referrerBalAfter - referrerBalBefore).to.equal(expectedFee);
+		});
+
+		it('should emit ReferrerPaid on losing spin', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { requestId } = await parseSpinPlaced(slots, tx);
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			await expect(vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findLossWord()]))
+				.to.emit(slots, 'ReferrerPaid')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+		});
+
+		it('should NOT pay referrer on winning spin', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { requestId } = await parseSpinPlaced(slots, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findTripleWord(0)]);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
+		it('should NOT pay if no referrer set', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			const { requestId } = await parseSpinPlaced(slots, tx);
+
+			await expect(vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findLossWord()])).to
+				.not.be.reverted;
+		});
+
+		it('setReferrals should emit event', async () => {
+			await expect(slots.connect(owner).setReferrals(secondAccount.address))
+				.to.emit(slots, 'ReferralsChanged')
+				.withArgs(secondAccount.address);
 		});
 	});
 });

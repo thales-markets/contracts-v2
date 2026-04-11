@@ -314,6 +314,38 @@ describe('Baccarat', () => {
 				)
 			).to.be.reverted;
 		});
+
+		it('should revert with zero collateral address', async () => {
+			const BaccaratFactory = await ethers.getContractFactory('Baccarat');
+			const b = await upgrades.deployProxy(BaccaratFactory, [], { initializer: false });
+			await expect(
+				b.initialize(
+					{
+						owner: owner.address,
+						manager: owner.address,
+						priceFeed: owner.address,
+						vrfCoordinator: owner.address,
+					},
+					{
+						usdc: ethers.ZeroAddress,
+						weth: usdcAddress,
+						over: usdcAddress,
+						wethPriceFeedKey: WETH_KEY,
+						overPriceFeedKey: OVER_KEY,
+					},
+					MAX_PROFIT_USD,
+					CANCEL_TIMEOUT,
+					0,
+					{
+						subscriptionId: 1,
+						keyHash: ethers.ZeroHash,
+						callbackGasLimit: 500000,
+						requestConfirmations: 3,
+						nativePayment: false,
+					}
+				)
+			).to.be.revertedWithCustomError(b, 'InvalidAddress');
+		});
 	});
 
 	/* ========== PLACE BET ========== */
@@ -960,6 +992,36 @@ describe('Baccarat', () => {
 				'InvalidAmount'
 			);
 		});
+
+		it('setMaxProfitUsd should revert from non-risk-manager', async () => {
+			await expect(
+				baccarat.connect(secondAccount).setMaxProfitUsd(ethers.parseEther('500'))
+			).to.be.revertedWithCustomError(baccarat, 'InvalidSender');
+		});
+
+		it('setPausedByRole should revert from non-pauser', async () => {
+			await expect(
+				baccarat.connect(secondAccount).setPausedByRole(true)
+			).to.be.revertedWithCustomError(baccarat, 'InvalidSender');
+		});
+
+		it('placeBet should revert and rollback reservedProfit on insufficient liquidity', async () => {
+			const balance = await usdc.balanceOf(baccaratAddress);
+			await baccarat.connect(owner).withdrawCollateral(usdcAddress, owner.address, balance);
+
+			const reservedBefore = await baccarat.reservedProfitPerCollateral(usdcAddress);
+
+			// TIE bet: 9x payout, reserved profit = 8x bet = 24 USDC > 3 USDC bet amount
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			await expect(
+				baccarat
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.TIE, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(baccarat, 'InsufficientAvailableLiquidity');
+
+			const reservedAfter = await baccarat.reservedProfitPerCollateral(usdcAddress);
+			expect(reservedAfter).to.equal(reservedBefore);
+		});
 	});
 
 	/* ========== VRF CONFIG ========== */
@@ -1138,6 +1200,117 @@ describe('Baccarat', () => {
 			// Holder gets stake back
 			const holderBalAfter = await usdc.balanceOf(holderAddress);
 			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
+		});
+	});
+
+	/* ========== REFERRALS ========== */
+
+	describe('Referrals', () => {
+		let mockReferrals, mockReferralsAddress;
+		const REFERRER_FEE = ethers.parseEther('0.005'); // 0.5%
+		const ONE = ethers.parseEther('1');
+
+		beforeEach(async () => {
+			const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+			mockReferrals = await MockReferralsFactory.deploy();
+			mockReferralsAddress = await mockReferrals.getAddress();
+			await mockReferrals.setReferrerFees(REFERRER_FEE, REFERRER_FEE, REFERRER_FEE);
+			await baccarat.setReferrals(mockReferralsAddress);
+		});
+
+		it('should set referrer on placeBet', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, secondAccount.address);
+			expect(await mockReferrals.referrals(player.address)).to.equal(secondAccount.address);
+		});
+
+		it('should NOT set referrer when zero address', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
+			expect(await mockReferrals.referrals(player.address)).to.equal(ethers.ZeroAddress);
+		});
+
+		it('should pay referrer on losing bet', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, secondAccount.address);
+			const { requestId } = await parseBetPlaced(baccarat, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			// PLAYER bet, banker wins -> loss
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [bankerWinWord.word]);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			expect(referrerBalAfter - referrerBalBefore).to.equal(expectedFee);
+		});
+
+		it('should emit ReferrerPaid on losing bet', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, secondAccount.address);
+			const { requestId } = await parseBetPlaced(baccarat, tx);
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			await expect(
+				vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [bankerWinWord.word])
+			)
+				.to.emit(baccarat, 'ReferrerPaid')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+		});
+
+		it('should NOT pay referrer on winning bet', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, secondAccount.address);
+			const { requestId } = await parseBetPlaced(baccarat, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [playerWinWord.word]);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
+		it('should NOT pay referrer on TIE (push) for PLAYER bet', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, secondAccount.address);
+			const { requestId } = await parseBetPlaced(baccarat, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [tieWord.word]);
+
+			// Push -> not a loss, referrer should not be paid
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
+		it('should NOT pay if no referrer set', async () => {
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, ethers.ZeroAddress);
+			const { requestId } = await parseBetPlaced(baccarat, tx);
+
+			await expect(
+				vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [bankerWinWord.word])
+			).to.not.be.reverted;
+		});
+
+		it('setReferrals should emit event', async () => {
+			await expect(baccarat.connect(owner).setReferrals(secondAccount.address))
+				.to.emit(baccarat, 'ReferralsChanged')
+				.withArgs(secondAccount.address);
 		});
 	});
 });

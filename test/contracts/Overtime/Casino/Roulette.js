@@ -252,6 +252,37 @@ describe('Roulette', () => {
 			).to.be.revertedWithCustomError(fresh, 'InvalidAddress');
 		});
 
+		it('should revert with zero collateral address (usdc)', async () => {
+			const RouletteFactory = await ethers.getContractFactory('Roulette');
+			const fresh = await upgrades.deployProxy(RouletteFactory, [], { initializer: false });
+			await expect(
+				fresh.initialize(
+					{
+						owner: owner.address,
+						manager: owner.address,
+						priceFeed: owner.address,
+						vrfCoordinator: owner.address,
+					},
+					{
+						usdc: ZERO_ADDRESS,
+						weth: wethAddress,
+						over: overAddress,
+						wethPriceFeedKey: WETH_KEY,
+						overPriceFeedKey: OVER_KEY,
+					},
+					MAX_PROFIT_USD,
+					CANCEL_TIMEOUT,
+					{
+						subscriptionId: 1,
+						keyHash: ethers.ZeroHash,
+						callbackGasLimit: 200000,
+						requestConfirmations: 3,
+						nativePayment: false,
+					}
+				)
+			).to.be.revertedWithCustomError(fresh, 'InvalidAddress');
+		});
+
 		it('should revert if maxProfitUsd is zero', async () => {
 			const RouletteFactory = await ethers.getContractFactory('Roulette');
 			const fresh = await upgrades.deployProxy(RouletteFactory, [], { initializer: false });
@@ -996,6 +1027,26 @@ describe('Roulette', () => {
 					.withArgs(secondAccount.address, testKey);
 			});
 		});
+
+		describe('insufficient liquidity rollback', () => {
+			it('placeBet should revert and rollback reservedProfit on insufficient liquidity', async () => {
+				const balance = await usdc.balanceOf(rouletteAddress);
+				await roulette.connect(owner).withdrawCollateral(usdcAddress, owner.address, balance);
+
+				const reservedBefore = await roulette.reservedProfitPerCollateral(usdcAddress);
+
+				// STRAIGHT bet: 35x payout, reserved = 34*3 = 102 USDC > 3 USDC bet amount
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+				await expect(
+					roulette
+						.connect(player)
+						.placeBet(usdcAddress, MIN_USDC_BET, BetType.STRAIGHT, 7, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InsufficientAvailableLiquidity');
+
+				const reservedAfter = await roulette.reservedProfitPerCollateral(usdcAddress);
+				expect(reservedAfter).to.equal(reservedBefore);
+			});
+		});
 	});
 
 	/* ========== GETTERS ========== */
@@ -1435,6 +1486,101 @@ describe('Roulette', () => {
 			// Holder gets stake back
 			const holderBalAfter = await usdc.balanceOf(holderAddress);
 			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
+		});
+	});
+
+	/* ========== REFERRALS ========== */
+
+	describe('Referrals', () => {
+		let mockReferrals, mockReferralsAddress;
+		const REFERRER_FEE = ethers.parseEther('0.005'); // 0.5%
+		const ONE = ethers.parseEther('1');
+
+		beforeEach(async () => {
+			const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+			mockReferrals = await MockReferralsFactory.deploy();
+			mockReferralsAddress = await mockReferrals.getAddress();
+			await mockReferrals.setReferrerFees(REFERRER_FEE, REFERRER_FEE, REFERRER_FEE);
+			await roulette.setReferrals(mockReferralsAddress);
+		});
+
+		it('should set referrer on placeBet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, secondAccount.address);
+			expect(await mockReferrals.referrals(player.address)).to.equal(secondAccount.address);
+		});
+
+		it('should NOT set referrer when zero address', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+			expect(await mockReferrals.referrals(player.address)).to.equal(ethers.ZeroAddress);
+		});
+
+		it('should pay referrer on losing bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, secondAccount.address);
+			const { requestId } = await parseBetPlaced(roulette, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			// Selected red (0), randomWord=2 -> black -> loses
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [2n]);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			expect(referrerBalAfter - referrerBalBefore).to.equal(expectedFee);
+		});
+
+		it('should emit ReferrerPaid on losing bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, secondAccount.address);
+			const { requestId } = await parseBetPlaced(roulette, tx);
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			await expect(vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [2n]))
+				.to.emit(roulette, 'ReferrerPaid')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+		});
+
+		it('should NOT pay referrer on winning bet', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, secondAccount.address);
+			const { requestId } = await parseBetPlaced(roulette, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			// Selected red (0), randomWord=1 -> red -> wins
+			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
+		it('should NOT pay if no referrer set', async () => {
+			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+			const tx = await roulette
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+			const { requestId } = await parseBetPlaced(roulette, tx);
+
+			await expect(vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [2n])).to.not.be
+				.reverted;
+		});
+
+		it('setReferrals should emit event', async () => {
+			await expect(roulette.connect(owner).setReferrals(secondAccount.address))
+				.to.emit(roulette, 'ReferralsChanged')
+				.withArgs(secondAccount.address);
 		});
 	});
 });

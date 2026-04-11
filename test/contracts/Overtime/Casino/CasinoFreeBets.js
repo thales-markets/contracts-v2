@@ -20,6 +20,9 @@ async function deployFixture() {
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
 	const usdc = await ExoticUSDC.deploy();
 	const usdcAddress = await usdc.getAddress();
+	// Top up owner with more USDC for funding multiple casino bankrolls
+	await usdc.mintForUser(owner.address);
+	await usdc.mintForUser(owner.address);
 
 	const ExoticUSD = await ethers.getContractFactory('ExoticUSD');
 	const weth = await ExoticUSD.deploy();
@@ -104,13 +107,47 @@ async function deployFixture() {
 	await slots.setSymbols(5, [20, 20, 20, 20, 20]);
 	for (let i = 0; i < 5; i++) await slots.setTriplePayout(i, ethers.parseEther('5'));
 
+	// Deploy Baccarat
+	const BaccaratFactory = await ethers.getContractFactory('Baccarat');
+	const baccarat = await upgrades.deployProxy(BaccaratFactory, [], { initializer: false });
+	await baccarat.initialize(
+		core,
+		collateralConfig,
+		MAX_PROFIT_USD,
+		CANCEL_TIMEOUT,
+		0, // use default banker payout
+		vrfConfig
+	);
+	const baccaratAddress = await baccarat.getAddress();
+	await baccarat.setFreeBetsHolder(holderAddress);
+
+	// Deploy Blackjack
+	const BlackjackFactory = await ethers.getContractFactory('Blackjack');
+	const blackjack = await upgrades.deployProxy(BlackjackFactory, [], { initializer: false });
+	await blackjack.initialize(core, collateralConfig, MAX_PROFIT_USD, CANCEL_TIMEOUT, vrfConfig);
+	const blackjackAddress = await blackjack.getAddress();
+	await blackjack.setFreeBetsHolder(holderAddress);
+
+	// Deploy Roulette
+	const RouletteFactory = await ethers.getContractFactory('Roulette');
+	const roulette = await upgrades.deployProxy(RouletteFactory, [], { initializer: false });
+	await roulette.initialize(core, collateralConfig, MAX_PROFIT_USD, CANCEL_TIMEOUT, vrfConfig);
+	const rouletteAddress = await roulette.getAddress();
+	await roulette.setFreeBetsHolder(holderAddress);
+
 	// Whitelist casino contracts in holder
 	await holder.setWhitelistedCasino(diceAddress, true);
 	await holder.setWhitelistedCasino(slotsAddress, true);
+	await holder.setWhitelistedCasino(baccaratAddress, true);
+	await holder.setWhitelistedCasino(blackjackAddress, true);
+	await holder.setWhitelistedCasino(rouletteAddress, true);
 
 	// Fund bankrolls
 	await usdc.transfer(diceAddress, 30n * 1_000_000n);
 	await usdc.transfer(slotsAddress, 30n * 1_000_000n);
+	await usdc.transfer(baccaratAddress, 30n * 1_000_000n);
+	await usdc.transfer(blackjackAddress, 30n * 1_000_000n);
+	await usdc.transfer(rouletteAddress, 30n * 1_000_000n);
 
 	// Fund funder with USDC for free bets
 	await usdc.transfer(funder.address, 20n * 1_000_000n);
@@ -122,6 +159,12 @@ async function deployFixture() {
 		diceAddress,
 		slots,
 		slotsAddress,
+		baccarat,
+		baccaratAddress,
+		blackjack,
+		blackjackAddress,
+		roulette,
+		rouletteAddress,
 		usdc,
 		usdcAddress,
 		vrfCoordinator,
@@ -135,6 +178,7 @@ async function deployFixture() {
 
 describe('CasinoFreeBets', () => {
 	let holder, holderAddress, dice, diceAddress, slots, slotsAddress;
+	let baccarat, baccaratAddress, blackjack, blackjackAddress, roulette, rouletteAddress;
 	let usdc, usdcAddress, vrfCoordinator;
 	let owner, funder, player, secondAccount;
 
@@ -146,6 +190,12 @@ describe('CasinoFreeBets', () => {
 			diceAddress,
 			slots,
 			slotsAddress,
+			baccarat,
+			baccaratAddress,
+			blackjack,
+			blackjackAddress,
+			roulette,
+			rouletteAddress,
 			usdc,
 			usdcAddress,
 			vrfCoordinator,
@@ -353,6 +403,126 @@ describe('CasinoFreeBets', () => {
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
 
 			// User freebet balance NOT restored
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+		});
+	});
+
+	describe('Baccarat: Free Bet Cancel', () => {
+		// Baccarat BetType.PLAYER = 0
+		const PLAYER_BET = 0;
+
+		beforeEach(async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
+		});
+
+		it('should return stake to holder on cancel, user gets nothing', async () => {
+			const tx = await baccarat
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, PLAYER_BET);
+			const receipt = await tx.wait();
+			const betEvent = receipt.logs
+				.map((l) => {
+					try {
+						return baccarat.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			const betId = betEvent.args.betId;
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			await time.increase(CANCEL_TIMEOUT);
+			await baccarat.connect(player).cancelBet(betId);
+
+			const betDetails = await baccarat.getBetDetails(betId);
+			expect(betDetails.status).to.equal(3n); // CANCELLED
+
+			// Stake returned to holder, not user
+			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
+
+			// User freebet balance NOT restored
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+		});
+	});
+
+	describe('Blackjack: Free Bet Cancel', () => {
+		beforeEach(async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
+		});
+
+		it('should return stake to holder on cancel, user gets nothing', async () => {
+			const tx = await blackjack.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET);
+			const receipt = await tx.wait();
+			const handEvent = receipt.logs
+				.map((l) => {
+					try {
+						return blackjack.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'HandCreated');
+			const handId = handEvent.args.handId;
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			await time.increase(CANCEL_TIMEOUT);
+			await blackjack.connect(player).cancelHand(handId);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(7n); // CANCELLED (Blackjack enum)
+
+			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
+
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+		});
+	});
+
+	describe('Roulette: Free Bet Cancel', () => {
+		// Roulette BetType.RED_BLACK = 1
+		const RED_BLACK = 1;
+
+		beforeEach(async () => {
+			await usdc.connect(funder).approve(holderAddress, MIN_USDC_BET);
+			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
+		});
+
+		it('should return stake to holder on cancel, user gets nothing', async () => {
+			const tx = await roulette
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, RED_BLACK, 0);
+			const receipt = await tx.wait();
+			const betEvent = receipt.logs
+				.map((l) => {
+					try {
+						return roulette.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			const betId = betEvent.args.betId;
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const holderBalBefore = await usdc.balanceOf(holderAddress);
+
+			await time.increase(CANCEL_TIMEOUT);
+			await roulette.connect(player).cancelBet(betId);
+
+			const betDetails = await roulette.getBetDetails(betId);
+			expect(betDetails.status).to.equal(3n); // CANCELLED
+
+			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
+
 			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
 		});
 	});

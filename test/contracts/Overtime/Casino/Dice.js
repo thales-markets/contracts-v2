@@ -247,6 +247,38 @@ describe('Dice', () => {
 				)
 			).to.be.revertedWithCustomError(d, 'InvalidHouseEdge');
 		});
+
+		it('should revert with zero collateral address', async () => {
+			const DiceFactory = await ethers.getContractFactory('Dice');
+			const d = await upgrades.deployProxy(DiceFactory, [], { initializer: false });
+			await expect(
+				d.initialize(
+					{
+						owner: owner.address,
+						manager: owner.address,
+						priceFeed: owner.address,
+						vrfCoordinator: owner.address,
+					},
+					{
+						usdc: ethers.ZeroAddress,
+						weth: usdcAddress,
+						over: usdcAddress,
+						wethPriceFeedKey: WETH_KEY,
+						overPriceFeedKey: OVER_KEY,
+					},
+					MAX_PROFIT_USD,
+					CANCEL_TIMEOUT,
+					HOUSE_EDGE,
+					{
+						subscriptionId: 1,
+						keyHash: ethers.ZeroHash,
+						callbackGasLimit: 500000,
+						requestConfirmations: 3,
+						nativePayment: false,
+					}
+				)
+			).to.be.revertedWithCustomError(d, 'InvalidAddress');
+		});
 	});
 
 	/* ========== PLACE BET ========== */
@@ -725,6 +757,39 @@ describe('Dice', () => {
 			await expect(dice.connect(owner).setMaxProfitUsd(ethers.parseEther('500')))
 				.to.emit(dice, 'MaxProfitUsdChanged')
 				.withArgs(ethers.parseEther('500'));
+		});
+
+		it('setMaxProfitUsd should revert from non-risk-manager', async () => {
+			await expect(
+				dice.connect(secondAccount).setMaxProfitUsd(ethers.parseEther('500'))
+			).to.be.revertedWithCustomError(dice, 'InvalidSender');
+		});
+
+		it('setPausedByRole should revert from non-pauser', async () => {
+			await expect(dice.connect(secondAccount).setPausedByRole(true)).to.be.revertedWithCustomError(
+				dice,
+				'InvalidSender'
+			);
+		});
+
+		it('placeBet should revert and rollback reservedProfit on insufficient liquidity', async () => {
+			// Drain bankroll
+			const balance = await usdc.balanceOf(diceAddress);
+			await dice.connect(owner).withdrawCollateral(usdcAddress, owner.address, balance);
+
+			const reservedBefore = await dice.reservedProfitPerCollateral(usdcAddress);
+
+			// ROLL_UNDER target 2: 1/20 win odds, ~19.6x payout, reserved profit ~55.8 USDC > 3 USDC bet
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			await expect(
+				dice
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.ROLL_UNDER, 2, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(dice, 'InsufficientAvailableLiquidity');
+
+			// Reserved profit should be rolled back to before
+			const reservedAfter = await dice.reservedProfitPerCollateral(usdcAddress);
+			expect(reservedAfter).to.equal(reservedBefore);
 		});
 
 		it('setSupportedCollateral should emit', async () => {

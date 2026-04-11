@@ -86,11 +86,13 @@ async function main() {
 	await delay(5000);
 
 	// Configure triple payouts (raw multipliers in 1e18, before house edge)
+	// Clean 2x doubling ladder. With equal weights [20,20,20,20,20] and 2% houseEdge:
+	// RTP = (1/125) × Σ (1 + 0.98 × raw_mult) = 90.24% (effective house edge ~9.76%)
 	const triplePayouts = [
-		ethers.parseEther('2'), // symbol 0: 2x
-		ethers.parseEther('5'), // symbol 1: 5x
-		ethers.parseEther('10'), // symbol 2: 10x
-		ethers.parseEther('20'), // symbol 3: 20x
+		ethers.parseEther('4'), // symbol 0: 4x
+		ethers.parseEther('8'), // symbol 1: 8x
+		ethers.parseEther('16'), // symbol 2: 16x
+		ethers.parseEther('32'), // symbol 3: 32x
 		ethers.parseEther('50'), // symbol 4: 50x (jackpot)
 	];
 	for (let i = 0; i < triplePayouts.length; i++) {
