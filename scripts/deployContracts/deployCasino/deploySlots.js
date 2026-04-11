@@ -77,23 +77,22 @@ async function main() {
 
 	await delay(5000);
 
-	// Configure symbols: 5 symbols with equal weights
-	const symbolCount = 5;
-	const symbolWeights = [20, 20, 20, 20, 20];
+	// Configure symbols: 3 tiers with skewed weights (industry-standard weighted reels).
+	// Hit rate: 0.62³ + 0.28³ + 0.10³ ≈ 26.13% (1 in ~3.8 spins)
+	const symbolCount = 3;
+	const symbolWeights = [62, 28, 10];
 	await slotsDeployed.setSymbols(symbolCount, symbolWeights);
 	console.log('Symbols configured');
 
 	await delay(5000);
 
-	// Configure triple payouts (raw multipliers in 1e18, before house edge)
-	// Clean 2x doubling ladder. With equal weights [20,20,20,20,20] and 2% houseEdge:
-	// RTP = (1/125) × Σ (1 + 0.98 × raw_mult) = 90.24% (effective house edge ~9.76%)
+	// Triple payouts (raw multipliers in 1e18, before house edge).
+	// Every win is ≥ 2.96x stake (no "small losing wins").
+	// RTP = Σ pᵢ × (1 + 0.98 × rawᵢ) ≈ 89.96% → house edge ≈ 10.04%
 	const triplePayouts = [
-		ethers.parseEther('4'), // symbol 0: 4x
-		ethers.parseEther('8'), // symbol 1: 8x
-		ethers.parseEther('16'), // symbol 2: 16x
-		ethers.parseEther('32'), // symbol 3: 32x
-		ethers.parseEther('50'), // symbol 4: 50x (jackpot)
+		ethers.parseEther('2'), // symbol 0 (common):  2x → total return 2.96x
+		ethers.parseEther('6'), // symbol 1 (mid):     6x → total return 6.88x
+		ethers.parseEther('43'), // symbol 2 (jackpot): 43x → total return 43.14x
 	];
 	for (let i = 0; i < triplePayouts.length; i++) {
 		await slotsDeployed.setTriplePayout(i, triplePayouts[i]);
