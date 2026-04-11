@@ -8,15 +8,9 @@ async function main() {
 	console.log('Owner:', owner.address);
 	console.log('Network:', network);
 
-	// === 1. Finish Slots triple payout[4] if needed ===
+	// === 1. Slots configuration is done by deploySlots.js (pair + triple payouts) ===
 	const slotsAddress = getTargetAddress('Slots', network);
 	const slots = await ethers.getContractAt('Slots', slotsAddress);
-	const tp4 = await slots.triplePayout(4);
-	if (tp4 === 0n) {
-		await slots.setTriplePayout(4, ethers.parseEther('50'));
-		console.log('Slots: triple payout[4] = 50x');
-		await delay(3000);
-	}
 
 	// === 2. Fund all with USDC ===
 	const usdcAddress = getTargetAddress('DefaultCollateral', network);
@@ -69,16 +63,14 @@ async function main() {
 		}
 	}
 
-	// === 4. Deploy or reuse CasinoFreeBetsHolder ===
-	let holderAddress = getTargetAddress('CasinoFreeBetsHolder', network);
-	let holder;
-	if (holderAddress && holderAddress !== '0x') {
-		holder = await ethers.getContractAt('CasinoFreeBetsHolder', holderAddress);
-		console.log('\nUsing existing CasinoFreeBetsHolder:', holderAddress);
-	} else {
-		console.log('\nNo CasinoFreeBetsHolder found, skipping freebets setup');
+	// === 4. Use the main FreeBetsHolder (not the legacy CasinoFreeBetsHolder) ===
+	const holderAddress = getTargetAddress('FreeBetsHolder', network);
+	if (!holderAddress || holderAddress === '0x') {
+		console.log('\nNo FreeBetsHolder found in deployments.json, skipping freebets setup');
 		return;
 	}
+	const holder = await ethers.getContractAt('FreeBetsHolder', holderAddress);
+	console.log('\nUsing main FreeBetsHolder:', holderAddress);
 
 	// === 5. Set freeBetsHolder + whitelist on all games ===
 	for (const name of games) {

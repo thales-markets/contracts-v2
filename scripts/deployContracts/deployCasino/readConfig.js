@@ -25,9 +25,16 @@ async function main() {
 		}
 		if (g.name === 'Slots') {
 			console.log('  maxPayoutMultiplier:', ethers.formatEther(await c.maxPayoutMultiplier()));
-			console.log('  symbolCount:', (await c.symbolCount()).toString());
-			for (let i = 0; i < Number(await c.symbolCount()); i++) {
-				console.log(`  triplePayout[${i}]:`, ethers.formatEther(await c.triplePayout(i)));
+			const symbolCount = Number(await c.symbolCount());
+			console.log('  symbolCount:', symbolCount);
+			for (let i = 0; i < symbolCount; i++) {
+				const weight = await c.symbolWeights(i);
+				const pair = await c.pairPayout(i);
+				const triple = await c.triplePayout(i);
+				console.log(
+					`  symbol[${i}]: weight=${weight.toString()}, ` +
+						`pair=${ethers.formatEther(pair)}x, triple=${ethers.formatEther(triple)}x`
+				);
 			}
 		}
 		if (g.name === 'Baccarat') {

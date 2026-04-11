@@ -16,10 +16,46 @@ const ONE = ethers.parseEther('1');
 
 const BET_AMOUNT = 3n * 1_000_000n; // 3 USDC
 const NUM_SPINS = 1000;
-const NUM_SYMBOLS = 3;
-const SYMBOL_WEIGHTS = [62, 28, 10];
-// Production ladder: [2, 6, 43]
-const TRIPLE_PAYOUTS = [ethers.parseEther('2'), ethers.parseEther('6'), ethers.parseEther('43')];
+
+// Production game math
+const NUM_SYMBOLS = 5;
+const SYMBOL_WEIGHTS = [34, 26, 18, 13, 9];
+const PAIR_PAYOUTS = [
+	ethers.parseEther('0.5'),
+	ethers.parseEther('0.75'),
+	ethers.parseEther('1'),
+	ethers.parseEther('1.25'),
+	ethers.parseEther('1.75'),
+];
+const TRIPLE_PAYOUTS = [
+	ethers.parseEther('2'),
+	ethers.parseEther('4'),
+	ethers.parseEther('10'),
+	ethers.parseEther('20'),
+	ethers.parseEther('38'),
+];
+
+// Analytic expectations (for the console banner)
+const TOTAL_W = SYMBOL_WEIGHTS.reduce((a, b) => a + b, 0);
+const P = SYMBOL_WEIGHTS.map((w) => w / TOTAL_W);
+const EXPECTED_HIT_RATE = P.reduce((acc, p) => acc + (2 * p * p - p ** 3), 0); // 2Σp² - Σp³
+const EXPECTED_TRIPLE_RATE = P.reduce((acc, p) => acc + p ** 3, 0);
+const EXPECTED_PAIR_RATE = EXPECTED_HIT_RATE - EXPECTED_TRIPLE_RATE;
+
+function computeExpectedRTP() {
+	const houseEdgeNum = 0.02;
+	let rtp = 0;
+	for (let i = 0; i < NUM_SYMBOLS; i++) {
+		const pairRaw = Number(ethers.formatEther(PAIR_PAYOUTS[i]));
+		const tripleRaw = Number(ethers.formatEther(TRIPLE_PAYOUTS[i]));
+		const pairProb = 2 * P[i] * P[i] * (1 - P[i]);
+		const tripleProb = P[i] ** 3;
+		rtp += pairProb * (1 + (1 - houseEdgeNum) * pairRaw);
+		rtp += tripleProb * (1 + (1 - houseEdgeNum) * tripleRaw);
+	}
+	return rtp;
+}
+const EXPECTED_RTP = computeExpectedRTP();
 
 async function deployFixture() {
 	const [owner, player] = await ethers.getSigners();
@@ -86,6 +122,7 @@ async function deployFixture() {
 
 	await slots.setSymbols(NUM_SYMBOLS, SYMBOL_WEIGHTS);
 	for (let i = 0; i < NUM_SYMBOLS; i++) {
+		await slots.setPairPayout(i, PAIR_PAYOUTS[i]);
 		await slots.setTriplePayout(i, TRIPLE_PAYOUTS[i]);
 	}
 
@@ -98,7 +135,6 @@ async function deployFixture() {
 
 // Mirror the contract's _roll logic off-chain to derive the reel without events
 function rollSymbol(randomWord) {
-	// keccak256(abi.encode(r, index))
 	const total = SYMBOL_WEIGHTS.reduce((a, b) => a + b, 0);
 	const rand = Number(randomWord % BigInt(total));
 	let acc = 0;
@@ -128,6 +164,15 @@ function deriveReels(randomWord) {
 	return [rollSymbol(r0), rollSymbol(r1), rollSymbol(r2)];
 }
 
+// Mirror of _getPayoutMultiplier: triple > adjacent pair > no win
+function classify(reels) {
+	const [a, b, c] = reels;
+	if (a === b && b === c) return { kind: 'triple', symbol: a };
+	if (a === b) return { kind: 'pair', symbol: a };
+	if (b === c) return { kind: 'pair', symbol: b };
+	return { kind: 'loss' };
+}
+
 describe('Slots Simulation', () => {
 	let slots, slotsAddress, usdc, usdcAddress, vrfCoordinator, player;
 
@@ -139,15 +184,17 @@ describe('Slots Simulation', () => {
 	it(`should run ${NUM_SPINS} spins and report the outcome`, async function () {
 		this.timeout(600000); // 10 min — this is a lot of transactions
 
-		// Pre-approve the full bet amount up front (saves N approvals)
 		await usdc.connect(player).approve(slotsAddress, BET_AMOUNT * BigInt(NUM_SPINS));
 
 		const playerBalBefore = await usdc.balanceOf(player.address);
 		const slotsBalBefore = await usdc.balanceOf(slotsAddress);
 
-		let wins = 0;
-		const winsPerSymbol = [0, 0, 0, 0, 0];
-		const payoutPerSymbol = [0n, 0n, 0n, 0n, 0n];
+		let pairWins = 0;
+		let tripleWins = 0;
+		const pairWinsPerSymbol = new Array(NUM_SYMBOLS).fill(0);
+		const tripleWinsPerSymbol = new Array(NUM_SYMBOLS).fill(0);
+		const pairPayoutPerSymbol = new Array(NUM_SYMBOLS).fill(0n);
+		const triplePayoutPerSymbol = new Array(NUM_SYMBOLS).fill(0n);
 		let biggestWin = 0n;
 		let currentLossStreak = 0;
 		let longestLossStreak = 0;
@@ -156,7 +203,6 @@ describe('Slots Simulation', () => {
 			const tx = await slots.connect(player).spin(usdcAddress, BET_AMOUNT, ethers.ZeroAddress);
 			const receipt = await tx.wait();
 
-			// Find the SpinPlaced event to get requestId
 			let requestId;
 			for (const log of receipt.logs) {
 				try {
@@ -168,25 +214,30 @@ describe('Slots Simulation', () => {
 				} catch {}
 			}
 
-			// Use keccak(i) as the VRF random word for uniformly distributed pseudo-random outcomes
 			const randomWord = BigInt(
 				ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [i]))
 			);
 			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [randomWord]);
 
-			// Predict the result off-chain using the same logic
 			const reels = deriveReels(randomWord);
-			const won = reels[0] === reels[1] && reels[1] === reels[2];
+			const outcome = classify(reels);
 
-			if (won) {
-				wins++;
-				const symbol = reels[0];
-				winsPerSymbol[symbol]++;
-				// Net profit multiplier = raw * (1 - houseEdge)
-				const netMult = (TRIPLE_PAYOUTS[symbol] * (ONE - HOUSE_EDGE)) / ONE;
+			if (outcome.kind === 'triple') {
+				tripleWins++;
+				tripleWinsPerSymbol[outcome.symbol]++;
+				const netMult = (TRIPLE_PAYOUTS[outcome.symbol] * (ONE - HOUSE_EDGE)) / ONE;
 				const profit = (BET_AMOUNT * netMult) / ONE;
 				const payout = BET_AMOUNT + profit;
-				payoutPerSymbol[symbol] += payout;
+				triplePayoutPerSymbol[outcome.symbol] += payout;
+				if (payout > biggestWin) biggestWin = payout;
+				currentLossStreak = 0;
+			} else if (outcome.kind === 'pair') {
+				pairWins++;
+				pairWinsPerSymbol[outcome.symbol]++;
+				const netMult = (PAIR_PAYOUTS[outcome.symbol] * (ONE - HOUSE_EDGE)) / ONE;
+				const profit = (BET_AMOUNT * netMult) / ONE;
+				const payout = BET_AMOUNT + profit;
+				pairPayoutPerSymbol[outcome.symbol] += payout;
 				if (payout > biggestWin) biggestWin = payout;
 				currentLossStreak = 0;
 			} else {
@@ -199,12 +250,12 @@ describe('Slots Simulation', () => {
 		const slotsBalAfter = await usdc.balanceOf(slotsAddress);
 
 		const totalStaked = BET_AMOUNT * BigInt(NUM_SPINS);
-		const playerNet = playerBalAfter - playerBalBefore; // negative if player lost
-		const slotsNet = slotsBalAfter - slotsBalBefore; // positive if house won
-		const totalReturned = totalStaked + playerNet; // what the player got back over all spins
+		const playerNet = playerBalAfter - playerBalBefore;
+		const slotsNet = slotsBalAfter - slotsBalBefore;
+		const totalReturned = totalStaked + playerNet;
 
+		const totalWins = pairWins + tripleWins;
 		const fmt = (v) => (Number(v) / 1e6).toFixed(2);
-		const expectedRTP = 90.24;
 		const actualRTP = (Number(totalReturned) / Number(totalStaked)) * 100;
 
 		console.log('\n========== SLOTS SIMULATION RESULTS ==========');
@@ -213,25 +264,44 @@ describe('Slots Simulation', () => {
 		console.log(`Total staked:       ${fmt(totalStaked)} USDC`);
 		console.log('');
 		console.log(
-			`Wins:               ${wins} (${((wins / NUM_SPINS) * 100).toFixed(2)}% — expected 4.00%)`
+			`Total wins:         ${totalWins} (${((totalWins / NUM_SPINS) * 100).toFixed(2)}% — ` +
+				`expected ${(EXPECTED_HIT_RATE * 100).toFixed(2)}%)`
 		);
-		console.log(`Losses:             ${NUM_SPINS - wins}`);
+		console.log(
+			`  Pair wins:        ${pairWins} (${((pairWins / NUM_SPINS) * 100).toFixed(2)}% — ` +
+				`expected ${(EXPECTED_PAIR_RATE * 100).toFixed(2)}%)`
+		);
+		console.log(
+			`  Triple wins:      ${tripleWins} (${((tripleWins / NUM_SPINS) * 100).toFixed(2)}% — ` +
+				`expected ${(EXPECTED_TRIPLE_RATE * 100).toFixed(2)}%)`
+		);
+		console.log(`Losses:             ${NUM_SPINS - totalWins}`);
 		console.log(`Longest loss streak: ${longestLossStreak}`);
 		console.log(`Biggest single win: ${fmt(biggestWin)} USDC`);
 		console.log('');
-		console.log('Wins per symbol:');
+		console.log('Pair wins per symbol:');
+		for (let i = 0; i < NUM_SYMBOLS; i++) {
+			const rawMult = Number(ethers.formatEther(PAIR_PAYOUTS[i]));
+			console.log(
+				`  symbol ${i} (${rawMult}x): ${pairWinsPerSymbol[i].toString().padStart(4)} wins, ` +
+					`${fmt(pairPayoutPerSymbol[i])} USDC returned`
+			);
+		}
+		console.log('Triple wins per symbol:');
 		for (let i = 0; i < NUM_SYMBOLS; i++) {
 			const rawMult = Number(ethers.formatEther(TRIPLE_PAYOUTS[i]));
 			console.log(
-				`  symbol ${i} (${rawMult}x):  ${winsPerSymbol[i].toString().padStart(3)} wins, ` +
-					`${fmt(payoutPerSymbol[i])} USDC returned`
+				`  symbol ${i} (${rawMult}x): ${tripleWinsPerSymbol[i].toString().padStart(4)} wins, ` +
+					`${fmt(triplePayoutPerSymbol[i])} USDC returned`
 			);
 		}
 		console.log('');
 		console.log(`Total returned:     ${fmt(totalReturned)} USDC`);
 		console.log(`Player net:         ${playerNet >= 0n ? '+' : ''}${fmt(playerNet)} USDC`);
 		console.log(`House net:          ${slotsNet >= 0n ? '+' : ''}${fmt(slotsNet)} USDC`);
-		console.log(`Actual RTP:         ${actualRTP.toFixed(2)}%  (target ${expectedRTP}%)`);
+		console.log(
+			`Actual RTP:         ${actualRTP.toFixed(2)}%  (target ${(EXPECTED_RTP * 100).toFixed(2)}%)`
+		);
 		console.log(`Effective edge:     ${(100 - actualRTP).toFixed(2)}%`);
 		console.log('==============================================\n');
 

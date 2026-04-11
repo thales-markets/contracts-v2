@@ -190,6 +190,10 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @notice Referrals contract
     IReferrals public referrals;
 
+    /// @notice Payout multiplier for adjacent 2-of-a-kind per symbol (in 1e18 precision, net of stake)
+    /// @dev A pair is first-two-reels or last-two-reels matching (triples are handled separately)
+    mapping(uint8 => uint) public pairPayout;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the slots contract
@@ -489,14 +493,19 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     }
 
     /// @notice Returns the net payout multiplier in 1e18 precision for a given reel result
-    /// @dev Returns 0 if no winning combination; applies house edge to triple payouts
+    /// @dev Triple (3-of-a-kind) supersedes adjacent pair. Pair matches `a==b` or `b==c`.
+    ///      Returns 0 if no winning combination; applies house edge to the selected raw payout.
     function _getPayoutMultiplier(uint8 a, uint8 b, uint8 c) internal view returns (uint) {
+        uint rawMultiplier;
         if (a == b && b == c) {
-            uint rawMultiplier = triplePayout[a];
-            if (rawMultiplier == 0) return 0;
-            return (rawMultiplier * (ONE - houseEdge)) / ONE;
+            rawMultiplier = triplePayout[a];
+        } else if (a == b) {
+            rawMultiplier = pairPayout[a];
+        } else if (b == c) {
+            rawMultiplier = pairPayout[b];
         }
-        return 0;
+        if (rawMultiplier == 0) return 0;
+        return (rawMultiplier * (ONE - houseEdge)) / ONE;
     }
 
     /// @notice Requests one random word from Chainlink VRF
@@ -654,6 +663,16 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         emit TriplePayoutChanged(symbol, multiplier);
     }
 
+    /// @notice Sets the payout multiplier for an adjacent 2-of-a-kind symbol
+    /// @param symbol Symbol index
+    /// @param multiplier Payout multiplier in 1e18 precision (net of stake), must be <= maxPayoutMultiplier
+    function setPairPayout(uint8 symbol, uint multiplier) external onlyOwner {
+        if (symbol >= symbolCount) revert InvalidConfig();
+        if (multiplier > maxPayoutMultiplier) revert InvalidConfig();
+        pairPayout[symbol] = multiplier;
+        emit PairPayoutChanged(symbol, multiplier);
+    }
+
     /// @notice Sets maximum allowed profit per spin in USD
     function setMaxProfitUsd(uint _maxProfitUsd) external onlyRiskManager {
         if (_maxProfitUsd == 0) revert InvalidAmount();
@@ -675,11 +694,12 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         emit HouseEdgeChanged(_houseEdge);
     }
 
-    /// @notice Sets maximum payout multiplier (must be >= all existing triplePayout values)
+    /// @notice Sets maximum payout multiplier (must be >= all existing triplePayout and pairPayout values)
     function setMaxPayoutMultiplier(uint _maxPayoutMultiplier) external onlyRiskManager {
         if (_maxPayoutMultiplier == 0) revert InvalidAmount();
         for (uint8 i = 0; i < symbolCount; i++) {
             if (triplePayout[i] > _maxPayoutMultiplier) revert InvalidConfig();
+            if (pairPayout[i] > _maxPayoutMultiplier) revert InvalidConfig();
         }
         maxPayoutMultiplier = _maxPayoutMultiplier;
         emit MaxPayoutMultiplierChanged(_maxPayoutMultiplier);
@@ -807,6 +827,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
     event SymbolsChanged(uint8 count, uint[] weights);
     event TriplePayoutChanged(uint8 symbol, uint multiplier);
+    event PairPayoutChanged(uint8 symbol, uint multiplier);
     event MaxProfitUsdChanged(uint maxProfitUsd);
     event CancelTimeoutChanged(uint cancelTimeout);
     event HouseEdgeChanged(uint houseEdge);

@@ -80,13 +80,47 @@ function findTripleWord(symbol) {
 	throw new Error(`Could not find triple word for symbol ${symbol}`);
 }
 
-// Helper: find a random word that gives no triple
-function findLossWord() {
+// Helper: find a random word that gives no triple AND no pair (true loss)
+// Needed because with pair payouts set, findLossWord-as-"not a triple" can land on a pair
+function findTrueLossWord() {
 	for (let i = 0n; i < 100000n; i++) {
 		const [r1, r2, r3] = deriveReels(i);
-		if (r1 !== r2 || r2 !== r3) return i;
+		if (r1 !== r2 && r2 !== r3) return i; // neither adjacent pair
 	}
-	throw new Error('Could not find loss word');
+	throw new Error('Could not find true loss word');
+}
+
+// Helper: find a random word that gives no triple
+// Kept for backwards compatibility with existing tests that rely on pairPayout=0 defaults
+function findLossWord() {
+	return findTrueLossWord();
+}
+
+// Helper: find a random word that gives an adjacent pair (a==b, b!=c) of a specific symbol
+function findFirstPairWord(symbol) {
+	for (let i = 0n; i < 100000n; i++) {
+		const [r1, r2, r3] = deriveReels(i);
+		if (r1 === symbol && r2 === symbol && r3 !== symbol) return i;
+	}
+	throw new Error(`Could not find first-pair word for symbol ${symbol}`);
+}
+
+// Helper: find a random word that gives an adjacent pair (a!=b, b==c) of a specific symbol
+function findLastPairWord(symbol) {
+	for (let i = 0n; i < 100000n; i++) {
+		const [r1, r2, r3] = deriveReels(i);
+		if (r2 === symbol && r3 === symbol && r1 !== symbol) return i;
+	}
+	throw new Error(`Could not find last-pair word for symbol ${symbol}`);
+}
+
+// Helper: find a random word where a==c but b is different (NOT adjacent, should lose)
+function findACPairWord() {
+	for (let i = 0n; i < 100000n; i++) {
+		const [r1, r2, r3] = deriveReels(i);
+		if (r1 === r3 && r1 !== r2) return i;
+	}
+	throw new Error('Could not find AC-pair word');
 }
 
 async function deploySlotsFixture() {
@@ -1325,6 +1359,174 @@ describe('Slots', () => {
 			await expect(slots.connect(owner).setReferrals(secondAccount.address))
 				.to.emit(slots, 'ReferralsChanged')
 				.withArgs(secondAccount.address);
+		});
+	});
+
+	/* ========== PAIR PAYOUTS ========== */
+
+	describe('Pair Payouts', () => {
+		// Pair payouts for all 5 symbols; all within MAX_PAYOUT_MULTIPLIER (15x)
+		const PAIR_PAYOUTS = [
+			ethers.parseEther('0.5'),
+			ethers.parseEther('0.75'),
+			ethers.parseEther('1'),
+			ethers.parseEther('1.25'),
+			ethers.parseEther('1.75'),
+		];
+
+		beforeEach(async () => {
+			for (let i = 0; i < SYMBOL_COUNT; i++) {
+				await slots.connect(owner).setPairPayout(i, PAIR_PAYOUTS[i]);
+			}
+		});
+
+		it('setPairPayout should emit event and update state', async () => {
+			const mult = ethers.parseEther('2');
+			await expect(slots.connect(owner).setPairPayout(0, mult))
+				.to.emit(slots, 'PairPayoutChanged')
+				.withArgs(0, mult);
+			expect(await slots.pairPayout(0)).to.equal(mult);
+		});
+
+		it('setPairPayout should revert for symbol >= symbolCount', async () => {
+			await expect(
+				slots.connect(owner).setPairPayout(SYMBOL_COUNT, ethers.parseEther('1'))
+			).to.be.revertedWithCustomError(slots, 'InvalidConfig');
+		});
+
+		it('setPairPayout should revert for multiplier > maxPayoutMultiplier', async () => {
+			await expect(
+				slots.connect(owner).setPairPayout(0, ethers.parseEther('100'))
+			).to.be.revertedWithCustomError(slots, 'InvalidConfig');
+		});
+
+		it('setPairPayout should revert from non-owner', async () => {
+			await expect(slots.connect(secondAccount).setPairPayout(0, ethers.parseEther('1'))).to.be
+				.reverted;
+		});
+
+		it('should resolve as win on first-two-reels pair (a==b, c!=a)', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const playerBalBefore = await usdc.balanceOf(player.address);
+
+			const word = findFirstPairWord(0);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [word]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.won).to.equal(true);
+
+			const rawMult = PAIR_PAYOUTS[0];
+			const netMult = (rawMult * (ONE - HOUSE_EDGE)) / ONE;
+			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * netMult) / ONE;
+			expect(spinBase.payout).to.equal(expectedPayout);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore + expectedPayout);
+		});
+
+		it('should resolve as win on last-two-reels pair (a!=b, b==c)', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const word = findLastPairWord(2);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [word]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.won).to.equal(true);
+
+			const rawMult = PAIR_PAYOUTS[2];
+			const netMult = (rawMult * (ONE - HOUSE_EDGE)) / ONE;
+			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * netMult) / ONE;
+			expect(spinBase.payout).to.equal(expectedPayout);
+		});
+
+		it('should NOT pay on non-adjacent pair (a==c, b different)', async () => {
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const word = findACPairWord();
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [word]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.won).to.equal(false);
+			expect(spinBase.payout).to.equal(0n);
+		});
+
+		it('triple supersedes pair payout for the same symbol', async () => {
+			// Triple payout for symbol 0 is 2x (from fixture TRIPLE_PAYOUTS); pair payout is 0.5x.
+			// A triple should pay the higher (triple) multiplier.
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const word = findTripleWord(0);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [word]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.won).to.equal(true);
+
+			const tripleRaw = TRIPLE_PAYOUTS[0]; // 2x
+			const netMult = (tripleRaw * (ONE - HOUSE_EDGE)) / ONE;
+			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * netMult) / ONE;
+			expect(spinBase.payout).to.equal(expectedPayout);
+			// Sanity: triple payout should be strictly greater than what the pair would've paid
+			const pairRaw = PAIR_PAYOUTS[0]; // 0.5x
+			const pairNetMult = (pairRaw * (ONE - HOUSE_EDGE)) / ONE;
+			const pairWinPayout = MIN_USDC_BET + (MIN_USDC_BET * pairNetMult) / ONE;
+			expect(spinBase.payout).to.be.gt(pairWinPayout);
+		});
+
+		it('pair with zero payout resolves as loss', async () => {
+			// Zero out pair payout for symbol 0
+			await slots.connect(owner).setPairPayout(0, 0);
+
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const word = findFirstPairWord(0);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [word]);
+
+			const spinDetails = await slots.getSpinDetails(spinId);
+			const spinBase = await slots.getSpinBase(spinId);
+			expect(spinDetails.won).to.equal(false);
+			expect(spinBase.payout).to.equal(0n);
+		});
+
+		it('setMaxPayoutMultiplier should revert when below existing pairPayout', async () => {
+			// Set pair payout for symbol 4 to 12 (still <= MAX_PAYOUT_MULTIPLIER 15)
+			await slots.connect(owner).setPairPayout(4, ethers.parseEther('12'));
+			// Now lowering maxPayoutMultiplier to 10 should revert because pairPayout[4] = 12
+			await expect(
+				slots.connect(owner).setMaxPayoutMultiplier(ethers.parseEther('10'))
+			).to.be.revertedWithCustomError(slots, 'InvalidConfig');
+		});
+
+		it('pair win should NOT pay referrer (referrer only paid on loss)', async () => {
+			const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+			const mockReferrals = await MockReferralsFactory.deploy();
+			await mockReferrals.setReferrerFees(
+				ethers.parseEther('0.005'),
+				ethers.parseEther('0.005'),
+				ethers.parseEther('0.005')
+			);
+			await slots.setReferrals(await mockReferrals.getAddress());
+
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { requestId } = await parseSpinPlaced(slots, tx);
+
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+			await vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findFirstPairWord(0)]);
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
 		});
 	});
 });

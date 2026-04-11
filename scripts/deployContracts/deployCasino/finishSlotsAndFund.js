@@ -6,18 +6,8 @@ async function main() {
 	const networkObj = await ethers.provider.getNetwork();
 	const network = networkObj.name;
 
-	const slotsAddress = getTargetAddress('Slots', network);
-	const slots = await ethers.getContractAt('Slots', slotsAddress);
-
-	// Check if triple payout[4] needs setting
-	const tp4 = await slots.triplePayout(4);
-	if (tp4 === 0n) {
-		await slots.setTriplePayout(4, ethers.parseEther('50'));
-		console.log('Slots triple payout[4] = 50x');
-		await delay(3000);
-	} else {
-		console.log('Slots triple payout[4] already set:', ethers.formatEther(tp4));
-	}
+	// Slots game math is fully configured by deploySlots.js / redeploySlots.js.
+	// This script now only funds bankrolls.
 
 	// Fund all bankrolls
 	const usdcAddress = getTargetAddress('DefaultCollateral', network);

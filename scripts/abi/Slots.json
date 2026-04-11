@@ -240,6 +240,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint8",
+        "name": "symbol",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "multiplier",
+        "type": "uint256"
+      }
+    ],
+    "name": "PairPayoutChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "bool",
         "name": "isPaused",
         "type": "bool"
@@ -1230,6 +1249,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "name": "pairPayout",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "paused",
     "outputs": [
@@ -1443,6 +1481,24 @@
       }
     ],
     "name": "setOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "symbol",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "multiplier",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPairPayout",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

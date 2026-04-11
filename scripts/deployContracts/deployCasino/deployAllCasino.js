@@ -151,18 +151,32 @@ async function main() {
 		);
 	});
 
-	// Configure Slots symbols
+	// Configure Slots: 5 symbols, balanced weights, pair + triple payouts.
+	// See deploySlots.js for full math (hit rate ~41.56%, RTP ~95.05%).
 	await delay(3000);
-	await slots.setSymbols(5, [20, 20, 20, 20, 20]);
+	await slots.setSymbols(5, [34, 26, 18, 13, 9]);
 	console.log('Slots symbols configured');
 	await delay(3000);
 
+	const pairPayouts = [
+		ethers.parseEther('0.5'),
+		ethers.parseEther('0.75'),
+		ethers.parseEther('1'),
+		ethers.parseEther('1.25'),
+		ethers.parseEther('1.75'),
+	];
+	for (let i = 0; i < pairPayouts.length; i++) {
+		await slots.setPairPayout(i, pairPayouts[i]);
+		console.log(`Slots pair payout[${i}] = ${ethers.formatEther(pairPayouts[i])}x`);
+		await delay(3000);
+	}
+
 	const triplePayouts = [
 		ethers.parseEther('2'),
-		ethers.parseEther('5'),
+		ethers.parseEther('4'),
 		ethers.parseEther('10'),
 		ethers.parseEther('20'),
-		ethers.parseEther('50'),
+		ethers.parseEther('38'),
 	];
 	for (let i = 0; i < triplePayouts.length; i++) {
 		await slots.setTriplePayout(i, triplePayouts[i]);
