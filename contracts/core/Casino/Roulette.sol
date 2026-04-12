@@ -29,7 +29,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
 
     uint private constant ONE = 1e18;
     uint private constant USDC_UNIT = 1e6;
-    uint private constant WHEEL_SIZE = 38; // 0..36 and 37 == 00
+    uint private constant WHEEL_SIZE = 37; // 0..36 single-zero (European)
 
     /// @notice Minimum allowed bet value expressed in USD, normalized to 18 decimals
     uint public constant MIN_BET_USD = 3e18;
@@ -87,7 +87,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @param betType Type of roulette bet
     /// @param status Current status of the bet
     /// @param selection Encoded selection for the chosen bet type
-    /// @param result Winning roulette result in range 0..37, where 37 represents 00
+    /// @param result Winning roulette result in range 0..36 (European single-zero)
     /// @param won Whether the bet won
     struct Bet {
         address user;
@@ -545,7 +545,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @param selection Encoded selection value
     function _validateSelection(BetType betType, uint8 selection) internal pure {
         if (betType == BetType.STRAIGHT) {
-            if (selection > 37) revert InvalidSelection();
+            if (selection > 36) revert InvalidSelection();
             return;
         }
 
@@ -565,14 +565,14 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Returns whether a given bet selection wins for a roulette result
     /// @param betType Roulette bet type
     /// @param selection Encoded selection value
-    /// @param result Roulette result in range 0..37, where 37 represents 00
+    /// @param result Roulette result in range 0..36 (European single-zero)
     /// @return True if the bet wins
     function _isWinning(BetType betType, uint8 selection, uint8 result) internal pure returns (bool) {
         if (betType == BetType.STRAIGHT) {
             return result == selection;
         }
 
-        if (result == 0 || result == 37) {
+        if (result == 0) {
             return false;
         }
 
@@ -660,7 +660,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Returns whether a given selection wins for a provided roulette result
     /// @param betType Roulette bet type
     /// @param selection Encoded selection value
-    /// @param result Roulette result in range 0..37, where 37 represents 00
+    /// @param result Roulette result in range 0..36 (European single-zero)
     /// @return True if the bet wins
     function isWinningBet(BetType betType, uint8 selection, uint8 result) external pure returns (bool) {
         return _isWinning(betType, selection, result);
@@ -898,7 +898,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @param betId Bet id
     /// @param requestId Chainlink VRF request id
     /// @param user Bettor address
-    /// @param result Roulette result in range 0..37, where 37 represents 00
+    /// @param result Roulette result in range 0..36 (European single-zero)
     /// @param won Whether the bet won
     /// @param payout Final payout amount
     event BetResolved(uint indexed betId, uint indexed requestId, address indexed user, uint8 result, bool won, uint payout);

@@ -199,7 +199,7 @@ describe('Edge Audit: Dice', () => {
 });
 
 // ============================================================================
-// ROULETTE — 10k RED_BLACK bets on red (selection=0), expect 5.26% edge
+// ROULETTE — 10k RED_BLACK bets on red (selection=0), expect 2.70% edge
 // ============================================================================
 describe('Edge Audit: Roulette', () => {
 	const NUM_BETS = 10000;
@@ -207,7 +207,7 @@ describe('Edge Audit: Roulette', () => {
 	const SELECTION = 0; // red
 	const RED_SET = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 
-	it(`should observe ~5.26% house edge over ${NUM_BETS} RED_BLACK bets`, async function () {
+	it(`should observe ~2.70% house edge over ${NUM_BETS} RED_BLACK bets`, async function () {
 		this.timeout(900000);
 
 		const f = await loadFixture(sharedFixture);
@@ -240,8 +240,8 @@ describe('Edge Audit: Roulette', () => {
 			const word = seedWord(i, 2);
 			await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [word]);
 
-			const result = Number(word % 38n);
-			if (result === 0 || result === 37) zeroGreenCount++;
+			const result = Number(word % 37n);
+			if (result === 0) zeroGreenCount++;
 			if (RED_SET.has(result)) wins++;
 		}
 
@@ -257,22 +257,22 @@ describe('Edge Audit: Roulette', () => {
 		console.log('\n========== ROULETTE EDGE AUDIT ==========');
 		console.log(`Bets: ${NUM_BETS} | bet type: RED_BLACK | selection: red`);
 		console.log(
-			`Wins:       ${wins}/${NUM_BETS} (${((wins / NUM_BETS) * 100).toFixed(2)}% — expected 47.37%)`
+			`Wins:       ${wins}/${NUM_BETS} (${((wins / NUM_BETS) * 100).toFixed(2)}% — expected 48.65%)`
 		);
 		console.log(
-			`0 or 00:    ${zeroGreenCount}/${NUM_BETS} (${((zeroGreenCount / NUM_BETS) * 100).toFixed(
+			`Zero:       ${zeroGreenCount}/${NUM_BETS} (${((zeroGreenCount / NUM_BETS) * 100).toFixed(
 				2
-			)}% — expected 5.26%)`
+			)}% — expected 2.70%)`
 		);
 		console.log(`Player net: ${(Number(playerNet) / 1e6).toFixed(2)} USDC`);
-		console.log(`Empirical RTP:  ${rtp.toFixed(2)}%  (expected 94.74%)`);
-		console.log(`Empirical edge: ${(100 - rtp).toFixed(2)}%  (expected 5.26%)`);
+		console.log(`Empirical RTP:  ${rtp.toFixed(2)}%  (expected 97.30%)`);
+		console.log(`Empirical edge: ${(100 - rtp).toFixed(2)}%  (expected 2.70%)`);
 		console.log('=========================================\n');
 
-		expect(rtp).to.be.within(92.0, 97.5); // ±2.5% tolerance
+		expect(rtp).to.be.within(94.5, 100.0); // ±2.5% tolerance
 	});
 
-	it(`should observe ~5.26% house edge over ${NUM_BETS} STRAIGHT bets`, async function () {
+	it(`should observe ~2.70% house edge over ${NUM_BETS} STRAIGHT bets`, async function () {
 		this.timeout(900000);
 
 		const f = await loadFixture(sharedFixture);
@@ -301,7 +301,7 @@ describe('Edge Audit: Roulette', () => {
 			const word = seedWord(i, 3);
 			await vrfCoordinator.fulfillRandomWords(rouletteAddress, placed.args.requestId, [word]);
 
-			const result = Number(word % 38n);
+			const result = Number(word % 37n);
 			if (result === TARGET_NUMBER) wins++;
 		}
 
@@ -314,11 +314,11 @@ describe('Edge Audit: Roulette', () => {
 		console.log('\n========== ROULETTE STRAIGHT AUDIT ==========');
 		console.log(`Bets: ${NUM_BETS} | bet type: STRAIGHT | selection: ${TARGET_NUMBER}`);
 		console.log(
-			`Wins: ${wins}/${NUM_BETS} (${((wins / NUM_BETS) * 100).toFixed(2)}% — expected 2.63%)`
+			`Wins: ${wins}/${NUM_BETS} (${((wins / NUM_BETS) * 100).toFixed(2)}% — expected 2.70%)`
 		);
 		console.log(`Player net: ${(Number(playerNet) / 1e6).toFixed(2)} USDC`);
-		console.log(`Empirical RTP:  ${rtp.toFixed(2)}%  (expected 94.74%)`);
-		console.log(`Empirical edge: ${(100 - rtp).toFixed(2)}%  (expected 5.26%)`);
+		console.log(`Empirical RTP:  ${rtp.toFixed(2)}%  (expected 97.30%)`);
+		console.log(`Empirical edge: ${(100 - rtp).toFixed(2)}%  (expected 2.70%)`);
 		console.log('=============================================\n');
 
 		// STRAIGHT has high variance; wider tolerance
@@ -576,8 +576,7 @@ describe('Edge Audit: Slots', () => {
 // (hit until hard ≥ 17 or soft ≥ 18, never double)
 //
 // Mimic-dealer on 3:2 S17 infinite deck has a published edge ~5.5%. This
-// contract uses 6:5 BJ + H17 + no splits which all favor the house, so the
-// expected edge is higher (~7–8%). Basic strategy drops edge to ~2.5%.
+// contract uses 3:2 BJ + H17 + no splits. Basic strategy drops edge to ~0.5%.
 // This test uses mimic-dealer for simplicity — confirms house always has
 // a clearly positive edge regardless of play style.
 //
@@ -720,7 +719,7 @@ describe('Edge Audit: Blackjack', () => {
 		console.log(`Player actions: ${hitCount} hits, ${standCount} stands`);
 		console.log('Results:');
 		console.log(
-			`  Player blackjack (6:5): ${results.blackjack} (${(
+			`  Player blackjack (3:2): ${results.blackjack} (${(
 				(results.blackjack / NUM_HANDS) *
 				100
 			).toFixed(2)}%)`

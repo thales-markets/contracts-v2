@@ -339,7 +339,7 @@ describe('Blackjack', () => {
 			expect(handCards.dealerCards.length).to.equal(1);
 		});
 
-		it('should auto-resolve player blackjack (6:5 payout)', async () => {
+		it('should auto-resolve player blackjack (3:2 payout)', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			const tx = await blackjack
 				.connect(player)
@@ -361,8 +361,8 @@ describe('Blackjack', () => {
 			expect(handDetails.status).to.equal(Status.RESOLVED);
 			expect(handDetails.result).to.equal(Result.PLAYER_BLACKJACK);
 
-			// 6:5 payout = amount + amount*6/5 = 3 + 3.6 = 6.6 USDC
-			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n;
+			// 3:2 payout = amount + amount*3/2 = 3 + 4.5 = 7.5 USDC
+			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * 3n) / 2n;
 			expect(handBase.payout).to.equal(expectedPayout);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalanceBefore + expectedPayout);
 		});
@@ -1023,9 +1023,9 @@ describe('Blackjack', () => {
 	/* ========== GETTERS ========== */
 
 	describe('Getters', () => {
-		it('getMaxPayout should return bet + 6:5 profit', async () => {
+		it('getMaxPayout should return bet + 3:2 profit', async () => {
 			const payout = await blackjack.getMaxPayout(usdcAddress, MIN_USDC_BET);
-			expect(payout).to.equal(MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n);
+			expect(payout).to.equal(MIN_USDC_BET + (MIN_USDC_BET * 3n) / 2n);
 		});
 
 		it('getUserHandIds should return hand IDs for card retrieval', async () => {
@@ -1384,8 +1384,8 @@ describe('Blackjack', () => {
 			expect(handDetails.status).to.equal(Status.RESOLVED);
 			expect(handDetails.result).to.equal(Result.PLAYER_BLACKJACK);
 
-			// 6:5 payout = amount + amount*6/5
-			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * 6n) / 5n;
+			// 3:2 payout = amount + amount*3/2
+			const expectedPayout = MIN_USDC_BET + (MIN_USDC_BET * 3n) / 2n;
 			expect(handBase.payout).to.equal(expectedPayout);
 
 			// Player gets profit (payout - amount)

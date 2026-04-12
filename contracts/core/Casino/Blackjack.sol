@@ -29,8 +29,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
     uint private constant ONE = 1e18;
     uint private constant USDC_UNIT = 1e6;
-    uint private constant BLACKJACK_PAYOUT_NUMERATOR = 6;
-    uint private constant BLACKJACK_PAYOUT_DENOMINATOR = 5;
+    uint private constant BLACKJACK_PAYOUT_NUMERATOR = 3;
+    uint private constant BLACKJACK_PAYOUT_DENOMINATOR = 2;
     uint private constant MAX_CARDS = 11;
 
     /// @notice Minimum allowed bet value expressed in USD, normalized to 18 decimals
@@ -301,7 +301,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint amountUsd = _getUsdValue(collateral, amount);
         if (amountUsd < MIN_BET_USD) revert InvalidAmount();
 
-        // Max profit is blackjack payout (6:5)
+        // Max profit is blackjack payout (3:2)
         uint potentialProfitCollateral = (amount * BLACKJACK_PAYOUT_NUMERATOR) / BLACKJACK_PAYOUT_DENOMINATOR;
         uint potentialProfitUsd = _getUsdValue(collateral, potentialProfitCollateral);
 
@@ -862,7 +862,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         return (h.status, h.result, h.isDoubledDown, h.playerCardCount, h.dealerCardCount);
     }
 
-    /// @notice Returns the maximum potential payout for a bet amount (blackjack 6:5)
+    /// @notice Returns the maximum potential payout for a bet amount (blackjack 3:2)
     function getMaxPayout(address collateral, uint amount) external pure returns (uint) {
         return amount + (amount * BLACKJACK_PAYOUT_NUMERATOR) / BLACKJACK_PAYOUT_DENOMINATOR;
     }

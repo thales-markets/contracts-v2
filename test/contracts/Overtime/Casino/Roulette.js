@@ -382,12 +382,12 @@ describe('Roulette', () => {
 			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
 		});
 
-		it('should revert for invalid selection on STRAIGHT (selection > 37)', async () => {
+		it('should revert for invalid selection on STRAIGHT (selection > 36)', async () => {
 			await weth.connect(player).approve(rouletteAddress, MIN_WETH_BET);
 			await expect(
 				roulette
 					.connect(player)
-					.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 38, ethers.ZeroAddress)
+					.placeBet(wethAddress, MIN_WETH_BET, BetType.STRAIGHT, 37, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
 		});
 
@@ -1108,16 +1108,9 @@ describe('Roulette', () => {
 			it('STRAIGHT: loses on different number', async () => {
 				expect(await roulette.isWinningBet(BetType.STRAIGHT, 7, 8)).to.equal(false);
 			});
-			it('STRAIGHT: 00 (37) wins on selection 37', async () => {
-				expect(await roulette.isWinningBet(BetType.STRAIGHT, 37, 37)).to.equal(true);
-			});
-
 			// RED_BLACK
 			it('RED_BLACK: 0 always loses', async () => {
 				expect(await roulette.isWinningBet(BetType.RED_BLACK, 0, 0)).to.equal(false);
-			});
-			it('RED_BLACK: 00 (37) always loses', async () => {
-				expect(await roulette.isWinningBet(BetType.RED_BLACK, 0, 37)).to.equal(false);
 			});
 			it('RED_BLACK: selection 0 wins on red number (1)', async () => {
 				expect(await roulette.isWinningBet(BetType.RED_BLACK, 0, 1)).to.equal(true);
