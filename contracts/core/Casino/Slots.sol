@@ -228,7 +228,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         if (_maxProfitUsd == 0) revert InvalidAmount();
         if (_houseEdge == 0 || _houseEdge > MAX_HOUSE_EDGE) revert InvalidHouseEdge();
         if (_maxPayoutMultiplier == 0) revert InvalidAmount();
-        if (vrfConfig.callbackGasLimit == 0 || vrfConfig.requestConfirmations == 0) revert InvalidAmount();
+        if (vrfConfig.callbackGasLimit == 0) revert InvalidAmount();
 
         setOwner(core.owner);
         initNonReentrant();
@@ -770,7 +770,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
-        if (_callbackGasLimit == 0 || _requestConfirmations == 0) revert InvalidAmount();
+        if (_callbackGasLimit == 0) revert InvalidAmount();
 
         subscriptionId = _subscriptionId;
         keyHash = _keyHash;

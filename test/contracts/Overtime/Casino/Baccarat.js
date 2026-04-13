@@ -1041,10 +1041,10 @@ describe('Baccarat', () => {
 			).to.be.revertedWithCustomError(baccarat, 'InvalidAmount');
 		});
 
-		it('should revert for zero requestConfirmations', async () => {
+		it('should accept zero requestConfirmations', async () => {
 			await expect(
 				baccarat.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.be.revertedWithCustomError(baccarat, 'InvalidAmount');
+			).to.emit(baccarat, 'VrfConfigChanged');
 		});
 	});
 

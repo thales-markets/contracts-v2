@@ -280,7 +280,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         priceFeedKeyPerCollateral[collateralConfig.over] = collateralConfig.overPriceFeedKey;
 
         if (_maxProfitUsd == 0) revert InvalidAmount();
-        if (vrfConfig.callbackGasLimit == 0 || vrfConfig.requestConfirmations == 0) revert InvalidAmount();
+        if (vrfConfig.callbackGasLimit == 0) revert InvalidAmount();
 
         uint bankerMultiplierToSet = _bankerPayoutMultiplier == 0 ? DEFAULT_BANKER_PAYOUT : _bankerPayoutMultiplier;
         if (bankerMultiplierToSet < MIN_BANKER_PAYOUT || bankerMultiplierToSet > MAX_BANKER_PAYOUT) {
@@ -998,7 +998,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
-        if (_callbackGasLimit == 0 || _requestConfirmations == 0) revert InvalidAmount();
+        if (_callbackGasLimit == 0) revert InvalidAmount();
 
         subscriptionId = _subscriptionId;
         keyHash = _keyHash;

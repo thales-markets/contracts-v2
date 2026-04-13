@@ -967,10 +967,10 @@ describe('Roulette', () => {
 				).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
 			});
 
-			it('should revert when requestConfirmations is zero', async () => {
+			it('should accept zero requestConfirmations', async () => {
 				await expect(
 					roulette.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 200000n, 0n, false)
-				).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
+				).to.emit(roulette, 'VrfConfigChanged');
 			});
 
 			it('should update VRF config and emit event', async () => {

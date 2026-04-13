@@ -974,10 +974,10 @@ describe('Slots', () => {
 			).to.be.revertedWithCustomError(slots, 'InvalidAmount');
 		});
 
-		it('setVrfConfig should revert for zero requestConfirmations', async () => {
+		it('setVrfConfig should accept zero requestConfirmations', async () => {
 			await expect(
 				slots.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.be.revertedWithCustomError(slots, 'InvalidAmount');
+			).to.emit(slots, 'VrfConfigChanged');
 		});
 	});
 

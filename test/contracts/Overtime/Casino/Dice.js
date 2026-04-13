@@ -740,10 +740,10 @@ describe('Dice', () => {
 			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
 		});
 
-		it('setVrfConfig should revert for zero requestConfirmations', async () => {
+		it('setVrfConfig should accept zero requestConfirmations', async () => {
 			await expect(
 				dice.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
+			).to.emit(dice, 'VrfConfigChanged');
 		});
 
 		it('setMaxProfitUsd should revert for zero', async () => {

@@ -1276,10 +1276,10 @@ describe('Blackjack', () => {
 			).to.be.revertedWithCustomError(blackjack, 'InvalidAmount');
 		});
 
-		it('should revert for zero requestConfirmations', async () => {
+		it('should accept zero requestConfirmations', async () => {
 			await expect(
 				blackjack.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.be.revertedWithCustomError(blackjack, 'InvalidAmount');
+			).to.emit(blackjack, 'VrfConfigChanged');
 		});
 	});
 
