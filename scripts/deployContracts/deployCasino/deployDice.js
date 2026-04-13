@@ -19,7 +19,7 @@ async function main() {
 	const usdcAddress = getTargetAddress('DefaultCollateral', network);
 	const wethAddress = getTargetAddress('WETH', network);
 	const overAddress = getTargetAddress('OVER', network);
-	const wethPriceFeedKey = ethers.encodeBytes32String('WETH');
+	const wethPriceFeedKey = ethers.encodeBytes32String('ETH');
 	const overPriceFeedKey = ethers.encodeBytes32String('OVER');
 
 	const maxProfitUsd = ethers.parseEther('1000');
@@ -29,7 +29,7 @@ async function main() {
 	const subscriptionId = BigInt(getTargetAddress('VRFSubscriptionId', network));
 	const keyHash = getTargetAddress('VRFKeyHash', network);
 	const callbackGasLimit = 500000;
-	const requestConfirmations = 3;
+	const requestConfirmations = 1;
 	const nativePayment = false;
 
 	const Dice = await ethers.getContractFactory('Dice');

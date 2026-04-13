@@ -107,7 +107,7 @@ async function main() {
 	const usdcAddress = getTargetAddress('DefaultCollateral', network);
 	const wethAddress = getTargetAddress('WETH', network);
 	const overAddress = getTargetAddress('OVER', network);
-	const wethPriceFeedKey = ethers.encodeBytes32String('WETH');
+	const wethPriceFeedKey = ethers.encodeBytes32String('ETH');
 	const overPriceFeedKey = ethers.encodeBytes32String('OVER');
 
 	const collaterals = [
@@ -201,7 +201,7 @@ async function main() {
 			subscriptionId: BigInt(getTargetAddress('VRFSubscriptionId', network)),
 			keyHash: getTargetAddress('VRFKeyHash', network),
 			callbackGasLimit: 500000,
-			requestConfirmations: 3,
+			requestConfirmations: 1,
 			nativePayment: false,
 		}
 	);
