@@ -45,21 +45,16 @@ async function main() {
 		keyHash,
 		callbackGasLimit: 500000,
 		requestConfirmations: 3,
-		nativePayment: false,
+		nativePayment: true,
 	};
 
-	const maxProfitUsd = ethers.parseEther('1000');
+	const maxProfitUsd = ethers.parseEther('300');
 	const cancelTimeout = 60;
-
-	// Add VRF consumer helper
-	const vrfAbi = ['function addConsumer(uint256 subId, address consumer) external'];
-	const vrf = new ethers.Contract(vrfCoordinatorAddress, vrfAbi, owner);
 
 	async function deployAndInit(name, initFn) {
 		const Factory = await ethers.getContractFactory(name);
 		const proxy = await upgrades.deployProxy(Factory, [], {
 			initializer: false,
-			initialOwner: protocolDAOAddress,
 		});
 		await proxy.waitForDeployment();
 		const addr = await proxy.getAddress();
@@ -69,11 +64,6 @@ async function main() {
 
 		await initFn(proxy);
 		console.log(`${name} initialized`);
-		await delay(3000);
-
-		// Add as VRF consumer
-		await vrf.addConsumer(subscriptionId, addr);
-		console.log(`${name} added as VRF consumer`);
 		await delay(3000);
 
 		const impl = await getImplementationAddress(ethers.provider, addr);
@@ -93,16 +83,8 @@ async function main() {
 	}
 
 	// ==================== DICE ====================
-	await deployAndInit('Dice', async (dice) => {
-		await dice.initialize(
-			coreAddresses,
-			collateralConfig,
-			maxProfitUsd,
-			cancelTimeout,
-			ethers.parseEther('0.02'), // houseEdge 2%
-			vrfConfig
-		);
-	});
+	// Already deployed: 0x278a57140870E8d697a2Bf7321fFd212c4243aDc
+	console.log('\nDice: already deployed, skipping');
 
 	// ==================== ROULETTE ====================
 	await deployAndInit('Roulette', async (roulette) => {
@@ -184,23 +166,7 @@ async function main() {
 		await delay(3000);
 	}
 
-	// ==================== FUND BANKROLLS ====================
-	console.log('\n--- Funding bankrolls ---');
-	const usdc = await ethers.getContractAt('IERC20', usdcAddress);
-	const fundAmount = ethers.parseUnits('500', 6);
-
-	const games = ['Dice', 'Roulette', 'Blackjack', 'Baccarat', 'Slots'];
-	for (const name of games) {
-		const addr = getTargetAddress(name, network);
-		const bal = await usdc.balanceOf(addr);
-		if (bal < fundAmount) {
-			await usdc.transfer(addr, fundAmount);
-			console.log(`${name}: funded with 500 USDC`);
-			await delay(3000);
-		} else {
-			console.log(`${name}: already has ${ethers.formatUnits(bal, 6)} USDC`);
-		}
-	}
+	// Bankroll funding skipped — fund each contract manually before enabling bets.
 
 	console.log('\n=== All casino contracts deployed and configured ===');
 }
