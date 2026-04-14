@@ -1237,7 +1237,7 @@ describe('Slots', () => {
 	/* ========== FREE BET WIN RESOLUTION ========== */
 
 	describe('FreeBet Win Resolution', () => {
-		it('should send profit to user and stake to holder on freebet triple win', async () => {
+		it('should send profit to user and stake to holder owner on freebet triple win', async () => {
 			// Deploy FreeBetsHolder inline
 			const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
 			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
@@ -1263,6 +1263,7 @@ describe('Slots', () => {
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
 			const holderBalBefore = await usdc.balanceOf(holderAddress);
+			const ownerBalBefore = await usdc.balanceOf(owner.address);
 
 			// Use a triple word for symbol 0 (lowest payout to stay within bankroll)
 			const tripleWord = findTripleWord(0);
@@ -1277,9 +1278,11 @@ describe('Slots', () => {
 			const playerBalAfter = await usdc.balanceOf(player.address);
 			expect(playerBalAfter - playerBalBefore).to.equal(profit);
 
-			// Holder gets stake back
+			// Stake is forwarded to holder owner; holder itself nets zero
 			const holderBalAfter = await usdc.balanceOf(holderAddress);
-			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
+			expect(holderBalAfter - holderBalBefore).to.equal(0n);
+			const ownerBalAfter = await usdc.balanceOf(owner.address);
+			expect(ownerBalAfter - ownerBalBefore).to.equal(MIN_USDC_BET);
 		});
 	});
 

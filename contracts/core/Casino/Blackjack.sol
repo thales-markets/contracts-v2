@@ -15,7 +15,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
-import "../../interfaces/ICasinoFreeBetsHolder.sol";
+import "../../interfaces/IFreeBetsHolder.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
 /// @title Blackjack
@@ -285,7 +285,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint amount
     ) external nonReentrant notPaused returns (uint handId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
-        ICasinoFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
+        IFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
         return _placeBet(msg.sender, collateral, amount, true);
     }
 
@@ -662,9 +662,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
         if (payout > 0) {
             if (isFreeBet[handId]) {
-                uint profit = payout > hand.amount ? payout - hand.amount : 0;
-                if (profit > 0) IERC20(hand.collateral).safeTransfer(hand.user, profit);
-                IERC20(hand.collateral).safeTransfer(freeBetsHolder, hand.amount);
+                IERC20(hand.collateral).safeTransfer(freeBetsHolder, payout);
+                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(hand.user, hand.collateral, payout, hand.amount);
             } else {
                 IERC20(hand.collateral).safeTransfer(hand.user, payout);
             }
@@ -713,6 +712,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         if (isFreeBet[handId]) {
             hand.payout = 0;
             IERC20(hand.collateral).safeTransfer(freeBetsHolder, hand.amount);
+            IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(hand.user, hand.collateral, hand.amount, hand.amount);
         } else {
             hand.payout = hand.amount;
             IERC20(hand.collateral).safeTransfer(hand.user, hand.amount);
@@ -863,7 +863,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     }
 
     /// @notice Returns the maximum potential payout for a bet amount (blackjack 3:2)
-    function getMaxPayout(address collateral, uint amount) external pure returns (uint) {
+    function getMaxPayout(address, uint amount) external pure returns (uint) {
         return amount + (amount * BLACKJACK_PAYOUT_NUMERATOR) / BLACKJACK_PAYOUT_DENOMINATOR;
     }
 

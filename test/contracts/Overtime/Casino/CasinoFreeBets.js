@@ -252,7 +252,7 @@ describe('CasinoFreeBets', () => {
 			expect(await dice.isFreeBet(1)).to.equal(true);
 		});
 
-		it('should send only profit to user on free bet win', async () => {
+		it('should send profit to user and stake to holder owner on free bet win', async () => {
 			const tx = await dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, 0, 11);
 			const receipt = await tx.wait();
 			const betEvent = receipt.logs
@@ -268,6 +268,7 @@ describe('CasinoFreeBets', () => {
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
 			const holderBalBefore = await usdc.balanceOf(holderAddress);
+			const ownerBalBefore = await usdc.balanceOf(owner.address);
 
 			// Win: randomWord=4 → result=5, ROLL_UNDER target=11 → win
 			await vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [4n]);
@@ -278,7 +279,9 @@ describe('CasinoFreeBets', () => {
 			const betBase = await dice.getBetBase(1);
 			const profit = betBase.payout - MIN_USDC_BET;
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore + profit);
-			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
+			// Stake is forwarded to the holder owner, holder itself nets zero
+			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore);
+			expect(await usdc.balanceOf(owner.address)).to.equal(ownerBalBefore + MIN_USDC_BET);
 		});
 
 		it('should not send anything on free bet loss', async () => {
@@ -337,7 +340,7 @@ describe('CasinoFreeBets', () => {
 			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
 		});
 
-		it('should return stake to holder on cancel, user gets nothing', async () => {
+		it('should return stake to holder and restore user free bet balance on cancel', async () => {
 			const tx = await dice.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, 0, 11);
 			const receipt = await tx.wait();
 			const betEvent = receipt.logs
@@ -360,12 +363,14 @@ describe('CasinoFreeBets', () => {
 			const betDetails = await dice.getBetDetails(betId);
 			expect(betDetails.status).to.equal(3n); // CANCELLED
 
-			// Stake returned to holder, not user
+			// Stake physically held by holder, not sent to user
 			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
 
-			// User freebet balance NOT restored
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+			// User's free bet balance is restored so it can be reused
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET
+			);
 		});
 	});
 
@@ -375,7 +380,7 @@ describe('CasinoFreeBets', () => {
 			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
 		});
 
-		it('should return stake to holder on cancel, user gets nothing', async () => {
+		it('should return stake to holder and restore user free bet balance on cancel', async () => {
 			const tx = await slots.connect(player).spinWithFreeBet(usdcAddress, MIN_USDC_BET);
 			const receipt = await tx.wait();
 			const spinEvent = receipt.logs
@@ -398,12 +403,14 @@ describe('CasinoFreeBets', () => {
 			const spinDetails = await slots.getSpinDetails(spinId);
 			expect(spinDetails.status).to.equal(3n); // CANCELLED
 
-			// Stake returned to holder, not user
+			// Stake physically held by holder, not sent to user
 			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
 
-			// User freebet balance NOT restored
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+			// User's free bet balance is restored so it can be reused
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET
+			);
 		});
 	});
 
@@ -416,7 +423,7 @@ describe('CasinoFreeBets', () => {
 			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
 		});
 
-		it('should return stake to holder on cancel, user gets nothing', async () => {
+		it('should return stake to holder and restore user free bet balance on cancel', async () => {
 			const tx = await baccarat
 				.connect(player)
 				.placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, PLAYER_BET);
@@ -441,12 +448,14 @@ describe('CasinoFreeBets', () => {
 			const betDetails = await baccarat.getBetDetails(betId);
 			expect(betDetails.status).to.equal(3n); // CANCELLED
 
-			// Stake returned to holder, not user
+			// Stake physically held by holder, not sent to user
 			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
 
-			// User freebet balance NOT restored
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+			// User's free bet balance is restored so it can be reused
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET
+			);
 		});
 	});
 
@@ -456,7 +465,7 @@ describe('CasinoFreeBets', () => {
 			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
 		});
 
-		it('should return stake to holder on cancel, user gets nothing', async () => {
+		it('should return stake to holder and restore user free bet balance on cancel', async () => {
 			const tx = await blackjack.connect(player).placeBetWithFreeBet(usdcAddress, MIN_USDC_BET);
 			const receipt = await tx.wait();
 			const handEvent = receipt.logs
@@ -482,7 +491,9 @@ describe('CasinoFreeBets', () => {
 			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
 
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET
+			);
 		});
 	});
 
@@ -495,7 +506,7 @@ describe('CasinoFreeBets', () => {
 			await holder.connect(funder).fund(player.address, usdcAddress, MIN_USDC_BET);
 		});
 
-		it('should return stake to holder on cancel, user gets nothing', async () => {
+		it('should return stake to holder and restore user free bet balance on cancel', async () => {
 			const tx = await roulette
 				.connect(player)
 				.placeBetWithFreeBet(usdcAddress, MIN_USDC_BET, RED_BLACK, 0);
@@ -523,7 +534,9 @@ describe('CasinoFreeBets', () => {
 			expect(await usdc.balanceOf(holderAddress)).to.equal(holderBalBefore + MIN_USDC_BET);
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
 
-			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+			expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+				MIN_USDC_BET
+			);
 		});
 	});
 });

@@ -15,7 +15,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
-import "../../interfaces/ICasinoFreeBetsHolder.sol";
+import "../../interfaces/IFreeBetsHolder.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
 /// @title Slots
@@ -289,7 +289,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         uint amount
     ) external nonReentrant notPaused returns (uint spinId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
-        ICasinoFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
+        IFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
         return _spin(msg.sender, collateral, amount, true);
     }
 
@@ -414,9 +414,8 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         if (multiplier > 0) {
             payout = s.amount + (s.amount * multiplier) / ONE;
             if (isFreeBet[spinId]) {
-                uint profit = payout > s.amount ? payout - s.amount : 0;
-                if (profit > 0) IERC20(s.collateral).safeTransfer(s.user, profit);
-                IERC20(s.collateral).safeTransfer(freeBetsHolder, s.amount);
+                IERC20(s.collateral).safeTransfer(freeBetsHolder, payout);
+                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(s.user, s.collateral, payout, s.amount);
             } else {
                 IERC20(s.collateral).safeTransfer(s.user, payout);
             }
@@ -466,6 +465,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         if (isFreeBet[spinId]) {
             s.payout = 0;
             IERC20(s.collateral).safeTransfer(freeBetsHolder, s.amount);
+            IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(s.user, s.collateral, s.amount, s.amount);
         } else {
             s.payout = s.amount;
             IERC20(s.collateral).safeTransfer(s.user, s.amount);

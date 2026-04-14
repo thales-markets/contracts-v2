@@ -15,7 +15,7 @@ import "../../utils/proxy/ProxyPausable.sol";
 import "@thales-dao/contracts/contracts/interfaces/IPriceFeed.sol";
 
 import "../../interfaces/ISportsAMMV2Manager.sol";
-import "../../interfaces/ICasinoFreeBetsHolder.sol";
+import "../../interfaces/IFreeBetsHolder.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
 /// @title Roulette
@@ -278,7 +278,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint8 selection
     ) external nonReentrant notPaused returns (uint betId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
-        ICasinoFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
+        IFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
         return _placeBet(msg.sender, collateral, amount, betType, selection, true);
     }
 
@@ -409,9 +409,8 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         if (won) {
             payout = bet.amount + bet.reservedProfit;
             if (isFreeBet[betId]) {
-                uint profit = bet.reservedProfit;
-                if (profit > 0) IERC20(bet.collateral).safeTransfer(bet.user, profit);
-                IERC20(bet.collateral).safeTransfer(freeBetsHolder, bet.amount);
+                IERC20(bet.collateral).safeTransfer(freeBetsHolder, payout);
+                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(bet.user, bet.collateral, payout, bet.amount);
             } else {
                 IERC20(bet.collateral).safeTransfer(bet.user, payout);
             }
@@ -461,6 +460,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         if (isFreeBet[betId]) {
             bet.payout = 0;
             IERC20(bet.collateral).safeTransfer(freeBetsHolder, bet.amount);
+            IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(bet.user, bet.collateral, bet.amount, bet.amount);
         } else {
             bet.payout = bet.amount;
             IERC20(bet.collateral).safeTransfer(bet.user, bet.amount);

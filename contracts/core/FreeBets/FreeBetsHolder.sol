@@ -786,6 +786,33 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
         emit FreeBetUsedByCasino(_user, _collateral, _amount, msg.sender);
     }
 
+    /// @notice Called by whitelisted casino contracts after a free-bet bet is resolved or cancelled.
+    /// @dev Caller must have already transferred `_exercized` of `_collateral` to this contract.
+    /// Win (exercized > stake): stake forwarded to owner, profit to user wallet.
+    /// Push / cancel (0 < exercized <= stake): user's free-bet balance is credited so it can be reused.
+    function confirmCasinoBetResolved(
+        address _user,
+        address _collateral,
+        uint _exercized,
+        uint _stake
+    ) external nonReentrant {
+        if (!whitelistedCasino[msg.sender]) revert CallerNotAllowed();
+        if (_exercized == 0) return;
+
+        uint earned;
+        if (_exercized > _stake) {
+            IERC20(_collateral).safeTransfer(owner, _stake);
+            earned = _exercized - _stake;
+            if (earned > 0) {
+                IERC20(_collateral).safeTransfer(_user, earned);
+            }
+        } else {
+            balancePerUserAndCollateral[_user][_collateral] += _exercized;
+        }
+
+        emit CasinoBetResolved(msg.sender, _user, _collateral, _exercized, _stake, earned);
+    }
+
     /// @notice Sets whether an address is a whitelisted casino contract
     function setWhitelistedCasino(address _casino, bool _enabled) external onlyOwner {
         if (_casino == address(0)) revert InvalidAddress();
@@ -840,4 +867,12 @@ contract FreeBetsHolder is Initializable, ProxyOwned, ProxyPausable, ProxyReentr
     event UpdateMaxApprovalSpeedMarketsAMM(address collateral);
     event FreeBetUsedByCasino(address indexed user, address indexed collateral, uint amount, address indexed casino);
     event WhitelistedCasinoChanged(address indexed casino, bool enabled);
+    event CasinoBetResolved(
+        address indexed casino,
+        address indexed user,
+        address indexed collateral,
+        uint exercized,
+        uint stake,
+        uint earned
+    );
 }

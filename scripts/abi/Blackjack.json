@@ -924,7 +924,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "collateral",
+        "name": "",
         "type": "address"
       },
       {

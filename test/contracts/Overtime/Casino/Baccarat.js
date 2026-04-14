@@ -1156,7 +1156,7 @@ describe('Baccarat', () => {
 	/* ========== FREE BET WIN RESOLUTION ========== */
 
 	describe('FreeBet Win Resolution', () => {
-		it('should send profit to user and stake to holder on freebet PLAYER win', async () => {
+		it('should send profit to user and stake to holder owner on freebet PLAYER win', async () => {
 			// Deploy FreeBetsHolder inline
 			const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
 			const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
@@ -1184,6 +1184,7 @@ describe('Baccarat', () => {
 
 			const playerBalBefore = await usdc.balanceOf(player.address);
 			const holderBalBefore = await usdc.balanceOf(holderAddress);
+			const ownerBalBefore = await usdc.balanceOf(owner.address);
 
 			// Use the pre-computed player win word
 			await vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [playerWinWord.word]);
@@ -1197,9 +1198,11 @@ describe('Baccarat', () => {
 			const playerBalAfter = await usdc.balanceOf(player.address);
 			expect(playerBalAfter - playerBalBefore).to.equal(profit);
 
-			// Holder gets stake back
+			// Stake is forwarded to holder owner; holder itself nets zero
 			const holderBalAfter = await usdc.balanceOf(holderAddress);
-			expect(holderBalAfter - holderBalBefore).to.equal(MIN_USDC_BET);
+			expect(holderBalAfter - holderBalBefore).to.equal(0n);
+			const ownerBalAfter = await usdc.balanceOf(owner.address);
+			expect(ownerBalAfter - ownerBalBefore).to.equal(MIN_USDC_BET);
 		});
 	});
 
