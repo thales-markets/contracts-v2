@@ -566,13 +566,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         );
     }
 
-    /// @notice checks if a ticket belongs to the default LP round (round 1)
-    function _isDefaultRoundTicket(address _ticket, IERC20 _collateral) internal view returns (bool) {
-        address pool = liquidityPoolForCollateral[address(_collateral)];
-        if (pool == address(0)) return true;
-        return ISportsAMMV2LiquidityPool(pool).getTicketRound(_ticket) == 1;
-    }
-
     function _isDeferredTicket(address _ticket) internal view returns (bool) {
         try Ticket(_ticket).isDeferred() returns (bool stored) {
             return stored;
@@ -700,7 +693,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // 3) Commit trade to LP
         ISportsAMMV2LiquidityPool collateralPool = ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool);
 
-        if (_isDefaultRoundTicket(address(ticket), IERC20(_tradeDataInternal._collateral))) {
+        if (collateralPool.getTicketRound(address(ticket)) == 1) {
             // Default round: deferred collateralization.
             // Only send buyIn to LP for safekeeping. LP does NOT provide profit upfront.
             collateralPool.commitTradeDeferred(address(ticket), _tradeDataInternal._buyInAmount);
@@ -846,11 +839,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             );
         }
 
-        uint feesPaid;
-        if (!ticket.cancelled()) {
-            feesPaid = _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
-        }
-
         if (userWonAmount > 0) {
             if (_exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
                 if (ticketCollateral != defaultCollateral) revert OfframpOnlyDefaultCollateralAllowed();
@@ -862,6 +850,10 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 // Deferred: AMM pays user directly (ticket has no funds)
                 ticketCollateral.safeTransfer(ticketOwner, userWonAmount);
             }
+        }
+
+        if (!ticket.cancelled()) {
+            _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
 
         _finalizeTicketResolution(_ticket, ticketOwner, ticketCollateral, ticket.isUserTheWinner());

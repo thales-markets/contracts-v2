@@ -90,6 +90,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     uint private constant ONE_PERCENT = 1e16;
     uint private constant MAX_APPROVAL = type(uint256).max;
     uint private constant MAX_CURSOR_MOVES_PER_BATCH = 1000;
+    uint private constant DEFAULT_ROUND = 1;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -166,7 +167,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         _setSafeBoxParams(params._safeBox, params._safeBoxImpact);
 
         collateral.approve(params._sportsAMM, MAX_APPROVAL);
-        round = 1;
+        round = DEFAULT_ROUND;
     }
 
     /* ========== EXTERNAL WRITE FUNCTIONS ========== */
@@ -241,7 +242,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                 collateral.safeTransferFrom(liquidityPoolRound, address(sportsAMM), amount);
             }
         } else {
-            if (ticketRound != 1) revert InvalidRound();
+            if (ticketRound != DEFAULT_ROUND) revert InvalidRound();
             _provideAsDefault(amount);
         }
         tradingTicketsPerRound[ticketRound].push(ticket);
@@ -257,18 +258,16 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         uint buyInAmount
     ) external nonReentrant whenNotPaused onlyAMM roundClosingNotPrepared {
         if (!started) revert PoolNotStarted();
-        uint ticketRound = getTicketRound(ticket);
-        if (ticketRound != 1) revert OnlyDefaultRound();
-        roundPerTicket[ticket] = ticketRound;
-        _getOrCreateRoundPool(ticketRound);
+        if (buyInAmount == 0) revert ZeroAmount();
+        if (getTicketRound(ticket) != DEFAULT_ROUND) revert OnlyDefaultRound();
+        roundPerTicket[ticket] = DEFAULT_ROUND;
+        _getOrCreateRoundPool(DEFAULT_ROUND);
 
         // Take buyIn from AMM and deposit into defaultLiquidityProvider
-        if (buyInAmount > 0) {
-            collateral.safeTransferFrom(address(sportsAMM), defaultLiquidityProvider, buyInAmount);
-        }
+        collateral.safeTransferFrom(address(sportsAMM), defaultLiquidityProvider, buyInAmount);
 
-        tradingTicketsPerRound[ticketRound].push(ticket);
-        isTradingTicketInARound[ticketRound][ticket] = true;
+        tradingTicketsPerRound[DEFAULT_ROUND].push(ticket);
+        isTradingTicketInARound[DEFAULT_ROUND][ticket] = true;
     }
 
     /// @notice Pull funds from defaultLiquidityProvider to AMM for ticket resolution.
@@ -277,10 +276,9 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @param amount the amount to pull from LP to AMM
     function provideForResolution(address ticket, uint amount) external whenNotPaused onlyAMM {
         uint ticketRound = getTicketRound(ticket);
-        if (ticketRound != 1) revert OnlyDefaultRound();
-        if (amount > 0) {
-            collateral.safeTransferFrom(defaultLiquidityProvider, address(sportsAMM), amount);
-        }
+        if (ticketRound != DEFAULT_ROUND) revert OnlyDefaultRound();
+        if (amount == 0) revert ZeroAmount();
+        collateral.safeTransferFrom(defaultLiquidityProvider, address(sportsAMM), amount);
     }
 
     /// @notice transfer collateral amount from AMM to LP (ticket liquidity pool round)
@@ -289,11 +287,13 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         uint ticketRound = getTicketRound(_ticket);
 
         // if this is a past round, but not the default one, then we send the funds to the current round
-        if (ticketRound > 1 && ticketRound < round) {
+        if (ticketRound > DEFAULT_ROUND && ticketRound < round) {
             ticketRound = round;
         }
         if (_amount > 0) {
-            address liquidityPoolRound = ticketRound <= 1 ? defaultLiquidityProvider : _getOrCreateRoundPool(ticketRound);
+            address liquidityPoolRound = ticketRound <= DEFAULT_ROUND
+                ? defaultLiquidityProvider
+                : _getOrCreateRoundPool(ticketRound);
             collateral.safeTransferFrom(address(sportsAMM), liquidityPoolRound, _amount);
         }
         if (isTradingTicketInARound[ticketRound][_ticket]) {
@@ -507,7 +507,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
     /// @notice iterate all tickets in the default round and exercise those ready to be exercised
     function exerciseDefaultRoundTicketsReadyToBeExercised() external whenNotPaused {
-        _exerciseTicketsReadyToBeExercised(1);
+        _exerciseTicketsReadyToBeExercised(DEFAULT_ROUND);
     }
 
     /// @notice iterate all tickets in the current round and exercise those ready to be exercised (batch)
@@ -523,7 +523,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     function exerciseDefaultRoundTicketsReadyToBeExercisedBatch(
         uint _batchSize
     ) external nonReentrant whenNotPaused roundClosingNotPrepared {
-        _exerciseTicketsReadyToBeExercisedBatch(_batchSize, 1);
+        _exerciseTicketsReadyToBeExercisedBatch(_batchSize, DEFAULT_ROUND);
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -583,7 +583,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     /// @notice iterate all tickets in the default round and return true if at least one can be exercised
     /// @return bool
     function hasDefaultRoundTicketsReadyToBeExercised() external view returns (bool) {
-        return _hasTicketsReadyToBeExercised(1);
+        return _hasTicketsReadyToBeExercised(DEFAULT_ROUND);
     }
 
     function _hasTicketsReadyToBeExercised(uint _round) internal view returns (bool) {
@@ -649,12 +649,12 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
                     } else {
                         // if ticket is cross rounds, use the default round
                         if (((maturity - firstRoundStartTime) / roundLength + 2) != ticketRound) {
-                            ticketRound = 1;
+                            ticketRound = DEFAULT_ROUND;
                             break;
                         }
                     }
                 } else {
-                    ticketRound = 1;
+                    ticketRound = DEFAULT_ROUND;
                     break;
                 }
             }
@@ -818,16 +818,16 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
 
         collateral.safeTransferFrom(defaultLiquidityProvider, address(sportsAMM), _amount);
 
-        balancesPerRound[1][defaultLiquidityProvider] += _amount;
-        allocationPerRound[1] += _amount;
+        balancesPerRound[DEFAULT_ROUND][defaultLiquidityProvider] += _amount;
+        allocationPerRound[DEFAULT_ROUND] += _amount;
 
-        emit Deposited(defaultLiquidityProvider, _amount, 1);
+        emit Deposited(defaultLiquidityProvider, _amount, DEFAULT_ROUND);
     }
 
     function _getOrCreateRoundPool(uint _round) internal returns (address roundPool) {
         roundPool = roundPools[_round];
         if (roundPool == address(0)) {
-            if (_round == 1) {
+            if (_round == DEFAULT_ROUND) {
                 roundPools[_round] = defaultLiquidityProvider;
                 roundPool = defaultLiquidityProvider;
             } else {
@@ -850,7 +850,7 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
     }
 
     function _migrateTicketToNewRound(address _ticket, uint _newRound, uint _ticketIndexInRound) internal {
-        if (_newRound <= round && _newRound != 1) revert RoundAlreadyClosed();
+        if (_newRound <= round && _newRound != DEFAULT_ROUND) revert RoundAlreadyClosed();
         uint ticketRound = getTicketRound(_ticket);
         if (ticketRound != round) revert TicketNotInRound();
         if (!isTradingTicketInARound[ticketRound][_ticket]) revert TicketNotInCurrentRound();
