@@ -41,6 +41,7 @@ describe('Ticket Exercise and Expire', () => {
 		stakingThales,
 		safeBox,
 		priceFeed,
+		referrals,
 		firstLiquidityProvider,
 		firstTrader,
 		owner,
@@ -73,6 +74,7 @@ describe('Ticket Exercise and Expire', () => {
 			positionalManager,
 			stakingThales,
 			priceFeed,
+			referrals,
 			safeBox,
 			tradeDataCurrentRound,
 			tradeDataNextRound,
@@ -334,6 +336,75 @@ describe('Ticket Exercise and Expire', () => {
 
 			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0n);
 			expect(lpBalanceAfter - lpBalanceBefore).to.equal(0n);
+		});
+
+		it('Deferred winner exercises cleanly even when referrer tier > safeBoxFee', async () => {
+			// Regression: with referrerFeeByTier > safeBoxFee, the deferred-exercise path
+			// in _exerciseTicket used to over-pay the referrer (because AMM balance is
+			// inflated by userWonAmount, defeating the `_ammBalance >= referrerShare` cap
+			// in calculateFees) and then revert on the user's safeTransfer. After the fix,
+			// exercise must complete: the user is paid in full, referrer cannot drain
+			// more than the available fee budget, and the ticket resolves.
+			const safeBoxFee = await sportsAMMV2.safeBoxFee(); // 2e16 (2%)
+			const highReferrerFee = safeBoxFee * 2n; // 4% > 2%
+			await referrals.setReferrerFees(highReferrerFee, highReferrerFee, highReferrerFee);
+
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+				[tradeDataCrossRounds[0].typeId, tradeDataCrossRounds[1].typeId],
+				[RESULT_TYPE.ExactPosition, RESULT_TYPE.Spread]
+			);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2.connect(firstTrader).trade(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				quote.totalQuote,
+				ADDITIONAL_SLIPPAGE,
+				secondAccount.address, // referrer (must differ from trader)
+				ZERO_ADDRESS,
+				false
+			);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			expect(await userTicket.isDeferred()).to.equal(true);
+
+			for (const leg of tradeDataCrossRounds) {
+				await sportsAMMV2ResultManager.setResultsPerMarkets(
+					[leg.gameId],
+					[leg.typeId],
+					[leg.playerId],
+					[[leg.position]]
+				);
+			}
+
+			expect(await userTicket.isUserTheWinner()).to.equal(true);
+
+			const expectedUserPayout = quote.payout; // userWonAmount for a full winner
+			const userBalanceBefore = await collateral.balanceOf(firstTrader.address);
+			const ammBalanceBefore = await collateral.balanceOf(sportsAMMV2.target);
+
+			// Should NOT revert. Pre-fix, this reverts with ERC20InsufficientBalance
+			// because referrer is paid before user, depleting AMM below userWonAmount.
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
+
+			expect(await userTicket.resolved()).to.equal(true);
+
+			// User must receive their full winnings.
+			const userBalanceAfter = await collateral.balanceOf(firstTrader.address);
+			expect(userBalanceAfter - userBalanceBefore).to.equal(expectedUserPayout);
+
+			// AMM must end at the same balance it started (no stuck funds).
+			expect(await collateral.balanceOf(sportsAMMV2.target)).to.equal(ammBalanceBefore);
 		});
 
 		it('Expire legacy ticket without isDeferred uses non-deferred path', async () => {
