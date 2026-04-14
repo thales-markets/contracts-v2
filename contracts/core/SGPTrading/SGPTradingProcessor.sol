@@ -185,6 +185,13 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         require((timestampPerRequest[_requestId] + maxAllowedExecutionDelay) > block.timestamp, "Request timed out");
 
         ISGPTradingProcessor.SGPTradeData memory sgpTradeData = requestIdToTradeData[_requestId];
+        if (sgpTradeData._isLive) {
+            // Align live markets trade data with risk manager requirements
+            for (uint i = 0; i < sgpTradeData._tradeData.length; ++i) {
+                sgpTradeData._tradeData[i].status = 0;
+                sgpTradeData._tradeData[i].maturity = block.timestamp + 60;
+            }
+        }
         address requester = requestIdToRequester[_requestId];
 
         require(
