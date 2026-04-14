@@ -88,7 +88,8 @@ interface ISportsAMMV2 {
         uint _approvedQuote,
         address _recipient,
         address _referrer,
-        address _collateral
+        address _collateral,
+        bool _isLive
     ) external returns (address _createdTicket);
 
     function rootPerGame(bytes32 game) external view returns (bytes32);

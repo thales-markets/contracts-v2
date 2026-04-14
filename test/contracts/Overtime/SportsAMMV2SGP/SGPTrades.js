@@ -143,14 +143,16 @@ describe('SportsAMMV2Live Live Trades', () => {
 			const ticketAddress = activeTickets[0];
 
 			const TicketContract = await ethers.getContractFactory('Ticket');
-			const userTicket = await TicketContract.attach(ticketAddress);
+			const userTicket = TicketContract.attach(ticketAddress);
 
 			const marketData = await userTicket.markets(0);
 			expect(marketData.gameId).to.equal(sameGameWithFirstPlayerProps[0].gameId);
 
 			const sgpTradeData = await sgpTradingProcessor.requestIdToTradeData(requestId);
-			console.log(sgpTradeData);
 			expect(sgpTradeData._isLive).to.equal(true);
+
+			const totalQuote = await userTicket.totalQuote();
+			expect(totalQuote).to.equal(sgpTradeData._expectedQuote);
 		});
 
 		it('Should fail SGP due to liquidity', async () => {

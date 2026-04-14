@@ -199,7 +199,8 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 _approvedQuote,
                 requester,
                 sgpTradeData._referrer,
-                sgpTradeData._collateral
+                sgpTradeData._collateral,
+                sgpTradeData._isLive
             );
 
             if (requester == freeBetsHolder) {
