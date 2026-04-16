@@ -19,6 +19,7 @@ const { TASK_TEST_GET_TEST_FILES } = require('hardhat/builtin-tasks/task-names')
 const EXCLUDED_EDGE_TESTS = [
 	'test/contracts/Overtime/Casino/EdgeAudit.js',
 	'test/contracts/Overtime/Casino/SlotsSimulation.js',
+	'test/contracts/Overtime/Casino/BlackjackStrategies.js',
 ].map((p) => path.resolve(__dirname, p));
 
 task(TASK_TEST_GET_TEST_FILES).setAction(async (args, _hre, runSuper) => {

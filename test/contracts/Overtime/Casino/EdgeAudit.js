@@ -118,12 +118,12 @@ function parseEvent(contract, receipt, name) {
 // DICE — 10k bets, ROLL_UNDER target=11 (50% hit, 1.96x payout, 2% edge)
 // ============================================================================
 describe('Edge Audit: Dice', () => {
-	const NUM_BETS = 10000;
+	const NUM_BETS = 100000;
 	const TARGET = 11; // ROLL_UNDER 11 → winning faces 1..10 → 50% win rate
 	const BET_TYPE = 0; // ROLL_UNDER
 
 	it(`should observe ~2% house edge over ${NUM_BETS} ROLL_UNDER bets`, async function () {
-		this.timeout(900000); // 15 min
+		this.timeout(9000000); // 150 min (100k iters)
 
 		const f = await loadFixture(sharedFixture);
 		const { owner, player, usdc, usdcAddress, vrfCoordinator, core, collateralConfig, vrfConfig } =
@@ -202,13 +202,13 @@ describe('Edge Audit: Dice', () => {
 // ROULETTE — 10k RED_BLACK bets on red (selection=0), expect 2.70% edge
 // ============================================================================
 describe('Edge Audit: Roulette', () => {
-	const NUM_BETS = 10000;
+	const NUM_BETS = 100000;
 	const BET_TYPE = 1; // RED_BLACK
 	const SELECTION = 0; // red
 	const RED_SET = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 
 	it(`should observe ~2.70% house edge over ${NUM_BETS} RED_BLACK bets`, async function () {
-		this.timeout(900000);
+		this.timeout(9000000); // 150 min (100k iters)
 
 		const f = await loadFixture(sharedFixture);
 		const { owner, player, usdc, usdcAddress, vrfCoordinator, core, collateralConfig, vrfConfig } =
@@ -273,7 +273,7 @@ describe('Edge Audit: Roulette', () => {
 	});
 
 	it(`should observe ~2.70% house edge over ${NUM_BETS} STRAIGHT bets`, async function () {
-		this.timeout(900000);
+		this.timeout(9000000); // 150 min (100k iters)
 
 		const f = await loadFixture(sharedFixture);
 		const { player, usdc, usdcAddress, vrfCoordinator, core, collateralConfig, vrfConfig } = f;
@@ -330,7 +330,7 @@ describe('Edge Audit: Roulette', () => {
 // BACCARAT — 10k bets each for Player / Banker / Tie
 // ============================================================================
 describe('Edge Audit: Baccarat', () => {
-	const NUM_BETS = 10000;
+	const NUM_BETS = 100000;
 
 	// BetType enum
 	const BetType = { PLAYER: 0, BANKER: 1, TIE: 2 };
@@ -445,17 +445,17 @@ describe('Edge Audit: Baccarat', () => {
 	}
 
 	it(`should observe ~1.24% edge over ${NUM_BETS} PLAYER bets`, async function () {
-		this.timeout(900000);
+		this.timeout(9000000); // 150 min (100k iters)
 		await runBaccaratBets(BetType.PLAYER, 'PLAYER', 98.76, 2.0);
 	});
 
 	it(`should observe ~1.05% edge over ${NUM_BETS} BANKER bets (1.95x payout)`, async function () {
-		this.timeout(900000);
+		this.timeout(9000000); // 150 min (100k iters)
 		await runBaccaratBets(BetType.BANKER, 'BANKER', 98.95, 2.0);
 	});
 
 	it(`should observe ~14.36% edge over ${NUM_BETS} TIE bets (9x payout)`, async function () {
-		this.timeout(900000);
+		this.timeout(9000000); // 150 min (100k iters)
 		await runBaccaratBets(BetType.TIE, 'TIE', 85.64, 4.0);
 	});
 });
@@ -464,7 +464,7 @@ describe('Edge Audit: Baccarat', () => {
 // SLOTS — 10k spins on the production pair+triple config
 // ============================================================================
 describe('Edge Audit: Slots', () => {
-	const NUM_BETS = 10000;
+	const NUM_BETS = 100000;
 	const NUM_SYMBOLS = 5;
 	const SYMBOL_WEIGHTS = [34, 26, 18, 13, 9];
 	const PAIR_PAYOUTS = [
@@ -504,7 +504,7 @@ describe('Edge Audit: Slots', () => {
 	}
 
 	it(`should observe ~4.95% edge over ${NUM_BETS} spins`, async function () {
-		this.timeout(1200000); // 20 min
+		this.timeout(12000000); // 200 min (100k iters)
 
 		const f = await loadFixture(sharedFixture);
 		const { player, usdc, usdcAddress, vrfCoordinator, core, collateralConfig, vrfConfig } = f;
@@ -583,7 +583,7 @@ describe('Edge Audit: Slots', () => {
 // Runtime note: each hand requires 2–3 transactions; 10k hands takes ~5 min.
 // ============================================================================
 describe('Edge Audit: Blackjack', () => {
-	const NUM_HANDS = 10000;
+	const NUM_HANDS = 100000;
 
 	// Off-chain card derivation matching contract _deriveCard
 	function deriveCard(word, shift) {
@@ -620,7 +620,7 @@ describe('Edge Audit: Blackjack', () => {
 	}
 
 	it(`should observe a positive house edge over ${NUM_HANDS} hands`, async function () {
-		this.timeout(1800000); // 30 min
+		this.timeout(18000000); // 300 min (100k iters)
 
 		const f = await loadFixture(sharedFixture);
 		const { player, usdc, usdcAddress, vrfCoordinator, core, collateralConfig, vrfConfig } = f;
