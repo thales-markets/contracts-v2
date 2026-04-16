@@ -449,8 +449,9 @@ describe('Roulette', () => {
 			expect(betBase.collateral).to.equal(usdcAddress);
 			expect(betBase.amount).to.equal(MIN_USDC_BET);
 			expect(betDetails.status).to.equal(1n); // PENDING
-			expect(betDetails.betType).to.equal(BetType.RED_BLACK);
-			expect(betDetails.selection).to.equal(0n);
+			expect(betDetails.betPicks.length).to.equal(1);
+			expect(betDetails.betPicks[0].betType).to.equal(BigInt(BetType.RED_BLACK));
+			expect(betDetails.betPicks[0].selection).to.equal(0n);
 
 			// nextBetId incremented
 			expect(await roulette.nextBetId()).to.equal(2n);
@@ -481,7 +482,7 @@ describe('Roulette', () => {
 				.placeBet(usdcAddress, MIN_USDC_BET, BetType.DOZEN, 0, ethers.ZeroAddress);
 			const betDetails = await roulette.getBetDetails(1n);
 			expect(betDetails.status).to.equal(1n); // PENDING
-			expect(betDetails.betType).to.equal(BigInt(BetType.DOZEN));
+			expect(betDetails.betPicks[0].betType).to.equal(BigInt(BetType.DOZEN));
 		});
 
 		it('should place a COLUMN bet successfully', async () => {
@@ -491,7 +492,7 @@ describe('Roulette', () => {
 				.placeBet(usdcAddress, MIN_USDC_BET, BetType.COLUMN, 0, ethers.ZeroAddress);
 			const betDetails = await roulette.getBetDetails(1n);
 			expect(betDetails.status).to.equal(1n); // PENDING
-			expect(betDetails.betType).to.equal(BigInt(BetType.COLUMN));
+			expect(betDetails.betPicks[0].betType).to.equal(BigInt(BetType.COLUMN));
 		});
 
 		it('should revert DOZEN with invalid selection (>= 3)', async () => {
@@ -1237,8 +1238,8 @@ describe('Roulette', () => {
 
 			const betDetails = await roulette.getBetDetails(betId);
 			expect(betDetails.status).to.equal(2n); // RESOLVED
-			expect(betDetails.betType).to.equal(BigInt(BetType.RED_BLACK));
-			expect(betDetails.selection).to.equal(0n);
+			expect(betDetails.betPicks[0].betType).to.equal(BigInt(BetType.RED_BLACK));
+			expect(betDetails.betPicks[0].selection).to.equal(0n);
 			expect(betDetails.result).to.equal(1n);
 			expect(betDetails.won).to.equal(true);
 		});
@@ -1351,7 +1352,7 @@ describe('Roulette', () => {
 			expect(page.length).to.equal(1);
 			// Skip most recent (bet 3), get bet 2
 			const bet = await roulette.getBetDetails(page[0]);
-			expect(bet.betType).to.equal(BigInt(BetType.ODD_EVEN));
+			expect(bet.betPicks[0].betType).to.equal(BigInt(BetType.ODD_EVEN));
 		});
 	});
 
@@ -1388,8 +1389,8 @@ describe('Roulette', () => {
 			expect(ids.length).to.equal(2);
 			const bet0 = await roulette.getBetDetails(ids[0]);
 			const bet1 = await roulette.getBetDetails(ids[1]);
-			expect(bet0.betType).to.equal(BigInt(BetType.ODD_EVEN));
-			expect(bet1.betType).to.equal(BigInt(BetType.RED_BLACK));
+			expect(bet0.betPicks[0].betType).to.equal(BigInt(BetType.ODD_EVEN));
+			expect(bet1.betPicks[0].betType).to.equal(BigInt(BetType.RED_BLACK));
 		});
 
 		it('getUserBetIds should return empty for offset beyond length', async () => {
@@ -1577,6 +1578,572 @@ describe('Roulette', () => {
 			await expect(roulette.connect(owner).setReferrals(secondAccount.address))
 				.to.emit(roulette, 'ReferralsChanged')
 				.withArgs(secondAccount.address);
+		});
+	});
+
+	/* ========== MULTI-PICK BETS ========== */
+
+	describe('Multi-Pick Bets', () => {
+		// Build a PickInput tuple the way ethers expects for a Solidity struct
+		const pick = (betType, selection, amount) => ({ betType, selection, amount });
+
+		describe('placeMultiBet', () => {
+			it('places a 2-pick USDC bet with different types and amounts', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
+
+				const picks = [
+					pick(BetType.RED_BLACK, 0, MIN_USDC_BET),
+					pick(BetType.DOZEN, 0, MIN_USDC_BET),
+				];
+
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				const { betId, requestId } = await parseBetPlaced(roulette, tx);
+				expect(betId).to.equal(1n);
+				expect(requestId).to.equal(1n);
+
+				// Bet aggregate stake = sum of pick amounts
+				const betBase = await roulette.getBetBase(betId);
+				expect(betBase.amount).to.equal(MIN_USDC_BET * 2n);
+				// Aggregate reserved profit = 1x (RED_BLACK) + 2x (DOZEN) of per-pick amounts
+				expect(betBase.reservedProfit).to.equal(MIN_USDC_BET * 3n);
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(MIN_USDC_BET * 3n);
+
+				// Pick count and contents
+				expect(await roulette.getBetPickCount(betId)).to.equal(2n);
+				const details = await roulette.getBetDetails(betId);
+				expect(details.betPicks.length).to.equal(2);
+				expect(details.betPicks[0].betType).to.equal(BigInt(BetType.RED_BLACK));
+				expect(details.betPicks[0].amount).to.equal(MIN_USDC_BET);
+				expect(details.betPicks[0].reservedProfit).to.equal(MIN_USDC_BET);
+				expect(details.betPicks[1].betType).to.equal(BigInt(BetType.DOZEN));
+				expect(details.betPicks[1].amount).to.equal(MIN_USDC_BET);
+				expect(details.betPicks[1].reservedProfit).to.equal(MIN_USDC_BET * 2n);
+			});
+
+			it('emits MultiBetPlaced alongside BetPlaced for multi-pick bets', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
+
+				const picks = [
+					pick(BetType.RED_BLACK, 0, MIN_USDC_BET),
+					pick(BetType.ODD_EVEN, 1, MIN_USDC_BET),
+				];
+
+				await expect(roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress))
+					.to.emit(roulette, 'MultiBetPlaced')
+					.withArgs(1n, 1n, player.address, usdcAddress, MIN_USDC_BET * 2n, 2, false)
+					.and.to.emit(roulette, 'BetPlaced');
+			});
+
+			it('does not emit MultiBetPlaced for single-pick placeBet (back-compat)', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+
+				const tx = await roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+				const receipt = await tx.wait();
+				const hasMulti = receipt.logs.some((log) => {
+					try {
+						return roulette.interface.parseLog(log)?.name === 'MultiBetPlaced';
+					} catch {
+						return false;
+					}
+				});
+				expect(hasMulti).to.equal(false);
+			});
+
+			it('single-pick bet shows pickCount=1 and a synthesized 1-element picks array', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+
+				await roulette
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+
+				expect(await roulette.getBetPickCount(1n)).to.equal(1n);
+				const details = await roulette.getBetDetails(1n);
+				expect(details.betPicks.length).to.equal(1);
+				expect(details.betPicks[0].betType).to.equal(BigInt(BetType.RED_BLACK));
+				expect(details.betPicks[0].selection).to.equal(0n);
+				expect(details.betPicks[0].amount).to.equal(MIN_USDC_BET);
+			});
+
+			it('places the maximum 10 picks', async () => {
+				// 10 tiny picks of RED_BLACK on alternating colors, each 1 USDC
+				const amount = 1n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 10n);
+				const picks = Array.from({ length: 10 }, (_, i) => pick(BetType.RED_BLACK, i % 2, amount));
+
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				const { betId } = await parseBetPlaced(roulette, tx);
+
+				expect(await roulette.getBetPickCount(betId)).to.equal(10n);
+				const betBase = await roulette.getBetBase(betId);
+				expect(betBase.amount).to.equal(amount * 10n);
+				// Each RED_BLACK reserves 1x = amount, so total reserved = 10 * amount
+				expect(betBase.reservedProfit).to.equal(amount * 10n);
+			});
+
+			it('allows duplicate picks (stacked weight on the same selection)', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
+				const picks = [
+					pick(BetType.RED_BLACK, 0, MIN_USDC_BET),
+					pick(BetType.RED_BLACK, 0, MIN_USDC_BET),
+				];
+
+				await roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				const details = await roulette.getBetDetails(1n);
+				expect(details.betPicks.length).to.equal(2);
+				expect(details.betPicks[0].selection).to.equal(0n);
+				expect(details.betPicks[1].selection).to.equal(0n);
+			});
+
+			it('places a 1-pick multi-bet (equivalent to placeBet)', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+				const picks = [pick(BetType.RED_BLACK, 0, MIN_USDC_BET)];
+
+				await roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				expect(await roulette.getBetPickCount(1n)).to.equal(1n);
+				const betBase = await roulette.getBetBase(1n);
+				expect(betBase.amount).to.equal(MIN_USDC_BET);
+			});
+		});
+
+		describe('placeMultiBet validations', () => {
+			it('reverts on empty picks array', async () => {
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, [], ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InvalidPickCount');
+			});
+
+			it('reverts on >10 picks', async () => {
+				const amount = 1n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 11n);
+				const picks = Array.from({ length: 11 }, (_, i) => pick(BetType.RED_BLACK, i % 2, amount));
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InvalidPickCount');
+			});
+
+			it('reverts when a pick has zero amount', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
+				const picks = [pick(BetType.RED_BLACK, 0, MIN_USDC_BET), pick(BetType.DOZEN, 0, 0)];
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
+			});
+
+			it('reverts when a pick has invalid selection value', async () => {
+				await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET * 2n);
+				const picks = [
+					pick(BetType.RED_BLACK, 0, MIN_USDC_BET),
+					pick(BetType.DOZEN, 3, MIN_USDC_BET),
+				];
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InvalidSelection');
+			});
+
+			it('reverts on unsupported collateral', async () => {
+				const picks = [pick(BetType.RED_BLACK, 0, MIN_USDC_BET)];
+				await expect(
+					roulette.connect(player).placeMultiBet(secondAccount.address, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InvalidCollateral');
+			});
+
+			it('reverts when aggregate stake is below MIN_BET_USD', async () => {
+				// Two picks of 1 USDC each (2 USD total, below the 3 USD minimum)
+				const amount = 1n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.RED_BLACK, 1, amount)];
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InvalidAmount');
+			});
+
+			it('accepts a pick with stake individually below MIN_BET_USD when the aggregate meets it', async () => {
+				// Two picks of 2 USDC each => 4 USD total, each pick is only 2 USD
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.RED_BLACK, 1, amount)];
+				await expect(roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress))
+					.to.not.be.reverted;
+			});
+
+			it('reverts when aggregate profit exceeds maxProfitUsd', async () => {
+				// maxProfitUsd = 1000 USD; one STRAIGHT at 30 USDC reserves 35*30 = 1050 USD profit
+				const amount = 30n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount);
+				const picks = [pick(BetType.STRAIGHT, 7, amount)];
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'MaxProfitExceeded');
+			});
+
+			it('reverts when aggregate profit exceeds maxProfitUsd across multiple picks', async () => {
+				// Two STRAIGHTs at 20 USDC each => 2 * 35 * 20 = 1400 USD profit (> 1000 cap)
+				const amount = 20n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.STRAIGHT, 7, amount), pick(BetType.STRAIGHT, 13, amount)];
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'MaxProfitExceeded');
+			});
+
+			it('rolls back reservation when liquidity is insufficient', async () => {
+				// Drain most of the USDC bankroll so the next placement trips the liquidity check.
+				// STRAIGHT reserves 35x, so a 14 USDC STRAIGHT reserves 490 USDC profit.
+				const remainingBankroll = 10n * 1_000_000n;
+				const currentBal = await usdc.balanceOf(rouletteAddress);
+				await roulette
+					.connect(owner)
+					.withdrawCollateral(usdcAddress, owner.address, currentBal - remainingBankroll);
+
+				// Multi-bet that aggregates enough reservation to exceed bankroll after stake transfer
+				const amount = 14n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.STRAIGHT, 7, amount), pick(BetType.STRAIGHT, 13, amount)];
+				await expect(
+					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
+				).to.be.revertedWithCustomError(roulette, 'InsufficientAvailableLiquidity');
+
+				// Reservation was rolled back
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(0n);
+			});
+		});
+
+		describe('Multi-pick fulfillment', () => {
+			it('all picks win: totalPayout = sum of leg payouts; Bet.won=true', async () => {
+				// Result = 7 (red, odd, 1-18, STRAIGHT=7 hits)
+				// Picks: STRAIGHT=7 (wins 36x), RED_BLACK=0 red (wins 2x), LOW_HIGH=0 (wins 2x)
+				const amount = 1n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 3n);
+				const picks = [
+					pick(BetType.STRAIGHT, 7, amount),
+					pick(BetType.RED_BLACK, 0, amount),
+					pick(BetType.LOW_HIGH, 0, amount),
+				];
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+				const balBefore = await usdc.balanceOf(player.address);
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [7n]);
+
+				const betBase = await roulette.getBetBase(betId);
+				// Expected payout: 36*amount (STRAIGHT) + 2*amount (RED_BLACK) + 2*amount (LOW_HIGH) = 40*amount
+				expect(betBase.payout).to.equal(amount * 40n);
+				const balAfter = await usdc.balanceOf(player.address);
+				expect(balAfter - balBefore).to.equal(amount * 40n);
+
+				const details = await roulette.getBetDetails(betId);
+				expect(details.won).to.equal(true);
+				expect(details.status).to.equal(2n); // RESOLVED
+				expect(details.result).to.equal(7n);
+				expect(details.betPicks.every((p) => p.won)).to.equal(true);
+
+				// Reservation released
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(0n);
+			});
+
+			it('partial win: only winning picks pay out, single aggregate transfer', async () => {
+				// Result = 1 (red, odd, 1-18, STRAIGHT=1)
+				// Picks: STRAIGHT=5 (loses), RED_BLACK=0 red (wins), ODD_EVEN=1 even (loses)
+				const amount = 1n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 3n);
+				const picks = [
+					pick(BetType.STRAIGHT, 5, amount),
+					pick(BetType.RED_BLACK, 0, amount),
+					pick(BetType.ODD_EVEN, 1, amount),
+				];
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+				const balBefore = await usdc.balanceOf(player.address);
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]);
+
+				const betBase = await roulette.getBetBase(betId);
+				// Only RED_BLACK wins: payout = 2 * amount
+				expect(betBase.payout).to.equal(amount * 2n);
+				const balAfter = await usdc.balanceOf(player.address);
+				expect(balAfter - balBefore).to.equal(amount * 2n);
+
+				const details = await roulette.getBetDetails(betId);
+				expect(details.won).to.equal(true); // any pick won
+				expect(details.betPicks[0].won).to.equal(false);
+				expect(details.betPicks[0].payout).to.equal(0n);
+				expect(details.betPicks[1].won).to.equal(true);
+				expect(details.betPicks[1].payout).to.equal(amount * 2n);
+				expect(details.betPicks[2].won).to.equal(false);
+				expect(details.betPicks[2].payout).to.equal(0n);
+
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(0n);
+			});
+
+			it('all picks lose: no payout, referrer paid on totalAmount', async () => {
+				// Set up referrer with 0.5% fee
+				const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+				const mockReferrals = await MockReferralsFactory.deploy();
+				const fee = ethers.parseEther('0.005');
+				await mockReferrals.setReferrerFees(fee, fee, fee);
+				await roulette.connect(owner).setReferrals(await mockReferrals.getAddress());
+
+				// Pick all selections that lose on result=0
+				const amount = 1n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 3n);
+				const picks = [
+					pick(BetType.RED_BLACK, 0, amount),
+					pick(BetType.ODD_EVEN, 1, amount),
+					pick(BetType.LOW_HIGH, 0, amount),
+				];
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, secondAccount.address);
+				const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+				const playerBefore = await usdc.balanceOf(player.address);
+				const refBefore = await usdc.balanceOf(secondAccount.address);
+
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [0n]); // zero kills all
+
+				const betBase = await roulette.getBetBase(betId);
+				expect(betBase.payout).to.equal(0n);
+				expect(await usdc.balanceOf(player.address)).to.equal(playerBefore);
+
+				// Referrer gets 0.5% of totalAmount (3 USDC)
+				const refAfter = await usdc.balanceOf(secondAccount.address);
+				expect(refAfter - refBefore).to.equal((amount * 3n * 5n) / 1000n);
+
+				const details = await roulette.getBetDetails(betId);
+				expect(details.won).to.equal(false);
+				expect(details.betPicks.every((p) => !p.won)).to.equal(true);
+			});
+
+			it('does not pay referrer when any pick wins', async () => {
+				const MockReferralsFactory = await ethers.getContractFactory('MockReferrals');
+				const mockReferrals = await MockReferralsFactory.deploy();
+				const fee = ethers.parseEther('0.005');
+				await mockReferrals.setReferrerFees(fee, fee, fee);
+				await roulette.connect(owner).setReferrals(await mockReferrals.getAddress());
+
+				// Partial win scenario — referrer should NOT be paid.
+				// Small STRAIGHT + larger RED_BLACK so aggregate stake hits MIN_BET_USD but reserved
+				// profit stays well under bankroll
+				const strAmount = 1n * 1_000_000n;
+				const rbAmount = 2n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, strAmount + rbAmount);
+				const picks = [pick(BetType.STRAIGHT, 5, strAmount), pick(BetType.RED_BLACK, 0, rbAmount)];
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, secondAccount.address);
+				const { requestId } = await parseBetPlaced(roulette, tx);
+
+				const refBefore = await usdc.balanceOf(secondAccount.address);
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]); // RED_BLACK wins
+				const refAfter = await usdc.balanceOf(secondAccount.address);
+				expect(refAfter - refBefore).to.equal(0n);
+			});
+
+			it('emits a single BetResolved event with aggregate payout and releases full reservation', async () => {
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.DOZEN, 0, amount)];
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+				// Reservation should be 1x + 2x = 3x amount
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 3n);
+
+				// Result = 1 (red, dozen 1-12): both picks win → payout = 2*amount + 3*amount = 5*amount
+				await expect(vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]))
+					.to.emit(roulette, 'BetResolved')
+					.withArgs(betId, requestId, player.address, 1, true, amount * 5n);
+
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(0n);
+			});
+		});
+
+		describe('Multi-pick free bet', () => {
+			let holder, holderAddress;
+
+			beforeEach(async () => {
+				const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
+				holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+				await holder.initialize(owner.address, owner.address, owner.address);
+				holderAddress = await holder.getAddress();
+				await holder.addSupportedCollateral(usdcAddress, true, owner.address);
+				await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
+				await roulette.connect(owner).setFreeBetsHolder(holderAddress);
+				await holder.setWhitelistedCasino(rouletteAddress, true);
+			});
+
+			it('deducts aggregate amount from holder balance on placement', async () => {
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(owner).approve(holderAddress, amount * 2n);
+				await holder.connect(owner).fund(player.address, usdcAddress, amount * 2n);
+
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.DOZEN, 0, amount)];
+				await roulette.connect(player).placeMultiBetWithFreeBet(usdcAddress, picks);
+
+				expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+				expect(await roulette.isFreeBet(1n)).to.equal(true);
+			});
+
+			it('full win: sends aggregate payout to holder; profit → user, stake → holder owner', async () => {
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(owner).approve(holderAddress, amount * 2n);
+				await holder.connect(owner).fund(player.address, usdcAddress, amount * 2n);
+
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.DOZEN, 0, amount)];
+				const tx = await roulette.connect(player).placeMultiBetWithFreeBet(usdcAddress, picks);
+				const { betId, requestId } = await parseBetPlaced(roulette, tx);
+
+				const playerBefore = await usdc.balanceOf(player.address);
+				const ownerBefore = await usdc.balanceOf(owner.address);
+
+				// Result = 1: RED_BLACK wins (2*amount), DOZEN wins (3*amount) → total 5*amount
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]);
+
+				const betBase = await roulette.getBetBase(betId);
+				expect(betBase.payout).to.equal(amount * 5n);
+
+				// Stake (totalAmount = 2*amount) → holder owner; profit (5*amount - 2*amount = 3*amount) → user
+				const playerAfter = await usdc.balanceOf(player.address);
+				expect(playerAfter - playerBefore).to.equal(amount * 3n);
+				const ownerAfter = await usdc.balanceOf(owner.address);
+				expect(ownerAfter - ownerBefore).to.equal(amount * 2n);
+			});
+
+			it('partial win: payout credited back to holder free-bet balance', async () => {
+				// Three picks of 1 USDC each: RED_BLACK=0 wins on result=1, the other two lose.
+				// totalAmount = 3 USDC, winning leg payout = 2 USDC → 2 < 3, so credited back to holder balance
+				const amount = 1n * 1_000_000n;
+				const totalStake = amount * 3n;
+				await usdc.connect(owner).approve(holderAddress, totalStake);
+				await holder.connect(owner).fund(player.address, usdcAddress, totalStake);
+
+				const picks = [
+					pick(BetType.STRAIGHT, 5, amount),
+					pick(BetType.ODD_EVEN, 1, amount),
+					pick(BetType.RED_BLACK, 0, amount),
+				];
+				const tx = await roulette.connect(player).placeMultiBetWithFreeBet(usdcAddress, picks);
+				const { requestId } = await parseBetPlaced(roulette, tx);
+
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]);
+
+				// Winning leg (RED_BLACK) payout = 2 * amount = 2 USDC; 2 < 3 → credited back
+				expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(
+					amount * 2n
+				);
+			});
+
+			it('full loss: no transfer to holder (stake consumed)', async () => {
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(owner).approve(holderAddress, amount * 2n);
+				await holder.connect(owner).fund(player.address, usdcAddress, amount * 2n);
+
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.RED_BLACK, 0, amount)];
+				const tx = await roulette.connect(player).placeMultiBetWithFreeBet(usdcAddress, picks);
+				const { requestId } = await parseBetPlaced(roulette, tx);
+
+				const holderBefore = await usdc.balanceOf(holderAddress);
+				// Result = 0 (zero) → both RED picks lose
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [0n]);
+				const holderAfter = await usdc.balanceOf(holderAddress);
+				expect(holderAfter - holderBefore).to.equal(0n);
+				expect(await holder.balancePerUserAndCollateral(player.address, usdcAddress)).to.equal(0n);
+			});
+		});
+
+		describe('Multi-pick cancel', () => {
+			it('user cancel after timeout refunds aggregate stake and releases reservation', async () => {
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.DOZEN, 0, amount)];
+				await roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+
+				// Fast-forward past cancel timeout
+				await time.increase(CANCEL_TIMEOUT + 1n);
+
+				const balBefore = await usdc.balanceOf(player.address);
+				await expect(roulette.connect(player).cancelBet(1n))
+					.to.emit(roulette, 'BetCancelled')
+					.withArgs(1n, 1n, player.address, amount * 2n, false);
+
+				expect(await usdc.balanceOf(player.address)).to.equal(balBefore + amount * 2n);
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(0n);
+			});
+
+			it('admin cancel works regardless of timeout', async () => {
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.DOZEN, 0, amount)];
+				await roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+
+				const balBefore = await usdc.balanceOf(player.address);
+				await roulette.connect(owner).adminCancelBet(1n);
+				expect(await usdc.balanceOf(player.address)).to.equal(balBefore + amount * 2n);
+			});
+
+			it('cannot cancel after resolution', async () => {
+				const amount = 2n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.RED_BLACK, 0, amount), pick(BetType.DOZEN, 0, amount)];
+				const tx = await roulette
+					.connect(player)
+					.placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				const { requestId } = await parseBetPlaced(roulette, tx);
+				await vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [0n]);
+
+				await time.increase(CANCEL_TIMEOUT + 1n);
+				await expect(roulette.connect(player).cancelBet(1n)).to.be.revertedWithCustomError(
+					roulette,
+					'BetNotPending'
+				);
+			});
+		});
+
+		describe('Multi-pick views', () => {
+			it('quoteMultiBet returns correct aggregates', async () => {
+				const amount = 2n * 1_000_000n;
+				const picks = [
+					pick(BetType.RED_BLACK, 0, amount), // 1x
+					pick(BetType.DOZEN, 0, amount), // 2x
+					pick(BetType.STRAIGHT, 7, amount), // 35x
+				];
+				const q = await roulette.quoteMultiBet(usdcAddress, picks);
+				expect(q.totalAmount).to.equal(amount * 3n);
+				expect(q.totalProfitCollateral).to.equal(amount * (1n + 2n + 35n));
+				// 1 USDC = 1 USD → totalProfitUsd = totalProfitCollateral scaled to 18-dec
+				const expectedUsd = (amount * 38n * ethers.parseEther('1')) / 1_000_000n;
+				expect(q.totalProfitUsd).to.equal(expectedUsd);
+			});
+
+			it('quoteMultiBet reverts on invalid pick count', async () => {
+				await expect(roulette.quoteMultiBet(usdcAddress, [])).to.be.revertedWithCustomError(
+					roulette,
+					'InvalidPickCount'
+				);
+			});
+
+			it('quoteMultiBet reverts on unsupported collateral', async () => {
+				const picks = [pick(BetType.RED_BLACK, 0, 1n)];
+				await expect(
+					roulette.quoteMultiBet(secondAccount.address, picks)
+				).to.be.revertedWithCustomError(roulette, 'InvalidCollateral');
+			});
+
+			it('MAX_PICKS_PER_BET constant is exposed as 10', async () => {
+				expect(await roulette.MAX_PICKS_PER_BET()).to.equal(10n);
+			});
 		});
 	});
 });

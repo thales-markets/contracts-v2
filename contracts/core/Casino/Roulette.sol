@@ -37,6 +37,9 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Minimum allowed cancel timeout in seconds
     uint public constant MIN_CANCEL_TIMEOUT = 30;
 
+    /// @notice Maximum number of picks (sub-selections) that can be combined in a single bet
+    uint public constant MAX_PICKS_PER_BET = 10;
+
     /* ========== ERRORS ========== */
 
     error InvalidAddress();
@@ -52,6 +55,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     error CancelTimeoutNotReached();
     error MaxProfitExceeded();
     error InsufficientAvailableLiquidity();
+    error InvalidPickCount();
 
     /* ========== ENUMS ========== */
 
@@ -103,6 +107,27 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint8 selection;
         uint8 result;
         bool won;
+    }
+
+    /// @notice User-provided input for one pick inside a bet
+    /// @param betType Roulette bet type for this pick
+    /// @param selection Encoded selection value for this pick
+    /// @param amount Collateral amount staked on this pick
+    struct PickInput {
+        BetType betType;
+        uint8 selection;
+        uint amount;
+    }
+
+    /// @notice Stored per-pick data for a multi-pick bet (length == 0 for a single-pick bet — the
+    /// pick's data lives on the parent Bet struct itself)
+    struct Pick {
+        BetType betType;
+        uint8 selection;
+        bool won;
+        uint amount;
+        uint reservedProfit;
+        uint payout;
     }
 
     struct CoreAddresses {
@@ -195,6 +220,11 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Referrals contract
     IReferrals public referrals;
 
+    // ---- Multi-pick storage (appended; must preserve proxy layout above) ----
+
+    /// @notice Per-pick data for multi-pick bets. Empty for single-pick bets (the pick lives on Bet itself)
+    mapping(uint => Pick[]) internal picks;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the roulette contract
@@ -256,7 +286,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         nextBetId = 1;
     }
 
-    /// @notice Places a roulette bet and requests randomness from Chainlink VRF
+    /// @notice Places a single-pick roulette bet and requests randomness from Chainlink VRF
     function placeBet(
         address collateral,
         uint amount,
@@ -267,10 +297,10 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         IERC20(collateral).safeTransferFrom(msg.sender, address(this), amount);
         _setReferrer(_referrer, msg.sender);
-        return _placeBet(msg.sender, collateral, amount, betType, selection, false);
+        return _placeSingle(msg.sender, collateral, amount, betType, selection, false);
     }
 
-    /// @notice Places a roulette bet using free bet balance
+    /// @notice Places a single-pick roulette bet using free bet balance
     function placeBetWithFreeBet(
         address collateral,
         uint amount,
@@ -279,10 +309,47 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     ) external nonReentrant notPaused returns (uint betId, uint requestId) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         IFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, amount);
-        return _placeBet(msg.sender, collateral, amount, betType, selection, true);
+        return _placeSingle(msg.sender, collateral, amount, betType, selection, true);
     }
 
-    function _placeBet(
+    /// @notice Places a multi-pick bet with up to MAX_PICKS_PER_BET picks sharing one VRF request
+    /// @dev All picks share the same collateral. Per-pick amounts may differ. Aggregate profit across
+    /// picks is validated against maxProfitUsd, and aggregate stake must satisfy MIN_BET_USD.
+    /// Duplicate picks are permitted. With a single pick, this behaves identically to placeBet
+    /// @return betId The id of the new bet
+    /// @return requestId The Chainlink VRF request id
+    function placeMultiBet(
+        address collateral,
+        PickInput[] calldata pickInputs,
+        address _referrer
+    ) external nonReentrant notPaused returns (uint betId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        uint totalAmount = _validateAndSum(pickInputs);
+        IERC20(collateral).safeTransferFrom(msg.sender, address(this), totalAmount);
+        _setReferrer(_referrer, msg.sender);
+        return _placeMulti(msg.sender, collateral, pickInputs, totalAmount, false);
+    }
+
+    /// @notice Places a multi-pick bet using free bet balance
+    function placeMultiBetWithFreeBet(
+        address collateral,
+        PickInput[] calldata pickInputs
+    ) external nonReentrant notPaused returns (uint betId, uint requestId) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        uint totalAmount = _validateAndSum(pickInputs);
+        IFreeBetsHolder(freeBetsHolder).useFreeBet(msg.sender, collateral, totalAmount);
+        return _placeMulti(msg.sender, collateral, pickInputs, totalAmount, true);
+    }
+
+    function _validateAndSum(PickInput[] calldata pickInputs) internal pure returns (uint total) {
+        uint n = pickInputs.length;
+        if (n == 0 || n > MAX_PICKS_PER_BET) revert InvalidPickCount();
+        for (uint i = 0; i < n; i++) {
+            total += pickInputs[i].amount;
+        }
+    }
+
+    function _placeSingle(
         address user,
         address collateral,
         uint amount,
@@ -290,29 +357,21 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint8 selection,
         bool _isFreeBet
     ) internal returns (uint betId, uint requestId) {
-        if (!supportedCollateral[collateral]) revert InvalidCollateral();
         if (amount == 0) revert InvalidAmount();
-
         _validateSelection(betType, selection);
 
-        uint amountUsd = _getUsdValue(collateral, amount);
-        if (amountUsd < MIN_BET_USD) revert InvalidAmount();
+        if (_getUsdValue(collateral, amount) < MIN_BET_USD) revert InvalidAmount();
 
-        uint profitMultiplier = _getProfitMultiplier(betType);
-        uint potentialProfitCollateral = amount * profitMultiplier;
-        uint potentialProfitUsd = _getUsdValue(collateral, potentialProfitCollateral);
+        uint profit = amount * _getProfitMultiplier(betType);
+        if (_getUsdValue(collateral, profit) > maxProfitUsd) revert MaxProfitExceeded();
 
-        if (potentialProfitUsd > maxProfitUsd) revert MaxProfitExceeded();
-
-        reservedProfitPerCollateral[collateral] += potentialProfitCollateral;
-
+        reservedProfitPerCollateral[collateral] += profit;
         if (!_hasEnoughLiquidity(collateral)) {
-            reservedProfitPerCollateral[collateral] -= potentialProfitCollateral;
+            reservedProfitPerCollateral[collateral] -= profit;
             revert InsufficientAvailableLiquidity();
         }
 
         requestId = _requestRandomWord();
-
         betId = nextBetId++;
         bets[betId] = Bet({
             user: user,
@@ -322,23 +381,89 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
             requestId: requestId,
             placedAt: block.timestamp,
             resolvedAt: 0,
-            reservedProfit: potentialProfitCollateral,
+            reservedProfit: profit,
             betType: betType,
             status: BetStatus.PENDING,
             selection: selection,
             result: 0,
             won: false
         });
-
         if (_isFreeBet) isFreeBet[betId] = true;
-
         requestIdToBetId[requestId] = betId;
         userBetIds[user].push(betId);
 
         emit BetPlaced(betId, requestId, user, collateral, amount, betType, selection);
     }
 
-    /// @notice Cancels a pending bet after timeout and refunds the original stake
+    function _placeMulti(
+        address user,
+        address collateral,
+        PickInput[] calldata pickInputs,
+        uint totalAmount,
+        bool _isFreeBet
+    ) internal returns (uint betId, uint requestId) {
+        uint n = pickInputs.length;
+        uint totalReservedProfit;
+        for (uint i = 0; i < n; i++) {
+            PickInput calldata p = pickInputs[i];
+            if (p.amount == 0) revert InvalidAmount();
+            _validateSelection(p.betType, p.selection);
+            totalReservedProfit += p.amount * _getProfitMultiplier(p.betType);
+        }
+
+        if (_getUsdValue(collateral, totalAmount) < MIN_BET_USD) revert InvalidAmount();
+        if (_getUsdValue(collateral, totalReservedProfit) > maxProfitUsd) revert MaxProfitExceeded();
+
+        reservedProfitPerCollateral[collateral] += totalReservedProfit;
+        if (!_hasEnoughLiquidity(collateral)) {
+            reservedProfitPerCollateral[collateral] -= totalReservedProfit;
+            revert InsufficientAvailableLiquidity();
+        }
+
+        requestId = _requestRandomWord();
+        betId = nextBetId++;
+
+        // For multi-pick bets, Bet.betType/selection reflect pick 0 as "primary" for UIs; the full
+        // pick list lives in picks[betId]. Bet.amount / reservedProfit / payout are aggregates.
+        bets[betId] = Bet({
+            user: user,
+            collateral: collateral,
+            amount: totalAmount,
+            payout: 0,
+            requestId: requestId,
+            placedAt: block.timestamp,
+            resolvedAt: 0,
+            reservedProfit: totalReservedProfit,
+            betType: pickInputs[0].betType,
+            status: BetStatus.PENDING,
+            selection: pickInputs[0].selection,
+            result: 0,
+            won: false
+        });
+        if (_isFreeBet) isFreeBet[betId] = true;
+        requestIdToBetId[requestId] = betId;
+        userBetIds[user].push(betId);
+
+        Pick[] storage dst = picks[betId];
+        for (uint i = 0; i < n; i++) {
+            PickInput calldata p = pickInputs[i];
+            dst.push(
+                Pick({
+                    betType: p.betType,
+                    selection: p.selection,
+                    won: false,
+                    amount: p.amount,
+                    reservedProfit: p.amount * _getProfitMultiplier(p.betType),
+                    payout: 0
+                })
+            );
+        }
+
+        emit BetPlaced(betId, requestId, user, collateral, totalAmount, pickInputs[0].betType, pickInputs[0].selection);
+        emit MultiBetPlaced(betId, requestId, user, collateral, totalAmount, uint8(n), _isFreeBet);
+    }
+
+    /// @notice Cancels a pending bet after timeout and refunds the aggregate stake
     /// @param betId Bet id to cancel
     function cancelBet(uint betId) external nonReentrant {
         Bet storage bet = bets[betId];
@@ -351,7 +476,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         _cancelBet(betId, false);
     }
 
-    /// @notice Emergency cancels a pending bet and refunds the original stake
+    /// @notice Emergency cancels a pending bet and refunds the aggregate stake
     /// @dev Callable by owner or manager role with MARKET_RESOLVING permission
     /// @param betId Bet id to cancel
     function adminCancelBet(uint betId) external onlyResolver nonReentrant {
@@ -386,47 +511,66 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /* ========== INTERNAL / PRIVATE ========== */
 
     /// @notice Internal roulette resolution logic after VRF fulfillment
+    /// @dev Single code path handles both single-pick and multi-pick bets: when picks[betId] is empty
+    /// the Bet struct itself describes the only pick; otherwise iterate the stored Pick array
     /// @param requestId Chainlink VRF request id
     /// @param randomWords Array of VRF random words
     function _fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal {
         uint betId = requestIdToBetId[requestId];
-        if (betId == 0) {
-            return;
-        }
+        if (betId == 0) return;
 
         Bet storage bet = bets[betId];
-
-        if (bet.status != BetStatus.PENDING) {
-            return;
-        }
+        if (bet.status != BetStatus.PENDING) return;
 
         uint8 result = uint8(randomWords[0] % WHEEL_SIZE);
-        bool won = _isWinning(bet.betType, bet.selection, result);
+        address collateral = bet.collateral;
+        address user = bet.user;
 
-        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+        reservedProfitPerCollateral[collateral] -= bet.reservedProfit;
 
-        uint payout = 0;
-        if (won) {
-            payout = bet.amount + bet.reservedProfit;
-            if (isFreeBet[betId]) {
-                IERC20(bet.collateral).safeTransfer(freeBetsHolder, payout);
-                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(bet.user, bet.collateral, payout, bet.amount);
-            } else {
-                IERC20(bet.collateral).safeTransfer(bet.user, payout);
+        uint totalPayout;
+        bool anyWon;
+        Pick[] storage betPicks = picks[betId];
+        uint pickCount = betPicks.length;
+        if (pickCount == 0) {
+            bool won = _isWinning(bet.betType, bet.selection, result);
+            if (won) {
+                totalPayout = bet.amount + bet.reservedProfit;
+                anyWon = true;
+            }
+        } else {
+            for (uint i = 0; i < pickCount; i++) {
+                Pick storage p = betPicks[i];
+                bool won = _isWinning(p.betType, p.selection, result);
+                uint legPayout = 0;
+                if (won) {
+                    legPayout = p.amount + p.reservedProfit;
+                    totalPayout += legPayout;
+                    anyWon = true;
+                }
+                p.won = won;
+                p.payout = legPayout;
             }
         }
 
-        if (!won) {
-            _payReferrer(bet.user, bet.collateral, bet.amount);
+        if (totalPayout > 0) {
+            if (isFreeBet[betId]) {
+                IERC20(collateral).safeTransfer(freeBetsHolder, totalPayout);
+                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(user, collateral, totalPayout, bet.amount);
+            } else {
+                IERC20(collateral).safeTransfer(user, totalPayout);
+            }
+        } else {
+            _payReferrer(user, collateral, bet.amount);
         }
 
         bet.result = result;
-        bet.won = won;
-        bet.payout = payout;
+        bet.won = anyWon;
+        bet.payout = totalPayout;
         bet.status = BetStatus.RESOLVED;
         bet.resolvedAt = block.timestamp;
 
-        emit BetResolved(betId, requestId, bet.user, result, won, payout);
+        emit BetResolved(betId, requestId, user, result, anyWon, totalPayout);
     }
 
     function _setReferrer(address _referrer, address _user) internal {
@@ -702,12 +846,40 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         return (b.user, b.collateral, b.amount, b.payout, b.requestId, b.placedAt, b.resolvedAt, b.reservedProfit);
     }
 
-    /// @notice Returns bet game details
+    /// @notice Returns bet game details including the full list of picks
+    /// @dev For a single-pick bet, synthesizes a 1-element Pick array from the Bet struct; for a
+    /// multi-pick bet, returns the stored picks. `won` is true iff any pick paid out (payout > 0)
     function getBetDetails(
         uint betId
-    ) external view returns (BetType betType, BetStatus status, uint8 selection, uint8 result, bool won) {
+    ) external view returns (Pick[] memory betPicks, BetStatus status, uint8 result, bool won) {
         Bet storage b = bets[betId];
-        return (b.betType, b.status, b.selection, b.result, b.won);
+        status = b.status;
+        result = b.result;
+        won = b.won;
+        Pick[] storage stored = picks[betId];
+        uint n = stored.length;
+        if (n == 0) {
+            betPicks = new Pick[](1);
+            betPicks[0] = Pick({
+                betType: b.betType,
+                selection: b.selection,
+                won: b.won,
+                amount: b.amount,
+                reservedProfit: b.reservedProfit,
+                payout: b.payout
+            });
+        } else {
+            betPicks = new Pick[](n);
+            for (uint i = 0; i < n; i++) {
+                betPicks[i] = stored[i];
+            }
+        }
+    }
+
+    /// @notice Returns the number of picks in a bet (always ≥ 1). Single-pick bets report 1
+    function getBetPickCount(uint betId) external view returns (uint) {
+        uint n = picks[betId].length;
+        return n == 0 ? 1 : n;
     }
 
     /// @notice Returns bet IDs for a user's bets with pagination (reverse chronological)
@@ -733,6 +905,27 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         for (uint i = 0; i < count; i++) {
             ids[i] = start - i;
         }
+    }
+
+    /// @notice Quotes aggregate stake and profit for a proposed multi-pick bet
+    /// @dev Pure-of-state helper for UIs. The caller compares totalProfitUsd against maxProfitUsd and
+    /// totalProfitCollateral against getAvailableLiquidity to check acceptability
+    /// @return totalAmount Sum of per-pick stakes
+    /// @return totalProfitCollateral Sum of per-pick profit, in collateral units
+    /// @return totalProfitUsd Sum of per-pick profit, in USD normalized to 18 decimals
+    function quoteMultiBet(
+        address collateral,
+        PickInput[] calldata pickInputs
+    ) external view returns (uint totalAmount, uint totalProfitCollateral, uint totalProfitUsd) {
+        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        uint n = pickInputs.length;
+        if (n == 0 || n > MAX_PICKS_PER_BET) revert InvalidPickCount();
+        for (uint i = 0; i < n; i++) {
+            _validateSelection(pickInputs[i].betType, pickInputs[i].selection);
+            totalAmount += pickInputs[i].amount;
+            totalProfitCollateral += pickInputs[i].amount * _getProfitMultiplier(pickInputs[i].betType);
+        }
+        totalProfitUsd = _getUsdValue(collateral, totalProfitCollateral);
     }
 
     /* ========== SETTERS ========== */
@@ -915,6 +1108,19 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         address indexed user,
         uint refundedAmount,
         bool adminCancelled
+    );
+
+    /// @notice Emitted alongside BetPlaced when a bet includes multiple picks
+    /// @dev For single-pick bets, only BetPlaced is emitted. For multi-pick bets, read picks[betId]
+    /// or getBetDetails(betId) to retrieve the full pick list
+    event MultiBetPlaced(
+        uint indexed betId,
+        uint indexed requestId,
+        address indexed user,
+        address collateral,
+        uint totalAmount,
+        uint8 pickCount,
+        bool isFreeBet
     );
 
     /// @notice Emitted when maximum profit per bet is changed
