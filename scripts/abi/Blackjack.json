@@ -23,11 +23,6 @@
   },
   {
     "inputs": [],
-    "name": "CancelTimeoutNotReached",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "FailedInnerCall",
     "type": "error"
   },
@@ -73,17 +68,7 @@
   },
   {
     "inputs": [],
-    "name": "InvalidPrice",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidSender",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MaxProfitExceeded",
     "type": "error"
   },
   {
@@ -107,12 +92,36 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "cancelTimeout",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "priceFeed",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "vrfCoordinator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "freeBetsHolder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "referrals",
+        "type": "address"
       }
     ],
-    "name": "CancelTimeoutChanged",
+    "name": "AddressesChanged",
     "type": "event"
   },
   {
@@ -156,6 +165,31 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "currencyKey",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "supported",
+        "type": "bool"
+      }
+    ],
+    "name": "CollateralConfigChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "uint256",
         "name": "handId",
@@ -181,19 +215,6 @@
       }
     ],
     "name": "DoubleDownRequested",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "freeBetsHolder",
-        "type": "address"
-      }
-    ],
-    "name": "FreeBetsHolderChanged",
     "type": "event"
   },
   {
@@ -327,6 +348,43 @@
         "internalType": "address",
         "name": "user",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "additionalAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isAceSplit",
+        "type": "bool"
+      }
+    ],
+    "name": "HandSplit",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "handId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       }
     ],
     "name": "HitRequested",
@@ -343,32 +401,6 @@
       }
     ],
     "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "manager",
-        "type": "address"
-      }
-    ],
-    "name": "ManagerChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxProfitUsd",
-        "type": "uint256"
-      }
-    ],
-    "name": "MaxProfitUsdChanged",
     "type": "event"
   },
   {
@@ -451,51 +483,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "priceFeed",
-        "type": "address"
-      }
-    ],
-    "name": "PriceFeedChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "key",
-        "type": "bytes32"
-      }
-    ],
-    "name": "PriceFeedKeyPerCollateralChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "referrals",
-        "type": "address"
-      }
-    ],
-    "name": "ReferralsChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "referrer",
@@ -533,6 +520,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxProfitUsd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "cancelTimeout",
+        "type": "uint256"
+      }
+    ],
+    "name": "RiskParamsChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "uint256",
         "name": "handId",
@@ -552,25 +558,6 @@
       }
     ],
     "name": "StandRequested",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "supported",
-        "type": "bool"
-      }
-    ],
-    "name": "SupportedCollateralChanged",
     "type": "event"
   },
   {
@@ -608,19 +595,6 @@
       }
     ],
     "name": "VrfConfigChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "vrfCoordinator",
-        "type": "address"
-      }
-    ],
-    "name": "VrfCoordinatorChanged",
     "type": "event"
   },
   {
@@ -971,6 +945,60 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "handId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSplitDetails",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount2",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payout2",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "player2CardCount",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "activeHand",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAceSplit",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDoubled2",
+        "type": "bool"
+      },
+      {
+        "internalType": "enum Blackjack.HandResult",
+        "name": "result2",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "player2Cards",
+        "type": "uint8[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "user",
         "type": "address"
@@ -1160,6 +1188,25 @@
       }
     ],
     "name": "isFreeBet",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isSplit",
     "outputs": [
       {
         "internalType": "bool",
@@ -1493,25 +1540,32 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_cancelTimeout",
-        "type": "uint256"
-      }
-    ],
-    "name": "setCancelTimeout",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+        "internalType": "address",
+        "name": "_manager",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_priceFeed",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_vrfCoordinator",
+        "type": "address"
+      },
       {
         "internalType": "address",
         "name": "_freeBetsHolder",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_referrals",
+        "type": "address"
       }
     ],
-    "name": "setFreeBetsHolder",
+    "name": "setAddresses",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1520,24 +1574,21 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_manager",
+        "name": "collateral",
         "type": "address"
-      }
-    ],
-    "name": "setManager",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
-        "internalType": "uint256",
-        "name": "_maxProfitUsd",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "currencyKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "isSupported",
+        "type": "bool"
       }
     ],
-    "name": "setMaxProfitUsd",
+    "name": "setCollateralConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1584,61 +1635,17 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_priceFeed",
-        "type": "address"
-      }
-    ],
-    "name": "setPriceFeed",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_maxProfitUsd",
+        "type": "uint256"
       },
       {
-        "internalType": "bytes32",
-        "name": "currencyKey",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "_cancelTimeout",
+        "type": "uint256"
       }
     ],
-    "name": "setPriceFeedKeyPerCollateral",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_referrals",
-        "type": "address"
-      }
-    ],
-    "name": "setReferrals",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "isSupported",
-        "type": "bool"
-      }
-    ],
-    "name": "setSupportedCollateral",
+    "name": "setRiskParams",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1679,13 +1686,19 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_vrfCoordinator",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "handId",
+        "type": "uint256"
       }
     ],
-    "name": "setVrfCoordinator",
-    "outputs": [],
+    "name": "split",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

@@ -126,7 +126,13 @@ async function deployFixture() {
 	const blackjack = await upgrades.deployProxy(BlackjackFactory, [], { initializer: false });
 	await blackjack.initialize(core, collateralConfig, MAX_PROFIT_USD, CANCEL_TIMEOUT, vrfConfig);
 	const blackjackAddress = await blackjack.getAddress();
-	await blackjack.setFreeBetsHolder(holderAddress);
+	await blackjack.setAddresses(
+		ethers.ZeroAddress,
+		ethers.ZeroAddress,
+		ethers.ZeroAddress,
+		holderAddress,
+		ethers.ZeroAddress
+	);
 
 	// Deploy Roulette
 	const RouletteFactory = await ethers.getContractFactory('Roulette');

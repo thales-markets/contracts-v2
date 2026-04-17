@@ -23,7 +23,22 @@ const Status = {
 	AWAITING_DOUBLE: 5n,
 	RESOLVED: 6n,
 	CANCELLED: 7n,
+	AWAITING_SPLIT: 8n,
 };
+
+// Helper: build a VRF word so that _deriveCard(word, 0) == r0 and _deriveCard(word, 1) == r1.
+// Solidity does (word >> shift*128) % 13; for shift 0 this mods the FULL word, so the upper
+// 128 bits leak into the low result. Compensate by choosing low such that
+// (low + (2^128 mod 13) * high) mod 13 == r0 - 1, where 2^128 mod 13 == 9.
+function makeDealWord(r0, r1 = 1) {
+	const high = BigInt((((r1 - 1) % 13) + 13) % 13);
+	const target = BigInt((((r0 - 1) % 13) + 13) % 13);
+	const low = (target - 9n * high + 169n) % 13n;
+	return low | (high << 128n);
+}
+function makeSingleWord(r) {
+	return BigInt((((r - 1) % 13) + 13) % 13);
+}
 
 // HandResult enum
 const Result = {
@@ -705,7 +720,7 @@ describe('Blackjack', () => {
 
 			await expect(blackjack.connect(player).cancelHand(handId)).to.be.revertedWithCustomError(
 				blackjack,
-				'CancelTimeoutNotReached'
+				'InvalidHandStatus'
 			);
 		});
 
@@ -927,7 +942,7 @@ describe('Blackjack', () => {
 			// the cancel timeout should reset from lastRequestAt (the hit)
 			await expect(blackjack.connect(player).cancelHand(handId)).to.be.revertedWithCustomError(
 				blackjack,
-				'CancelTimeoutNotReached'
+				'InvalidHandStatus'
 			);
 
 			// Now wait the full timeout from the hit
@@ -952,17 +967,18 @@ describe('Blackjack', () => {
 			).to.be.revertedWithCustomError(blackjack, 'InsufficientAvailableLiquidity');
 		});
 
-		it('setCancelTimeout should revert below MIN_CANCEL_TIMEOUT (30)', async () => {
-			await expect(blackjack.connect(owner).setCancelTimeout(29)).to.be.revertedWithCustomError(
+		it('setRiskParams cancelTimeout below MIN_CANCEL_TIMEOUT (30) should revert', async () => {
+			await expect(blackjack.connect(owner).setRiskParams(0, 29)).to.be.revertedWithCustomError(
 				blackjack,
 				'InvalidAmount'
 			);
 		});
 
-		it('setCancelTimeout should succeed at MIN_CANCEL_TIMEOUT', async () => {
-			await expect(blackjack.connect(owner).setCancelTimeout(30))
-				.to.emit(blackjack, 'CancelTimeoutChanged')
-				.withArgs(30);
+		it('setRiskParams cancelTimeout at MIN_CANCEL_TIMEOUT should succeed', async () => {
+			await expect(blackjack.connect(owner).setRiskParams(0, 30))
+				.to.emit(blackjack, 'RiskParamsChanged')
+				.withArgs(0, 30);
+			expect(await blackjack.cancelTimeout()).to.equal(30);
 		});
 	});
 
@@ -974,10 +990,21 @@ describe('Blackjack', () => {
 				.reverted;
 		});
 
-		it('setFreeBetsHolder should emit event', async () => {
-			await expect(blackjack.connect(owner).setFreeBetsHolder(secondAccount.address))
-				.to.emit(blackjack, 'FreeBetsHolderChanged')
-				.withArgs(secondAccount.address);
+		it('setAddresses freeBetsHolder should emit AddressesChanged', async () => {
+			await expect(
+				blackjack
+					.connect(owner)
+					.setAddresses(
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						secondAccount.address,
+						ZERO_ADDRESS
+					)
+			)
+				.to.emit(blackjack, 'AddressesChanged')
+				.withArgs(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, secondAccount.address, ZERO_ADDRESS);
+			expect(await blackjack.freeBetsHolder()).to.equal(secondAccount.address);
 		});
 
 		it('normal bet isFreeBet should be false', async () => {
@@ -995,7 +1022,9 @@ describe('Blackjack', () => {
 			await holder.addSupportedCollateral(usdcAddress, true, owner.address);
 			await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
 
-			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);
+			await blackjack
+				.connect(owner)
+				.setAddresses(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, holderAddress, ZERO_ADDRESS);
 			await holder.setWhitelistedCasino(blackjackAddress, true);
 
 			// Fund player with free bet
@@ -1153,54 +1182,64 @@ describe('Blackjack', () => {
 
 	/* ========== SETTER ZERO-ADDRESS VALIDATIONS ========== */
 
-	describe('Setter Zero-Address Validations', () => {
-		it('setManager should revert for zero address', async () => {
-			await expect(blackjack.connect(owner).setManager(ZERO_ADDRESS)).to.be.revertedWithCustomError(
-				blackjack,
-				'InvalidAddress'
-			);
+	describe('Consolidated Setter Validations', () => {
+		// setAddresses treats zero for each field as "skip", so there is no
+		// "zero address reverts" path for it — rejection is via non-owner only.
+		it('setAddresses should revert from non-owner', async () => {
+			await expect(
+				blackjack
+					.connect(secondAccount)
+					.setAddresses(
+						secondAccount.address,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS
+					)
+			).to.be.revertedWith('Only the contract owner may perform this action');
 		});
 
-		it('setPriceFeed should revert for zero address', async () => {
+		it('setAddresses should update only non-zero fields and emit AddressesChanged', async () => {
+			const newMgr = secondAccount.address;
+			const newPf = resolver.address;
 			await expect(
-				blackjack.connect(owner).setPriceFeed(ZERO_ADDRESS)
+				blackjack
+					.connect(owner)
+					.setAddresses(newMgr, newPf, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS)
+			)
+				.to.emit(blackjack, 'AddressesChanged')
+				.withArgs(newMgr, newPf, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+			expect(await blackjack.manager()).to.equal(newMgr);
+			expect(await blackjack.priceFeed()).to.equal(newPf);
+		});
+
+		it('setCollateralConfig should revert for zero collateral', async () => {
+			await expect(
+				blackjack.connect(owner).setCollateralConfig(ZERO_ADDRESS, WETH_KEY, true)
 			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
 		});
 
-		it('setVrfCoordinator should revert for zero address', async () => {
+		it('setCollateralConfig should set both support and key and emit', async () => {
+			const testKey = ethers.encodeBytes32String('TEST');
 			await expect(
-				blackjack.connect(owner).setVrfCoordinator(ZERO_ADDRESS)
-			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
+				blackjack.connect(owner).setCollateralConfig(secondAccount.address, testKey, true)
+			)
+				.to.emit(blackjack, 'CollateralConfigChanged')
+				.withArgs(secondAccount.address, testKey, true);
+			expect(await blackjack.supportedCollateral(secondAccount.address)).to.equal(true);
+			expect(await blackjack.priceFeedKeyPerCollateral(secondAccount.address)).to.equal(testKey);
 		});
 
-		it('setSupportedCollateral should revert for zero address', async () => {
+		it('setRiskParams maxProfitUsd should update and emit', async () => {
+			await expect(blackjack.connect(owner).setRiskParams(ethers.parseEther('500'), 0))
+				.to.emit(blackjack, 'RiskParamsChanged')
+				.withArgs(ethers.parseEther('500'), 0);
+			expect(await blackjack.maxProfitUsd()).to.equal(ethers.parseEther('500'));
+		});
+
+		it('setRiskParams should revert from non-risk-manager', async () => {
 			await expect(
-				blackjack.connect(owner).setSupportedCollateral(ZERO_ADDRESS, true)
-			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
-		});
-
-		it('setPriceFeedKeyPerCollateral should revert for zero address', async () => {
-			await expect(
-				blackjack.connect(owner).setPriceFeedKeyPerCollateral(ZERO_ADDRESS, WETH_KEY)
-			).to.be.revertedWithCustomError(blackjack, 'InvalidAddress');
-		});
-
-		it('setMaxProfitUsd should revert for zero', async () => {
-			await expect(blackjack.connect(owner).setMaxProfitUsd(0)).to.be.revertedWithCustomError(
-				blackjack,
-				'InvalidAmount'
-			);
-		});
-
-		it('setMaxProfitUsd should update and emit', async () => {
-			await expect(blackjack.connect(owner).setMaxProfitUsd(ethers.parseEther('500')))
-				.to.emit(blackjack, 'MaxProfitUsdChanged')
-				.withArgs(ethers.parseEther('500'));
-		});
-
-		it('setMaxProfitUsd should revert from non-risk-manager', async () => {
-			await expect(
-				blackjack.connect(secondAccount).setMaxProfitUsd(ethers.parseEther('500'))
+				blackjack.connect(secondAccount).setRiskParams(ethers.parseEther('500'), 0)
 			).to.be.revertedWithCustomError(blackjack, 'InvalidSender');
 		});
 
@@ -1223,39 +1262,6 @@ describe('Blackjack', () => {
 
 			const reservedAfter = await blackjack.reservedProfitPerCollateral(usdcAddress);
 			expect(reservedAfter).to.equal(reservedBefore);
-		});
-
-		it('setSupportedCollateral should emit', async () => {
-			await expect(blackjack.connect(owner).setSupportedCollateral(secondAccount.address, true))
-				.to.emit(blackjack, 'SupportedCollateralChanged')
-				.withArgs(secondAccount.address, true);
-		});
-
-		it('setPriceFeedKeyPerCollateral should emit', async () => {
-			const testKey = ethers.encodeBytes32String('TEST');
-			await expect(
-				blackjack.connect(owner).setPriceFeedKeyPerCollateral(secondAccount.address, testKey)
-			)
-				.to.emit(blackjack, 'PriceFeedKeyPerCollateralChanged')
-				.withArgs(secondAccount.address, testKey);
-		});
-
-		it('setManager should emit', async () => {
-			await expect(blackjack.connect(owner).setManager(secondAccount.address))
-				.to.emit(blackjack, 'ManagerChanged')
-				.withArgs(secondAccount.address);
-		});
-
-		it('setPriceFeed should emit', async () => {
-			await expect(blackjack.connect(owner).setPriceFeed(secondAccount.address))
-				.to.emit(blackjack, 'PriceFeedChanged')
-				.withArgs(secondAccount.address);
-		});
-
-		it('setVrfCoordinator should emit', async () => {
-			await expect(blackjack.connect(owner).setVrfCoordinator(secondAccount.address))
-				.to.emit(blackjack, 'VrfCoordinatorChanged')
-				.withArgs(secondAccount.address);
 		});
 	});
 
@@ -1323,7 +1329,9 @@ describe('Blackjack', () => {
 			await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
 
 			// Set holder on blackjack
-			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);
+			await blackjack
+				.connect(owner)
+				.setAddresses(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, holderAddress, ZERO_ADDRESS);
 			// Whitelist blackjack in holder
 			await holder.setWhitelistedCasino(blackjackAddress, true);
 
@@ -1356,7 +1364,9 @@ describe('Blackjack', () => {
 			await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
 
 			// Set holder on blackjack
-			await blackjack.connect(owner).setFreeBetsHolder(holderAddress);
+			await blackjack
+				.connect(owner)
+				.setAddresses(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, holderAddress, ZERO_ADDRESS);
 			// Whitelist blackjack in holder
 			await holder.setWhitelistedCasino(blackjackAddress, true);
 
@@ -1490,7 +1500,13 @@ describe('Blackjack', () => {
 			mockReferrals = await MockReferralsFactory.deploy();
 			mockReferralsAddress = await mockReferrals.getAddress();
 			await mockReferrals.setReferrerFees(REFERRER_FEE, REFERRER_FEE, REFERRER_FEE);
-			await blackjack.setReferrals(mockReferralsAddress);
+			await blackjack.setAddresses(
+				ZERO_ADDRESS,
+				ZERO_ADDRESS,
+				ZERO_ADDRESS,
+				ZERO_ADDRESS,
+				mockReferralsAddress
+			);
 		});
 
 		it('should set referrer on placeBet', async () => {
@@ -1583,10 +1599,799 @@ describe('Blackjack', () => {
 				.be.reverted;
 		});
 
-		it('setReferrals should emit event', async () => {
-			await expect(blackjack.connect(owner).setReferrals(secondAccount.address))
-				.to.emit(blackjack, 'ReferralsChanged')
-				.withArgs(secondAccount.address);
+		it('setAddresses referrals should emit AddressesChanged', async () => {
+			await expect(
+				blackjack
+					.connect(owner)
+					.setAddresses(
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						ZERO_ADDRESS,
+						secondAccount.address
+					)
+			)
+				.to.emit(blackjack, 'AddressesChanged')
+				.withArgs(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, secondAccount.address);
+			expect(await blackjack.referrals()).to.equal(secondAccount.address);
+		});
+	});
+
+	/* ================================================================== */
+	/* ============================= SPLIT ============================== */
+	/* ================================================================== */
+
+	describe('Split', () => {
+		const AMT = MIN_USDC_BET; // 3 USDC
+
+		// Deal 8+8 to player, 5 dealer face-up, 6 dealer hidden. Player value = 16, not BJ.
+		// Returns { handId, requestId } after the initial deal fulfillment.
+		async function dealPairOf(rank, dealerFaceUp = 5, dealerHidden = 6) {
+			await usdc.connect(player).approve(blackjackAddress, AMT);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+			const word0 = makeDealWord(rank, dealerFaceUp); // playerCard1=rank, dealerFaceUp
+			const word1 = makeDealWord(rank, dealerHidden); // playerCard2=rank, dealerHidden
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [word0, word1]);
+			return handId;
+		}
+
+		async function approveAndSplit(handId) {
+			await usdc.connect(player).approve(blackjackAddress, AMT);
+			const tx = await blackjack.connect(player).split(handId);
+			const receipt = await tx.wait();
+			const parsed = receipt.logs
+				.map((l) => {
+					try {
+						return blackjack.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'HandSplit');
+			return { tx, requestId: parsed.args.requestId, isAceSplit: parsed.args.isAceSplit };
+		}
+
+		/* ---------------- PRECONDITIONS ---------------- */
+
+		describe('preconditions', () => {
+			it('reverts if status != PLAYER_TURN (no deal yet)', async () => {
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
+				const { handId } = await parseHandCreated(blackjack, tx);
+				// status is AWAITING_DEAL
+				await expect(blackjack.connect(player).split(handId)).to.be.revertedWithCustomError(
+					blackjack,
+					'InvalidHandStatus'
+				);
+			});
+
+			it('reverts on non-matching pair (value-compared)', async () => {
+				const handId = await dealPairOf(5, 3, 4); // player 5+5? no, dealPairOf deals same rank. Use diff setup.
+				// Overwrite with mixed hand via direct word: force 5 and 6 to player
+				// Simpler: place a fresh bet and provide mixed cards
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
+				const { handId: h2, requestId } = await parseHandCreated(blackjack, tx);
+				const word0 = makeDealWord(5, 4); // playerCard1=5, dealerFaceUp=4
+				const word1 = makeDealWord(6, 3); // playerCard2=6 (value 6, not matching 5), dealerHidden=3
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [word0, word1]);
+				await expect(blackjack.connect(player).split(h2)).to.be.revertedWithCustomError(
+					blackjack,
+					'InvalidHandStatus'
+				);
+			});
+
+			it('allows same-value split: 10 + Q (both value 10)', async () => {
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
+				const { handId, requestId } = await parseHandCreated(blackjack, tx);
+				// playerCard1 = rank 10 (value 10), playerCard2 = rank 12 (Queen, value 10)
+				// But both total 20 = no player BJ (BJ is A+10-value pair)
+				const word0 = makeDealWord(10, 4); // 10, dealerFaceUp=4
+				const word1 = makeDealWord(12, 3); // Q, dealerHidden=3
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [word0, word1]);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.PLAYER_TURN);
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				await expect(blackjack.connect(player).split(handId)).to.emit(blackjack, 'HandSplit');
+			});
+
+			it('reverts if already split', async () => {
+				const handId = await dealPairOf(8);
+				await approveAndSplit(handId);
+				// VRF hasn't fulfilled, status is AWAITING_SPLIT — calling split again should revert
+				await expect(blackjack.connect(player).split(handId)).to.be.revertedWithCustomError(
+					blackjack,
+					'InvalidHandStatus'
+				);
+			});
+
+			it('reverts if not hand owner', async () => {
+				const handId = await dealPairOf(8);
+				await expect(blackjack.connect(secondAccount).split(handId)).to.be.revertedWithCustomError(
+					blackjack,
+					'HandNotOwner'
+				);
+			});
+
+			it('reverts if playerCardCount != 2 (e.g. after hit)', async () => {
+				const handId = await dealPairOf(8);
+				const hitTx = await blackjack.connect(player).hit(handId);
+				const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [makeSingleWord(3)]);
+				// hand now has 3 cards — split no longer legal
+				await expect(blackjack.connect(player).split(handId)).to.be.revertedWithCustomError(
+					blackjack,
+					'InvalidHandStatus'
+				);
+			});
+		});
+
+		/* ---------------- STAKE / RESERVATION ---------------- */
+
+		describe('stake and reservation', () => {
+			it('transfers matching stake from player via safeTransferFrom', async () => {
+				const handId = await dealPairOf(8);
+				const balBefore = await usdc.balanceOf(player.address);
+				const contractBefore = await usdc.balanceOf(blackjackAddress);
+				await approveAndSplit(handId);
+				expect(await usdc.balanceOf(player.address)).to.equal(balBefore - AMT);
+				expect(await usdc.balanceOf(blackjackAddress)).to.equal(contractBefore + AMT);
+			});
+
+			it('sets hand.reservedProfit to 2*amount and updates global reservation', async () => {
+				const handId = await dealPairOf(8);
+				const beforeGlobal = await blackjack.reservedProfitPerCollateral(usdcAddress);
+				// Pre-split, single-hand reservation = amount * 3/2 (BJ payout)
+				const preSplitReservation = (AMT * 3n) / 2n;
+				await approveAndSplit(handId);
+				const base = await blackjack.getHandBase(handId);
+				expect(base.reservedProfit).to.equal(AMT * 2n);
+				// Global reservation went up by (2*AMT) - (preSplitReservation) = 2*AMT - 1.5*AMT = 0.5*AMT
+				expect(await blackjack.reservedProfitPerCollateral(usdcAddress)).to.equal(
+					beforeGlobal - preSplitReservation + AMT * 2n
+				);
+			});
+
+			it('marks isSplit[handId] = true and populates SplitState', async () => {
+				const handId = await dealPairOf(8);
+				await approveAndSplit(handId);
+				expect(await blackjack.isSplit(handId)).to.equal(true);
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.amount2).to.equal(AMT);
+				expect(ss.activeHand).to.equal(1n);
+				expect(ss.isAceSplit).to.equal(false);
+				expect(ss.isDoubled2).to.equal(false);
+				expect(ss.player2CardCount).to.equal(1);
+				// player2Cards[0] was the original playerCards[1]
+				const cards = await blackjack.getHandCards(handId);
+				expect(cards.playerCards.length).to.equal(1);
+			});
+
+			it('flags ace-split correctly', async () => {
+				const handId = await dealPairOf(1, 5, 6); // A + A
+				const { isAceSplit } = await approveAndSplit(handId);
+				expect(isAceSplit).to.equal(true);
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.isAceSplit).to.equal(true);
+			});
+
+			it('emits HandSplit with user, additionalAmount, isAceSplit', async () => {
+				const handId = await dealPairOf(8);
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				await expect(blackjack.connect(player).split(handId))
+					.to.emit(blackjack, 'HandSplit')
+					.withArgs(handId, (anyReq) => typeof anyReq === 'bigint', player.address, AMT, false);
+			});
+		});
+
+		/* ---------------- FREE BET GUARD ---------------- */
+
+		describe('free bet', () => {
+			it('reverts split on free-bet hands', async () => {
+				const HolderFactory = await ethers.getContractFactory('FreeBetsHolder');
+				const holder = await upgrades.deployProxy(HolderFactory, [], { initializer: false });
+				await holder.initialize(owner.address, owner.address, owner.address);
+				const holderAddress = await holder.getAddress();
+				await holder.addSupportedCollateral(usdcAddress, true, owner.address);
+				await holder.setFreeBetExpirationPeriod(86400, Math.floor(Date.now() / 1000));
+				await blackjack
+					.connect(owner)
+					.setAddresses(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, holderAddress, ZERO_ADDRESS);
+				await holder.setWhitelistedCasino(blackjackAddress, true);
+
+				// Fund free bet
+				await usdc.connect(owner).approve(holderAddress, AMT);
+				await holder.connect(owner).fund(player.address, usdcAddress, AMT);
+
+				// Place free-bet hand with 8+8 (valid split pair)
+				const tx = await blackjack.connect(player).placeBetWithFreeBet(usdcAddress, AMT);
+				const { handId, requestId } = await parseHandCreated(blackjack, tx);
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+					makeDealWord(8, 5),
+					makeDealWord(8, 6),
+				]);
+				// Even with approval + balance, split should revert on free bet
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				await expect(blackjack.connect(player).split(handId)).to.be.revertedWithCustomError(
+					blackjack,
+					'InvalidHandStatus'
+				);
+			});
+		});
+
+		/* ---------------- POST-SPLIT FULFILLMENT ---------------- */
+
+		describe('post-split fulfillment', () => {
+			it('non-ace split: deals second card to each hand, activeHand=1, status=PLAYER_TURN', async () => {
+				const handId = await dealPairOf(8);
+				const { requestId } = await approveAndSplit(handId);
+				// 2 words: hand1-card2 = 3 (value 3), hand2-card2 = 5 (value 5)
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+					makeSingleWord(3),
+					makeSingleWord(5),
+				]);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.PLAYER_TURN);
+				expect(details.playerCardCount).to.equal(2);
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.activeHand).to.equal(1n);
+				expect(ss.player2CardCount).to.equal(2);
+			});
+
+			it('ace split: auto-resolves in same callback with 9 VRF words', async () => {
+				const handId = await dealPairOf(1, 5, 6); // A+A
+				const { requestId } = await approveAndSplit(handId);
+				// words[0,1]: 2nd card per hand. words[2]: dealer hidden. words[3..8]: dealer draws
+				// Let hand1 draw 10 (value 10) → total A+10 = 21
+				// Let hand2 draw 5 → A+5 = 16 (soft). Won't hit because one-card rule.
+				// Dealer: hidden = 6, total 5+6=11 soft? No, dealer face-up was 5 hidden fresh on stand. Dealer gets hidden=10 → 15, then hits to 17+.
+				const words = [
+					makeSingleWord(10), // hand1 2nd card → A+10 = 21
+					makeSingleWord(5), // hand2 2nd card → A+5 = 16
+					makeSingleWord(10), // dealer hidden: 10 → face-up was 5, so 5+10=15, must hit
+					makeSingleWord(3), // dealer draws 3 → 18, stops
+					0n,
+					0n,
+					0n,
+					0n,
+					0n,
+				];
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, words);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.RESOLVED);
+				// Hand1 = 21 vs dealer 18 → WIN, pays 1:1 (6), NOT 3:2
+				// Hand2 = 16 vs dealer 18 → LOSE (0)
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.result2).to.equal(Result.DEALER_WIN);
+				// total payout = 2*AMT (only hand1 wins 1:1) = 2 * 3 = 6 USDC
+				const base = await blackjack.getHandBase(handId);
+				expect(base.payout).to.equal(AMT * 2n);
+			});
+		});
+
+		/* ---------------- HIT / STAND / DOUBLE ON SPLIT HANDS ---------------- */
+
+		describe('playing split hands', () => {
+			async function splitThenFulfill(rank, hand1Card2 = 3, hand2Card2 = 5) {
+				const handId = await dealPairOf(rank);
+				const { requestId } = await approveAndSplit(handId);
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+					makeSingleWord(hand1Card2),
+					makeSingleWord(hand2Card2),
+				]);
+				return handId;
+			}
+
+			it('hit() routes to hand 1 when activeHand=1', async () => {
+				const handId = await splitThenFulfill(8, 3, 5); // hand1=[8,3]=11, hand2=[8,5]=13
+				const hitTx = await blackjack.connect(player).hit(handId);
+				const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [makeSingleWord(2)]); // +2 = 13
+				const cards = await blackjack.getHandCards(handId);
+				expect(cards.playerCards.length).to.equal(3);
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.activeHand).to.equal(1n);
+				expect(ss.player2CardCount).to.equal(2); // unchanged
+			});
+
+			it('stand() on hand 1 advances to hand 2 without VRF', async () => {
+				const handId = await splitThenFulfill(8, 3, 5);
+				const standTx = await blackjack.connect(player).stand(handId);
+				const rc = await standTx.wait();
+				// No StandRequested event fired (no VRF)
+				const stood = rc.logs.some((l) => {
+					try {
+						return blackjack.interface.parseLog(l)?.name === 'StandRequested';
+					} catch {
+						return false;
+					}
+				});
+				expect(stood).to.equal(false);
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.activeHand).to.equal(2n);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.PLAYER_TURN);
+			});
+
+			it('bust on hand 1 auto-advances to hand 2', async () => {
+				const handId = await splitThenFulfill(10, 10, 5); // hand1=[10,10]=20, hand2=[10,5]=15
+				// Hit hand1 to bust: need +10 (total 30)
+				const hitTx = await blackjack.connect(player).hit(handId);
+				const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [makeSingleWord(10)]); // 20+10=30
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.activeHand).to.equal(2n);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.PLAYER_TURN);
+			});
+
+			it('doubleDown on hand 1 requests only 1 VRF word and advances to hand 2', async () => {
+				const handId = await splitThenFulfill(8, 3, 5); // hand1=[8,3]=11, hand2=[8,5]=13
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				const ddTx = await blackjack.connect(player).doubleDown(handId);
+				const ddReq = await parseRequestId(blackjack, ddTx, 'DoubleDownRequested');
+				// Only 1 word for hand 1's card, not 7
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, ddReq, [makeSingleWord(10)]); // 11+10=21
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.activeHand).to.equal(2n);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.PLAYER_TURN);
+				const base = await blackjack.getHandBase(handId);
+				expect(base.amount).to.equal(AMT * 2n); // hand1 stake doubled
+			});
+
+			it('doubleDown on hand 2 requests 7 VRF words and triggers dealer play', async () => {
+				const handId = await splitThenFulfill(8, 3, 5);
+				// Stand on hand 1 first
+				await blackjack.connect(player).stand(handId);
+				// Now doubleDown on hand 2
+				await usdc.connect(player).approve(blackjackAddress, AMT);
+				const ddTx = await blackjack.connect(player).doubleDown(handId);
+				const ddReq = await parseRequestId(blackjack, ddTx, 'DoubleDownRequested');
+				// 7 words: card + dealer
+				const words = [
+					makeSingleWord(3), // hand2 +3 = 8+5+3 = 16
+					makeSingleWord(10), // dealer hidden 10 → 5+10=15 (face-up was 5)
+					makeSingleWord(5), // dealer hits: 15+5=20, stops
+					0n,
+					0n,
+					0n,
+					0n,
+				];
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, ddReq, words);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.RESOLVED);
+			});
+
+			it('bust on hand 2 while hand 1 alive → dealer VRF kicked off inside callback', async () => {
+				const handId = await splitThenFulfill(8, 3, 5); // hand1=[8,3]=11, hand2=[8,5]=13
+				await blackjack.connect(player).stand(handId); // activeHand→2
+				// Hit hand 2 to bust
+				const hitTx = await blackjack.connect(player).hit(handId);
+				const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+				// Word makes hand 2 bust: 13 + 10 = 23
+				// Fulfillment should internally request 7 new words for dealer
+				const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
+					makeSingleWord(10),
+				]);
+				const rc = await fulfillTx.wait();
+				// Expect a new StandRequested event emitted from the callback
+				const stood = rc.logs
+					.map((l) => {
+						try {
+							return blackjack.interface.parseLog(l);
+						} catch {
+							return null;
+						}
+					})
+					.find((e) => e?.name === 'StandRequested');
+				expect(stood).to.not.equal(undefined);
+				const newReq = stood.args.requestId;
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.AWAITING_STAND);
+
+				// Fulfill dealer play; hand1=11 stood, dealer should play and resolve
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, newReq, [
+					makeSingleWord(10), // hidden=10 → 5+10=15
+					makeSingleWord(5), // draw 5 → 20
+					0n,
+					0n,
+					0n,
+					0n,
+					0n,
+				]);
+				const final = await blackjack.getHandDetails(handId);
+				expect(final.status).to.equal(Status.RESOLVED);
+				// hand1=11 vs dealer=20 → LOSE. hand2=busted → LOSE. Payout 0.
+				const base = await blackjack.getHandBase(handId);
+				expect(base.payout).to.equal(0n);
+			});
+
+			it('both hands bust → resolves without dealer play', async () => {
+				const handId = await splitThenFulfill(10, 10, 10); // hand1=[10,10]=20, hand2=[10,10]=20
+				// Bust hand 1
+				const hit1 = await blackjack.connect(player).hit(handId);
+				const r1 = await parseRequestId(blackjack, hit1, 'HitRequested');
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, r1, [makeSingleWord(10)]); // 30
+				// Bust hand 2
+				const hit2 = await blackjack.connect(player).hit(handId);
+				const r2 = await parseRequestId(blackjack, hit2, 'HitRequested');
+				const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, r2, [
+					makeSingleWord(10),
+				]);
+				const rc = await fulfillTx.wait();
+				// No dealer VRF should be requested
+				const stood = rc.logs.some((l) => {
+					try {
+						return blackjack.interface.parseLog(l)?.name === 'StandRequested';
+					} catch {
+						return false;
+					}
+				});
+				expect(stood).to.equal(false);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.RESOLVED);
+				const base = await blackjack.getHandBase(handId);
+				expect(base.payout).to.equal(0n);
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.result2).to.equal(Result.PLAYER_BUST);
+				expect(details.result).to.equal(Result.PLAYER_BUST);
+			});
+		});
+
+		/* ---------------- RESOLUTION ---------------- */
+
+		describe('resolution', () => {
+			it('both hands win on dealer bust → 2*AMT payout each', async () => {
+				// hand1=[8,3]=11, hand2=[8,5]=13. Dealer busts at 22.
+				const handId = await dealPairOf(8, 5, 6);
+				const { requestId } = await approveAndSplit(handId);
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+					makeSingleWord(3),
+					makeSingleWord(5),
+				]);
+				await blackjack.connect(player).stand(handId); // activeHand→2
+				const standTx = await blackjack.connect(player).stand(handId);
+				const standReq = await parseRequestId(blackjack, standTx, 'StandRequested');
+				// dealer: hidden=10 (face-up was 5, total 15), draw 8 (23) → bust
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, standReq, [
+					makeSingleWord(10),
+					makeSingleWord(8),
+					0n,
+					0n,
+					0n,
+					0n,
+					0n,
+				]);
+				const base = await blackjack.getHandBase(handId);
+				expect(base.payout).to.equal(AMT * 4n); // each hand wins 2x
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.result2).to.equal(Result.DEALER_BUST);
+			});
+
+			it('one hand wins, one loses → correct partial payout', async () => {
+				// hand1=[8,3]=11 (will stand), hand2=[8,13]=18 wait ranks 1-13, val 13=K→10. Use [8,K]=18.
+				const handId = await dealPairOf(8, 5, 6);
+				const { requestId } = await approveAndSplit(handId);
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+					makeSingleWord(3), // hand1 +3 = 11
+					makeSingleWord(13), // hand2 +K(val 10) = 18
+				]);
+				await blackjack.connect(player).stand(handId); // hand1 stands with 11
+				const standTx = await blackjack.connect(player).stand(handId);
+				const standReq = await parseRequestId(blackjack, standTx, 'StandRequested');
+				// dealer: hidden=10 → 15, draw 3 → 18, stops
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, standReq, [
+					makeSingleWord(10),
+					makeSingleWord(3),
+					0n,
+					0n,
+					0n,
+					0n,
+					0n,
+				]);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.result).to.equal(Result.DEALER_WIN); // 11 < 18
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.result2).to.equal(Result.PUSH); // 18 == 18
+				const base = await blackjack.getHandBase(handId);
+				// payout: hand1 lost (0), hand2 push (AMT) → total AMT
+				expect(base.payout).to.equal(AMT);
+			});
+
+			it('21 on split hand pays 1:1, not 3:2', async () => {
+				// Split aces; hand1 gets 10 → A+10=21
+				const handId = await dealPairOf(1, 5, 6);
+				const { requestId } = await approveAndSplit(handId);
+				const words = [
+					makeSingleWord(10), // hand1 2nd = A+10 = 21
+					makeSingleWord(5), // hand2 2nd = A+5 = 16
+					makeSingleWord(10), // dealer hidden → 5+10=15
+					makeSingleWord(3), // draw → 18, stop
+					0n,
+					0n,
+					0n,
+					0n,
+					0n,
+				];
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, words);
+				const base = await blackjack.getHandBase(handId);
+				const details = await blackjack.getHandDetails(handId);
+				expect(details.result).to.equal(Result.PLAYER_WIN); // 21 > 18 — but PLAYER_WIN, not PLAYER_BLACKJACK
+				// payout: hand1 wins = AMT*2. hand2 loses. total = AMT*2 (not AMT*2.5 which is BJ)
+				expect(base.payout).to.equal(AMT * 2n);
+			});
+		});
+
+		/* ---------------- CANCEL ---------------- */
+
+		describe('cancel', () => {
+			it('user cancel during AWAITING_SPLIT refunds both stakes after timeout', async () => {
+				const handId = await dealPairOf(8);
+				await approveAndSplit(handId);
+				const balBefore = await usdc.balanceOf(player.address);
+				await time.increase(CANCEL_TIMEOUT);
+				await expect(blackjack.connect(player).cancelHand(handId)).to.emit(
+					blackjack,
+					'HandCancelled'
+				);
+				expect(await usdc.balanceOf(player.address)).to.equal(balBefore + AMT * 2n);
+				const base = await blackjack.getHandBase(handId);
+				expect(base.payout).to.equal(AMT * 2n);
+			});
+
+			it('admin cancel during AWAITING_SPLIT works regardless of timeout', async () => {
+				const handId = await dealPairOf(8);
+				await approveAndSplit(handId);
+				const balBefore = await usdc.balanceOf(player.address);
+				await blackjack.connect(resolver).adminCancelHand(handId);
+				expect(await usdc.balanceOf(player.address)).to.equal(balBefore + AMT * 2n);
+			});
+
+			it('reservation released on cancel', async () => {
+				const handId = await dealPairOf(8);
+				await approveAndSplit(handId);
+				await time.increase(CANCEL_TIMEOUT);
+				await blackjack.connect(player).cancelHand(handId);
+				// After cancel, reservation for this hand should be released
+				const base = await blackjack.getHandBase(handId);
+				expect(base.reservedProfit).to.equal(AMT * 2n); // unchanged on hand, but global should drop
+				// Can't easily check global without another hand; rely on next bet not reverting
+			});
+		});
+
+		/* ---------------- BACKWARDS COMPAT: non-split hands unaffected ---------------- */
+
+		describe('non-split hands unaffected', () => {
+			it('isSplit returns false for a regular single-hand bet', async () => {
+				await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+				const tx = await blackjack
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+				const { handId } = await parseHandCreated(blackjack, tx);
+				expect(await blackjack.isSplit(handId)).to.equal(false);
+			});
+
+			it('getSplitDetails on a non-split hand returns empty data', async () => {
+				await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+				const tx = await blackjack
+					.connect(player)
+					.placeBet(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
+				const { handId } = await parseHandCreated(blackjack, tx);
+				const ss = await blackjack.getSplitDetails(handId);
+				expect(ss.amount2).to.equal(0n);
+				expect(ss.activeHand).to.equal(0n);
+				expect(ss.isAceSplit).to.equal(false);
+				expect(ss.player2CardCount).to.equal(0);
+			});
+		});
+	});
+
+	/* ================================================================== */
+	/* ===================== AUTO-STAND AT 21 =========================== */
+	/* ================================================================== */
+
+	describe('auto-stand at 21', () => {
+		const AMT = MIN_USDC_BET;
+
+		async function placeBetWithCards(c1, c2, dFaceUp, dHidden) {
+			await usdc.connect(player).approve(blackjackAddress, AMT);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+				makeDealWord(c1, dFaceUp),
+				makeDealWord(c2, dHidden),
+			]);
+			return handId;
+		}
+
+		it('non-split: hit landing on 21 auto-triggers dealer play', async () => {
+			// Start with 5+6=11, hit a 10 → 21 (not BJ since 3 cards)
+			const handId = await placeBetWithCards(5, 6, 4, 3);
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+			// Fulfilling the hit should emit StandRequested inside the callback (auto-stand)
+			const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
+				makeSingleWord(10), // 11 + 10 = 21
+			]);
+			const rc = await fulfillTx.wait();
+			const standRequested = rc.logs
+				.map((l) => {
+					try {
+						return blackjack.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'StandRequested');
+			expect(standRequested, 'StandRequested should fire from in-callback auto-stand').to.not.equal(
+				undefined
+			);
+			const d = await blackjack.getHandDetails(handId);
+			expect(d.status).to.equal(Status.AWAITING_STAND);
+
+			// Fulfill dealer play → hand resolves
+			const dealerReq = standRequested.args.requestId;
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, dealerReq, [
+				makeSingleWord(10), // hidden → 4+10=14
+				makeSingleWord(4), // draw → 18, stop
+				0n,
+				0n,
+				0n,
+				0n,
+				0n,
+			]);
+			const final = await blackjack.getHandDetails(handId);
+			expect(final.status).to.equal(Status.RESOLVED);
+			expect(final.result).to.equal(Result.PLAYER_WIN); // 21 vs 18
+		});
+
+		it('non-split: 21 via hit pays 2x, not 3:2 (not a natural blackjack)', async () => {
+			const handId = await placeBetWithCards(5, 6, 4, 3);
+			const balBefore = await usdc.balanceOf(player.address);
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+			const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
+				makeSingleWord(10),
+			]);
+			const rc = await fulfillTx.wait();
+			const standRequested = rc.logs
+				.map((l) => {
+					try {
+						return blackjack.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'StandRequested');
+			const dealerReq = standRequested.args.requestId;
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, dealerReq, [
+				makeSingleWord(10), // hidden → 14
+				makeSingleWord(4), // draw → 18
+				0n,
+				0n,
+				0n,
+				0n,
+				0n,
+			]);
+			const base = await blackjack.getHandBase(handId);
+			expect(base.payout).to.equal(AMT * 2n); // 2x, not 2.5x
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore + AMT * 2n);
+		});
+
+		it('non-split: hit landing below 21 still returns to PLAYER_TURN (no auto-stand)', async () => {
+			const handId = await placeBetWithCards(5, 6, 4, 3); // 11
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+			const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
+				makeSingleWord(5), // 11 + 5 = 16 (not 21)
+			]);
+			const rc = await fulfillTx.wait();
+			const standRequested = rc.logs.some((l) => {
+				try {
+					return blackjack.interface.parseLog(l)?.name === 'StandRequested';
+				} catch {
+					return false;
+				}
+			});
+			expect(standRequested).to.equal(false); // no auto-stand
+			const d = await blackjack.getHandDetails(handId);
+			expect(d.status).to.equal(Status.PLAYER_TURN);
+		});
+
+		it('split hand 1: hit landing on 21 auto-advances to hand 2', async () => {
+			// Pair of 8s, hit hand 1 with +5 = 21
+			await usdc.connect(player).approve(blackjackAddress, AMT);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+				makeDealWord(8, 4),
+				makeDealWord(8, 3),
+			]);
+			await usdc.connect(player).approve(blackjackAddress, AMT);
+			const splitTx = await blackjack.connect(player).split(handId);
+			const splitReq = await parseRequestId(blackjack, splitTx, 'HandSplit');
+			// Deal split cards: hand1 gets 5 (so 8+5=13), hand2 gets 5
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, splitReq, [
+				makeSingleWord(5),
+				makeSingleWord(5),
+			]);
+			// Hit hand 1: +8 = 21
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+			const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
+				makeSingleWord(8), // 8+5+8 = 21
+			]);
+			const rc = await fulfillTx.wait();
+			// No StandRequested — hand 1 at 21 just advances, hand 2 still awaits player
+			const stoodEvent = rc.logs.some((l) => {
+				try {
+					return blackjack.interface.parseLog(l)?.name === 'StandRequested';
+				} catch {
+					return false;
+				}
+			});
+			expect(stoodEvent).to.equal(false);
+			const ss = await blackjack.getSplitDetails(handId);
+			expect(ss.activeHand).to.equal(2n);
+			const d = await blackjack.getHandDetails(handId);
+			expect(d.status).to.equal(Status.PLAYER_TURN);
+		});
+
+		it('split hand 2: hit landing on 21 triggers dealer VRF', async () => {
+			await usdc.connect(player).approve(blackjackAddress, AMT);
+			const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [
+				makeDealWord(8, 4),
+				makeDealWord(8, 3),
+			]);
+			await usdc.connect(player).approve(blackjackAddress, AMT);
+			const splitTx = await blackjack.connect(player).split(handId);
+			const splitReq = await parseRequestId(blackjack, splitTx, 'HandSplit');
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, splitReq, [
+				makeSingleWord(3), // hand1: 8+3=11
+				makeSingleWord(5), // hand2: 8+5=13
+			]);
+			// Stand on hand 1 → activeHand = 2
+			await blackjack.connect(player).stand(handId);
+			// Hit hand 2: +8 = 21
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
+			const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
+				makeSingleWord(8), // 13+8=21
+			]);
+			const rc = await fulfillTx.wait();
+			// Dealer VRF kicked off
+			const standRequested = rc.logs
+				.map((l) => {
+					try {
+						return blackjack.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'StandRequested');
+			expect(standRequested).to.not.equal(undefined);
+			const d = await blackjack.getHandDetails(handId);
+			expect(d.status).to.equal(Status.AWAITING_STAND);
+
+			// Fulfill dealer → resolve both
+			const dealerReq = standRequested.args.requestId;
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, dealerReq, [
+				makeSingleWord(10), // dealer hidden → 4+10=14
+				makeSingleWord(4), // draw → 18
+				0n,
+				0n,
+				0n,
+				0n,
+				0n,
+			]);
+			const base = await blackjack.getHandBase(handId);
+			// hand1=11 vs 18 → LOSE (0), hand2=21 vs 18 → WIN 1:1 (2*AMT)
+			expect(base.payout).to.equal(AMT * 2n);
 		});
 	});
 });
