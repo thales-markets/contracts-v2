@@ -313,8 +313,9 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     }
 
     /// @notice Places a multi-pick bet with up to MAX_PICKS_PER_BET picks sharing one VRF request
-    /// @dev All picks share the same collateral. Per-pick amounts may differ. Aggregate profit across
-    /// picks is validated against maxProfitUsd, and aggregate stake must satisfy MIN_BET_USD.
+    /// @dev All picks share the same collateral. Per-pick amounts may differ. The worst-case
+    /// aggregate profit (max across all 37 wheel outcomes — mutually exclusive picks don't stack)
+    /// is validated against maxProfitUsd, and aggregate stake must satisfy MIN_BET_USD.
     /// Duplicate picks are permitted. With a single pick, this behaves identically to placeBet
     /// @return betId The id of the new bet
     /// @return requestId The Chainlink VRF request id
@@ -403,13 +404,13 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         bool _isFreeBet
     ) internal returns (uint betId, uint requestId) {
         uint n = pickInputs.length;
-        uint totalReservedProfit;
         for (uint i = 0; i < n; i++) {
             PickInput calldata p = pickInputs[i];
             if (p.amount == 0) revert InvalidAmount();
             _validateSelection(p.betType, p.selection);
-            totalReservedProfit += p.amount * _getProfitMultiplier(p.betType);
         }
+
+        uint totalReservedProfit = _worstCaseProfit(pickInputs);
 
         if (_getUsdValue(collateral, totalAmount) < MIN_BET_USD) revert InvalidAmount();
         if (_getUsdValue(collateral, totalReservedProfit) > maxProfitUsd) revert MaxProfitExceeded();
@@ -706,6 +707,35 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         revert InvalidBetType();
     }
 
+    /// @notice Computes the worst-case net house liability across all 37 wheel outcomes
+    /// @dev For each possible VRF result (0..36), net liability = sum of winning picks' profit minus
+    /// sum of losing picks' stakes (losers' stakes are already collected from the user and offset
+    /// the payout). Takes the max across all outcomes, clamped at 0. Matches true reservation need:
+    /// mutually exclusive picks (e.g. two dozens) don't stack; losing stakes reduce the required
+    /// bankroll reservation
+    /// @param pickInputs Per-pick inputs
+    /// @return worstCaseProfit Maximum net liability across all 37 possible wheel outcomes
+    function _worstCaseProfit(PickInput[] calldata pickInputs) internal pure returns (uint worstCaseProfit) {
+        uint n = pickInputs.length;
+        uint totalStake;
+        for (uint i = 0; i < n; i++) totalStake += pickInputs[i].amount;
+
+        for (uint8 r = 0; r < WHEEL_SIZE; r++) {
+            uint winnersProfit;
+            uint winnersStake;
+            for (uint i = 0; i < n; i++) {
+                PickInput calldata p = pickInputs[i];
+                if (_isWinning(p.betType, p.selection, r)) {
+                    winnersProfit += p.amount * _getProfitMultiplier(p.betType);
+                    winnersStake += p.amount;
+                }
+            }
+            uint losersStake = totalStake - winnersStake;
+            uint netLiability = winnersProfit > losersStake ? winnersProfit - losersStake : 0;
+            if (netLiability > worstCaseProfit) worstCaseProfit = netLiability;
+        }
+    }
+
     /// @notice Returns whether a given bet selection wins for a roulette result
     /// @param betType Roulette bet type
     /// @param selection Encoded selection value
@@ -907,12 +937,14 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         }
     }
 
-    /// @notice Quotes aggregate stake and profit for a proposed multi-pick bet
-    /// @dev Pure-of-state helper for UIs. The caller compares totalProfitUsd against maxProfitUsd and
-    /// totalProfitCollateral against getAvailableLiquidity to check acceptability
+    /// @notice Quotes aggregate stake and worst-case profit for a proposed multi-pick bet
+    /// @dev Pure-of-state helper for UIs. `totalProfitCollateral` / `totalProfitUsd` reflect the
+    /// worst-case aggregate profit across all 37 wheel outcomes — the exact value the contract
+    /// checks against `maxProfitUsd`. The caller compares `totalProfitUsd` against `maxProfitUsd`
+    /// and `totalProfitCollateral` against `getAvailableLiquidity` to check acceptability
     /// @return totalAmount Sum of per-pick stakes
-    /// @return totalProfitCollateral Sum of per-pick profit, in collateral units
-    /// @return totalProfitUsd Sum of per-pick profit, in USD normalized to 18 decimals
+    /// @return totalProfitCollateral Worst-case aggregate profit in collateral units
+    /// @return totalProfitUsd Worst-case aggregate profit in USD normalized to 18 decimals
     function quoteMultiBet(
         address collateral,
         PickInput[] calldata pickInputs
@@ -923,8 +955,8 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         for (uint i = 0; i < n; i++) {
             _validateSelection(pickInputs[i].betType, pickInputs[i].selection);
             totalAmount += pickInputs[i].amount;
-            totalProfitCollateral += pickInputs[i].amount * _getProfitMultiplier(pickInputs[i].betType);
         }
+        totalProfitCollateral = _worstCaseProfit(pickInputs);
         totalProfitUsd = _getUsdValue(collateral, totalProfitCollateral);
     }
 

@@ -1682,8 +1682,9 @@ describe('Roulette', () => {
 				expect(await roulette.getBetPickCount(betId)).to.equal(10n);
 				const betBase = await roulette.getBetBase(betId);
 				expect(betBase.amount).to.equal(amount * 10n);
-				// Each RED_BLACK reserves 1x = amount, so total reserved = 10 * amount
-				expect(betBase.reservedProfit).to.equal(amount * 10n);
+				// 5 Red + 5 Black (mutually exclusive): on any spin, 5 win (1x each → 5 profit),
+				// 5 lose (5 stake). Net liability = 5 - 5 = 0.
+				expect(betBase.reservedProfit).to.equal(0n);
 			});
 
 			it('allows duplicate picks (stacked weight on the same selection)', async () => {
@@ -1782,14 +1783,41 @@ describe('Roulette', () => {
 				).to.be.revertedWithCustomError(roulette, 'MaxProfitExceeded');
 			});
 
-			it('reverts when aggregate profit exceeds maxProfitUsd across multiple picks', async () => {
-				// Two STRAIGHTs at 20 USDC each => 2 * 35 * 20 = 1400 USD profit (> 1000 cap)
-				const amount = 20n * 1_000_000n;
+			it('reverts when worst-case profit exceeds maxProfitUsd across co-winning picks', async () => {
+				// Two STRAIGHT picks on the SAME number — always win together (fully co-winning).
+				// Worst-case profit @ 15 USDC each = 2 * 35 * 15 = 1050 USD (> 1000 cap)
+				const amount = 15n * 1_000_000n;
 				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
-				const picks = [pick(BetType.STRAIGHT, 7, amount), pick(BetType.STRAIGHT, 13, amount)];
+				const picks = [pick(BetType.STRAIGHT, 7, amount), pick(BetType.STRAIGHT, 7, amount)];
 				await expect(
 					roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress)
 				).to.be.revertedWithCustomError(roulette, 'MaxProfitExceeded');
+			});
+
+			it('accepts bet when picks are mutually exclusive (worst case bounded by one pick)', async () => {
+				// Two STRAIGHTs at 20 USDC each on different numbers. Old logic summed to 1400 USD
+				// profit (> 1000 cap). New worst-case logic: only one number can hit → 700 USD profit.
+				// Top up bankroll so reservation (700 USDC) fits.
+				await usdc.setDefaultAmount(2000n * 1_000_000n);
+				await usdc.mintForUser(owner.address); // owner +2000 USDC (EOA, transfer(0) safe)
+				await usdc.transfer(rouletteAddress, 1000n * 1_000_000n);
+				const amount = 20n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.STRAIGHT, 7, amount), pick(BetType.STRAIGHT, 13, amount)];
+				await expect(roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress))
+					.to.not.be.reverted;
+				// Net liability = winning STRAIGHT profit (35x) minus losing pick's stake (1x) = 34x
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 34n);
+			});
+
+			it('worst-case for mutually exclusive dozens nets losing stake', async () => {
+				// Two DOZENS (1st 12 and 2nd 12) — mutually exclusive. On any hit, one wins (2x profit)
+				// and the other loses (1x stake). Net liability = 2x - 1x = 1x
+				const amount = 15n * 1_000_000n;
+				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
+				const picks = [pick(BetType.DOZEN, 0, amount), pick(BetType.DOZEN, 1, amount)];
+				await roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 1n);
 			});
 
 			it('rolls back reservation when liquidity is insufficient', async () => {
@@ -2112,19 +2140,29 @@ describe('Roulette', () => {
 		});
 
 		describe('Multi-pick views', () => {
-			it('quoteMultiBet returns correct aggregates', async () => {
+			it('quoteMultiBet returns worst-case profit across all 37 outcomes', async () => {
 				const amount = 2n * 1_000_000n;
+				// RED_BLACK=0 (red, 1x), DOZEN=0 (1st 12, 2x), STRAIGHT=7 (35x) — all three co-win on 7.
+				// Worst-case profit = (1 + 2 + 35) * amount = 38 * amount
 				const picks = [
-					pick(BetType.RED_BLACK, 0, amount), // 1x
-					pick(BetType.DOZEN, 0, amount), // 2x
-					pick(BetType.STRAIGHT, 7, amount), // 35x
+					pick(BetType.RED_BLACK, 0, amount),
+					pick(BetType.DOZEN, 0, amount),
+					pick(BetType.STRAIGHT, 7, amount),
 				];
 				const q = await roulette.quoteMultiBet(usdcAddress, picks);
 				expect(q.totalAmount).to.equal(amount * 3n);
-				expect(q.totalProfitCollateral).to.equal(amount * (1n + 2n + 35n));
-				// 1 USDC = 1 USD → totalProfitUsd = totalProfitCollateral scaled to 18-dec
+				expect(q.totalProfitCollateral).to.equal(amount * 38n);
 				const expectedUsd = (amount * 38n * ethers.parseEther('1')) / 1_000_000n;
 				expect(q.totalProfitUsd).to.equal(expectedUsd);
+			});
+
+			it('quoteMultiBet returns net worst-case for mutually exclusive picks', async () => {
+				const amount = 5n * 1_000_000n;
+				// Two mutually exclusive dozens: winner pays 2x, loser's stake (1x) offsets → net 1x
+				const picks = [pick(BetType.DOZEN, 0, amount), pick(BetType.DOZEN, 1, amount)];
+				const q = await roulette.quoteMultiBet(usdcAddress, picks);
+				expect(q.totalAmount).to.equal(amount * 2n);
+				expect(q.totalProfitCollateral).to.equal(amount * 1n);
 			});
 
 			it('quoteMultiBet reverts on invalid pick count', async () => {
