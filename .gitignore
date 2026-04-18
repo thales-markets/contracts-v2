@@ -118,3 +118,4 @@ test/contracts/SportMarkets/SGP.csv
 /test/utils/merkleTree/treeMarketsAndHashes.json
 /.claude/settings.local.json
 /.claude/scheduled_tasks.lock
+/.claude/scheduled_tasks.lock

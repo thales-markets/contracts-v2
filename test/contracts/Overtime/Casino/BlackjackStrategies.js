@@ -337,6 +337,41 @@ function sS17InH17(playerCards, dealerRank) {
 	return chartDecision(BS_S17_HARD, BS_S17_SOFT, playerCards, dealerRank);
 }
 
+// ============================================================================
+// Split charts — basic strategy pair-splitting rules (DAS allowed, H17)
+// Returns true if strategy wants to split the given starting pair.
+// ============================================================================
+function shouldSplitBasic(playerCards, dealerRank) {
+	if (playerCards.length !== 2) return false;
+	if (cardPoints(playerCards[0]) !== cardPoints(playerCards[1])) return false;
+	// Use rank 1 (Ace) explicitly; 10-value (10,J,Q,K) treat as "10"
+	const r = playerCards[0];
+	const col = upcardIdx(dealerRank); // 0=2,5=7,9=A
+	if (r === 1) return true; // A,A — always
+	// 10-value pair (never split per basic strategy)
+	if (cardPoints(r) === 10) return false;
+	if (r === 8) return true; // always
+	if (r === 9) return col <= 8 && col !== 5; // vs 2-9 except 7
+	if (r === 7) return col <= 5; // vs 2-7
+	if (r === 6) return col <= 4; // vs 2-6
+	if (r === 5) return false;
+	if (r === 4) return col === 3 || col === 4; // vs 5,6 (with DAS)
+	if (r === 3 || r === 2) return col <= 5; // vs 2-7
+	return false;
+}
+// Aggressive: split every non-10 pair (simulates "split everything splittable")
+function shouldSplitAggressive(playerCards) {
+	if (playerCards.length !== 2) return false;
+	if (cardPoints(playerCards[0]) !== cardPoints(playerCards[1])) return false;
+	if (cardPoints(playerCards[0]) === 10) return false; // even aggro shouldn't split 10s
+	return true;
+}
+// Conservative: split only aces (safe baseline for the feature)
+function shouldSplitAcesOnly(playerCards) {
+	if (playerCards.length !== 2) return false;
+	return playerCards[0] === 1 && playerCards[1] === 1;
+}
+
 const STRATEGIES = [
 	{ name: 'Mimic Dealer (H17)', fn: sMimicDealer, canDouble: false },
 	{ name: 'Always Stand', fn: sAlwaysStand, canDouble: false },
@@ -348,12 +383,29 @@ const STRATEGIES = [
 	{ name: 'ChatGPT Conservative', fn: sChatGPTConservative, canDouble: true },
 	{ name: 'Simple Cheat Rule', fn: sSimpleCheat, canDouble: true },
 	{ name: 'S17 Chart vs H17 Dealer', fn: sS17InH17, canDouble: true },
+	// Split-enabled strategies (canDouble must be true — post-split doubles add EV)
+	{ name: 'Basic H17 + Split', fn: sBasicH17, canDouble: true, splitFn: shouldSplitBasic },
+	{
+		name: 'Basic + Deviations + Split',
+		fn: sBasicDeviations,
+		canDouble: true,
+		splitFn: shouldSplitBasic,
+	},
+	{
+		name: 'Aggressive Splitter',
+		fn: sBasicH17,
+		canDouble: true,
+		splitFn: shouldSplitAggressive,
+	},
+	{ name: 'Ace-Only Split', fn: sBasicH17, canDouble: true, splitFn: shouldSplitAcesOnly },
 ];
 
 // ============================================================================
 // Hand runner — deals a hand, plays through the decision loop, logs result.
 // ============================================================================
-async function runStrategy(name, strategyFn, ctx) {
+async function runStrategy(name, strategy, ctx) {
+	const strategyFn = strategy.fn;
+	const splitFn = strategy.splitFn || null;
 	const { bj, bjAddress, usdc, player, usdcAddress, vrfCoordinator } = ctx;
 
 	const results = {
@@ -369,8 +421,26 @@ async function runStrategy(name, strategyFn, ctx) {
 	let hitCount = 0;
 	let standCount = 0;
 	let doubleCount = 0;
+	let splitCount = 0;
 	let chunkStartBalance = await usdc.balanceOf(player.address);
 	const totalStartBalance = chunkStartBalance;
+
+	// Tally one sub-hand's result into `results`. For split hands we call this twice
+	// (once per sub-hand) with each sub-hand's HandResult enum.
+	function tallyResult(resultEnum, wasDouble) {
+		if (resultEnum === 1) results.blackjack++;
+		else if (resultEnum === 2 || resultEnum === 6) {
+			results.win++;
+			if (wasDouble) results.doubleWin++;
+		} else if (resultEnum === 4) {
+			results.push++;
+			if (wasDouble) results.doublePush++;
+		} else if (resultEnum === 5) results.bust++;
+		else {
+			results.loss++;
+			if (wasDouble) results.doubleLoss++;
+		}
+	}
 
 	for (let i = 1; i <= NUM_HANDS; i++) {
 		const placeTx = await bj.connect(player).placeBet(usdcAddress, BET_USDC, ethers.ZeroAddress);
@@ -385,71 +455,159 @@ async function runStrategy(name, strategyFn, ctx) {
 
 		let details = await bj.getHandDetails(handId);
 		if (details.status === 6n) {
-			// Natural-BJ resolved immediately
+			// Natural-BJ resolved immediately (not splittable)
 			const r = Number(details.result);
 			if (r === 1) results.blackjack++;
 			else if (r === 3) results.loss++;
 			else if (r === 4) results.push++;
 		} else {
-			// Player turn loop
-			let step = 0;
-			let resolved = false;
-			while (details.status === 2n && step < 15 && !resolved) {
+			// Check if strategy wants to split right at the top (before any hit)
+			let didSplit = false;
+			if (splitFn) {
 				const cards = await bj.getHandCards(handId);
 				const playerCards = cards.playerCards.map((c) => Number(c));
 				const dealerUp = Number(cards.dealerCards[0]);
-				let decision = strategyFn(playerCards, dealerUp);
-
-				// Guard: double only legal on 2 cards
-				if (decision === 'double' && playerCards.length !== 2) decision = 'hit';
-
-				if (decision === 'hit') {
-					hitCount++;
-					const hitTx = await bj.connect(player).hit(handId);
-					const hitReceipt = await hitTx.wait();
-					const hitEvent = parseEvent(bj, hitReceipt, 'HitRequested');
-					const hitWord = seedWord(i * 100 + step, 7);
-					await vrfCoordinator.fulfillRandomWords(bjAddress, hitEvent.args.requestId, [hitWord]);
-				} else if (decision === 'double') {
-					doubleCount++;
-					const dTx = await bj.connect(player).doubleDown(handId);
-					const dReceipt = await dTx.wait();
-					const dEvent = parseEvent(bj, dReceipt, 'DoubleDownRequested');
-					const dWords = [];
-					for (let w = 0; w < 7; w++) dWords.push(seedWord(i * 100 + step * 10 + w, 9));
-					await vrfCoordinator.fulfillRandomWords(bjAddress, dEvent.args.requestId, dWords);
-					resolved = true;
-				} else {
-					standCount++;
-					const sTx = await bj.connect(player).stand(handId);
-					const sReceipt = await sTx.wait();
-					const sEvent = parseEvent(bj, sReceipt, 'StandRequested');
-					const sWords = [];
-					for (let w = 0; w < 7; w++) sWords.push(seedWord(i * 100 + step * 10 + w, 8));
-					await vrfCoordinator.fulfillRandomWords(bjAddress, sEvent.args.requestId, sWords);
-					resolved = true;
-				}
-
-				if (!resolved) {
-					details = await bj.getHandDetails(handId);
-					step++;
+				if (splitFn(playerCards, dealerUp)) {
+					const isAceSplit = playerCards[0] === 1 && playerCards[1] === 1;
+					const splitTx = await bj.connect(player).split(handId);
+					const splitReceipt = await splitTx.wait();
+					const splitEvent = parseEvent(bj, splitReceipt, 'HandSplit');
+					const wordCount = isAceSplit ? 9 : 2;
+					const splitWords = [];
+					for (let w = 0; w < wordCount; w++) splitWords.push(seedWord(i * 1000 + w, 11));
+					await vrfCoordinator.fulfillRandomWords(bjAddress, splitEvent.args.requestId, splitWords);
+					splitCount++;
+					didSplit = true;
 				}
 			}
 
-			const finalDetails = await bj.getHandDetails(handId);
-			const r = Number(finalDetails.result);
-			const wasDouble = finalDetails.isDoubledDown;
-			if (r === 1) results.blackjack++;
-			else if (r === 2 || r === 6) {
-				results.win++;
-				if (wasDouble) results.doubleWin++;
-			} else if (r === 4) {
-				results.push++;
-				if (wasDouble) results.doublePush++;
-			} else if (r === 5) results.bust++;
-			else {
-				results.loss++;
-				if (wasDouble) results.doubleLoss++;
+			if (didSplit) {
+				// Play through both split hands (ace split already RESOLVED, skip loop)
+				let step = 0;
+				let finalDet = await bj.getHandDetails(handId);
+				while (finalDet.status === 2n && step < 30) {
+					const ss = await bj.getSplitDetails(handId);
+					const cards = await bj.getHandCards(handId);
+					const dealerUp = Number(cards.dealerCards[0]);
+					const active = Number(ss.activeHand);
+					const activeCards =
+						active === 1
+							? cards.playerCards.map((c) => Number(c))
+							: ss.player2Cards.map((c) => Number(c)).slice(0, Number(ss.player2CardCount));
+					let decision = strategyFn(activeCards, dealerUp);
+					if (decision === 'double' && activeCards.length !== 2) decision = 'hit';
+
+					if (decision === 'hit') {
+						hitCount++;
+						const hitTx = await bj.connect(player).hit(handId);
+						const hitReceipt = await hitTx.wait();
+						const hitEvent = parseEvent(bj, hitReceipt, 'HitRequested');
+						const hitWord = seedWord(i * 1000 + step, 7);
+						await vrfCoordinator.fulfillRandomWords(bjAddress, hitEvent.args.requestId, [hitWord]);
+					} else if (decision === 'double') {
+						doubleCount++;
+						const dTx = await bj.connect(player).doubleDown(handId);
+						const dReceipt = await dTx.wait();
+						const dEvent = parseEvent(bj, dReceipt, 'DoubleDownRequested');
+						// Hand 1 double: 1 word. Hand 2 double: 7 words.
+						const dWordCount = active === 1 ? 1 : 7;
+						const dWords = [];
+						for (let w = 0; w < dWordCount; w++) dWords.push(seedWord(i * 1000 + step * 10 + w, 9));
+						await vrfCoordinator.fulfillRandomWords(bjAddress, dEvent.args.requestId, dWords);
+					} else {
+						standCount++;
+						const sTx = await bj.connect(player).stand(handId);
+						// Hand 1 stand is a sync advance (no VRF). Hand 2 stand fires dealer VRF.
+						if (active === 2) {
+							const sReceipt = await sTx.wait();
+							const sEvent = parseEvent(bj, sReceipt, 'StandRequested');
+							const sWords = [];
+							for (let w = 0; w < 7; w++) sWords.push(seedWord(i * 1000 + step * 10 + w, 8));
+							await vrfCoordinator.fulfillRandomWords(bjAddress, sEvent.args.requestId, sWords);
+						}
+					}
+
+					// A hit that auto-stands at 21 (or busts hand 2 while hand 1 alive) fires an
+					// in-callback StandRequested. Check for it and fulfill if present.
+					if (decision === 'hit') {
+						const d2 = await bj.getHandDetails(handId);
+						if (d2.status === 4n) {
+							// AWAITING_STAND — dealer VRF was kicked off inside the hit callback
+							// We need to find the new requestId. The cleanest approach: query the
+							// current hand.requestId which was updated by _registerVrf.
+							const base = await bj.getHandBase(handId);
+							const sWords = [];
+							for (let w = 0; w < 7; w++) sWords.push(seedWord(i * 1000 + step * 10 + w + 100, 8));
+							await vrfCoordinator.fulfillRandomWords(bjAddress, base.requestId, sWords);
+						}
+					}
+
+					finalDet = await bj.getHandDetails(handId);
+					step++;
+				}
+
+				// Parse split results: hand 1 from hand.result, hand 2 from splitDetails.result2
+				const ss = await bj.getSplitDetails(handId);
+				const r1 = Number(finalDet.result);
+				const r2 = Number(ss.result2);
+				tallyResult(r1, finalDet.isDoubledDown);
+				tallyResult(r2, ss.isDoubled2);
+			} else {
+				// Non-split path (original logic)
+				let step = 0;
+				let resolved = false;
+				while (details.status === 2n && step < 15 && !resolved) {
+					const cards = await bj.getHandCards(handId);
+					const playerCards = cards.playerCards.map((c) => Number(c));
+					const dealerUp = Number(cards.dealerCards[0]);
+					let decision = strategyFn(playerCards, dealerUp);
+
+					if (decision === 'double' && playerCards.length !== 2) decision = 'hit';
+
+					if (decision === 'hit') {
+						hitCount++;
+						const hitTx = await bj.connect(player).hit(handId);
+						const hitReceipt = await hitTx.wait();
+						const hitEvent = parseEvent(bj, hitReceipt, 'HitRequested');
+						const hitWord = seedWord(i * 100 + step, 7);
+						await vrfCoordinator.fulfillRandomWords(bjAddress, hitEvent.args.requestId, [hitWord]);
+						// Check for auto-stand-at-21 kicking off dealer VRF in callback
+						const d2 = await bj.getHandDetails(handId);
+						if (d2.status === 4n) {
+							const base = await bj.getHandBase(handId);
+							const sWords = [];
+							for (let w = 0; w < 7; w++) sWords.push(seedWord(i * 100 + step * 10 + w + 100, 8));
+							await vrfCoordinator.fulfillRandomWords(bjAddress, base.requestId, sWords);
+							resolved = true;
+						}
+					} else if (decision === 'double') {
+						doubleCount++;
+						const dTx = await bj.connect(player).doubleDown(handId);
+						const dReceipt = await dTx.wait();
+						const dEvent = parseEvent(bj, dReceipt, 'DoubleDownRequested');
+						const dWords = [];
+						for (let w = 0; w < 7; w++) dWords.push(seedWord(i * 100 + step * 10 + w, 9));
+						await vrfCoordinator.fulfillRandomWords(bjAddress, dEvent.args.requestId, dWords);
+						resolved = true;
+					} else {
+						standCount++;
+						const sTx = await bj.connect(player).stand(handId);
+						const sReceipt = await sTx.wait();
+						const sEvent = parseEvent(bj, sReceipt, 'StandRequested');
+						const sWords = [];
+						for (let w = 0; w < 7; w++) sWords.push(seedWord(i * 100 + step * 10 + w, 8));
+						await vrfCoordinator.fulfillRandomWords(bjAddress, sEvent.args.requestId, sWords);
+						resolved = true;
+					}
+
+					if (!resolved) {
+						details = await bj.getHandDetails(handId);
+						step++;
+					}
+				}
+
+				const finalDetails = await bj.getHandDetails(handId);
+				tallyResult(Number(finalDetails.result), finalDetails.isDoubledDown);
 			}
 		}
 
@@ -457,12 +615,14 @@ async function runStrategy(name, strategyFn, ctx) {
 			const cur = await usdc.balanceOf(player.address);
 			const chunkNet = Number(cur - chunkStartBalance) / 1e6;
 			const totalNet = Number(cur - totalStartBalance) / 1e6;
-			// Effective units wagered so far = hands + doubles (double re-bets once)
-			const effWageredUnits = i + doubleCount;
-			const effWageredUsdc = effWageredUnits * 3; // 3 USDC / unit
+			// Effective units wagered: base bets + doubles + splits (each adds 1 unit of BET_USDC)
+			const effWageredUnits = i + doubleCount + splitCount;
+			const effWageredUsdc = effWageredUnits * 3;
 			const rtp = ((effWageredUsdc + totalNet) / effWageredUsdc) * 100;
 			console.log(
-				`  [${name}] hand ${i.toString().padStart(6)} | chunkNet ${chunkNet
+				`  [${name}] hand ${i.toString().padStart(6)} | splits ${splitCount
+					.toString()
+					.padStart(5)} | doubles ${doubleCount.toString().padStart(5)} | chunkNet ${chunkNet
 					.toFixed(2)
 					.padStart(10)} USDC | totalNet ${totalNet
 					.toFixed(2)
@@ -478,13 +638,15 @@ async function runStrategy(name, strategyFn, ctx) {
 
 	const playerAfter = await usdc.balanceOf(player.address);
 	const totalNet = Number(playerAfter - totalStartBalance) / 1e6;
-	const effUnits = NUM_HANDS + doubleCount;
+	const effUnits = NUM_HANDS + doubleCount + splitCount;
 	const effWagered = effUnits * 3;
 	const rtp = ((effWagered + totalNet) / effWagered) * 100;
 
 	console.log(`\n========== BJ STRATEGY: ${name} ==========`);
 	console.log(`Hands: ${NUM_HANDS}`);
-	console.log(`Actions: ${hitCount} hits, ${standCount} stands, ${doubleCount} doubles`);
+	console.log(
+		`Actions: ${hitCount} hits, ${standCount} stands, ${doubleCount} doubles, ${splitCount} splits`
+	);
 	console.log(`Results:`);
 	console.log(
 		`  Natural BJ:   ${results.blackjack} (${((results.blackjack / NUM_HANDS) * 100).toFixed(2)}%)`
@@ -527,7 +689,8 @@ async function setupBlackjack(f) {
 	await usdc.transfer(bjAddress, 200_000n * 1_000_000n);
 	await usdc.transfer(player.address, 200_000n * 1_000_000n);
 	// Allowance sized for all hands + full doubles (100% of hands doubled is an upper bound)
-	await usdc.connect(player).approve(bjAddress, BET_USDC * BigInt(NUM_HANDS * 3));
+	// 5x allowance covers: base bet + split + 2 post-split doubles (worst case per hand)
+	await usdc.connect(player).approve(bjAddress, BET_USDC * BigInt(NUM_HANDS * 5));
 
 	return { bj, bjAddress, usdc, player, usdcAddress, vrfCoordinator };
 }
@@ -542,7 +705,7 @@ describe('Blackjack Strategy Audit', () => {
 			this.timeout(18000000); // 300 min
 			const f = await loadFixture(sharedFixture);
 			const ctx = await setupBlackjack(f);
-			const { rtp } = await runStrategy(strategy.name, strategy.fn, ctx);
+			const { rtp } = await runStrategy(strategy.name, strategy, ctx);
 			expect(rtp).to.be.greaterThan(50); // sanity — even worst strategy should exceed 50%
 		});
 	}
