@@ -1965,35 +1965,36 @@ describe('Blackjack', () => {
 				expect(details.status).to.equal(Status.RESOLVED);
 			});
 
-			it('bust on hand 2 while hand 1 alive → dealer VRF kicked off inside callback', async () => {
+			it('bust on hand 2 while hand 1 alive → player must stand() to trigger dealer', async () => {
 				const handId = await splitThenFulfill(8, 3, 5); // hand1=[8,3]=11, hand2=[8,5]=13
 				await blackjack.connect(player).stand(handId); // activeHand→2
-				// Hit hand 2 to bust
+				// Hit hand 2 to bust: 13 + 10 = 23
 				const hitTx = await blackjack.connect(player).hit(handId);
 				const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
-				// Word makes hand 2 bust: 13 + 10 = 23
-				// Fulfillment should internally request 7 new words for dealer
 				const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
 					makeSingleWord(10),
 				]);
 				const rc = await fulfillTx.wait();
-				// Expect a new StandRequested event emitted from the callback
-				const stood = rc.logs
-					.map((l) => {
-						try {
-							return blackjack.interface.parseLog(l);
-						} catch {
-							return null;
-						}
-					})
-					.find((e) => e?.name === 'StandRequested');
-				expect(stood).to.not.equal(undefined);
-				const newReq = stood.args.requestId;
-				const details = await blackjack.getHandDetails(handId);
+				// No nested VRF — Chainlink v2.5 coordinator's reentrancyLock blocks nested
+				// requestRandomWords in the callback. Hand sits at PLAYER_TURN; FE submits stand().
+				const stoodInCallback = rc.logs.some((l) => {
+					try {
+						return blackjack.interface.parseLog(l)?.name === 'StandRequested';
+					} catch {
+						return false;
+					}
+				});
+				expect(stoodInCallback).to.equal(false);
+				let details = await blackjack.getHandDetails(handId);
+				expect(details.status).to.equal(Status.PLAYER_TURN);
+
+				// Frontend auto-submits stand() → dealer VRF requested
+				const standTx = await blackjack.connect(player).stand(handId);
+				const standReq = await parseRequestId(blackjack, standTx, 'StandRequested');
+				details = await blackjack.getHandDetails(handId);
 				expect(details.status).to.equal(Status.AWAITING_STAND);
 
-				// Fulfill dealer play; hand1=11 stood, dealer should play and resolve
-				await vrfCoordinator.fulfillRandomWords(blackjackAddress, newReq, [
+				await vrfCoordinator.fulfillRandomWords(blackjackAddress, standReq, [
 					makeSingleWord(10), // hidden=10 → 5+10=15
 					makeSingleWord(5), // draw 5 → 20
 					0n,
@@ -2190,10 +2191,10 @@ describe('Blackjack', () => {
 	});
 
 	/* ================================================================== */
-	/* ===================== AUTO-STAND AT 21 =========================== */
+	/* =================== HIT-TO-21 (FE auto-stands) =================== */
 	/* ================================================================== */
 
-	describe('auto-stand at 21', () => {
+	describe('hit to 21 — FE must stand()', () => {
 		const AMT = MIN_USDC_BET;
 
 		async function placeBetWithCards(c1, c2, dFaceUp, dHidden) {
@@ -2207,33 +2208,33 @@ describe('Blackjack', () => {
 			return handId;
 		}
 
-		it('non-split: hit landing on 21 auto-triggers dealer play', async () => {
+		it('non-split: hit landing on 21 sits at PLAYER_TURN — FE submits stand()', async () => {
 			// Start with 5+6=11, hit a 10 → 21 (not BJ since 3 cards)
 			const handId = await placeBetWithCards(5, 6, 4, 3);
 			const hitTx = await blackjack.connect(player).hit(handId);
 			const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
-			// Fulfilling the hit should emit StandRequested inside the callback (auto-stand)
 			const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
 				makeSingleWord(10), // 11 + 10 = 21
 			]);
 			const rc = await fulfillTx.wait();
-			const standRequested = rc.logs
-				.map((l) => {
-					try {
-						return blackjack.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'StandRequested');
-			expect(standRequested, 'StandRequested should fire from in-callback auto-stand').to.not.equal(
-				undefined
-			);
-			const d = await blackjack.getHandDetails(handId);
+			// No nested VRF in callback (Chainlink reentrancyLock)
+			const standInCb = rc.logs.some((l) => {
+				try {
+					return blackjack.interface.parseLog(l)?.name === 'StandRequested';
+				} catch {
+					return false;
+				}
+			});
+			expect(standInCb).to.equal(false);
+			let d = await blackjack.getHandDetails(handId);
+			expect(d.status).to.equal(Status.PLAYER_TURN);
+
+			// Frontend auto-submits stand() on reaching 21
+			const standTx = await blackjack.connect(player).stand(handId);
+			const dealerReq = await parseRequestId(blackjack, standTx, 'StandRequested');
+			d = await blackjack.getHandDetails(handId);
 			expect(d.status).to.equal(Status.AWAITING_STAND);
 
-			// Fulfill dealer play → hand resolves
-			const dealerReq = standRequested.args.requestId;
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, dealerReq, [
 				makeSingleWord(10), // hidden → 4+10=14
 				makeSingleWord(4), // draw → 18, stop
@@ -2253,20 +2254,11 @@ describe('Blackjack', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const hitTx = await blackjack.connect(player).hit(handId);
 			const hitReq = await parseRequestId(blackjack, hitTx, 'HitRequested');
-			const fulfillTx = await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [
-				makeSingleWord(10),
-			]);
-			const rc = await fulfillTx.wait();
-			const standRequested = rc.logs
-				.map((l) => {
-					try {
-						return blackjack.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'StandRequested');
-			const dealerReq = standRequested.args.requestId;
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, hitReq, [makeSingleWord(10)]);
+
+			// FE auto-stands on 21
+			const standTx = await blackjack.connect(player).stand(handId);
+			const dealerReq = await parseRequestId(blackjack, standTx, 'StandRequested');
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, dealerReq, [
 				makeSingleWord(10), // hidden → 14
 				makeSingleWord(4), // draw → 18
@@ -2340,7 +2332,7 @@ describe('Blackjack', () => {
 			expect(d.status).to.equal(Status.PLAYER_TURN);
 		});
 
-		it('split hand 2: hit landing on 21 triggers dealer VRF', async () => {
+		it('split hand 2: hit landing on 21 sits at PLAYER_TURN — FE submits stand()', async () => {
 			await usdc.connect(player).approve(blackjackAddress, AMT);
 			const tx = await blackjack.connect(player).placeBet(usdcAddress, AMT, ethers.ZeroAddress);
 			const { handId, requestId } = await parseHandCreated(blackjack, tx);
@@ -2364,22 +2356,24 @@ describe('Blackjack', () => {
 				makeSingleWord(8), // 13+8=21
 			]);
 			const rc = await fulfillTx.wait();
-			// Dealer VRF kicked off
-			const standRequested = rc.logs
-				.map((l) => {
-					try {
-						return blackjack.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'StandRequested');
-			expect(standRequested).to.not.equal(undefined);
-			const d = await blackjack.getHandDetails(handId);
+			// No nested VRF in callback
+			const standInCb = rc.logs.some((l) => {
+				try {
+					return blackjack.interface.parseLog(l)?.name === 'StandRequested';
+				} catch {
+					return false;
+				}
+			});
+			expect(standInCb).to.equal(false);
+			let d = await blackjack.getHandDetails(handId);
+			expect(d.status).to.equal(Status.PLAYER_TURN);
+
+			// FE auto-stands on 21
+			const standTx = await blackjack.connect(player).stand(handId);
+			const dealerReq = await parseRequestId(blackjack, standTx, 'StandRequested');
+			d = await blackjack.getHandDetails(handId);
 			expect(d.status).to.equal(Status.AWAITING_STAND);
 
-			// Fulfill dealer → resolve both
-			const dealerReq = standRequested.args.requestId;
 			await vrfCoordinator.fulfillRandomWords(blackjackAddress, dealerReq, [
 				makeSingleWord(10), // dealer hidden → 4+10=14
 				makeSingleWord(4), // draw → 18

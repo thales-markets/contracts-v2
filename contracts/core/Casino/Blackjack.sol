@@ -634,18 +634,16 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
                 if (playerValue >= BLACKJACK_TARGET) {
                     // Hand 2 done (bust or 21). If BOTH hands busted → resolve (no dealer needed).
-                    // Otherwise dealer plays.
+                    // Otherwise remain in PLAYER_TURN: the frontend auto-submits stand(), which
+                    // triggers the dealer VRF request. We can't request VRF from inside a VRF
+                    // callback — Chainlink's coordinator blocks it with its reentrancyLock
                     (uint8 hand1Value, ) = _handValue(hand.playerCards, hand.playerCardCount);
                     if (hand1Value > BLACKJACK_TARGET && playerValue > BLACKJACK_TARGET) {
                         _resolveSplit(handId, hand);
-                    } else {
-                        uint newRequestId = _requestRandomWords(7);
-                        _registerVrf(handId, hand, newRequestId, VrfAction.STAND, HandStatus.AWAITING_STAND);
-                        emit StandRequested(handId, newRequestId, hand.user);
+                        return;
                     }
-                } else {
-                    hand.status = HandStatus.PLAYER_TURN;
                 }
+                hand.status = HandStatus.PLAYER_TURN;
             }
         } else {
             hand.playerCards[hand.playerCardCount] = newCard;
@@ -655,12 +653,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
             if (playerValue > BLACKJACK_TARGET) {
                 _resolveHand(handId, hand, HandResult.PLAYER_BUST);
-            } else if (playerValue == BLACKJACK_TARGET) {
-                // Auto-stand at 21 — trigger dealer VRF in the same callback
-                uint newRequestId = _requestRandomWords(7);
-                _registerVrf(handId, hand, newRequestId, VrfAction.STAND, HandStatus.AWAITING_STAND);
-                emit StandRequested(handId, newRequestId, hand.user);
             } else {
+                // At 21, frontend auto-submits stand() — can't nest a VRF request from here
                 hand.status = HandStatus.PLAYER_TURN;
             }
         }

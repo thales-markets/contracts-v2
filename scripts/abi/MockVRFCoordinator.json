@@ -1,5 +1,10 @@
 [
   {
+    "inputs": [],
+    "name": "Reentrant",
+    "type": "error"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
