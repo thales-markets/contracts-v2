@@ -418,7 +418,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             _tradeData,
             TradeDataInternal(
                 _buyInAmount,
-                _divWithDecimals(_buyInAmount, _expectedQuote), // quote to expected payout
+                (ONE * _buyInAmount) / _expectedQuote, // quote to expected payout
                 _additionalSlippage,
                 _recipient,
                 _tradeTypeData._isLive,
@@ -453,13 +453,12 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
             }
         }
 
-        if (action == ISportsAMMV2.TicketAction.Cancel) {
-            _exerciseTicket(_ticket, address(0), true, false);
-        } else if (action == ISportsAMMV2.TicketAction.MarkLost) {
-            _exerciseTicket(_ticket, address(0), false, true);
-        } else {
-            _exerciseTicket(_ticket, address(0), false, false);
-        }
+        _exerciseTicket(
+            _ticket,
+            address(0),
+            action == ISportsAMMV2.TicketAction.Cancel,
+            action == ISportsAMMV2.TicketAction.MarkLost
+        );
     }
 
     /// @notice exercise specific ticket to an off ramp collateral
@@ -524,14 +523,32 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
 
         cashoutAmount = ticket.cashout(payoutAfterCashoutFee, _recipient);
 
+        _resolveCashout(_ticket, _recipient, ticket, cashoutAmount);
+
+        emit TicketCashedOut(_ticket, _recipient, cashoutAmount);
+    }
+
+    function _resolveCashout(address _ticket, address _recipient, Ticket ticket, uint cashoutAmount) internal {
         IERC20 collateral = ticket.collateral();
+
+        bool isDeferred = _isDeferredTicket(_ticket);
+        // For deferred tickets: AMM has no funds — pull everything needed from LP
+        if (isDeferred) {
+            uint neededFromLP = cashoutAmount + sportsAMMV2Utils.getFees(ticket.buyInAmount(), safeBoxFee);
+            ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(collateral)]).provideForResolution(
+                _ticket,
+                neededFromLP
+            );
+            // Pay user
+            if (cashoutAmount > 0) {
+                collateral.safeTransfer(_recipient, cashoutAmount);
+            }
+        }
 
         // protocol fees (safeBox/referrer), NOT cashout fee
         _handleFees(ticket.buyInAmount(), _recipient, collateral);
 
         _finalizeTicketResolution(_ticket, _recipient, collateral, true);
-
-        emit TicketCashedOut(_ticket, _recipient, cashoutAmount);
     }
 
     function _finalizeTicketResolution(
@@ -543,11 +560,19 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         manager.resolveKnownTicket(_ticket, _ticketOwner);
         emit TicketResolved(_ticket, _ticketOwner, _isUserTheWinner);
 
-        // mark ticket as exercised in LiquidityPool and return any funds to the pool if ticket was lost or cancelled
+        // Return unused funds to LP
         ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(_collateral)]).transferToPool(
             _ticket,
             _collateral.balanceOf(address(this))
         );
+    }
+
+    function _isDeferredTicket(address _ticket) internal view returns (bool) {
+        try Ticket(_ticket).isDeferred() returns (bool stored) {
+            return stored;
+        } catch {
+            return false;
+        }
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -666,16 +691,22 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         // 2) Track ticket on the manager (unchanged)
         manager.addNewKnownTicket(_tradeData, address(ticket), _tradeDataInternal._recipient);
 
-        // 3) Commit trade to LP (unchanged)
-        ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool).commitTrade(
-            address(ticket),
-            processingParams._payoutWithFees - _tradeDataInternal._buyInAmount
-        );
+        // 3) Commit trade to LP
+        ISportsAMMV2LiquidityPool collateralPool = ISportsAMMV2LiquidityPool(_tradeDataInternal._collateralPool);
 
-        // 4) Fund the ticket with the full expected amount (unchanged)
-        IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), processingParams._payoutWithFees);
+        if (collateralPool.getTicketRound(address(ticket)) == 1) {
+            // Default round: deferred collateralization.
+            // Only send buyIn to LP for safekeeping. LP does NOT provide profit upfront.
+            collateralPool.commitTradeDeferred(address(ticket), _tradeDataInternal._buyInAmount);
+            // Setting deferred flag
+            ticket.setIsDeferred();
+        } else {
+            // Non-default round: full collateralization as before.
+            collateralPool.commitTrade(address(ticket), processingParams._payoutWithFees - _tradeDataInternal._buyInAmount);
+            IERC20(_tradeDataInternal._collateral).safeTransfer(address(ticket), processingParams._payoutWithFees);
+        }
 
-        // 5) Lock the accounting: tell the Ticket what the authoritative funded amount is
+        // Store expected payout for validation
         ticket.setExpectedFinalPayout(processingParams._payoutWithFees);
 
         emit NewTicket(
@@ -748,7 +779,7 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
                 marketTradeData.line,
                 marketTradeData.playerId,
                 marketTradeData.position,
-                (odds * ONE) / ((ONE + _addedPayoutPercentage) - _mulWithDecimals(_addedPayoutPercentage, odds)),
+                (odds * ONE) / ((ONE + _addedPayoutPercentage) - ((_addedPayoutPercentage * odds) / ONE)),
                 marketTradeData.combinedPositions[marketTradeData.position]
             );
         }
@@ -777,14 +808,6 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         }
     }
 
-    function _divWithDecimals(uint _dividend, uint _divisor) internal pure returns (uint) {
-        return (ONE * _dividend) / _divisor;
-    }
-
-    function _mulWithDecimals(uint _firstMul, uint _secondMul) internal pure returns (uint) {
-        return (_firstMul * _secondMul) / ONE;
-    }
-
     function _setReferrer(address _referrer, address _recipient) internal {
         if (_referrer != address(0) && _recipient != address(freeBetsHolder)) referrals.setReferrer(_referrer, _recipient);
     }
@@ -805,17 +828,33 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         if (ticketOwner == freeBetsHolder) {
             IProxyBetting(ticketOwner).confirmTicketResolved(_ticket);
         }
-        if (!ticket.cancelled()) {
-            _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
+
+        bool isDeferred = _isDeferredTicket(_ticket);
+        // For deferred tickets: AMM has no funds — pull everything needed from LP
+        if (isDeferred) {
+            uint neededFromLP = userWonAmount +
+                (ticket.cancelled() ? 0 : sportsAMMV2Utils.getFees(ticket.buyInAmount(), safeBoxFee));
+            ISportsAMMV2LiquidityPool(liquidityPoolForCollateral[address(ticketCollateral)]).provideForResolution(
+                _ticket,
+                neededFromLP
+            );
         }
 
-        if (userWonAmount > 0 && _exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
-            if (ticketCollateral != defaultCollateral) revert OfframpOnlyDefaultCollateralAllowed();
+        if (userWonAmount > 0) {
+            if (_exerciseCollateral != address(0) && _exerciseCollateral != address(ticketCollateral)) {
+                if (ticketCollateral != defaultCollateral) revert OfframpOnlyDefaultCollateralAllowed();
+                IERC20(_exerciseCollateral).safeTransfer(
+                    ticketOwner,
+                    multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWonAmount)
+                );
+            } else if (isDeferred) {
+                // Deferred: AMM pays user directly (ticket has no funds)
+                ticketCollateral.safeTransfer(ticketOwner, userWonAmount);
+            }
+        }
 
-            IERC20(_exerciseCollateral).safeTransfer(
-                ticketOwner,
-                multiCollateralOnOffRamp.offramp(_exerciseCollateral, userWonAmount)
-            );
+        if (!ticket.cancelled()) {
+            _handleFees(ticket.buyInAmount(), ticketOwner, ticketCollateral);
         }
 
         _finalizeTicketResolution(_ticket, ticketOwner, ticketCollateral, ticket.isUserTheWinner());

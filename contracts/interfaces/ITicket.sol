@@ -7,4 +7,5 @@ interface ITicket {
     function isSGP() external view returns (bool);
 
     function numOfMarkets() external view returns (uint);
+    function isDeferred() external view returns (bool);
 }
