@@ -104,8 +104,6 @@
 		"Slots": "0xCAE6929b97D0d761eaEAf8718836E8c5E985Ea45",
 		"SlotsImplementation": "0x54FD5291d9914E3F7eD7C9780e7E1D1Ac99bc739",
 		"SlotsProxyAdmin": "0x456D21E5989ee65f8aAA33F5543253D04E8E08ab",
-		"CasinoFreeBetsHolder": "0xc4C7D964Ef26C17Dc4d616eC2524A8b9eB712f54",
-		"CasinoFreeBetsHolderImplementation": "0x87DC4f3463341C5e9ADC3150812955F4d6b27D87",
 		"MockReferrals": "0xc36F183cF54EBe05941923fa13149542ae475C12"
 	},
 	"optimisticEthereum": {
