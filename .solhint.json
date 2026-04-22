@@ -8,6 +8,14 @@
 		"max-states-count": "off",
 		"not-rely-on-time": "off",
 		"explicit-types": "off",
-		"custom-errors": "off"
+		"custom-errors": "off",
+		"gas-custom-errors": "off",
+		"gas-increment-by-one": "off",
+		"gas-small-strings": "off",
+		"gas-indexed-events": "off",
+		"gas-strict-inequalities": "off",
+		"use-natspec": "off",
+		"no-empty-blocks": "off",
+		"function-max-lines": ["error", 500]
 	}
 }

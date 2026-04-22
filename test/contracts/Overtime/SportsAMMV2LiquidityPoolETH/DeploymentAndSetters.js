@@ -132,7 +132,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(ZERO_ADDRESS)
-			).to.be.revertedWith('ZeroAddress');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPool, 'ZeroAddress');
 
 			await sportsAMMV2LiquidityPool.setDefaultLiquidityProvider(dummyAddress1);
 			expect(await sportsAMMV2LiquidityPool.defaultLiquidityProvider()).to.equal(dummyAddress1);
@@ -149,7 +149,7 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPool.setPoolRoundMastercopy(ZERO_ADDRESS)
-			).to.be.revertedWith('ZeroAddress');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPool, 'ZeroAddress');
 
 			await sportsAMMV2LiquidityPool.setPoolRoundMastercopy(dummyAddress1);
 			expect(await sportsAMMV2LiquidityPool.poolRoundMastercopy()).to.equal(dummyAddress1);
@@ -170,9 +170,9 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 				sportsAMMV2LiquidityPool.connect(secondAccount).setSportsAMM(dummyAddress1)
 			).to.be.revertedWith('Only the contract owner may perform this action');
 
-			await expect(sportsAMMV2LiquidityPool.setSportsAMM(ZERO_ADDRESS)).to.be.revertedWith(
-				'ZeroAddress'
-			);
+			await expect(
+				sportsAMMV2LiquidityPool.setSportsAMM(ZERO_ADDRESS)
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPool, 'ZeroAddress');
 
 			await sportsAMMV2LiquidityPool.setSportsAMM(dummyAddress1);
 			expect(await sportsAMMV2LiquidityPool.sportsAMM()).to.equal(dummyAddress1);
@@ -259,9 +259,9 @@ describe('SportsAMMV2LiquidityPoolETH Deployment and Setters', () => {
 			// start pool
 			await sportsAMMV2LiquidityPool.start();
 
-			await expect(sportsAMMV2LiquidityPool.setRoundLength(newRoundLength)).to.be.revertedWith(
-				'CantChangeAfterPoolStart'
-			);
+			await expect(
+				sportsAMMV2LiquidityPool.setRoundLength(newRoundLength)
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPool, 'CantChangeAfterPoolStart');
 		});
 
 		it('Should set the new utilization rate', async () => {

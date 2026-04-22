@@ -78,6 +78,10 @@ contract Ticket {
     bool public cashedOut;
     uint public cashoutPayout;
 
+    /// @notice True for default-round (cross-round) tickets using deferred collateralization.
+    ///         Set by AMM at creation; immutable after that.
+    bool public isDeferred;
+
     // Snapshot of approved cashout odds at the moment of cashout
     mapping(uint => uint) private cashoutOddsPerLeg;
 
@@ -128,6 +132,12 @@ contract Ticket {
     function setExpectedFinalPayout(uint amount) external onlyAMM {
         expectedFinalPayout = amount;
         emit ExpectedFinalPayoutSet(amount);
+    }
+
+    /// @notice Mark this ticket as deferred (default-round, no upfront LP collateral).
+    /// @dev Called once by the AMM immediately after commitTradeDeferred.
+    function setIsDeferred() external onlyAMM {
+        isDeferred = true;
     }
 
     /* ========== EXTERNAL READ FUNCTIONS ========== */
@@ -456,15 +466,18 @@ contract Ticket {
 
             finalPayout = isCancelled ? buyInAmount : (isSystem ? _getSystemBetPayout() : finalPayout);
 
-            collateral.safeTransfer(
-                _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
-                    ? address(ticketOwner)
-                    : address(sportsAMM),
-                finalPayout
-            );
+            // Only transfer if non-deferred ticket
+            if (!isDeferred) {
+                collateral.safeTransfer(
+                    _exerciseCollateral == address(0) || _exerciseCollateral == address(collateral)
+                        ? address(ticketOwner)
+                        : address(sportsAMM),
+                    finalPayout
+                );
+            }
         }
 
-        // if user is lost or if the user payout was less than anticipated due to cancelled games, send the remainder to AMM
+        // Send any remaining ticket balance to AMM
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {
             collateral.safeTransfer(address(sportsAMM), balance);
@@ -496,8 +509,11 @@ contract Ticket {
         finalPayout = _cashoutAmount;
         cashedOut = true;
 
-        // Pay user
-        collateral.safeTransfer(_recipient, _cashoutAmount);
+        // Only transfer if non-deferred ticket
+        if (!isDeferred) {
+            // Pay user
+            collateral.safeTransfer(_recipient, _cashoutAmount);
+        }
 
         // Send remainder back to AMM (same behavior as exercise/cancel)
         uint balance = collateral.balanceOf(address(this));
@@ -546,7 +562,11 @@ contract Ticket {
     /// @notice cancel the ticket
     function cancel() external onlyAMM notPaused returns (uint) {
         finalPayout = buyInAmount;
-        collateral.safeTransfer(address(ticketOwner), finalPayout);
+
+        // Only transfer if non-deferred ticket
+        if (!isDeferred) {
+            collateral.safeTransfer(address(ticketOwner), finalPayout);
+        }
 
         uint balance = collateral.balanceOf(address(this));
         if (balance != 0) {

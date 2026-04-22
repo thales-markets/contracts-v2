@@ -1,6 +1,6 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
+const { ethers, network } = require('hardhat');
 
 const {
 	deploySportsAMMV2Fixture,
@@ -20,6 +20,7 @@ describe('Admin MarkAsLost Functionality', () => {
 		sportsAMMV2ResultManager,
 		sportsAMMV2LiquidityPool,
 		collateral,
+		owner,
 		firstLiquidityProvider,
 		firstTrader,
 		secondAccount,
@@ -35,7 +36,7 @@ describe('Admin MarkAsLost Functionality', () => {
 			tradeDataCurrentRound,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 
-		({ firstLiquidityProvider, firstTrader, secondAccount } =
+		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2LiquidityPool
@@ -130,5 +131,37 @@ describe('Admin MarkAsLost Functionality', () => {
 		await expect(
 			sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 2)
 		).to.be.revertedWithCustomError(sportsAMMV2, 'UnsupportedSender');
+	});
+
+	it('markAsLost on legacy ticket without isDeferred', async () => {
+		const LegacyTicketMock = await ethers.getContractFactory('LegacyTicketMock');
+		const legacyTicket = await LegacyTicketMock.deploy(owner.address, collateral, 0, false);
+		const legacyTicketAddress = await legacyTicket.getAddress();
+
+		const sportsAMMAddress = await sportsAMMV2.getAddress();
+		await network.provider.request({
+			method: 'hardhat_setBalance',
+			params: [sportsAMMAddress, '0x1000000000000000000'],
+		});
+		await network.provider.request({
+			method: 'hardhat_impersonateAccount',
+			params: [sportsAMMAddress],
+		});
+		const ammSigner = await ethers.getSigner(sportsAMMAddress);
+		await sportsAMMV2Manager
+			.connect(ammSigner)
+			.addNewKnownTicket([], legacyTicketAddress, owner.address);
+		await network.provider.request({
+			method: 'hardhat_stopImpersonatingAccount',
+			params: [sportsAMMAddress],
+		});
+
+		await sportsAMMV2Manager.setWhitelistedAddresses([secondAccount], 2, true);
+
+		await sportsAMMV2.connect(secondAccount).handleTicketResolving(legacyTicketAddress, 2);
+
+		expect(await legacyTicket.isMarkedAsLost()).to.be.equal(true);
+		expect(await legacyTicket.resolved()).to.be.equal(true);
+		expect(await sportsAMMV2Manager.isActiveTicket(legacyTicketAddress)).to.be.equal(false);
 	});
 });

@@ -1,10 +1,12 @@
 const { loadFixture, time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
+const { ethers, upgrades } = require('hardhat');
 const {
 	deployAccountsFixture,
 	deploySportsAMMV2Fixture,
 } = require('../../../utils/fixtures/overtimeFixtures');
 const { ZERO_ADDRESS } = require('../../../constants/general');
+const { SPORTS_AMM_LP_INITAL_PARAMS } = require('../../../constants/overtimeContractParams');
 const {
 	BUY_IN_AMOUNT,
 	ADDITIONAL_SLIPPAGE,
@@ -22,8 +24,11 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2Manager,
 		sportsAMMV2RiskManager,
+		addressManager,
+		sportsAMMV2LiquidityPoolRoundMastercopy,
 		collateral,
 		safeBox,
+		owner,
 		firstLiquidityProvider,
 		firstTrader,
 		tradeDataCurrentRound,
@@ -37,13 +42,15 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
+			addressManager,
+			sportsAMMV2LiquidityPoolRoundMastercopy,
 			collateral,
 			safeBox,
 			tradeDataCurrentRound,
 			tradeDataNextRound,
 			tradeDataCrossRounds,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
+		({ owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
 		await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
 			[0, TYPE_ID_TOTAL, TYPE_ID_SPREAD, TYPE_ID_WINNER_TOTAL],
@@ -54,6 +61,19 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				RESULT_TYPE.CombinedPositions,
 			]
 		);
+	});
+
+	const buildMarket = (tradeData) => ({
+		gameId: tradeData.gameId,
+		sportId: tradeData.sportId,
+		typeId: tradeData.typeId,
+		maturity: tradeData.maturity,
+		status: tradeData.status,
+		line: tradeData.line,
+		playerId: tradeData.playerId,
+		position: tradeData.position,
+		odd: tradeData.odds[tradeData.position],
+		combinedPositions: tradeData.combinedPositions[tradeData.position],
 	});
 
 	describe('Trades', () => {
@@ -645,16 +665,9 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 					false
 				);
 
-			// difference between payout and buy-in (amount taken from LP)
-			// payout: 40
-			// fees: 0.2
-			// buy-in: 10
-			// diff taken from LP: 30.2
-			const diffPayoutBuyIn =
-				Number(ethers.formatEther(quote.payout)) +
-				Number(ethers.formatEther(quote.fees)) -
-				Number(ethers.formatEther(BUY_IN_AMOUNT));
-
+			// In deferred mode, LP receives buyIn at trade creation (not fronts the payout diff).
+			// payout: 40, fees: 0.2, buy-in: 10
+			// defaultLP gains buyIn (10) at creation, pays payout+fees at resolution.
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 			let defaultLpBalanceAfterTrade = await collateral.balanceOf(defaultLpAddress);
 
@@ -663,7 +676,10 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				ethers.formatEther(defaultLpBalanceAfterTrade);
 
 			expect(currentRoundPoolBalanceAfterTrade).to.equal(currentRoundPoolBalanceBeforeTrade);
-			expect(diffPayoutBuyIn.toFixed(4)).to.equal(diffDefaultLpBalance.toFixed(4));
+			// Deferred: LP received buyIn → balance went UP, so diff is negative (−buyIn)
+			expect(diffDefaultLpBalance.toFixed(4)).to.equal(
+				(-Number(ethers.formatEther(BUY_IN_AMOUNT))).toFixed(4)
+			);
 
 			// check default round data
 			const defaultRound = 1;
@@ -671,7 +687,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 				ethers.formatEther(await sportsAMMV2LiquidityPool.allocationPerRound(defaultRound))
 			);
 			let defaultRoundAddress = await sportsAMMV2LiquidityPool.roundPools(defaultRound);
-			expect(defaultRoundAllocation.toFixed(4)).to.equal(diffDefaultLpBalance.toFixed(4));
+			// Deferred: commitTradeDeferred does not update allocationPerRound[1]
+			expect(defaultRoundAllocation).to.equal(0);
 			expect(defaultRoundAddress).to.equal(defaultLpAddress);
 
 			// get active Ticket from Sports AMM
@@ -1378,6 +1395,139 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(await sportsAMMV2LiquidityPool.roundPerTicket(ticketAddress)).to.equal(1);
 			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(1);
 			expect(await sportsAMMV2LiquidityPool.tradingTicketsPerRound(1, 0)).to.equal(ticketAddress);
+		});
+	});
+
+	describe('LP error branches', () => {
+		const deployLpWithoutDefault = async () => {
+			const SportsAMMV2LiquidityPool = await ethers.getContractFactory('SportsAMMV2LiquidityPool');
+			const lp = await upgrades.deployProxy(SportsAMMV2LiquidityPool, [
+				{
+					_owner: owner.address,
+					_sportsAMM: owner.address,
+					_addressManager: await addressManager.getAddress(),
+					_collateral: await collateral.getAddress(),
+					_collateralKey: ethers.encodeBytes32String('SUSD'),
+					_roundLength: SPORTS_AMM_LP_INITAL_PARAMS.roundLength,
+					_maxAllowedDeposit: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedDeposit,
+					_minDepositAmount: SPORTS_AMM_LP_INITAL_PARAMS.minDepositAmount,
+					_maxAllowedUsers: SPORTS_AMM_LP_INITAL_PARAMS.maxAllowedUsers,
+					_utilizationRate: SPORTS_AMM_LP_INITAL_PARAMS.utilizationRate,
+					_safeBox: safeBox.address,
+					_safeBoxImpact: SPORTS_AMM_LP_INITAL_PARAMS.safeBoxImpact,
+				},
+			]);
+
+			await lp.setPoolRoundMastercopy(await sportsAMMV2LiquidityPoolRoundMastercopy.getAddress());
+			return lp;
+		};
+
+		it('commitTrade reverts DefaultLPNotSet when default LP is missing', async () => {
+			const lp = await deployLpWithoutDefault();
+			const initialDeposit = ethers.parseEther('1000');
+
+			await collateral.connect(firstLiquidityProvider).approve(lp, initialDeposit);
+			await lp.connect(firstLiquidityProvider).deposit(initialDeposit);
+			await lp.start();
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.deploy();
+			const market = buildMarket(tradeDataNextRound[0]);
+
+			await ticket.initialize({
+				_markets: [market],
+				_buyInAmount: BUY_IN_AMOUNT,
+				_fees: 0,
+				_totalQuote: 0,
+				_sportsAMM: owner.address,
+				_ticketOwner: firstTrader.address,
+				_collateral: await collateral.getAddress(),
+				_expiry: BigInt(market.maturity) + 1n,
+				_isLive: false,
+				_systemBetDenominator: 0,
+				_isSGP: false,
+			});
+
+			await expect(
+				lp.connect(owner).commitTrade(ticket.target, BUY_IN_AMOUNT)
+			).to.be.revertedWithCustomError(lp, 'DefaultLPNotSet');
+		});
+
+		it('commitTrade reverts DefaultLPNotSet for default-round ticket', async () => {
+			const lp = await deployLpWithoutDefault();
+			const initialDeposit = ethers.parseEther('1000');
+
+			await collateral.connect(firstLiquidityProvider).approve(lp, initialDeposit);
+			await lp.connect(firstLiquidityProvider).deposit(initialDeposit);
+			await lp.start();
+
+			const firstRoundStartTime = Number(await lp.firstRoundStartTime());
+			const roundLength = Number(await lp.roundLength());
+			const market1 = buildMarket(tradeDataCrossRounds[0]);
+			const market2 = buildMarket(tradeDataCrossRounds[1]);
+			market1.maturity = firstRoundStartTime + roundLength;
+			market2.maturity = firstRoundStartTime + roundLength * 2;
+			const expiry = BigInt(Math.max(market1.maturity, market2.maturity)) + 1n;
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.deploy();
+
+			await ticket.initialize({
+				_markets: [market1, market2],
+				_buyInAmount: BUY_IN_AMOUNT,
+				_fees: 0,
+				_totalQuote: 0,
+				_sportsAMM: owner.address,
+				_ticketOwner: firstTrader.address,
+				_collateral: await collateral.getAddress(),
+				_expiry: expiry,
+				_isLive: false,
+				_systemBetDenominator: 0,
+				_isSGP: false,
+			});
+
+			expect(await lp.getTicketRound(ticket.target)).to.equal(1);
+
+			await expect(
+				lp.connect(owner).commitTrade(ticket.target, BUY_IN_AMOUNT)
+			).to.be.revertedWithCustomError(lp, 'DefaultLPNotSet');
+		});
+
+		it('commitTrade reverts InvalidRound when ticketRound is behind and not default', async () => {
+			const lp = await deployLpWithoutDefault();
+			const initialDeposit = ethers.parseEther('1000');
+
+			await collateral.connect(firstLiquidityProvider).approve(lp, initialDeposit);
+			await lp.connect(firstLiquidityProvider).deposit(initialDeposit);
+			await lp.start();
+
+			const roundEndTime = await lp.getRoundEndTime(2);
+			await time.increaseTo(roundEndTime);
+			await lp.prepareRoundClosing();
+			await lp.processRoundClosingBatch(10);
+			await lp.closeRound();
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const ticket = await TicketContract.deploy();
+			const market = buildMarket(tradeDataCurrentRound[0]);
+
+			await ticket.initialize({
+				_markets: [market],
+				_buyInAmount: BUY_IN_AMOUNT,
+				_fees: 0,
+				_totalQuote: 0,
+				_sportsAMM: owner.address,
+				_ticketOwner: firstTrader.address,
+				_collateral: await collateral.getAddress(),
+				_expiry: BigInt(market.maturity) + 1n,
+				_isLive: false,
+				_systemBetDenominator: 0,
+				_isSGP: false,
+			});
+
+			await expect(
+				lp.connect(owner).commitTrade(ticket.target, BUY_IN_AMOUNT)
+			).to.be.revertedWithCustomError(lp, 'InvalidRound');
 		});
 	});
 });

@@ -66,7 +66,8 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should fail with "Can not start with 0 deposits"', async () => {
-			await expect(sportsAMMV2LiquidityPoolETH.start()).to.be.revertedWith(
+			await expect(sportsAMMV2LiquidityPoolETH.start()).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
 				'CantStartWithoutDeposits'
 			);
 		});
@@ -92,7 +93,10 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			expect(await sportsAMMV2LiquidityPoolETH.firstRoundStartTime()).to.equal(roundStartTime);
 			expect(roundStartTime + roundLength).to.equal(roundEndTime);
 
-			await expect(sportsAMMV2LiquidityPoolETH.start()).to.be.revertedWith('LPHasStarted');
+			await expect(sportsAMMV2LiquidityPoolETH.start()).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'LPHasStarted'
+			);
 		});
 
 		it('Should emit PoolStarted event', async () => {
@@ -105,7 +109,8 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should fail with "Can\'t close current round" when pool not started', async () => {
-			await expect(sportsAMMV2LiquidityPoolETH.prepareRoundClosing()).to.be.revertedWith(
+			await expect(sportsAMMV2LiquidityPoolETH.prepareRoundClosing()).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
 				'CantCloseRound'
 			);
 		});
@@ -130,13 +135,13 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		it('Should fail with "Amount less than minDepositAmount"', async () => {
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('0.000001'))
-			).to.be.revertedWith('AmountLessThanMinDeposit');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'AmountLessThanMinDeposit');
 		});
 
 		it('Should fail with "Deposit amount exceeds AMM LP cap"', async () => {
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('30'))
-			).to.be.revertedWith('AmountExceedsLPCap');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'AmountExceedsLPCap');
 		});
 
 		it('Should fail with "Can\'t deposit directly as default LP"', async () => {
@@ -144,7 +149,10 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount)
-			).to.be.revertedWith('CantDepositDirectlyAsDefaultLP');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'CantDepositDirectlyAsDefaultLP'
+			);
 		});
 
 		it('Should fail with "Max amount of users reached"', async () => {
@@ -155,7 +163,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithSecondLiquidityProvider.deposit(defaultDepositAmount)
-			).to.be.revertedWith('MaxUsersReached');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'MaxUsersReached');
 
 			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 			expect(await sportsAMMV2LiquidityPoolETH.usersCurrentlyInPool()).to.equal(1);
@@ -301,13 +309,13 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		it('Should fail with "Pool has not started"', async () => {
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()
-			).to.be.revertedWith('PoolNotStarted');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'PoolNotStarted');
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.partialWithdrawalRequest(
 					ethers.parseEther('0.2')
 				)
-			).to.be.revertedWith('PoolNotStarted');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'PoolNotStarted');
 		});
 
 		it('Should fail with "Nothing to withdraw"', async () => {
@@ -318,13 +326,13 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()
-			).to.be.revertedWith('NothingToWithdraw');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'NothingToWithdraw');
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.partialWithdrawalRequest(
 					ethers.parseEther('0.2')
 				)
-			).to.be.revertedWith('NothingToWithdraw');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'NothingToWithdraw');
 		});
 
 		it('Should fail with "Can\'t withdraw as you already deposited for next round"', async () => {
@@ -335,13 +343,19 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			await sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount);
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()
-			).to.be.revertedWith('CantWithdrawWhenDepositedForNextRound');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'CantWithdrawWhenDepositedForNextRound'
+			);
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.partialWithdrawalRequest(
 					ethers.parseEther('0.2')
 				)
-			).to.be.revertedWith('CantWithdrawWhenDepositedForNextRound');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'CantWithdrawWhenDepositedForNextRound'
+			);
 		});
 
 		it('Should fail with "Withdrawal already requested"', async () => {
@@ -354,13 +368,13 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()
-			).to.be.revertedWith('WithdrawalAlreadyRequested');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'WithdrawalAlreadyRequested');
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.partialWithdrawalRequest(
 					ethers.parseEther('0.2')
 				)
-			).to.be.revertedWith('WithdrawalAlreadyRequested');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'WithdrawalAlreadyRequested');
 		});
 
 		it('Deposit should fail with "Withdrawal is requested, cannot deposit"', async () => {
@@ -373,7 +387,10 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(defaultDepositAmount)
-			).to.be.revertedWith('CantDepositDuringWithdrawalRequested');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'CantDepositDuringWithdrawalRequested'
+			);
 		});
 
 		it('Should withdraw full amount', async () => {
@@ -529,7 +546,7 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.partialWithdrawalRequest(
 					ethers.parseEther('5')
 				)
-			).to.be.revertedWith('InvalidWithdrawalValue');
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'InvalidWithdrawalValue');
 		});
 
 		it('Should withdraw partial amount - 30%', async () => {
@@ -703,7 +720,8 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 		});
 
 		it('Should fail with "Can\'t close current round" - round not ended', async () => {
-			await expect(sportsAMMV2LiquidityPoolETH.prepareRoundClosing()).to.be.revertedWith(
+			await expect(sportsAMMV2LiquidityPoolETH.prepareRoundClosing()).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
 				'CantCloseRound'
 			);
 		});
@@ -721,9 +739,9 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 		it('Should fail with "RoundClosingNotPrepared" on processing round closing', async () => {
 			await time.increaseTo(currentRoundCloseTime);
-			await expect(sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(10)).to.be.revertedWith(
-				'RoundClosingNotPrepared'
-			);
+			await expect(
+				sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(10)
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'RoundClosingNotPrepared');
 		});
 
 		it('Should fail with "All users already processed"', async () => {
@@ -731,23 +749,24 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			await sportsAMMV2LiquidityPoolETH.prepareRoundClosing();
 			await sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(10);
 
-			await expect(sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(10)).to.be.revertedWith(
-				'AllUsersProcessed'
-			);
+			await expect(
+				sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(10)
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'AllUsersProcessed');
 		});
 
 		it('Should fail with "BatchSizeZero"', async () => {
 			await time.increaseTo(currentRoundCloseTime);
 			await sportsAMMV2LiquidityPoolETH.prepareRoundClosing();
 
-			await expect(sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(0)).to.be.revertedWith(
-				'BatchSizeZero'
-			);
+			await expect(
+				sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(0)
+			).to.be.revertedWithCustomError(sportsAMMV2LiquidityPoolETH, 'BatchSizeZero');
 		});
 
 		it('Should fail with "RoundClosingNotPrepared" on round closing', async () => {
 			await time.increaseTo(currentRoundCloseTime);
-			await expect(sportsAMMV2LiquidityPoolETH.closeRound()).to.be.revertedWith(
+			await expect(sportsAMMV2LiquidityPoolETH.closeRound()).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
 				'RoundClosingNotPrepared'
 			);
 		});
@@ -756,7 +775,8 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 			await time.increaseTo(currentRoundCloseTime);
 			await sportsAMMV2LiquidityPoolETH.prepareRoundClosing();
 			await sportsAMMV2LiquidityPoolETH.processRoundClosingBatch(1);
-			await expect(sportsAMMV2LiquidityPoolETH.closeRound()).to.be.revertedWith(
+			await expect(sportsAMMV2LiquidityPoolETH.closeRound()).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
 				'NotAllUsersProcessed'
 			);
 		});
@@ -767,24 +787,40 @@ describe('SportsAMMV2LiquidityPoolETH User Actions', () => {
 
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.deposit(ethers.parseEther('1'))
-			).to.be.revertedWith('NotAllowedWhenRoundClosingPrepared');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'NotAllowedWhenRoundClosingPrepared'
+			);
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.withdrawalRequest()
-			).to.be.revertedWith('NotAllowedWhenRoundClosingPrepared');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'NotAllowedWhenRoundClosingPrepared'
+			);
 			await expect(
 				sportsAMMV2LiquidityPoolETHWithFirstLiquidityProvider.partialWithdrawalRequest(
 					ethers.parseEther('0.3')
 				)
-			).to.be.revertedWith('NotAllowedWhenRoundClosingPrepared');
-			await expect(sportsAMMV2LiquidityPoolETH.prepareRoundClosing()).to.be.revertedWith(
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'NotAllowedWhenRoundClosingPrepared'
+			);
+			await expect(sportsAMMV2LiquidityPoolETH.prepareRoundClosing()).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
 				'NotAllowedWhenRoundClosingPrepared'
 			);
 			await expect(
 				sportsAMMV2LiquidityPoolETH.exerciseTicketsReadyToBeExercised()
-			).to.be.revertedWith('NotAllowedWhenRoundClosingPrepared');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'NotAllowedWhenRoundClosingPrepared'
+			);
 			await expect(
 				sportsAMMV2LiquidityPoolETH.exerciseTicketsReadyToBeExercisedBatch(10)
-			).to.be.revertedWith('NotAllowedWhenRoundClosingPrepared');
+			).to.be.revertedWithCustomError(
+				sportsAMMV2LiquidityPoolETH,
+				'NotAllowedWhenRoundClosingPrepared'
+			);
 		});
 
 		it('Should close round', async () => {
