@@ -40,6 +40,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint public requestCounter;
     mapping(uint => bytes32) public counterToRequestId;
+    mapping(bytes32 => address) public requestIdToTicketId;
 
     constructor(
         address _link,
@@ -209,6 +210,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 sgpTradeData._collateral,
                 sgpTradeData._isLive
             );
+            requestIdToTicketId[_requestId] = _createdTicket;
 
             if (requester == freeBetsHolder) {
                 IFreeBetsHolder(freeBetsHolder).confirmSGPTrade(
@@ -273,6 +275,17 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         maxAllowedExecutionDelay = _maxAllowedExecutionDelay;
         emit SetMaxAllowedExecutionDelay(_maxAllowedExecutionDelay);
     }
+
+    //////////// GETTERS
+
+    /// @notice gets trade data struct for specified request ID
+    /// @param _requestId request ID
+    /// @return sgpTradeData Stored SGPTradeData for request ID
+    function getTradeData(bytes32 _requestId) external view returns (ISGPTradingProcessor.SGPTradeData memory) {
+        return requestIdToTradeData[_requestId];
+    }
+
+    //// UTILITY
 
     // Helper function to convert bytes32 to string
     function bytes32ToString(bytes32 _bytes32) internal pure returns (string memory) {
