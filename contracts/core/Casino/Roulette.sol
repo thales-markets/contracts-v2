@@ -561,7 +561,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
             } else {
                 IERC20(collateral).safeTransfer(user, totalPayout);
             }
-        } else {
+        } else if (!isFreeBet[betId]) {
             _payReferrer(user, collateral, bet.amount);
         }
 

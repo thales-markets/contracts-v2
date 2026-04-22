@@ -421,7 +421,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
             }
         }
 
-        if (multiplier == 0) {
+        if (multiplier == 0 && !isFreeBet[spinId]) {
             _payReferrer(s.user, s.collateral, s.amount);
         }
 

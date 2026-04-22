@@ -413,7 +413,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
             }
         }
 
-        if (!won) {
+        if (!won && !isFreeBet[betId]) {
             _payReferrer(bet.user, bet.collateral, bet.amount);
         }
 

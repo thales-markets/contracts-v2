@@ -862,7 +862,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             }
         }
 
-        if (payout == 0) {
+        if (payout == 0 && !isFreeBet[handId]) {
             _payReferrer(hand.user, hand.collateral, hand.amount);
         }
 
