@@ -17,7 +17,7 @@ const {
 	ADDITIONAL_SLIPPAGE,
 } = require('../../../constants/overtime');
 const { ZERO_ADDRESS } = require('../../../constants/general');
-const { ethers } = require('hardhat');
+const { ethers, network } = require('hardhat');
 
 describe('Ticket Exercise and Expire', () => {
 	let sportsAMMV2,
@@ -41,8 +41,10 @@ describe('Ticket Exercise and Expire', () => {
 		stakingThales,
 		safeBox,
 		priceFeed,
+		referrals,
 		firstLiquidityProvider,
 		firstTrader,
+		owner,
 		secondAccount,
 		tradeDataCurrentRound,
 		tradeDataTenMarketsCurrentRound,
@@ -72,6 +74,7 @@ describe('Ticket Exercise and Expire', () => {
 			positionalManager,
 			stakingThales,
 			priceFeed,
+			referrals,
 			safeBox,
 			tradeDataCurrentRound,
 			tradeDataNextRound,
@@ -79,7 +82,7 @@ describe('Ticket Exercise and Expire', () => {
 			tradeDataTenMarketsCurrentRound,
 			collateralAddress,
 		} = await loadFixture(deploySportsAMMV2Fixture));
-		({ firstLiquidityProvider, firstTrader, secondAccount } =
+		({ owner, firstLiquidityProvider, firstTrader, secondAccount } =
 			await loadFixture(deployAccountsFixture));
 		await sportsAMMV2LiquidityPool
 			.connect(firstLiquidityProvider)
@@ -278,6 +281,174 @@ describe('Ticket Exercise and Expire', () => {
 			expect(numOfActiveTicketsAfter.toString() * 1).to.be.equal(
 				numOfActiveTicketsBefore.toString() * 1 - 1
 			);
+		});
+
+		it('Expire default-round winner leaves funds in default LP', async () => {
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+				[tradeDataCrossRounds[0].typeId, tradeDataCrossRounds[1].typeId],
+				[RESULT_TYPE.ExactPosition, RESULT_TYPE.Spread]
+			);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCrossRounds,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			for (const leg of tradeDataCrossRounds) {
+				await sportsAMMV2ResultManager.setResultsPerMarkets(
+					[leg.gameId],
+					[leg.typeId],
+					[leg.playerId],
+					[[leg.position]]
+				);
+			}
+
+			const expireTimestamp = await userTicket.expiry();
+			await time.increaseTo(expireTimestamp + 1n);
+
+			const defaultLp = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
+			const lpBalanceBefore = await collateral.balanceOf(defaultLp);
+			const ownerBalanceBefore = await collateral.balanceOf(owner.address);
+
+			await sportsAMMV2.connect(owner).expireTickets([ticketAddress]);
+
+			const lpBalanceAfter = await collateral.balanceOf(defaultLp);
+			const ownerBalanceAfter = await collateral.balanceOf(owner.address);
+
+			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0n);
+			expect(lpBalanceAfter - lpBalanceBefore).to.equal(0n);
+		});
+
+		it('Deferred winner exercises cleanly even when referrer tier > safeBoxFee', async () => {
+			// Regression: with referrerFeeByTier > safeBoxFee, the deferred-exercise path
+			// in _exerciseTicket used to over-pay the referrer (because AMM balance is
+			// inflated by userWonAmount, defeating the `_ammBalance >= referrerShare` cap
+			// in calculateFees) and then revert on the user's safeTransfer. After the fix,
+			// exercise must complete: the user is paid in full, referrer cannot drain
+			// more than the available fee budget, and the ticket resolves.
+			const safeBoxFee = await sportsAMMV2.safeBoxFee(); // 2e16 (2%)
+			const highReferrerFee = safeBoxFee * 2n; // 4% > 2%
+			await referrals.setReferrerFees(highReferrerFee, highReferrerFee, highReferrerFee);
+
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes(
+				[tradeDataCrossRounds[0].typeId, tradeDataCrossRounds[1].typeId],
+				[RESULT_TYPE.ExactPosition, RESULT_TYPE.Spread]
+			);
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2.connect(firstTrader).trade(
+				tradeDataCrossRounds,
+				BUY_IN_AMOUNT,
+				quote.totalQuote,
+				ADDITIONAL_SLIPPAGE,
+				secondAccount.address, // referrer (must differ from trader)
+				ZERO_ADDRESS,
+				false
+			);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			expect(await userTicket.isDeferred()).to.equal(true);
+
+			for (const leg of tradeDataCrossRounds) {
+				await sportsAMMV2ResultManager.setResultsPerMarkets(
+					[leg.gameId],
+					[leg.typeId],
+					[leg.playerId],
+					[[leg.position]]
+				);
+			}
+
+			expect(await userTicket.isUserTheWinner()).to.equal(true);
+
+			const expectedUserPayout = quote.payout; // userWonAmount for a full winner
+			const userBalanceBefore = await collateral.balanceOf(firstTrader.address);
+			const ammBalanceBefore = await collateral.balanceOf(sportsAMMV2.target);
+
+			// Should NOT revert. Pre-fix, this reverts with ERC20InsufficientBalance
+			// because referrer is paid before user, depleting AMM below userWonAmount.
+			await sportsAMMV2.connect(firstTrader).handleTicketResolving(ticketAddress, 0);
+
+			expect(await userTicket.resolved()).to.equal(true);
+
+			// User must receive their full winnings.
+			const userBalanceAfter = await collateral.balanceOf(firstTrader.address);
+			expect(userBalanceAfter - userBalanceBefore).to.equal(expectedUserPayout);
+
+			// AMM must end at the same balance it started (no stuck funds).
+			expect(await collateral.balanceOf(sportsAMMV2.target)).to.equal(ammBalanceBefore);
+		});
+
+		it('Expire legacy ticket without isDeferred uses non-deferred path', async () => {
+			const LegacyTicketMock = await ethers.getContractFactory('LegacyTicketMock');
+			const expectedPayout = ethers.parseEther('10');
+			const legacyTicket = await LegacyTicketMock.deploy(
+				owner.address,
+				collateral,
+				expectedPayout,
+				true
+			);
+			const legacyTicketAddress = await legacyTicket.getAddress();
+
+			const sportsAMMAddress = await sportsAMMV2.getAddress();
+			await network.provider.request({
+				method: 'hardhat_setBalance',
+				params: [sportsAMMAddress, '0x1000000000000000000'],
+			});
+			await network.provider.request({
+				method: 'hardhat_impersonateAccount',
+				params: [sportsAMMAddress],
+			});
+			const ammSigner = await ethers.getSigner(sportsAMMAddress);
+			await sportsAMMV2Manager
+				.connect(ammSigner)
+				.addNewKnownTicket([], legacyTicketAddress, owner.address);
+			await network.provider.request({
+				method: 'hardhat_stopImpersonatingAccount',
+				params: [sportsAMMAddress],
+			});
+
+			const defaultLp = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
+			const lpBalanceBefore = await collateral.balanceOf(defaultLp);
+			const ownerBalanceBefore = await collateral.balanceOf(owner.address);
+
+			await sportsAMMV2.connect(owner).expireTickets([legacyTicketAddress]);
+
+			const lpBalanceAfter = await collateral.balanceOf(defaultLp);
+			const ownerBalanceAfter = await collateral.balanceOf(owner.address);
+
+			expect(ownerBalanceAfter - ownerBalanceBefore).to.equal(0n);
+			expect(lpBalanceAfter - lpBalanceBefore).to.equal(0n);
+			expect(await legacyTicket.resolved()).to.equal(true);
+			expect(await sportsAMMV2Manager.isActiveTicket(legacyTicketAddress)).to.equal(false);
 		});
 
 		it('Auto exercise losing tickets when results are set', async () => {

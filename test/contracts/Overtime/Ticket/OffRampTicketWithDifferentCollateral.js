@@ -24,6 +24,7 @@ describe('Ticket Exercise and Expire', () => {
 		sportsAMMV2Manager,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2ResultManager,
+		referrals,
 		tradeDataCurrentRound,
 		multiCollateral,
 		weth,
@@ -41,6 +42,7 @@ describe('Ticket Exercise and Expire', () => {
 			sportsAMMV2Manager,
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2ResultManager,
+			referrals,
 			safeBox,
 			multiCollateral,
 			weth,
@@ -135,6 +137,61 @@ describe('Ticket Exercise and Expire', () => {
 			let calculatedBalance =
 				parseInt(swapAmount.toString()) + parseInt(userBalanceBefore.toString());
 			expect(parseInt(userBalanceAfter.toString())).to.be.equal(calculatedBalance);
+		});
+
+		it('Offramp winner exercises cleanly even when referrer tier > safeBoxFee', async () => {
+			tradeDataCurrentRound[0].position = 0;
+			await sportsAMMV2ResultManager.setResultTypesPerMarketTypes([0], [RESULT_TYPE.ExactPosition]);
+
+			const safeBoxFee = await sportsAMMV2.safeBoxFee();
+			const highReferrerFee = safeBoxFee * 2n;
+			await referrals.setReferrerFees(highReferrerFee, highReferrerFee, highReferrerFee);
+
+			await multiCollateral.setSwapRate(collateral, collateral18, ethers.parseEther('2'));
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					secondAccount.address,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const swapAmount = quote.payout * 2n;
+			await collateral18.transfer(multiCollateral, swapAmount);
+			await collateral.transfer(multiCollateral, swapAmount);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const ticketMarket1 = tradeDataCurrentRound[0];
+			await sportsAMMV2ResultManager.setResultsPerMarkets(
+				[ticketMarket1.gameId],
+				[ticketMarket1.typeId],
+				[ticketMarket1.playerId],
+				[[0]]
+			);
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = await TicketContract.attach(ticketAddress);
+
+			const userBalanceBefore = await collateral18.balanceOf(firstTrader);
+			await sportsAMMV2.connect(firstTrader).exerciseTicketOffRamp(ticketAddress, collateral18);
+
+			expect(await userTicket.resolved()).to.be.equal(true);
+			const userBalanceAfter = await collateral18.balanceOf(firstTrader);
+			expect(userBalanceAfter - userBalanceBefore).to.equal(swapAmount);
 		});
 	});
 });

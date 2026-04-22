@@ -534,4 +534,70 @@ describe('Ticket Cashout Quote (Ticket.getCashoutQuoteAndPayout)', () => {
 
 		expect(await ticket.cashedOut()).to.eq(true);
 	});
+
+	it('10) cashout on default-round deferred ticket pulls funds from default LP', async () => {
+		const {
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			sportsAMMV2LiquidityPool,
+			tradeDataCrossRounds,
+			collateral,
+			safeBox,
+		} = await loadFixture(deploySportsAMMV2Fixture);
+
+		const { owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture);
+
+		await sportsAMMV2LiquidityPool
+			.connect(firstLiquidityProvider)
+			.deposit(ethers.parseEther('1000'));
+		await sportsAMMV2LiquidityPool.start();
+
+		const ticket = await buyParlayAndGetTicket({
+			sportsAMMV2,
+			sportsAMMV2Manager,
+			firstTrader,
+			legs: tradeDataCrossRounds,
+		});
+
+		await setOwnerAsCashoutProcessor({ sportsAMMV2, owner });
+		await moveToExactCashoutTimestamp({ ticket, sportsAMMV2 });
+
+		const leg0 = await ticket.getMarketOdd(0);
+		const leg1 = await ticket.getMarketOdd(1);
+		const approvedOddsPerLeg = [leg0, leg1];
+		const isLegSettled = [false, false];
+
+		const res = await ticket.getCashoutQuoteAndPayout(approvedOddsPerLeg, isLegSettled);
+		const cashoutAmount = res[1];
+
+		const sportsAMMV2UtilsAddress = await sportsAMMV2.sportsAMMV2Utils();
+		const SportsAMMV2Utils = await ethers.getContractFactory('SportsAMMV2Utils');
+		const sportsAMMV2Utils = SportsAMMV2Utils.attach(sportsAMMV2UtilsAddress);
+		const safeBoxFee = await sportsAMMV2.safeBoxFee();
+		const expectedFees = await sportsAMMV2Utils.getFees(BUY_IN_AMOUNT, safeBoxFee);
+
+		const defaultLp = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
+		const lpBalanceBefore = await collateral.balanceOf(defaultLp);
+		const userBalanceBefore = await collateral.balanceOf(firstTrader.address);
+		const safeBoxBalanceBefore = await collateral.balanceOf(safeBox);
+
+		await sportsAMMV2
+			.connect(owner)
+			.cashoutTicketWithLegOdds(
+				ticket.target,
+				approvedOddsPerLeg,
+				isLegSettled,
+				firstTrader.address
+			);
+
+		const lpBalanceAfter = await collateral.balanceOf(defaultLp);
+		const userBalanceAfter = await collateral.balanceOf(firstTrader.address);
+		const safeBoxBalanceAfter = await collateral.balanceOf(safeBox);
+		const ammBalanceAfter = await collateral.balanceOf(sportsAMMV2.target);
+
+		expect(userBalanceAfter - userBalanceBefore).to.eq(cashoutAmount);
+		expect(lpBalanceBefore - lpBalanceAfter).to.eq(cashoutAmount + expectedFees);
+		expect(safeBoxBalanceAfter - safeBoxBalanceBefore).to.eq(expectedFees);
+		expect(ammBalanceAfter).to.eq(0n);
+	});
 });

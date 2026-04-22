@@ -664,15 +664,9 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 					{ value: ETH_BUY_IN_AMOUNT }
 				);
 
-			// difference between payout and buy-in (amount taken from default LP)
-			// buy-in without fees: 9.8
-			// payout: 40
-			// diff taken from LP: 30.2
-			const diffPayoutBuyIn =
-				Number(ethers.formatEther(quote.payout)) +
-				Number(ethers.formatEther(quote.fees)) -
-				Number(ethers.formatEther(ETH_BUY_IN_AMOUNT));
-
+			// In deferred mode, LP receives buyIn at trade creation (not fronts the payout diff).
+			// buy-in: ETH_BUY_IN_AMOUNT, payout: 40-scale
+			// defaultLP gains buyIn at creation, pays payout+fees at resolution.
 			let currentRoundPoolBalanceAfterTrade = await collateral.balanceOf(currentRoundPoolAddress);
 			let defaultLpBalanceAfterTrade = await collateral.balanceOf(defaultLpAddress);
 
@@ -681,7 +675,10 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 				ethers.formatEther(defaultLpBalanceAfterTrade);
 
 			expect(currentRoundPoolBalanceAfterTrade).to.equal(currentRoundPoolBalanceBeforeTrade);
-			expect(diffPayoutBuyIn.toFixed(4)).to.equal(diffDefaultLpBalance.toFixed(4));
+			// Deferred: LP received buyIn → balance went UP, so diff is negative (−buyIn)
+			expect(diffDefaultLpBalance.toFixed(4)).to.equal(
+				(-Number(ethers.formatEther(ETH_BUY_IN_AMOUNT))).toFixed(4)
+			);
 
 			// check default round data
 			const defaultRound = 1;
@@ -689,7 +686,8 @@ describe('SportsAMMV2LiquidityPoolETH Trades', () => {
 				ethers.formatEther(await sportsAMMV2LiquidityPoolETH.allocationPerRound(defaultRound))
 			);
 			let defaultRoundAddress = await sportsAMMV2LiquidityPoolETH.roundPools(defaultRound);
-			expect(defaultRoundAllocation.toFixed(4)).to.equal(diffDefaultLpBalance.toFixed(4));
+			// Deferred: commitTradeDeferred does not update allocationPerRound[1]
+			expect(defaultRoundAllocation).to.equal(0);
 			expect(defaultRoundAddress).to.equal(defaultLpAddress);
 
 			// get active Ticket from Sports AMM

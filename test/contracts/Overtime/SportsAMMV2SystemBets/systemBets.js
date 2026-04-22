@@ -97,7 +97,8 @@ describe('SportsAMMV2 system bets', () => {
 			expect(await userTicket.isSystem()).to.be.equal(true);
 
 			const ticketBalance = await collateral.balanceOf(ticketAddress);
-			expect(ticketBalance).to.equal(ethers.parseEther('27.550427350427350423'));
+			// Deferred collateralization: ticket holds no funds at creation
+			expect(ticketBalance).to.equal(0n);
 
 			expect(await userTicket.isTicketExercisable()).to.be.equal(false);
 
@@ -160,9 +161,8 @@ describe('SportsAMMV2 system bets', () => {
 			expect(userBalanceBefore).to.be.equal(ethers.parseEther('9990'));
 			expect(userBalanceAfter).to.be.equal(ethers.parseEther('9997.407407407407407406'));
 
-			expect(defaultLiquidityProviderAddressBefore).to.be.equal(
-				ethers.parseEther('9982.449572649572649577')
-			);
+			// Deferred: defaultLP received buyIn (10) at trade creation, so balance = 10000 + 10 = 10010
+			expect(defaultLiquidityProviderAddressBefore).to.be.equal(ethers.parseEther('10010'));
 			expect(defaultLiquidityProviderAddressAfter).to.be.equal(
 				ethers.parseEther('10002.392592592592592594')
 			);
