@@ -2795,6 +2795,16 @@
 		"name": "CHILD_TO_QUALIFY_NEXT_ROUND"
 	},
 	{
+		"id": 13018,
+		"result_type": 1,
+		"name": "CHILD_SERIES_HANDICAP"
+	},
+	{
+		"id": 13019,
+		"result_type": 1,
+		"name": "CHILD_SERIES_TOTAL"
+	},
+	{
 		"id": 10513,
 		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_ROUND_2_ML"
