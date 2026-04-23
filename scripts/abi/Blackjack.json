@@ -546,6 +546,25 @@
       },
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "SplitHandAdvanced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "handId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "requestId",
         "type": "uint256"

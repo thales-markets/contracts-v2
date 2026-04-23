@@ -366,9 +366,9 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint profit = amount * _getProfitMultiplier(betType);
         if (_getUsdValue(collateral, profit) > maxProfitUsd) revert MaxProfitExceeded();
 
-        reservedProfitPerCollateral[collateral] += profit;
+        reservedProfitPerCollateral[collateral] += amount + profit;
         if (!_hasEnoughLiquidity(collateral)) {
-            reservedProfitPerCollateral[collateral] -= profit;
+            reservedProfitPerCollateral[collateral] -= amount + profit;
             revert InsufficientAvailableLiquidity();
         }
 
@@ -415,9 +415,9 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         if (_getUsdValue(collateral, totalAmount) < MIN_BET_USD) revert InvalidAmount();
         if (_getUsdValue(collateral, totalReservedProfit) > maxProfitUsd) revert MaxProfitExceeded();
 
-        reservedProfitPerCollateral[collateral] += totalReservedProfit;
+        reservedProfitPerCollateral[collateral] += totalAmount + totalReservedProfit;
         if (!_hasEnoughLiquidity(collateral)) {
-            reservedProfitPerCollateral[collateral] -= totalReservedProfit;
+            reservedProfitPerCollateral[collateral] -= totalAmount + totalReservedProfit;
             revert InsufficientAvailableLiquidity();
         }
 
@@ -527,7 +527,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         address collateral = bet.collateral;
         address user = bet.user;
 
-        reservedProfitPerCollateral[collateral] -= bet.reservedProfit;
+        reservedProfitPerCollateral[collateral] -= bet.amount + bet.reservedProfit;
 
         uint totalPayout;
         bool anyWon;
@@ -554,6 +554,15 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
             }
         }
 
+        // State update before external transfers (CEI)
+        bet.result = result;
+        bet.won = anyWon;
+        bet.payout = totalPayout;
+        bet.status = BetStatus.RESOLVED;
+        bet.resolvedAt = block.timestamp;
+
+        emit BetResolved(betId, requestId, user, result, anyWon, totalPayout);
+
         if (totalPayout > 0) {
             if (isFreeBet[betId]) {
                 IERC20(collateral).safeTransfer(freeBetsHolder, totalPayout);
@@ -564,14 +573,6 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         } else if (!isFreeBet[betId]) {
             _payReferrer(user, collateral, bet.amount);
         }
-
-        bet.result = result;
-        bet.won = anyWon;
-        bet.payout = totalPayout;
-        bet.status = BetStatus.RESOLVED;
-        bet.resolvedAt = block.timestamp;
-
-        emit BetResolved(betId, requestId, user, result, anyWon, totalPayout);
     }
 
     function _setReferrer(address _referrer, address _user) internal {
@@ -596,7 +597,7 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     function _cancelBet(uint betId, bool adminCancelled) internal {
         Bet storage bet = bets[betId];
 
-        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+        reservedProfitPerCollateral[bet.collateral] -= bet.amount + bet.reservedProfit;
 
         bet.status = BetStatus.CANCELLED;
         bet.resolvedAt = block.timestamp;
@@ -1026,12 +1027,14 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
 
     /// @notice Sets the free bets holder contract
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        if (_freeBetsHolder == address(0)) revert InvalidAddress();
         freeBetsHolder = _freeBetsHolder;
         emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
     /// @notice Sets the referrals contract
     function setReferrals(address _referrals) external onlyOwner {
+        if (_referrals == address(0)) revert InvalidAddress();
         referrals = IReferrals(_referrals);
         emit ReferralsChanged(_referrals);
     }
@@ -1062,6 +1065,8 @@ contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
+        if (_subscriptionId == 0) revert InvalidAmount();
+        if (_keyHash == bytes32(0)) revert InvalidAmount();
         if (_callbackGasLimit == 0) revert InvalidAmount();
 
         subscriptionId = _subscriptionId;

@@ -310,6 +310,21 @@ describe('Blackjack', () => {
 			).to.be.reverted;
 		});
 
+		it('should revert when aggregate payout liability of pending hands exceeds balance', async () => {
+			// Bankroll 50 USDC. Per hand: stake 3, reserved profit = 3 * 3/2 = 4.5 (BJ payout),
+			// aggregator = 7.5 per hand. After N hands: balance = 50 + 3N, reserved = 7.5N.
+			// Solvent while: 50 + 3N >= 7.5N  →  N ≤ 11. 12th hand must revert.
+			const bet = MIN_USDC_BET;
+			await usdc.mintForUser(player.address);
+			await usdc.connect(player).approve(blackjackAddress, bet * 15n);
+			for (let i = 0; i < 11; i++) {
+				await blackjack.connect(player).placeBet(usdcAddress, bet, ethers.ZeroAddress);
+			}
+			await expect(
+				blackjack.connect(player).placeBet(usdcAddress, bet, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(blackjack, 'InsufficientAvailableLiquidity');
+		});
+
 		it('should place a bet and emit HandCreated', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			await expect(
@@ -1269,23 +1284,27 @@ describe('Blackjack', () => {
 
 	describe('setVrfConfig', () => {
 		it('should update config and emit', async () => {
-			await expect(blackjack.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(blackjack.connect(owner).setVrfConfig(2n, kh, 300000n, 5n, true))
 				.to.emit(blackjack, 'VrfConfigChanged')
-				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+				.withArgs(2n, kh, 300000n, 5n, true);
 			expect(await blackjack.callbackGasLimit()).to.equal(300000n);
 			expect(await blackjack.requestConfirmations()).to.equal(5n);
 		});
 
 		it('should revert for zero callbackGasLimit', async () => {
+			const kh = ethers.encodeBytes32String('keyhash');
 			await expect(
-				blackjack.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+				blackjack.connect(owner).setVrfConfig(1n, kh, 0n, 3n, false)
 			).to.be.revertedWithCustomError(blackjack, 'InvalidAmount');
 		});
 
 		it('should accept zero requestConfirmations', async () => {
-			await expect(
-				blackjack.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.emit(blackjack, 'VrfConfigChanged');
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(blackjack.connect(owner).setVrfConfig(1n, kh, 500000n, 0n, false)).to.emit(
+				blackjack,
+				'VrfConfigChanged'
+			);
 		});
 	});
 
@@ -1743,14 +1762,14 @@ describe('Blackjack', () => {
 			it('sets hand.reservedProfit to 2*amount and updates global reservation', async () => {
 				const handId = await dealPairOf(8);
 				const beforeGlobal = await blackjack.reservedProfitPerCollateral(usdcAddress);
-				// Pre-split, single-hand reservation = amount * 3/2 (BJ payout)
+				// Pre-split, single-hand profit reservation = amount * 3/2 (BJ payout)
 				const preSplitReservation = (AMT * 3n) / 2n;
 				await approveAndSplit(handId);
 				const base = await blackjack.getHandBase(handId);
 				expect(base.reservedProfit).to.equal(AMT * 2n);
-				// Global reservation went up by (2*AMT) - (preSplitReservation) = 2*AMT - 1.5*AMT = 0.5*AMT
+				// Aggregator delta on split = new stake pulled in (AMT) + profit delta (2*AMT - 1.5*AMT = 0.5*AMT)
 				expect(await blackjack.reservedProfitPerCollateral(usdcAddress)).to.equal(
-					beforeGlobal - preSplitReservation + AMT * 2n
+					beforeGlobal + AMT + (AMT * 2n - preSplitReservation)
 				);
 			});
 
@@ -1913,6 +1932,20 @@ describe('Blackjack', () => {
 				expect(ss.activeHand).to.equal(2n);
 				const details = await blackjack.getHandDetails(handId);
 				expect(details.status).to.equal(Status.PLAYER_TURN);
+			});
+
+			it('stand() on hand 1 emits SplitHandAdvanced and resets lastRequestAt', async () => {
+				const handId = await splitThenFulfill(8, 3, 5);
+				const beforeBlock = await ethers.provider.getBlockNumber();
+				await expect(blackjack.connect(player).stand(handId))
+					.to.emit(blackjack, 'SplitHandAdvanced')
+					.withArgs(handId, player.address);
+				const lastReq = await blackjack.lastRequestAt(handId);
+				const newBlock = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
+				expect(lastReq).to.equal(BigInt(newBlock.timestamp));
+				// And ensure it's >= the block that ran before the stand (confirms reset happened)
+				const preBlock = await ethers.provider.getBlock(beforeBlock);
+				expect(lastReq).to.be.gte(BigInt(preBlock.timestamp));
 			});
 
 			it('bust on hand 1 auto-advances to hand 2', async () => {

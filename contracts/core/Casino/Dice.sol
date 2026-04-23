@@ -307,9 +307,9 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         uint reservedProfit = _getReservedProfit(amount, betType, target);
         if (_getUsdValue(collateral, reservedProfit) > maxProfitUsd) revert MaxProfitExceeded();
 
-        reservedProfitPerCollateral[collateral] += reservedProfit;
+        reservedProfitPerCollateral[collateral] += amount + reservedProfit;
         if (!_hasEnoughLiquidity(collateral)) {
-            reservedProfitPerCollateral[collateral] -= reservedProfit;
+            reservedProfitPerCollateral[collateral] -= amount + reservedProfit;
             revert InsufficientAvailableLiquidity();
         }
 
@@ -400,23 +400,11 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         uint8 result = uint8((randomWords[0] % DICE_SIDES) + 1);
         bool won = _isWinning(bet.betType, bet.target, result);
 
-        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+        reservedProfitPerCollateral[bet.collateral] -= bet.amount + bet.reservedProfit;
 
-        uint payout = 0;
-        if (won) {
-            payout = bet.amount + bet.reservedProfit;
-            if (isFreeBet[betId]) {
-                IERC20(bet.collateral).safeTransfer(freeBetsHolder, payout);
-                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(bet.user, bet.collateral, payout, bet.amount);
-            } else {
-                IERC20(bet.collateral).safeTransfer(bet.user, payout);
-            }
-        }
+        uint payout = won ? bet.amount + bet.reservedProfit : 0;
 
-        if (!won && !isFreeBet[betId]) {
-            _payReferrer(bet.user, bet.collateral, bet.amount);
-        }
-
+        // State update before external transfers (CEI)
         bet.result = result;
         bet.won = won;
         bet.payout = payout;
@@ -424,6 +412,17 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         bet.resolvedAt = block.timestamp;
 
         emit BetResolved(betId, requestId, bet.user, result, won, payout);
+
+        if (won) {
+            if (isFreeBet[betId]) {
+                IERC20(bet.collateral).safeTransfer(freeBetsHolder, payout);
+                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(bet.user, bet.collateral, payout, bet.amount);
+            } else {
+                IERC20(bet.collateral).safeTransfer(bet.user, payout);
+            }
+        } else if (!isFreeBet[betId]) {
+            _payReferrer(bet.user, bet.collateral, bet.amount);
+        }
     }
 
     function _setReferrer(address _referrer, address _user) internal {
@@ -451,7 +450,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     function _cancelBet(uint betId, bool adminCancelled) internal {
         Bet storage bet = bets[betId];
 
-        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+        reservedProfitPerCollateral[bet.collateral] -= bet.amount + bet.reservedProfit;
 
         bet.status = BetStatus.CANCELLED;
         bet.resolvedAt = block.timestamp;
@@ -821,12 +820,14 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
 
     /// @notice Sets the free bets holder contract
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        if (_freeBetsHolder == address(0)) revert InvalidAddress();
         freeBetsHolder = _freeBetsHolder;
         emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
     /// @notice Sets the referrals contract
     function setReferrals(address _referrals) external onlyOwner {
+        if (_referrals == address(0)) revert InvalidAddress();
         referrals = IReferrals(_referrals);
         emit ReferralsChanged(_referrals);
     }
@@ -857,6 +858,8 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
+        if (_subscriptionId == 0) revert InvalidAmount();
+        if (_keyHash == bytes32(0)) revert InvalidAmount();
         if (_callbackGasLimit == 0) revert InvalidAmount();
 
         subscriptionId = _subscriptionId;

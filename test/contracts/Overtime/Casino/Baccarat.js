@@ -365,6 +365,23 @@ describe('Baccarat', () => {
 			).to.be.revertedWithCustomError(baccarat, 'InvalidAmount');
 		});
 
+		it('should revert when aggregate payout liability of pending bets exceeds balance', async () => {
+			// Bankroll 50 USDC. PLAYER bet: stake 3, profit 3 (1x), winning payout 6.
+			// Aggregator = stake + profit per bet. After N placements: balance = 50 + 3N, reserved = 6N.
+			// Solvent while: 50 + 3N >= 6N  →  N ≤ 16. 17th bet must revert.
+			const bet = MIN_USDC_BET;
+			await usdc.mintForUser(player.address);
+			await usdc.connect(player).approve(baccaratAddress, bet * 20n);
+			for (let i = 0; i < 16; i++) {
+				await baccarat
+					.connect(player)
+					.placeBet(usdcAddress, bet, BetType.PLAYER, ethers.ZeroAddress);
+			}
+			await expect(
+				baccarat.connect(player).placeBet(usdcAddress, bet, BetType.PLAYER, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(baccarat, 'InsufficientAvailableLiquidity');
+		});
+
 		it('should revert when paused', async () => {
 			await baccarat.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
@@ -1028,23 +1045,27 @@ describe('Baccarat', () => {
 
 	describe('setVrfConfig', () => {
 		it('should update config and emit', async () => {
-			await expect(baccarat.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(baccarat.connect(owner).setVrfConfig(2n, kh, 300000n, 5n, true))
 				.to.emit(baccarat, 'VrfConfigChanged')
-				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+				.withArgs(2n, kh, 300000n, 5n, true);
 			expect(await baccarat.callbackGasLimit()).to.equal(300000n);
 			expect(await baccarat.requestConfirmations()).to.equal(5n);
 		});
 
 		it('should revert for zero callbackGasLimit', async () => {
+			const kh = ethers.encodeBytes32String('keyhash');
 			await expect(
-				baccarat.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+				baccarat.connect(owner).setVrfConfig(1n, kh, 0n, 3n, false)
 			).to.be.revertedWithCustomError(baccarat, 'InvalidAmount');
 		});
 
 		it('should accept zero requestConfirmations', async () => {
-			await expect(
-				baccarat.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.emit(baccarat, 'VrfConfigChanged');
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(baccarat.connect(owner).setVrfConfig(1n, kh, 500000n, 0n, false)).to.emit(
+				baccarat,
+				'VrfConfigChanged'
+			);
 		});
 	});
 

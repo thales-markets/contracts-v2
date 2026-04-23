@@ -326,6 +326,24 @@ describe('Dice', () => {
 			).to.be.revertedWithCustomError(dice, 'InvalidTarget');
 		});
 
+		it('should revert when aggregate payout liability of pending bets exceeds balance', async () => {
+			// Bankroll 59 USDC. ROLL_OVER target=10 → 50% win prob, 2% house edge → multiplier 1.96,
+			// profit = 0.96 * amount. On 3 USDC stake: profit 2_880_000, aggregator 5_880_000 per bet.
+			// Solvent while: 59e6 + 3e6*N >= 5_880_000*N  →  N ≤ floor(59e6 / 2_880_000) = 20.
+			// 21st bet must revert.
+			const bet = MIN_USDC_BET;
+			await usdc.mintForUser(player.address);
+			await usdc.connect(player).approve(diceAddress, bet * 25n);
+			for (let i = 0; i < 20; i++) {
+				await dice
+					.connect(player)
+					.placeBet(usdcAddress, bet, BetType.ROLL_OVER, 10, ethers.ZeroAddress);
+			}
+			await expect(
+				dice.connect(player).placeBet(usdcAddress, bet, BetType.ROLL_OVER, 10, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(dice, 'InsufficientAvailableLiquidity');
+		});
+
 		it('should revert when paused', async () => {
 			await dice.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
@@ -727,23 +745,40 @@ describe('Dice', () => {
 		});
 
 		it('setVrfConfig should update config and emit', async () => {
-			await expect(dice.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(dice.connect(owner).setVrfConfig(2n, kh, 300000n, 5n, true))
 				.to.emit(dice, 'VrfConfigChanged')
-				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+				.withArgs(2n, kh, 300000n, 5n, true);
 			expect(await dice.callbackGasLimit()).to.equal(300000n);
 			expect(await dice.requestConfirmations()).to.equal(5n);
 		});
 
-		it('setVrfConfig should revert for zero callbackGasLimit', async () => {
+		it('setVrfConfig should revert for zero subscriptionId', async () => {
+			const kh = ethers.encodeBytes32String('keyhash');
 			await expect(
-				dice.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+				dice.connect(owner).setVrfConfig(0n, kh, 500000n, 3n, false)
+			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
+		});
+
+		it('setVrfConfig should revert for zero keyHash', async () => {
+			await expect(
+				dice.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 3n, false)
+			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
+		});
+
+		it('setVrfConfig should revert for zero callbackGasLimit', async () => {
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(
+				dice.connect(owner).setVrfConfig(1n, kh, 0n, 3n, false)
 			).to.be.revertedWithCustomError(dice, 'InvalidAmount');
 		});
 
 		it('setVrfConfig should accept zero requestConfirmations', async () => {
-			await expect(
-				dice.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.emit(dice, 'VrfConfigChanged');
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(dice.connect(owner).setVrfConfig(1n, kh, 500000n, 0n, false)).to.emit(
+				dice,
+				'VrfConfigChanged'
+			);
 		});
 
 		it('setMaxProfitUsd should revert for zero', async () => {

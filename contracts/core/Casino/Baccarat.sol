@@ -333,7 +333,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         BetType betType,
         bool _isFreeBet
     ) internal returns (uint betId, uint requestId) {
-        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        // collateral support already validated by the external wrappers (placeBet / placeBetWithFreeBet)
         if (amount == 0) revert InvalidAmount();
 
         _validateBetType(betType);
@@ -344,9 +344,9 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint reservedProfit = _getReservedProfit(amount, betType);
         if (_getUsdValue(collateral, reservedProfit) > maxProfitUsd) revert MaxProfitExceeded();
 
-        reservedProfitPerCollateral[collateral] += reservedProfit;
+        reservedProfitPerCollateral[collateral] += amount + reservedProfit;
         if (!_hasEnoughLiquidity(collateral)) {
-            reservedProfitPerCollateral[collateral] -= reservedProfit;
+            reservedProfitPerCollateral[collateral] -= amount + reservedProfit;
             revert InsufficientAvailableLiquidity();
         }
 
@@ -441,7 +441,20 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     function _resolveBet(uint betId, Bet storage bet, uint256 randomWord) internal {
         ResolveResult memory r = _resolveGame(bet.amount, bet.betType, bet.bankerMultiplier, randomWord);
 
-        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+        reservedProfitPerCollateral[bet.collateral] -= bet.amount + bet.reservedProfit;
+
+        // State update before external transfers (CEI)
+        bet.result = r.result;
+        bet.won = r.won;
+        bet.isPush = r.isPush;
+        bet.payout = r.payout;
+        bet.playerTotal = r.playerTotal;
+        bet.bankerTotal = r.bankerTotal;
+        bet.cards = r.cards;
+        bet.status = BetStatus.RESOLVED;
+        bet.resolvedAt = block.timestamp;
+
+        emit BetResolved(betId, bet.requestId, bet.user, r.result, r.won, r.isPush, r.payout, r.playerTotal, r.bankerTotal);
 
         if (r.payout > 0) {
             if (isFreeBet[betId]) {
@@ -455,18 +468,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         if (!r.won && !r.isPush && !isFreeBet[betId]) {
             _payReferrer(bet.user, bet.collateral, bet.amount);
         }
-
-        bet.result = r.result;
-        bet.won = r.won;
-        bet.isPush = r.isPush;
-        bet.payout = r.payout;
-        bet.playerTotal = r.playerTotal;
-        bet.bankerTotal = r.bankerTotal;
-        bet.cards = r.cards;
-        bet.status = BetStatus.RESOLVED;
-        bet.resolvedAt = block.timestamp;
-
-        emit BetResolved(betId, bet.requestId, bet.user, r.result, r.won, r.isPush, r.payout, r.playerTotal, r.bankerTotal);
     }
 
     /// @notice Resolves a baccarat game from a single random word
@@ -532,7 +533,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     function _cancelBet(uint betId, bool adminCancelled) internal {
         Bet storage bet = _bets[betId];
 
-        reservedProfitPerCollateral[bet.collateral] -= bet.reservedProfit;
+        reservedProfitPerCollateral[bet.collateral] -= bet.amount + bet.reservedProfit;
 
         bet.status = BetStatus.CANCELLED;
         bet.resolvedAt = block.timestamp;
@@ -972,12 +973,14 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
 
     /// @notice Sets the free bets holder contract
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        if (_freeBetsHolder == address(0)) revert InvalidAddress();
         freeBetsHolder = _freeBetsHolder;
         emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
     /// @notice Sets the referrals contract
     function setReferrals(address _referrals) external onlyOwner {
+        if (_referrals == address(0)) revert InvalidAddress();
         referrals = IReferrals(_referrals);
         emit ReferralsChanged(_referrals);
     }
@@ -1008,6 +1011,8 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
+        if (_subscriptionId == 0) revert InvalidAmount();
+        if (_keyHash == bytes32(0)) revert InvalidAmount();
         if (_callbackGasLimit == 0) revert InvalidAmount();
 
         subscriptionId = _subscriptionId;

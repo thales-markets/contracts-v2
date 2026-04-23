@@ -194,6 +194,9 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     /// @dev A pair is first-two-reels or last-two-reels matching (triples are handled separately)
     mapping(uint8 => uint) public pairPayout;
 
+    /// @notice Cached sum of symbolWeights — updated in setSymbols to avoid recomputing per-reel
+    uint public symbolWeightsTotal;
+
     /* ========== PUBLIC / EXTERNAL METHODS ========== */
 
     /// @notice Initializes the slots contract
@@ -311,10 +314,10 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
         if (potentialProfitUsd > maxProfitUsd) revert MaxProfitExceeded();
 
-        reservedProfitPerCollateral[collateral] += reservedProfit;
+        reservedProfitPerCollateral[collateral] += amount + reservedProfit;
 
         if (!_hasEnoughLiquidity(collateral)) {
-            reservedProfitPerCollateral[collateral] -= reservedProfit;
+            reservedProfitPerCollateral[collateral] -= amount + reservedProfit;
             revert InsufficientAvailableLiquidity();
         }
 
@@ -408,29 +411,28 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
         uint multiplier = _getPayoutMultiplier(r1, r2, r3);
 
-        reservedProfitPerCollateral[s.collateral] -= s.reservedProfit;
+        reservedProfitPerCollateral[s.collateral] -= s.amount + s.reservedProfit;
 
-        uint payout = 0;
-        if (multiplier > 0) {
-            payout = s.amount + (s.amount * multiplier) / ONE;
-            if (isFreeBet[spinId]) {
-                IERC20(s.collateral).safeTransfer(freeBetsHolder, payout);
-                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(s.user, s.collateral, payout, s.amount);
-            } else {
-                IERC20(s.collateral).safeTransfer(s.user, payout);
-            }
-        }
+        uint payout = multiplier > 0 ? s.amount + (s.amount * multiplier) / ONE : 0;
 
-        if (multiplier == 0 && !isFreeBet[spinId]) {
-            _payReferrer(s.user, s.collateral, s.amount);
-        }
-
+        // State update before external transfers (CEI)
         s.payout = payout;
         s.won = multiplier > 0;
         s.status = SpinStatus.RESOLVED;
         s.resolvedAt = block.timestamp;
 
         emit SpinResolved(spinId, requestId, s.user, [r1, r2, r3], s.won, payout);
+
+        if (multiplier > 0) {
+            if (isFreeBet[spinId]) {
+                IERC20(s.collateral).safeTransfer(freeBetsHolder, payout);
+                IFreeBetsHolder(freeBetsHolder).confirmCasinoBetResolved(s.user, s.collateral, payout, s.amount);
+            } else {
+                IERC20(s.collateral).safeTransfer(s.user, payout);
+            }
+        } else if (!isFreeBet[spinId]) {
+            _payReferrer(s.user, s.collateral, s.amount);
+        }
     }
 
     /// @notice Cancels a pending spin, releases reserved liquidity and refunds stake
@@ -456,7 +458,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
     function _cancelSpin(uint spinId, bool adminCancelled) internal {
         Spin storage s = spins[spinId];
 
-        reservedProfitPerCollateral[s.collateral] -= s.reservedProfit;
+        reservedProfitPerCollateral[s.collateral] -= s.amount + s.reservedProfit;
 
         s.status = SpinStatus.CANCELLED;
         s.resolvedAt = block.timestamp;
@@ -476,11 +478,11 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
     /// @notice Rolls a single reel using weighted random selection
     function _roll(uint r) internal view returns (uint8) {
-        uint total;
-        for (uint i = 0; i < symbolWeights.length; i++) {
-            total += symbolWeights[i];
+        uint total = symbolWeightsTotal;
+        if (total == 0) {
+            // Fallback for the one-time upgrade window before setSymbols is re-called
+            for (uint i = 0; i < symbolWeights.length; i++) total += symbolWeights[i];
         }
-
         uint rand = r % total;
 
         uint acc;
@@ -650,6 +652,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         if (total == 0) revert InvalidConfig();
         symbolCount = _count;
         symbolWeights = weights;
+        symbolWeightsTotal = total;
         emit SymbolsChanged(_count, weights);
     }
 
@@ -742,12 +745,14 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
 
     /// @notice Sets the free bets holder contract
     function setFreeBetsHolder(address _freeBetsHolder) external onlyOwner {
+        if (_freeBetsHolder == address(0)) revert InvalidAddress();
         freeBetsHolder = _freeBetsHolder;
         emit FreeBetsHolderChanged(_freeBetsHolder);
     }
 
     /// @notice Sets the referrals contract
     function setReferrals(address _referrals) external onlyOwner {
+        if (_referrals == address(0)) revert InvalidAddress();
         referrals = IReferrals(_referrals);
         emit ReferralsChanged(_referrals);
     }
@@ -770,6 +775,8 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
+        if (_subscriptionId == 0) revert InvalidAmount();
+        if (_keyHash == bytes32(0)) revert InvalidAmount();
         if (_callbackGasLimit == 0) revert InvalidAmount();
 
         subscriptionId = _subscriptionId;

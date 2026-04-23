@@ -348,7 +348,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
         if (potentialProfitUsd > maxProfitUsd) revert InvalidAmount();
 
-        _reserveOrRevert(collateral, potentialProfitCollateral);
+        _reserveOrRevert(collateral, amount + potentialProfitCollateral);
 
         requestId = _requestRandomWords(2);
 
@@ -390,10 +390,13 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         // In split mode, stand on hand 1 just advances to hand 2 — no VRF, no dealer play yet.
         if (isSplit[handId] && splitStates[handId].activeHand == 1) {
             splitStates[handId].activeHand = 2;
+            // Reset cancel timeout baseline since no VRF was issued to refresh it naturally.
+            lastRequestAt[handId] = block.timestamp;
+            emit SplitHandAdvanced(handId, msg.sender);
             return 0;
         }
 
-        requestId = _requestRandomWords(7);
+        requestId = _requestRandomWords(10);
         _registerVrf(handId, hand, requestId, VrfAction.STAND, HandStatus.AWAITING_STAND);
         emit StandRequested(handId, requestId, msg.sender);
     }
@@ -431,9 +434,9 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         // Transfer matching stake for the doubled hand
         IERC20(hand.collateral).safeTransferFrom(msg.sender, address(this), activeAmount);
 
-        // Reservation bump: doubling a hand increases its max profit from 1x to 2x of the ORIGINAL
-        // per-hand stake → delta = activeAmount (the pre-double stake of that hand)
-        _reserveOrRevert(hand.collateral, activeAmount);
+        // Reservation bump: doubling a hand adds the new stake (activeAmount) plus the increase in
+        // max profit (another activeAmount, as profit cap goes from 1x to 2x of original per-hand stake)
+        _reserveOrRevert(hand.collateral, activeAmount * 2);
         hand.reservedProfit += activeAmount;
 
         if (isSpl) {
@@ -444,12 +447,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             } else {
                 ss.amount2 = activeAmount * 2;
                 ss.isDoubled2 = true;
-                requestId = _requestRandomWords(7); // card + dealer
+                requestId = _requestRandomWords(11); // card + dealer
             }
         } else {
             hand.amount = activeAmount * 2;
             hand.isDoubledDown = true;
-            requestId = _requestRandomWords(7);
+            requestId = _requestRandomWords(11);
         }
 
         _registerVrf(handId, hand, requestId, VrfAction.DOUBLE_DOWN, HandStatus.AWAITING_DOUBLE);
@@ -473,14 +476,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         IERC20(hand.collateral).safeTransferFrom(msg.sender, address(this), hand.amount);
 
         // Update reservation: BJ payout no longer possible, each hand can win 1x.
-        // newReservation = 2 * hand.amount (assuming no doubles yet)
+        // newProfitReservation = 2 * hand.amount (two hands, each capped at 1x profit).
+        // Aggregator delta = new stake pulled in (hand.amount) + profit delta (always positive:
+        // 2*amount vs amount*3/2).
         uint newReservedProfit = hand.amount * 2;
         uint oldReservedProfit = hand.reservedProfit;
-        if (newReservedProfit > oldReservedProfit) {
-            _reserveOrRevert(hand.collateral, newReservedProfit - oldReservedProfit);
-        } else {
-            reservedProfitPerCollateral[hand.collateral] -= (oldReservedProfit - newReservedProfit);
-        }
+        _reserveOrRevert(hand.collateral, hand.amount + (newReservedProfit - oldReservedProfit));
         hand.reservedProfit = newReservedProfit;
 
         // Allocate split state
@@ -497,8 +498,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         isSplit[handId] = true;
 
         // 2 words for normal split (one second card per hand).
-        // 9 words for ace split: 2 player cards + 1 dealer hidden + 6 dealer draws (auto-resolve).
-        uint32 numWords = aceSplit ? 9 : 2;
+        // 12 words for ace split: 2 player cards + 1 dealer hidden + 9 dealer draws (auto-resolve).
+        uint32 numWords = aceSplit ? 12 : 2;
         requestId = _requestRandomWords(numWords);
 
         _registerVrf(handId, hand, requestId, VrfAction.SPLIT, HandStatus.AWAITING_SPLIT);
@@ -717,9 +718,10 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             }
         }
 
-        // Dealer plays using randomWords[1..6]
-        uint256[] memory dealerWords = new uint256[](6);
-        for (uint i; i < 6; ++i) {
+        // Dealer plays using randomWords[1..]. Production requests 11 words (1 player card + 10 dealer).
+        uint256 dealerLen = randomWords.length - 1;
+        uint256[] memory dealerWords = new uint256[](dealerLen);
+        for (uint i; i < dealerLen; ++i) {
             dealerWords[i] = randomWords[i + 1];
         }
         _dealerPlayAndResolveFromMemory(handId, hand, dealerWords);
@@ -742,9 +744,11 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         ++ss.player2CardCount;
 
         if (ss.isAceSplit) {
-            // One-card rule: both hands are final. Play dealer using words 2..8 (7 words).
-            uint256[] memory dealerWords = new uint256[](7);
-            for (uint i; i < 7; ++i) {
+            // One-card rule: both hands are final. Play dealer using words 2.. Production requests 12 words
+            // (2 player second cards + 10 dealer: 1 hidden + up to 9 draws).
+            uint256 dealerLen = randomWords.length - 2;
+            uint256[] memory dealerWords = new uint256[](dealerLen);
+            for (uint i; i < dealerLen; ++i) {
                 dealerWords[i] = randomWords[i + 2];
             }
             _dealerPlayAndResolveFromMemory(handId, hand, dealerWords);
@@ -811,8 +815,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     /// referrer payment on total loss. Also used for the both-busted path where dealer never
     /// played — PLAYER_BUST short-circuits in `_judgeSplit` before any dealer comparison
     function _resolveSplit(uint handId, Hand storage hand) internal {
-        reservedProfitPerCollateral[hand.collateral] -= hand.reservedProfit;
         SplitState storage ss = splitStates[handId];
+        reservedProfitPerCollateral[hand.collateral] -= hand.amount + ss.amount2 + hand.reservedProfit;
 
         (uint8 dealerValue, ) = _handValue(hand.dealerCards, hand.dealerCardCount);
         bool dealerBust = dealerValue > BLACKJACK_TARGET;
@@ -824,12 +828,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint payout2 = _splitPayout(ss.amount2, r2);
         uint totalPayout = payout1 + payout2;
 
-        if (totalPayout > 0) {
-            IERC20(hand.collateral).safeTransfer(hand.user, totalPayout);
-        } else {
-            _payReferrer(hand.user, hand.collateral, hand.amount + ss.amount2);
-        }
-
+        // State update before external transfers (CEI)
         hand.result = r1;
         hand.payout = totalPayout;
         ss.result2 = r2;
@@ -838,11 +837,17 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         hand.resolvedAt = block.timestamp;
 
         emit HandResolved(handId, hand.requestId, hand.user, r1, totalPayout);
+
+        if (totalPayout > 0) {
+            IERC20(hand.collateral).safeTransfer(hand.user, totalPayout);
+        } else {
+            _payReferrer(hand.user, hand.collateral, hand.amount + ss.amount2);
+        }
     }
 
     /// @notice Resolves a hand with payout based on result
     function _resolveHand(uint handId, Hand storage hand, HandResult _result) internal {
-        reservedProfitPerCollateral[hand.collateral] -= hand.reservedProfit;
+        reservedProfitPerCollateral[hand.collateral] -= hand.amount + hand.reservedProfit;
 
         uint payout;
         if (_result == HandResult.PLAYER_BLACKJACK) {
@@ -853,6 +858,12 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             payout = hand.amount;
         }
 
+        // State update before external transfers (CEI)
+        hand.payout = payout;
+        hand.result = _result;
+        hand.status = HandStatus.RESOLVED;
+        hand.resolvedAt = block.timestamp;
+
         if (payout > 0) {
             if (isFreeBet[handId]) {
                 IERC20(hand.collateral).safeTransfer(freeBetsHolder, payout);
@@ -860,16 +871,9 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             } else {
                 IERC20(hand.collateral).safeTransfer(hand.user, payout);
             }
-        }
-
-        if (payout == 0 && !isFreeBet[handId]) {
+        } else if (!isFreeBet[handId]) {
             _payReferrer(hand.user, hand.collateral, hand.amount);
         }
-
-        hand.payout = payout;
-        hand.result = _result;
-        hand.status = HandStatus.RESOLVED;
-        hand.resolvedAt = block.timestamp;
 
         emit HandResolved(handId, hand.requestId, hand.user, _result, payout);
     }
@@ -890,17 +894,17 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     function _cancelHand(uint handId, bool adminCancelled) internal {
         Hand storage hand = hands[handId];
 
-        reservedProfitPerCollateral[hand.collateral] -= hand.reservedProfit;
-
-        hand.status = HandStatus.CANCELLED;
-        hand.resolvedAt = block.timestamp;
-
         // Aggregate refund includes both legs if the hand was split. Free-bet splits are blocked
         // at `split()`, so the free-bet branch can only see a non-split hand (user never added funds)
         uint refund = hand.amount;
         if (isSplit[handId]) {
             refund += splitStates[handId].amount2;
         }
+
+        reservedProfitPerCollateral[hand.collateral] -= refund + hand.reservedProfit;
+
+        hand.status = HandStatus.CANCELLED;
+        hand.resolvedAt = block.timestamp;
 
         if (isFreeBet[handId]) {
             hand.payout = 0;
@@ -1207,6 +1211,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
+        if (_subscriptionId == 0) revert InvalidAmount();
+        if (_keyHash == bytes32(0)) revert InvalidAmount();
         if (_callbackGasLimit == 0) revert InvalidAmount();
 
         subscriptionId = _subscriptionId;
@@ -1250,6 +1256,8 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     event PlayerCardDealt(uint indexed handId, address indexed user, uint8 card, uint8 handValue);
 
     event StandRequested(uint indexed handId, uint indexed requestId, address indexed user);
+
+    event SplitHandAdvanced(uint indexed handId, address indexed user);
 
     event DoubleDownRequested(uint indexed handId, uint indexed requestId, address indexed user, uint additionalAmount);
 

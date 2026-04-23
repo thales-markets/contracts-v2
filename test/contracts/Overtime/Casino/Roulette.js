@@ -412,6 +412,30 @@ describe('Roulette', () => {
 			).to.be.revertedWithCustomError(roulette, 'InsufficientAvailableLiquidity');
 		});
 
+		it('should revert when aggregate payout liability of pending bets exceeds balance', async () => {
+			// Bankroll: 50 USDC. Each RED_BLACK bet: stake 3 USDC, profit 3 USDC, winning payout 6 USDC.
+			// Correct invariant: balance >= sum(stake + profit) across all pending bets.
+			// After N placements: balance = 50 + 3*N, pending payout liability = 6*N.
+			// Solvent while: 50 + 3N >= 6N  →  N ≤ 16. Bet 17 must revert.
+			const bet = MIN_USDC_BET; // 3 USDC
+			await usdc.mintForUser(player.address); // top up player for 17+ bets (mints 5000 USDC)
+			await usdc.connect(player).approve(rouletteAddress, bet * 20n);
+
+			// Place 16 bets — all must succeed (within solvent capacity)
+			for (let i = 0; i < 16; i++) {
+				await roulette
+					.connect(player)
+					.placeBet(usdcAddress, bet, BetType.RED_BLACK, 0, ethers.ZeroAddress);
+			}
+
+			// 17th bet would push pending payout liability (102 USDC) past balance (101 USDC)
+			await expect(
+				roulette
+					.connect(player)
+					.placeBet(usdcAddress, bet, BetType.RED_BLACK, 0, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(roulette, 'InsufficientAvailableLiquidity');
+		});
+
 		it('should revert when paused', async () => {
 			await roulette.connect(pauser).setPausedByRole(true);
 			await usdc.connect(player).approve(rouletteAddress, MIN_USDC_BET);
@@ -439,8 +463,8 @@ describe('Roulette', () => {
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalanceBefore - MIN_USDC_BET);
 			expect(await usdc.balanceOf(rouletteAddress)).to.equal(rouletteBalanceBefore + MIN_USDC_BET);
 
-			// Reservation set (1x multiplier for RED_BLACK)
-			expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(MIN_USDC_BET);
+			// Reservation = stake + profit (1x multiplier for RED_BLACK)
+			expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(MIN_USDC_BET * 2n);
 
 			// Bet stored
 			const betBase = await roulette.getBetBase(1n);
@@ -468,8 +492,8 @@ describe('Roulette', () => {
 			expect(betId).to.equal(1n);
 			expect(requestId).to.equal(1n);
 
-			// Reservation = 35x bet
-			expect(await roulette.reservedProfitPerCollateral(wethAddress)).to.equal(MIN_WETH_BET * 35n);
+			// Reservation = stake + 35x profit = 36x
+			expect(await roulette.reservedProfitPerCollateral(wethAddress)).to.equal(MIN_WETH_BET * 36n);
 
 			// requestId mapped to betId
 			expect(await roulette.requestIdToBetId(requestId)).to.equal(betId);
@@ -736,9 +760,9 @@ describe('Roulette', () => {
 			// Refunded
 			expect(await usdc.balanceOf(player.address)).to.equal(playerBalanceBefore + MIN_USDC_BET);
 
-			// Reservation released
+			// Reservation released (stake + profit for RED_BLACK)
 			expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(
-				reservedBefore - MIN_USDC_BET
+				reservedBefore - MIN_USDC_BET * 2n
 			);
 
 			// Bet status updated
@@ -969,15 +993,18 @@ describe('Roulette', () => {
 			});
 
 			it('should accept zero requestConfirmations', async () => {
-				await expect(
-					roulette.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 200000n, 0n, false)
-				).to.emit(roulette, 'VrfConfigChanged');
+				const kh = ethers.encodeBytes32String('keyhash');
+				await expect(roulette.connect(owner).setVrfConfig(1n, kh, 200000n, 0n, false)).to.emit(
+					roulette,
+					'VrfConfigChanged'
+				);
 			});
 
 			it('should update VRF config and emit event', async () => {
-				await expect(roulette.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+				const kh = ethers.encodeBytes32String('keyhash');
+				await expect(roulette.connect(owner).setVrfConfig(2n, kh, 300000n, 5n, true))
 					.to.emit(roulette, 'VrfConfigChanged')
-					.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+					.withArgs(2n, kh, 300000n, 5n, true);
 				expect(await roulette.subscriptionId()).to.equal(2n);
 				expect(await roulette.callbackGasLimit()).to.equal(300000n);
 				expect(await roulette.nativePayment()).to.equal(true);
@@ -1195,9 +1222,9 @@ describe('Roulette', () => {
 					.connect(player)
 					.placeBet(usdcAddress, MIN_USDC_BET, BetType.RED_BLACK, 0, ethers.ZeroAddress);
 
-				// Reservation = MIN_USDC_BET (1x), balance grew by MIN_USDC_BET
-				// Available = (50e6 + MIN_USDC_BET) - MIN_USDC_BET = 50e6
-				expect(await roulette.getAvailableLiquidity(usdcAddress)).to.equal(50n * 1_000_000n);
+				// Reservation = stake + profit = 2 * MIN_USDC_BET; balance grew by MIN_USDC_BET
+				// Available = (50e6 + MIN_USDC_BET) - 2 * MIN_USDC_BET = 50e6 - MIN_USDC_BET = 47e6
+				expect(await roulette.getAvailableLiquidity(usdcAddress)).to.equal(47n * 1_000_000n);
 			});
 
 			it('should revert for unsupported collateral', async () => {
@@ -1608,7 +1635,8 @@ describe('Roulette', () => {
 				expect(betBase.amount).to.equal(MIN_USDC_BET * 2n);
 				// Aggregate reserved profit = 1x (RED_BLACK) + 2x (DOZEN) of per-pick amounts
 				expect(betBase.reservedProfit).to.equal(MIN_USDC_BET * 3n);
-				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(MIN_USDC_BET * 3n);
+				// Aggregator tracks stake + profit: 2*MIN (stakes) + 3*MIN (profit) = 5*MIN
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(MIN_USDC_BET * 5n);
 
 				// Pick count and contents
 				expect(await roulette.getBetPickCount(betId)).to.equal(2n);
@@ -1806,18 +1834,19 @@ describe('Roulette', () => {
 				const picks = [pick(BetType.STRAIGHT, 7, amount), pick(BetType.STRAIGHT, 13, amount)];
 				await expect(roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress))
 					.to.not.be.reverted;
-				// Net liability = winning STRAIGHT profit (35x) minus losing pick's stake (1x) = 34x
-				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 34n);
+				// Aggregator (stake + profit): 2x stake + (35x winning profit - 1x losing stake) worst-case = 36x
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 36n);
 			});
 
 			it('worst-case for mutually exclusive dozens nets losing stake', async () => {
 				// Two DOZENS (1st 12 and 2nd 12) — mutually exclusive. On any hit, one wins (2x profit)
-				// and the other loses (1x stake). Net liability = 2x - 1x = 1x
+				// and the other loses (1x stake). Net liability = 2x - 1x = 1x.
+				// Aggregator (stake + profit) = 2x stake + 1x net profit = 3x.
 				const amount = 15n * 1_000_000n;
 				await usdc.connect(player).approve(rouletteAddress, amount * 2n);
 				const picks = [pick(BetType.DOZEN, 0, amount), pick(BetType.DOZEN, 1, amount)];
 				await roulette.connect(player).placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
-				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 1n);
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 3n);
 			});
 
 			it('rolls back reservation when liquidity is insufficient', async () => {
@@ -1986,8 +2015,8 @@ describe('Roulette', () => {
 					.placeMultiBet(usdcAddress, picks, ethers.ZeroAddress);
 				const { betId, requestId } = await parseBetPlaced(roulette, tx);
 
-				// Reservation should be 1x + 2x = 3x amount
-				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 3n);
+				// Reservation (aggregator = stake + profit): 2x stakes + (1x + 2x) worst-case profit = 5x
+				expect(await roulette.reservedProfitPerCollateral(usdcAddress)).to.equal(amount * 5n);
 
 				// Result = 1 (red, dozen 1-12): both picks win → payout = 2*amount + 3*amount = 5*amount
 				await expect(vrfCoordinator.fulfillRandomWords(rouletteAddress, requestId, [1n]))

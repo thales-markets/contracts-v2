@@ -398,6 +398,18 @@ describe('Slots', () => {
 				.reverted;
 		});
 
+		it('should revert when aggregate payout liability of pending spins exceeds balance', async () => {
+			// Bankroll 59 USDC. Per spin: stake 3, reserved profit = stake * maxPayoutMultiplier(15x) = 45,
+			// aggregator = 48 per spin. After N spins: balance = 59 + 3N, reserved = 48N.
+			// Solvent while: 59 + 3N >= 48N  →  N ≤ 1. 2nd spin must revert.
+			const bet = MIN_USDC_BET;
+			await usdc.connect(player).approve(slotsAddress, bet * 5n);
+			await slots.connect(player).spin(usdcAddress, bet, ethers.ZeroAddress);
+			await expect(
+				slots.connect(player).spin(usdcAddress, bet, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(slots, 'InsufficientAvailableLiquidity');
+		});
+
 		it('should place a spin and emit SpinPlaced', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
 			await expect(slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress))
@@ -422,7 +434,8 @@ describe('Slots', () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
 			await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, ethers.ZeroAddress);
 			const reserved = await slots.reservedProfitPerCollateral(usdcAddress);
-			const expectedReserved = (MIN_USDC_BET * MAX_PAYOUT_MULTIPLIER) / ONE;
+			// Aggregator tracks stake + profit for solvency against worst-case payout
+			const expectedReserved = MIN_USDC_BET + (MIN_USDC_BET * MAX_PAYOUT_MULTIPLIER) / ONE;
 			expect(reserved).to.equal(expectedReserved);
 		});
 	});
@@ -961,23 +974,27 @@ describe('Slots', () => {
 		});
 
 		it('setVrfConfig should update config and emit', async () => {
-			await expect(slots.connect(owner).setVrfConfig(2n, ethers.ZeroHash, 300000n, 5n, true))
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(slots.connect(owner).setVrfConfig(2n, kh, 300000n, 5n, true))
 				.to.emit(slots, 'VrfConfigChanged')
-				.withArgs(2n, ethers.ZeroHash, 300000n, 5n, true);
+				.withArgs(2n, kh, 300000n, 5n, true);
 			expect(await slots.callbackGasLimit()).to.equal(300000n);
 			expect(await slots.requestConfirmations()).to.equal(5n);
 		});
 
 		it('setVrfConfig should revert for zero callbackGasLimit', async () => {
+			const kh = ethers.encodeBytes32String('keyhash');
 			await expect(
-				slots.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 0n, 3n, false)
+				slots.connect(owner).setVrfConfig(1n, kh, 0n, 3n, false)
 			).to.be.revertedWithCustomError(slots, 'InvalidAmount');
 		});
 
 		it('setVrfConfig should accept zero requestConfirmations', async () => {
-			await expect(
-				slots.connect(owner).setVrfConfig(1n, ethers.ZeroHash, 500000n, 0n, false)
-			).to.emit(slots, 'VrfConfigChanged');
+			const kh = ethers.encodeBytes32String('keyhash');
+			await expect(slots.connect(owner).setVrfConfig(1n, kh, 500000n, 0n, false)).to.emit(
+				slots,
+				'VrfConfigChanged'
+			);
 		});
 	});
 
