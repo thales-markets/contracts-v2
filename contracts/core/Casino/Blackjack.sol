@@ -461,7 +461,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
 
     /// @notice Splits a starting pair into two hands. User puts up an additional stake equal to
     /// the original. Each hand then plays independently (hit/stand/double). Aces split one card
-    /// each and auto-resolve in the same VRF fulfillment (bundled 9-word request)
+    /// each and auto-resolve in the same VRF fulfillment (bundled 12-word request)
     /// @param handId Hand id to split
     /// @return requestId Chainlink VRF request id
     function split(uint handId) external nonReentrant notPaused returns (uint requestId) {
@@ -691,7 +691,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
             return;
         }
 
-        // Non-split, or split + double on hand 2 (7 VRF words).
+        // Non-split, or split + double on hand 2 (11 VRF words).
         uint8 playerValue;
         if (isSpl) {
             ss.player2Cards[ss.player2CardCount] = newCard;

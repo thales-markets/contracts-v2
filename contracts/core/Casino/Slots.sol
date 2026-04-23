@@ -435,7 +435,6 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         }
     }
 
-    /// @notice Cancels a pending spin, releases reserved liquidity and refunds stake
     function _setReferrer(address _referrer, address _user) internal {
         if (_referrer != address(0) && address(referrals) != address(0)) {
             referrals.setReferrer(_referrer, _user);

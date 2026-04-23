@@ -763,7 +763,7 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
 
     /* ========== GETTERS ========== */
 
-    /// @notice Returns bet data split across two calls to avoid stack-too-deep
+    /// @notice Returns core bet data
     function getBetBase(
         uint betId
     )
@@ -1111,9 +1111,6 @@ contract Baccarat is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGu
     /// @notice Emitted when cancel timeout is changed
     /// @param cancelTimeout New timeout in seconds
     event CancelTimeoutChanged(uint cancelTimeout);
-
-    /// @notice Emitted when house edge is changed
-    /// @param houseEdge New house edge in 1e18 precision
 
     /// @notice Emitted when banker payout multiplier is changed
     /// @param bankerPayoutMultiplier New banker payout multiplier in 1e18 precision
