@@ -635,14 +635,21 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
         ticketRound = roundPerTicket[_ticket];
         if (ticketRound == 0) {
             Ticket ticket = Ticket(_ticket);
+            ISportsAMMV2RiskManager rm = ISportsAMMV2RiskManager(addressManager.getAddress("SportsAMMV2RiskManager"));
+            uint numOfMarkets = ticket.numOfMarkets();
+
+            // High-quote multi-leg tickets (parlays and system bets) always go to the default round
+            uint threshold = rm.defaultRoundHighQuoteThreshold();
+            if (threshold > 0 && numOfMarkets > 1 && ticket.totalQuote() < threshold) {
+                return DEFAULT_ROUND;
+            }
+
             uint maturity;
             uint16 sportId;
 
-            for (uint i = 0; i < ticket.numOfMarkets(); i++) {
+            for (uint i = 0; i < numOfMarkets; i++) {
                 (, sportId, , maturity, , , , , ) = ticket.markets(i);
-                bool isFuture = ISportsAMMV2RiskManager(addressManager.getAddress("SportsAMMV2RiskManager")).isSportIdFuture(
-                    sportId
-                );
+                bool isFuture = rm.isSportIdFuture(sportId);
                 if (maturity > firstRoundStartTime && !isFuture) {
                     if (i == 0) {
                         ticketRound = (maturity - firstRoundStartTime) / roundLength + 2;
