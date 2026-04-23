@@ -303,7 +303,7 @@ contract Slots is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard
         bool _isFreeBet
     ) internal returns (uint spinId, uint requestId) {
         if (symbolCount == 0) revert InvalidConfig();
-        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        // collateral support already validated by the external wrappers (spin / spinWithFreeBet)
         if (amount == 0) revert InvalidAmount();
 
         uint amountUsd = _getUsdValue(collateral, amount);

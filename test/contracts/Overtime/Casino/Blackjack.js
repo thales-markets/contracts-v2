@@ -1068,7 +1068,7 @@ describe('Blackjack', () => {
 
 	describe('Getters', () => {
 		it('getMaxPayout should return bet + 3:2 profit', async () => {
-			const payout = await blackjack.getMaxPayout(usdcAddress, MIN_USDC_BET);
+			const payout = await blackjack.getMaxPayout(MIN_USDC_BET);
 			expect(payout).to.equal(MIN_USDC_BET + (MIN_USDC_BET * 3n) / 2n);
 		});
 

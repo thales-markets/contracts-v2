@@ -299,7 +299,7 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         uint8 target,
         bool _isFreeBet
     ) internal returns (uint betId, uint requestId) {
-        if (!supportedCollateral[collateral]) revert InvalidCollateral();
+        // collateral support already validated by the external wrappers (placeBet / placeBetWithFreeBet)
         if (amount == 0) revert InvalidAmount();
         _validateTarget(betType, target);
         if (_getUsdValue(collateral, amount) < MIN_BET_USD) revert InvalidAmount();

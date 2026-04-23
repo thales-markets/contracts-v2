@@ -1074,7 +1074,7 @@ contract Blackjack is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyG
     }
 
     /// @notice Returns the maximum potential payout for a bet amount (blackjack 3:2)
-    function getMaxPayout(address, uint amount) external pure returns (uint) {
+    function getMaxPayout(uint amount) external pure returns (uint) {
         return amount + (amount * BLACKJACK_PAYOUT_NUMERATOR) / BLACKJACK_PAYOUT_DENOMINATOR;
     }
 
