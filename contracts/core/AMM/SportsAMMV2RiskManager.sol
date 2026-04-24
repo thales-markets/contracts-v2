@@ -153,6 +153,11 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     // cashout cooldown in seconds (0 => use DEFAULT_CASHOUT_COOLDOWN)
     uint public cashoutCooldown;
 
+    // quote threshold below which a multi-leg ticket (parlay or system bet) is routed to the default round
+    // expressed in 1e18 terms (e.g. 0.02e18 means tickets with 50x+ payout are deferred)
+    // 0 = feature disabled
+    uint public defaultRoundHighQuoteThreshold;
+
     /* ========== CONSTRUCTOR ========== */
 
     function initialize(
@@ -1052,6 +1057,13 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
         emit SetCashoutCooldown(_cooldown);
     }
 
+    /// @notice Set the quote threshold below which a multi-leg ticket is routed to the default round.
+    /// @param _threshold quote value in 1e18 (e.g. 0.02e18 for 50x+ tickets); 0 disables the feature
+    function setDefaultRoundHighQuoteThreshold(uint _threshold) external onlyOwner {
+        defaultRoundHighQuoteThreshold = _threshold;
+        emit DefaultRoundHighQuoteThresholdUpdated(_threshold);
+    }
+
     /// @notice sets whether a sportsId is future
     /// @param _sportId to set whether is a future
     /// @param _isFuture boolean representing whether the given _sportId should be treated as a future
@@ -1188,4 +1200,5 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     event SetSGPEnabledOnSport(uint16 _sportId, bool _isEnabled);
     event SetCashoutSafeBoxFeeMultiplier(uint multiplier);
     event SetCashoutCooldown(uint cooldown);
+    event DefaultRoundHighQuoteThresholdUpdated(uint threshold);
 }
