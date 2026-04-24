@@ -439,8 +439,12 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
         if (referrerFee == 0) return;
         uint referrerAmount = (_amount * referrerFee) / ONE;
         if (referrerAmount > 0) {
-            IERC20(_collateral).safeTransfer(referrer, referrerAmount);
-            emit ReferrerPaid(referrer, _user, referrerAmount, _amount, _collateral);
+            try IERC20(_collateral).transfer(referrer, referrerAmount) returns (bool ok) {
+                if (ok) emit ReferrerPaid(referrer, _user, referrerAmount, _amount, _collateral);
+                else emit ReferrerPayoutFailed(referrer, _user, referrerAmount, _amount, _collateral);
+            } catch {
+                emit ReferrerPayoutFailed(referrer, _user, referrerAmount, _amount, _collateral);
+            }
         }
     }
 
@@ -976,6 +980,13 @@ contract Dice is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard 
     event FreeBetsHolderChanged(address freeBetsHolder);
     event ReferralsChanged(address referrals);
     event ReferrerPaid(address indexed referrer, address indexed user, uint amount, uint betAmount, address collateral);
+    event ReferrerPayoutFailed(
+        address indexed referrer,
+        address indexed user,
+        uint amount,
+        uint betAmount,
+        address collateral
+    );
 
     /// @notice Emitted when collateral is withdrawn from the bankroll
     /// @param collateral Collateral token address

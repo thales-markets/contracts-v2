@@ -1583,6 +1583,34 @@ describe('Blackjack', () => {
 				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
 		});
 
+		it('should resolve losing hand and emit ReferrerPayoutFailed when referrer is blacklisted', async () => {
+			await usdc.setBlacklisted(secondAccount.address, true);
+			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
+			const tx = await blackjack
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { handId, requestId } = await parseHandCreated(blackjack, tx);
+
+			await vrfCoordinator.fulfillRandomWords(blackjackAddress, requestId, [12n, 11n]);
+
+			const hitTx = await blackjack.connect(player).hit(handId);
+			const hitRequestId = await parseRequestId(blackjack, hitTx, 'HitRequested');
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			await expect(vrfCoordinator.fulfillRandomWords(blackjackAddress, hitRequestId, [4n]))
+				.to.emit(blackjack, 'ReferrerPayoutFailed')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+
+			const handDetails = await blackjack.getHandDetails(handId);
+			expect(handDetails.status).to.equal(Status.RESOLVED);
+			expect(handDetails.result).to.equal(Result.PLAYER_BUST);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
 		it('should NOT pay referrer on winning hand (blackjack)', async () => {
 			await usdc.connect(player).approve(blackjackAddress, MIN_USDC_BET);
 			const tx = await blackjack
