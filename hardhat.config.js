@@ -7,6 +7,27 @@ require('@openzeppelin/hardhat-upgrades');
 require('@nomiclabs/hardhat-web3');
 
 const path = require('path');
+const { task } = require('hardhat/config');
+const { TASK_TEST_GET_TEST_FILES } = require('hardhat/builtin-tasks/task-names');
+
+// ---------------------------------------------------------------------------
+// Edge / simulation tests — excluded from the default `npx hardhat test` run
+// so the full suite stays fast. They still run when invoked explicitly:
+//   npx hardhat test test/contracts/Overtime/Casino/EdgeAudit.js
+// Add new slow simulation files here when they land.
+// ---------------------------------------------------------------------------
+const EXCLUDED_EDGE_TESTS = [
+	'test/contracts/Overtime/Casino/EdgeAudit.js',
+	'test/contracts/Overtime/Casino/SlotsSimulation.js',
+	'test/contracts/Overtime/Casino/BlackjackStrategies.js',
+].map((p) => path.resolve(__dirname, p));
+
+task(TASK_TEST_GET_TEST_FILES).setAction(async (args, _hre, runSuper) => {
+	const files = await runSuper(args);
+	// If the user passed explicit test files, respect their selection.
+	if (args.testFiles && args.testFiles.length > 0) return files;
+	return files.filter((f) => !EXCLUDED_EDGE_TESTS.includes(path.resolve(f)));
+});
 
 const TEST_PRIVATE_KEY = vars.get('TEST_PRIVATE_KEY');
 const PRIVATE_KEY = vars.get('PRIVATE_KEY');
