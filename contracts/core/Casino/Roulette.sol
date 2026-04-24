@@ -20,7 +20,7 @@ import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
 /// @title Roulette
 /// @author Overtime
-/// @notice American roulette contract using Chainlink VRF for single-player spins
+/// @notice European roulette contract using Chainlink VRF for single-player spins
 /// @dev Supports USDC, WETH and OVER collateral, with bankroll reservation per collateral
 contract Roulette is Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     using SafeERC20 for IERC20;
