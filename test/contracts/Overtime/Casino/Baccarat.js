@@ -1290,6 +1290,31 @@ describe('Baccarat', () => {
 				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
 		});
 
+		it('should resolve losing bet and emit ReferrerPayoutFailed when referrer is blacklisted', async () => {
+			await usdc.setBlacklisted(secondAccount.address, true);
+			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
+			const tx = await baccarat
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, BetType.PLAYER, secondAccount.address);
+			const { betId, requestId } = await parseBetPlaced(baccarat, tx);
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			await expect(
+				vrfCoordinator.fulfillRandomWords(baccaratAddress, requestId, [bankerWinWord.word])
+			)
+				.to.emit(baccarat, 'ReferrerPayoutFailed')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+
+			const details = await baccarat.getBetDetails(betId);
+			// BetStatus: NONE=0, PENDING=1, RESOLVED=2, CANCELLED=3
+			expect(details.status).to.equal(2n);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
 		it('should NOT pay referrer on winning bet', async () => {
 			await usdc.connect(player).approve(baccaratAddress, MIN_USDC_BET);
 			const tx = await baccarat
