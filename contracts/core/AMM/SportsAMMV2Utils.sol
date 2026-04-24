@@ -223,13 +223,20 @@ contract SportsAMMV2Utils {
         uint numOfMarkets = _tradeData.length;
         uint maxSupportedOdds = _params._riskManager.maxSupportedOdds();
 
-        if (numOfMarkets == 1) {
-            uint legOdd = _tradeData[0].odds[_tradeData[0].position];
-            uint boosted = _applyBonusToOdd(legOdd, _calc._addedPayoutPercentage);
-            if (boosted < maxSupportedOdds) boosted = maxSupportedOdds;
-            result._totalQuote = boosted;
+        if (_calc._isSGP) {
+            uint expectedQuote = _divWithDecimals(_calc._buyInAmount, _calc._expectedPayout);
+            result._totalQuote =
+                (expectedQuote * ONE) /
+                ((ONE + _calc._addedPayoutPercentage) - _mulWithDecimals(_calc._addedPayoutPercentage, expectedQuote));
         } else {
-            result._totalQuote = _calculateLiveParlay(_tradeData, _calc, maxSupportedOdds);
+            if (numOfMarkets == 1) {
+                uint legOdd = _tradeData[0].odds[_tradeData[0].position];
+                uint boosted = _applyBonusToOdd(legOdd, _calc._addedPayoutPercentage);
+                if (boosted < maxSupportedOdds) boosted = maxSupportedOdds;
+                result._totalQuote = boosted;
+            } else {
+                result._totalQuote = _calculateLiveParlay(_tradeData, _calc, maxSupportedOdds);
+            }
         }
 
         result._payout = _divWithDecimals(_calc._buyInAmount, result._totalQuote);

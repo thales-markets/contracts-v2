@@ -308,13 +308,14 @@ contract SportsAMMV2 is Initializable, ProxyOwned, ProxyPausable, ProxyReentranc
         uint _approvedQuote,
         address _recipient,
         address _referrer,
-        address _collateral
+        address _collateral,
+        bool _isLive
     ) external payable nonReentrant notPaused onlyValidRecipient(_recipient) returns (address _createdTicket) {
         if (msg.sender != sgpTradingProcessor) revert OnlyDedicatedProcessor();
 
         _createdTicket = _tradeInternal(
             _tradeData,
-            TradeTypeData(NON_SYSTEM_BET, true, false),
+            TradeTypeData(NON_SYSTEM_BET, true, _isLive),
             _buyInAmount,
             _approvedQuote,
             0, //no additional slippage as quote is assigned by CL node

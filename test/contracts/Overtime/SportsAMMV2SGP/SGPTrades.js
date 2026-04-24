@@ -64,6 +64,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_isLive: false,
 				})
 			).to.be.revertedWith('SGP only possible on the same game');
 		});
@@ -77,6 +78,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_isLive: false,
 				})
 			).to.be.revertedWith('SGP trading not enabled on _sportId');
 		});
@@ -96,6 +98,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_isLive: false,
 			});
 
 			let requestId = await sgpTradingProcessor.counterToRequestId(0);
@@ -118,6 +121,40 @@ describe('SportsAMMV2Live Live Trades', () => {
 			expect(sgpRiskAfter).to.equal(ethers.parseEther('10'));
 		});
 
+		it('Should buy a Live SGP trade', async () => {
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+			let approvedQuote = ethers.parseEther('0.5');
+
+			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+				_tradeData: sameGameWithFirstPlayerProps,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: approvedQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+				_isLive: true,
+			});
+
+			let requestId = await sgpTradingProcessor.counterToRequestId(0);
+
+			await mockChainlinkOracle.fulfillSGPTrade(requestId, true, approvedQuote);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			const TicketContract = await ethers.getContractFactory('Ticket');
+			const userTicket = TicketContract.attach(ticketAddress);
+
+			const marketData = await userTicket.markets(0);
+			expect(marketData.gameId).to.equal(sameGameWithFirstPlayerProps[0].gameId);
+
+			const sgpTradeData = await sgpTradingProcessor.requestIdToTradeData(requestId);
+			expect(sgpTradeData._isLive).to.equal(true);
+
+			const totalQuote = await userTicket.totalQuote();
+			expect(totalQuote).to.equal(sgpTradeData._expectedQuote);
+		});
+
 		it('Should fail SGP due to liquidity', async () => {
 			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
 			await sportsAMMV2RiskManager.setSGPCapDivider(10);
@@ -131,6 +168,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_isLive: false,
 			});
 
 			let requestId = await sgpTradingProcessor.counterToRequestId(0);
@@ -157,6 +195,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_isLive: false,
 			});
 
 			let requestId = await sgpTradingProcessor.counterToRequestId(0);
@@ -202,6 +241,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 				_additionalSlippage: ADDITIONAL_SLIPPAGE,
 				_referrer: ZERO_ADDRESS,
 				_collateral: ZERO_ADDRESS,
+				_isLive: false,
 			});
 
 			let requestId = await sgpTradingProcessor.counterToRequestId(0);
@@ -237,6 +277,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_additionalSlippage: ADDITIONAL_SLIPPAGE,
 					_referrer: ZERO_ADDRESS,
 					_collateral: ZERO_ADDRESS,
+					_isLive: false,
 				})
 			).to.be.revertedWith('Proof is not valid');
 		});

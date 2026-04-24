@@ -24,6 +24,8 @@ describe('SportsAMMV2Live Live Trades', () => {
 		secondAccount,
 		liveTradingProcessor,
 		liveTradingProcessorData,
+		sgpTradingProcessor,
+		sameGameWithFirstPlayerProps,
 		mockChainlinkOracle,
 		sportsAMMV2RiskManager,
 		weth,
@@ -40,6 +42,8 @@ describe('SportsAMMV2Live Live Trades', () => {
 			tradeDataTenMarketsCurrentRound,
 			liveTradingProcessor,
 			liveTradingProcessorData,
+			sgpTradingProcessor,
+			sameGameWithFirstPlayerProps,
 			mockChainlinkOracle,
 			weth,
 			sportsAMMV2RiskManager,
@@ -573,6 +577,63 @@ describe('SportsAMMV2Live Live Trades', () => {
 			expect(requestsData[0].requestId).to.eq(userLastRequestId);
 			expect(requestsData[0].isFulfilled).to.eq(true);
 			expect(requestsData[0].legs.length).to.gt(1);
+		});
+
+		it('Should get a live SGP trade requests data by user', async () => {
+			// GIVEN 1 live request and afte that 1 live SGP request
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+
+			await liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+				_gameId: tradeDataCurrentRound[0].gameId,
+				_sportId: tradeDataCurrentRound[0].sportId,
+				_typeId: tradeDataCurrentRound[0].typeId,
+				_line: tradeDataCurrentRound[0].line,
+				_position: tradeDataCurrentRound[0].position,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: quote.totalQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+				_playerId: 0,
+			});
+
+			const liveRequestId = await liveTradingProcessor.counterToRequestId(0);
+
+			await mockChainlinkOracle.fulfillLiveTrade(liveRequestId, true, quote.totalQuote);
+
+			// Live SGP
+			await sportsAMMV2RiskManager.setSGPEnabledOnSportIds([SPORT_ID_NBA], true);
+			let approvedQuote = ethers.parseEther('0.5');
+
+			await sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+				_tradeData: sameGameWithFirstPlayerProps,
+				_buyInAmount: BUY_IN_AMOUNT,
+				_expectedQuote: approvedQuote,
+				_additionalSlippage: ADDITIONAL_SLIPPAGE,
+				_referrer: ZERO_ADDRESS,
+				_collateral: ZERO_ADDRESS,
+				_isLive: true,
+			});
+
+			const sgpRequestId = await sgpTradingProcessor.counterToRequestId(0);
+
+			await mockChainlinkOracle.fulfillSGPTrade(sgpRequestId, true, approvedQuote);
+
+			// WHEN trying to fetch last request data for user
+			const BATCH_SIZE = 10;
+			const MAX_DATA_SIZE = 1;
+			const requestsData = await liveTradingProcessorData.getLatestRequestsDataPerUser(
+				firstTrader,
+				BATCH_SIZE,
+				MAX_DATA_SIZE
+			);
+
+			// THEN exactly MAX_DATA_SIZE is retrieved, user and request ID is matching last request is fulfilled
+			expect(requestsData.length).to.eq(MAX_DATA_SIZE);
+			expect(requestsData[0].user).to.eq(firstTrader.address);
+			expect(requestsData[0].requestId).to.eq(sgpRequestId);
+			expect(requestsData[0].isFulfilled).to.eq(true);
+			expect(requestsData[0].legs.length).to.eq(sameGameWithFirstPlayerProps.length);
 		});
 
 		it('Should get a live trade requests data by user for smaller batch size', async () => {

@@ -775,6 +775,8 @@ async function deploySportsAMMV2Fixture() {
 	);
 	const sgpTradingProcessorAddress = await sgpTradingProcessor.getAddress();
 
+	await liveTradingProcessorData.setSGPTradingProcessor(sgpTradingProcessorAddress);
+
 	// deploy CashoutProcessor
 	const CashoutProcessor = await ethers.getContractFactory('CashoutProcessor');
 	const cashoutProcessor = await CashoutProcessor.deploy(

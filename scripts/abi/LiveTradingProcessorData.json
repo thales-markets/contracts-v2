@@ -94,6 +94,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sgpTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "SGPTradingProcessorChanged",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "acceptOwnership",
     "outputs": [],
@@ -108,6 +121,272 @@
         "internalType": "contract IFreeBetsHolder",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_batchSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxSize",
+        "type": "uint256"
+      }
+    ],
+    "name": "getLatestLiveRequestsDataPerUser",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "requestId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "ticketId",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturityTimestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "buyInAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expectedPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedQuote",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LiveTradingProcessorData.Leg[]",
+            "name": "legs",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct LiveTradingProcessorData.RequestData[]",
+        "name": "requestsData",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_batchSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxSize",
+        "type": "uint256"
+      }
+    ],
+    "name": "getLatestLiveSGPRequestsDataPerUser",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "requestId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "ticketId",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maturityTimestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "buyInAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expectedPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "additionalSlippage",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "referrer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "gameId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint16",
+                "name": "sportId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "uint16",
+                "name": "typeId",
+                "type": "uint16"
+              },
+              {
+                "internalType": "int24",
+                "name": "line",
+                "type": "int24"
+              },
+              {
+                "internalType": "uint8",
+                "name": "position",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint24",
+                "name": "playerId",
+                "type": "uint24"
+              },
+              {
+                "internalType": "uint256",
+                "name": "expectedQuote",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LiveTradingProcessorData.Leg[]",
+            "name": "legs",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct LiveTradingProcessorData.RequestData[]",
+        "name": "requestsData",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -520,6 +799,32 @@
     "name": "setPaused",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ISGPTradingProcessor",
+        "name": "_sgpTradingProcessor",
+        "type": "address"
+      }
+    ],
+    "name": "setSGPTradingProcessor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sgpTradingProcessor",
+    "outputs": [
+      {
+        "internalType": "contract ISGPTradingProcessor",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

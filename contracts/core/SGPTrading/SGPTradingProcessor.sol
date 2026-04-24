@@ -40,6 +40,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
 
     uint public requestCounter;
     mapping(uint => bytes32) public counterToRequestId;
+    mapping(bytes32 => address) public requestIdToTicketId;
 
     constructor(
         address _link,
@@ -62,8 +63,10 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     ) external whenNotPaused returns (bytes32 requestId) {
         require(_sgpTradeData._tradeData.length > 1, "SGP not possible for a single game");
 
-        // **Verify Merkle Proofs**
-        _verifyMerkleProofs(_sgpTradeData._tradeData);
+        if (!_sgpTradeData._isLive) {
+            // **Verify Merkle Proofs**
+            _verifyMerkleProofs(_sgpTradeData._tradeData);
+        }
 
         // **Process trade data**
         (
@@ -90,6 +93,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         req.addUint("buyInAmount", _sgpTradeData._buyInAmount);
         req.addUint("expectedQuote", _sgpTradeData._expectedQuote);
         req.addUint("additionalSlippage", _sgpTradeData._additionalSlippage);
+        req.add("isLive", _sgpTradeData._isLive ? "true" : "false");
 
         requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;
@@ -182,6 +186,13 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         require((timestampPerRequest[_requestId] + maxAllowedExecutionDelay) > block.timestamp, "Request timed out");
 
         ISGPTradingProcessor.SGPTradeData memory sgpTradeData = requestIdToTradeData[_requestId];
+        if (sgpTradeData._isLive) {
+            // Align live markets trade data with risk manager requirements
+            for (uint i = 0; i < sgpTradeData._tradeData.length; ++i) {
+                sgpTradeData._tradeData[i].status = 0;
+                sgpTradeData._tradeData[i].maturity = block.timestamp + 60;
+            }
+        }
         address requester = requestIdToRequester[_requestId];
 
         require(
@@ -196,8 +207,10 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 _approvedQuote,
                 requester,
                 sgpTradeData._referrer,
-                sgpTradeData._collateral
+                sgpTradeData._collateral,
+                sgpTradeData._isLive
             );
+            requestIdToTicketId[_requestId] = _createdTicket;
 
             if (requester == freeBetsHolder) {
                 IFreeBetsHolder(freeBetsHolder).confirmSGPTrade(
@@ -262,6 +275,17 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         maxAllowedExecutionDelay = _maxAllowedExecutionDelay;
         emit SetMaxAllowedExecutionDelay(_maxAllowedExecutionDelay);
     }
+
+    //////////// GETTERS
+
+    /// @notice gets trade data struct for specified request ID
+    /// @param _requestId request ID
+    /// @return sgpTradeData Stored SGPTradeData for request ID
+    function getTradeData(bytes32 _requestId) external view returns (ISGPTradingProcessor.SGPTradeData memory) {
+        return requestIdToTradeData[_requestId];
+    }
+
+    //// UTILITY
 
     // Helper function to convert bytes32 to string
     function bytes32ToString(bytes32 _bytes32) internal pure returns (string memory) {
