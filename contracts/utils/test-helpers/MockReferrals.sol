@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 
 contract MockReferrals {
     mapping(address => address) public sportReferrals;
+    mapping(address => address) public referrals;
 
     uint public referrerFeeDefault;
     uint public referrerFeeSilver;
@@ -21,6 +22,7 @@ contract MockReferrals {
         require(referrer != address(0) && referred != address(0), "Cant refer zero addresses");
         require(referrer != referred, "Cant refer to yourself");
         sportReferrals[referred] = referrer;
+        referrals[referred] = referrer;
     }
 
     function setReferrerFees(uint _referrerFeeDefault, uint _referrerFeeSilver, uint _referrerFeeGold) external {
