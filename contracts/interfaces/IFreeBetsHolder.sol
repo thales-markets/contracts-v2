@@ -28,4 +28,14 @@ interface IFreeBetsHolder is IProxyBetting {
         address _collateral,
         bool isChained
     ) external;
+
+    /// @notice Called by whitelisted casino contracts to consume a user's free bet.
+    /// @dev Validates balance, expiry, and caller whitelist. Transfers tokens to caller.
+    function useFreeBet(address user, address collateral, uint amount) external;
+
+    /// @notice Called by whitelisted casino contracts after a free-bet bet is resolved or cancelled.
+    /// @dev Caller must have already transferred `exercized` of `collateral` to this contract.
+    /// On a win (exercized > stake) the stake is forwarded to the owner and the profit to the user.
+    /// On a push or cancel (0 < exercized <= stake) the user's free-bet balance is credited.
+    function confirmCasinoBetResolved(address user, address collateral, uint exercized, uint stake) external;
 }
