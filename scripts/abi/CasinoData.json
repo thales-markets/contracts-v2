@@ -1,0 +1,2099 @@
+[
+  {
+    "inputs": [],
+    "name": "InvalidInitialization",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "enum CasinoData.Game",
+        "name": "game",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "gameContract",
+        "type": "address"
+      }
+    ],
+    "name": "GameAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldOwner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnerChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnerNominated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "acceptOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "baccarat",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "blackjack",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "dice",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getBaccaratBetsByIds",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "playerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bankerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[6]",
+            "name": "cards",
+            "type": "uint8[6]"
+          }
+        ],
+        "internalType": "struct CasinoData.BaccaratFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getBlackjackHandsByIds",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "handId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount2",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastRequestAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result2",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSplit",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDoubledDown",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDoubled2",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "playerCards",
+            "type": "uint8[]"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "dealerCards",
+            "type": "uint8[]"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "player2Cards",
+            "type": "uint8[]"
+          }
+        ],
+        "internalType": "struct CasinoData.BlackjackFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getDiceBetsByIds",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "target",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct CasinoData.DiceFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum CasinoData.Game",
+        "name": "game",
+        "type": "uint8"
+      }
+    ],
+    "name": "getNextId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentBaccaratBetsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "playerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bankerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[6]",
+            "name": "cards",
+            "type": "uint8[6]"
+          }
+        ],
+        "internalType": "struct CasinoData.BaccaratFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum CasinoData.Game",
+        "name": "game",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentBets",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct CasinoData.BetRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offsetPerGame",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentBetsAllGames",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct CasinoData.BetRecord[][5]",
+        "name": "out",
+        "type": "tuple[][5]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentBlackjackHandsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "handId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount2",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastRequestAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result2",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSplit",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDoubledDown",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDoubled2",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "playerCards",
+            "type": "uint8[]"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "dealerCards",
+            "type": "uint8[]"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "player2Cards",
+            "type": "uint8[]"
+          }
+        ],
+        "internalType": "struct CasinoData.BlackjackFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentDiceBetsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "target",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct CasinoData.DiceFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentRouletteBetsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "primaryBetType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "primarySelection",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint8",
+                "name": "betType",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint8",
+                "name": "selection",
+                "type": "uint8"
+              },
+              {
+                "internalType": "bool",
+                "name": "won",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "payout",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CasinoData.RoulettePick[]",
+            "name": "picks",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct CasinoData.RouletteFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentSlotsSpinsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "spinId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "reels",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct CasinoData.SlotsFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getRouletteBetsByIds",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "primaryBetType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "primarySelection",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint8",
+                "name": "betType",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint8",
+                "name": "selection",
+                "type": "uint8"
+              },
+              {
+                "internalType": "bool",
+                "name": "won",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "payout",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CasinoData.RoulettePick[]",
+            "name": "picks",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct CasinoData.RouletteFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getSlotsSpinsByIds",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "spinId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "reels",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct CasinoData.SlotsFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserBaccaratBetsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "playerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bankerTotal",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[6]",
+            "name": "cards",
+            "type": "uint8[6]"
+          }
+        ],
+        "internalType": "struct CasinoData.BaccaratFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum CasinoData.Game",
+        "name": "game",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserBets",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPush",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct CasinoData.BetRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserBlackjackHandsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "handId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount2",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastRequestAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result2",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSplit",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDoubledDown",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDoubled2",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "playerCards",
+            "type": "uint8[]"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "dealerCards",
+            "type": "uint8[]"
+          },
+          {
+            "internalType": "uint8[]",
+            "name": "player2Cards",
+            "type": "uint8[]"
+          }
+        ],
+        "internalType": "struct CasinoData.BlackjackFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserDiceBetsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "betType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "target",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct CasinoData.DiceFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserRouletteBetsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "result",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "primaryBetType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "primarySelection",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint8",
+                "name": "betType",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint8",
+                "name": "selection",
+                "type": "uint8"
+              },
+              {
+                "internalType": "bool",
+                "name": "won",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "payout",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct CasinoData.RoulettePick[]",
+            "name": "picks",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct CasinoData.RouletteFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserSlotsSpinsFull",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "spinId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "reels",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct CasinoData.SlotsFullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_roulette",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_blackjack",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_dice",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_baccarat",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_slots",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      }
+    ],
+    "name": "nominateNewOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nominatedOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roulette",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_baccarat",
+        "type": "address"
+      }
+    ],
+    "name": "setBaccarat",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_blackjack",
+        "type": "address"
+      }
+    ],
+    "name": "setBlackjack",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_dice",
+        "type": "address"
+      }
+    ],
+    "name": "setDice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      }
+    ],
+    "name": "setOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_roulette",
+        "type": "address"
+      }
+    ],
+    "name": "setRoulette",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_slots",
+        "type": "address"
+      }
+    ],
+    "name": "setSlots",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "slots",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "proxyAddress",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnershipAtInit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

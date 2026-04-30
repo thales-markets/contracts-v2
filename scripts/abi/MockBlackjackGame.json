@@ -1,0 +1,465 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getHandBase",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "placed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getHandCards",
+    "outputs": [
+      {
+        "internalType": "uint8[]",
+        "name": "playerCards",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "dealerCards",
+        "type": "uint8[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getHandDetails",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "result",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDoubledDown",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentHandIds",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSplitDetails",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount2",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payout2",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDoubled2",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "result2",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "cards",
+        "type": "uint8[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserHandIds",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isFreeBet",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "isSplit",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "lastRequestAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextHandId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "placedAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "result",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "free",
+        "type": "bool"
+      }
+    ],
+    "name": "setHand",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDoubledDown",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "placed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requested",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "playerCards",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "dealerCards",
+        "type": "uint8[]"
+      }
+    ],
+    "name": "setHandExtras",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount2",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "payout2",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "result2",
+        "type": "uint8"
+      }
+    ],
+    "name": "setSplit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDoubled2",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "player2Cards",
+        "type": "uint8[]"
+      }
+    ],
+    "name": "setSplitExtras",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

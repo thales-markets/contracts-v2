@@ -440,6 +440,16 @@
       "address": "0xCAE6929b97D0d761eaEAf8718836E8c5E985Ea45",
       "txHash": "0xb36cadad84751979d56dd0916a3f843ddcc3cffc7a299ec8beaab749223218d0",
       "kind": "transparent"
+    },
+    {
+      "address": "0xCABB56b5396625185d25bC0d0d1349D8ffd19eB5",
+      "txHash": "0xf432fe109daa319d20a37c230a4f46c32f41b2200e04eeae36aa240fbea257c5",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x46cA324A2BbA10D3A66A95d3819B47CF2dF7276b",
+      "txHash": "0xf5481fbc8978de90fad88ad95be9543ed2730d1c9a410d398c7fea430fb1cc72",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -103615,6 +103625,272 @@
           "t_uint8": {
             "label": "uint8",
             "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "6fdb82b2a1f285b14cd2ca98c3c7bc25377825007c4c8c9fbb1d40e8034af41d": {
+      "address": "0x1Cf625Fc28cdE4aa8f99f986fcB923dB8Efd9703",
+      "txHash": "0x7fd127386650bbfb780bcfe9a76db2d1506d23c4dff0e970506593f4511d776e",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "roulette",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:67"
+          },
+          {
+            "label": "blackjack",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:69"
+          },
+          {
+            "label": "dice",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:71"
+          },
+          {
+            "label": "baccarat",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:73"
+          },
+          {
+            "label": "slots",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:75"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "b1c738d16c61d35ac512caaee9a79bbbe293de53e826285e605663ec07a8b44c": {
+      "address": "0xb590810e8dA71947361D8Ab8BF0b859293992Af0",
+      "txHash": "0xa2c8d328f5261eac23763eefcd208535ec5c2fb3eeb7dbcf888965465ca3d9c5",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:6"
+          },
+          {
+            "label": "nominatedOwner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:7"
+          },
+          {
+            "label": "_initialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:8"
+          },
+          {
+            "label": "_transferredAtInit",
+            "offset": 21,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "ProxyOwned",
+            "src": "contracts\\utils\\proxy\\ProxyOwned.sol:9"
+          },
+          {
+            "label": "roulette",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:184"
+          },
+          {
+            "label": "blackjack",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:186"
+          },
+          {
+            "label": "dice",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:188"
+          },
+          {
+            "label": "baccarat",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:190"
+          },
+          {
+            "label": "slots",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address",
+            "contract": "CasinoData",
+            "src": "contracts\\core\\Casino\\CasinoData.sol:192"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)371_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
           }
         },
         "namespaces": {
