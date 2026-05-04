@@ -13,7 +13,7 @@ const {
 const { ZERO_ADDRESS } = require('../../../constants/general');
 const { ethers } = require('hardhat');
 
-describe('SportsAMMV2Live Live Trades', () => {
+describe('SportsAMMV2 SGP Trades', () => {
 	let sportsAMMV2,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolETH,
@@ -41,6 +41,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			sgpTradingProcessor,
 			mockChainlinkOracle,
 			weth,
+			collateral,
 			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
@@ -51,10 +52,28 @@ describe('SportsAMMV2Live Live Trades', () => {
 			.connect(firstLiquidityProvider)
 			.deposit(ethers.parseEther('2000'));
 		await sportsAMMV2LiquidityPool.start();
+
+		await collateral.connect(firstTrader).approve(sportsAMMV2.target, ethers.MaxUint256);
 	});
 
 	describe('SGP Trade', () => {
 		let approvedQuote = ethers.parseEther('0.5');
+
+		it('Should revert if collateral not approved', async () => {
+			await collateral.connect(firstTrader).approve(sportsAMMV2.target, ethers.parseEther('0')); // Revoke approval
+			await expect(
+				sgpTradingProcessor.connect(firstTrader).requestSGPTrade({
+					_tradeData: tradeDataThreeMarketsCurrentRound,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: approvedQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+					_isLive: false,
+				})
+			).to.be.revertedWith('Insufficient allowance for sportsAMM');
+		});
+
 		it('Should revert if not the same game', async () => {
 			await expect(
 				sgpTradingProcessor.connect(firstTrader).requestSGPTrade({

@@ -87,6 +87,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             "Live trading not enabled on _sportId"
         );
 
+        address collateral = _liveTradeData._collateral == address(0)
+            ? address(sportsAMM.defaultCollateral())
+            : _liveTradeData._collateral;
+        require(
+            IERC20(collateral).allowance(msg.sender, address(sportsAMM)) >= _liveTradeData._buyInAmount,
+            "Insufficient allowance for sportsAMM"
+        );
+
         require(_liveTradeData._expectedQuote >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
 
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);

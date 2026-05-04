@@ -63,6 +63,14 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     ) external whenNotPaused returns (bytes32 requestId) {
         require(_sgpTradeData._tradeData.length > 1, "SGP not possible for a single game");
 
+        address collateral = _sgpTradeData._collateral == address(0)
+            ? address(sportsAMM.defaultCollateral())
+            : _sgpTradeData._collateral;
+        require(
+            IERC20(collateral).allowance(msg.sender, address(sportsAMM)) >= _sgpTradeData._buyInAmount,
+            "Insufficient allowance for sportsAMM"
+        );
+
         if (!_sgpTradeData._isLive) {
             // **Verify Merkle Proofs**
             _verifyMerkleProofs(_sgpTradeData._tradeData);

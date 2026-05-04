@@ -46,6 +46,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 			sameGameWithFirstPlayerProps,
 			mockChainlinkOracle,
 			weth,
+			collateral,
 			sportsAMMV2RiskManager,
 			sportsAMMV2Manager,
 		} = await loadFixture(deploySportsAMMV2Fixture));
@@ -77,6 +78,9 @@ describe('SportsAMMV2Live Live Trades', () => {
 			ZERO_ADDRESS,
 			false
 		);
+
+		await collateral.connect(firstTrader).approve(sportsAMMV2.target, ethers.MaxUint256);
+		await collateral.connect(secondAccount).approve(sportsAMMV2.target, ethers.MaxUint256);
 	});
 
 	describe('Live Trade', () => {
@@ -184,6 +188,26 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_playerId: 0,
 				})
 			).to.be.revertedWith('Live trading not enabled on _sportId');
+		});
+
+		it('Fail for insufficient allowance', async () => {
+			await collateral.connect(firstTrader).approve(sportsAMMV2.target, ethers.parseEther('0')); // Revoke approval
+			await sportsAMMV2RiskManager.setLiveTradingPerSportAndTypeEnabled(SPORT_ID_NBA, 0, true);
+			await expect(
+				liveTradingProcessor.connect(firstTrader).requestLiveTrade({
+					_gameId: tradeDataCurrentRound[0].gameId,
+					_sportId: tradeDataCurrentRound[0].sportId,
+					_typeId: tradeDataCurrentRound[0].typeId,
+					_line: tradeDataCurrentRound[0].line,
+					_position: tradeDataCurrentRound[0].position,
+					_buyInAmount: BUY_IN_AMOUNT,
+					_expectedQuote: quote.totalQuote,
+					_additionalSlippage: ADDITIONAL_SLIPPAGE,
+					_referrer: ZERO_ADDRESS,
+					_collateral: ZERO_ADDRESS,
+					_playerId: 0,
+				})
+			).to.be.revertedWith('Insufficient allowance for sportsAMM');
 		});
 
 		it('Fail for double fulfillment', async () => {
