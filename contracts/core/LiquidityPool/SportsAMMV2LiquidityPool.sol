@@ -641,28 +641,28 @@ contract SportsAMMV2LiquidityPool is Initializable, ProxyOwned, PausableUpgradea
             // High-quote multi-leg tickets (parlays and system bets) always go to the default round
             uint threshold = rm.defaultRoundHighQuoteThreshold();
             if (threshold > 0 && numOfMarkets > 1 && ticket.totalQuote() < threshold) {
-                return DEFAULT_ROUND;
-            }
+                ticketRound = DEFAULT_ROUND;
+            } else {
+                uint maturity;
+                uint16 sportId;
 
-            uint maturity;
-            uint16 sportId;
-
-            for (uint i = 0; i < numOfMarkets; i++) {
-                (, sportId, , maturity, , , , , ) = ticket.markets(i);
-                bool isFuture = rm.isSportIdFuture(sportId);
-                if (maturity > firstRoundStartTime && !isFuture) {
-                    if (i == 0) {
-                        ticketRound = (maturity - firstRoundStartTime) / roundLength + 2;
-                    } else {
-                        // if ticket is cross rounds, use the default round
-                        if (((maturity - firstRoundStartTime) / roundLength + 2) != ticketRound) {
-                            ticketRound = DEFAULT_ROUND;
-                            break;
+                for (uint i = 0; i < numOfMarkets; i++) {
+                    (, sportId, , maturity, , , , , ) = ticket.markets(i);
+                    bool isFuture = rm.isSportIdFuture(sportId);
+                    if (maturity > firstRoundStartTime && !isFuture) {
+                        if (i == 0) {
+                            ticketRound = (maturity - firstRoundStartTime) / roundLength + 2;
+                        } else {
+                            // if ticket is cross rounds, use the default round
+                            if (((maturity - firstRoundStartTime) / roundLength + 2) != ticketRound) {
+                                ticketRound = DEFAULT_ROUND;
+                                break;
+                            }
                         }
+                    } else {
+                        ticketRound = DEFAULT_ROUND;
+                        break;
                     }
-                } else {
-                    ticketRound = DEFAULT_ROUND;
-                    break;
                 }
             }
         }

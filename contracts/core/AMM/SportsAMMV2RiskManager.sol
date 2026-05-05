@@ -1060,6 +1060,7 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @notice Set the quote threshold below which a multi-leg ticket is routed to the default round.
     /// @param _threshold quote value in 1e18 (e.g. 0.02e18 for 50x+ tickets); 0 disables the feature
     function setDefaultRoundHighQuoteThreshold(uint _threshold) external onlyOwner {
+        if (_threshold >= ONE) revert ExceededMaxOdds();
         defaultRoundHighQuoteThreshold = _threshold;
         emit DefaultRoundHighQuoteThresholdUpdated(_threshold);
     }
