@@ -1327,6 +1327,28 @@ describe('Dice', () => {
 				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
 		});
 
+		it('should resolve losing bet and emit ReferrerPayoutFailed when referrer is blacklisted', async () => {
+			await usdc.setBlacklisted(secondAccount.address, true);
+			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
+			const tx = await dice
+				.connect(player)
+				.placeBet(usdcAddress, MIN_USDC_BET, 0, 11, secondAccount.address);
+			const { betId, requestId } = await parseBetPlaced(dice, tx);
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			await expect(vrfCoordinator.fulfillRandomWords(diceAddress, requestId, [14n]))
+				.to.emit(dice, 'ReferrerPayoutFailed')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+
+			const details = await dice.getBetDetails(betId);
+			expect(details.status).to.equal(Status.RESOLVED);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
 		it('should NOT pay referrer on winning bet', async () => {
 			await usdc.connect(player).approve(diceAddress, MIN_USDC_BET);
 			const tx = await dice

@@ -14,6 +14,8 @@ contract ExoticUSDC is ERC20, Ownable {
     bool public paused;
     uint public defaultAmount = 5000 * 1e6;
 
+    mapping(address => bool) public isBlacklisted;
+
     function name() public view override returns (string memory) {
         return __name;
     }
@@ -58,8 +60,19 @@ contract ExoticUSDC is ERC20, Ownable {
         emit PausedChanged(_paused);
     }
 
+    function setBlacklisted(address _account, bool _flag) external {
+        isBlacklisted[_account] = _flag;
+        emit BlacklistChanged(_account, _flag);
+    }
+
+    function _update(address from, address to, uint256 value) internal override {
+        require(!isBlacklisted[from] && !isBlacklisted[to], "Address is blacklisted");
+        super._update(from, to, value);
+    }
+
     event NewDefaultAmount(uint amount);
     event PausedChanged(bool paused);
     event NameChanged(string name);
     event SymbolChanged(string symbol);
+    event BlacklistChanged(address indexed account, bool flag);
 }

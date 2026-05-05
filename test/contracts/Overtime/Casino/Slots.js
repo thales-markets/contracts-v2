@@ -1354,6 +1354,26 @@ describe('Slots', () => {
 				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
 		});
 
+		it('should resolve losing spin and emit ReferrerPayoutFailed when referrer is blacklisted', async () => {
+			await usdc.setBlacklisted(secondAccount.address, true);
+			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
+			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, secondAccount.address);
+			const { spinId, requestId } = await parseSpinPlaced(slots, tx);
+
+			const expectedFee = (MIN_USDC_BET * REFERRER_FEE) / ONE;
+			const referrerBalBefore = await usdc.balanceOf(secondAccount.address);
+
+			await expect(vrfCoordinator.fulfillRandomWords(slotsAddress, requestId, [findLossWord()]))
+				.to.emit(slots, 'ReferrerPayoutFailed')
+				.withArgs(secondAccount.address, player.address, expectedFee, MIN_USDC_BET, usdcAddress);
+
+			const details = await slots.getSpinDetails(spinId);
+			expect(details.status).to.equal(Status.RESOLVED);
+
+			const referrerBalAfter = await usdc.balanceOf(secondAccount.address);
+			expect(referrerBalAfter - referrerBalBefore).to.equal(0n);
+		});
+
 		it('should NOT pay referrer on winning spin', async () => {
 			await usdc.connect(player).approve(slotsAddress, MIN_USDC_BET);
 			const tx = await slots.connect(player).spin(usdcAddress, MIN_USDC_BET, secondAccount.address);
