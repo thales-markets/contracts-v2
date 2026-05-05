@@ -33,6 +33,7 @@ describe('SportsAMMV2 SGP Trades', () => {
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
+			sportsAMMV2Utils,
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
 			tradeDataThreeMarketsCurrentRound,
@@ -71,7 +72,7 @@ describe('SportsAMMV2 SGP Trades', () => {
 					_collateral: ZERO_ADDRESS,
 					_isLive: false,
 				})
-			).to.be.revertedWith('Insufficient allowance for sportsAMM');
+			).to.be.revertedWithCustomError(sportsAMMV2Utils, 'InsufficientAllowance');
 		});
 
 		it('Should revert if not the same game', async () => {

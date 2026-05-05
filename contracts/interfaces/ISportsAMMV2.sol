@@ -2,10 +2,10 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/ISportsAMMV2ResultManager.sol";
 import "../interfaces/ISportsAMMV2RiskManager.sol";
-import "../interfaces/ISportsAMMV2Manager.sol";
 import "../interfaces/IFreeBetsHolder.sol";
 import "../interfaces/IStakingThalesBettingProxy.sol";
 
@@ -36,7 +36,13 @@ interface ISportsAMMV2 {
         CombinedPosition[][] combinedPositions;
     }
 
+    function sportsAMMV2Utils() external view returns (address);
+
     function defaultCollateral() external view returns (IERC20);
+
+    function multiCollateralOnOffRamp() external view returns (IMultiCollateralOnOffRamp);
+
+    function liquidityPoolForCollateral(address _collateral) external view returns (address);
 
     function manager() external view returns (ISportsAMMV2Manager);
 

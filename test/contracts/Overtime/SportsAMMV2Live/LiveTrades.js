@@ -36,6 +36,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
+			sportsAMMV2Utils,
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
 			tradeDataCurrentRound,
@@ -207,7 +208,7 @@ describe('SportsAMMV2Live Live Trades', () => {
 					_collateral: ZERO_ADDRESS,
 					_playerId: 0,
 				})
-			).to.be.revertedWith('Insufficient allowance for sportsAMM');
+			).to.be.revertedWithCustomError(sportsAMMV2Utils, 'InsufficientAllowance');
 		});
 
 		it('Fail for double fulfillment', async () => {

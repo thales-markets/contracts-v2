@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
+import "../../core/AMM/SportsAMMV2Utils.sol";
 
 contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
@@ -87,15 +88,18 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             "Live trading not enabled on _sportId"
         );
 
-        address collateral = _liveTradeData._collateral == address(0)
-            ? address(sportsAMM.defaultCollateral())
-            : _liveTradeData._collateral;
-        require(
-            IERC20(collateral).allowance(msg.sender, address(sportsAMM)) >= _liveTradeData._buyInAmount,
-            "Insufficient allowance for sportsAMM"
-        );
-
         require(_liveTradeData._expectedQuote >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
+
+        SportsAMMV2Utils(sportsAMM.sportsAMMV2Utils()).checkTradeLimits(
+            msg.sender,
+            _liveTradeData._buyInAmount,
+            _liveTradeData._collateral,
+            _liveTradeData._expectedQuote,
+            1,
+            sportsAMM,
+            sportsAMM.multiCollateralOnOffRamp(),
+            sportsAMM.riskManager()
+        );
 
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
@@ -163,6 +167,17 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         }
 
         require(_parlay.expectedPayout >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
+
+        SportsAMMV2Utils(sportsAMM.sportsAMMV2Utils()).checkTradeLimits(
+            msg.sender,
+            _parlay.buyInAmount,
+            _parlay.collateral,
+            _parlay.expectedPayout,
+            legsLen,
+            sportsAMM,
+            sportsAMM.multiCollateralOnOffRamp(),
+            sportsAMM.riskManager()
+        );
 
         Chainlink.Request memory req = buildChainlinkRequest(
             parlayJobSpecId,

@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/ISGPTradingProcessor.sol";
+import "../../core/AMM/SportsAMMV2Utils.sol";
 
 contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Strings for uint;
@@ -63,12 +64,15 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
     ) external whenNotPaused returns (bytes32 requestId) {
         require(_sgpTradeData._tradeData.length > 1, "SGP not possible for a single game");
 
-        address collateral = _sgpTradeData._collateral == address(0)
-            ? address(sportsAMM.defaultCollateral())
-            : _sgpTradeData._collateral;
-        require(
-            IERC20(collateral).allowance(msg.sender, address(sportsAMM)) >= _sgpTradeData._buyInAmount,
-            "Insufficient allowance for sportsAMM"
+        SportsAMMV2Utils(sportsAMM.sportsAMMV2Utils()).checkTradeLimits(
+            msg.sender,
+            _sgpTradeData._buyInAmount,
+            _sgpTradeData._collateral,
+            _sgpTradeData._expectedQuote,
+            _sgpTradeData._tradeData.length,
+            sportsAMM,
+            sportsAMM.multiCollateralOnOffRamp(),
+            sportsAMM.riskManager()
         );
 
         if (!_sgpTradeData._isLive) {
