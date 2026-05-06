@@ -484,6 +484,9 @@ contract SportsAMMV2Utils {
         IMultiCollateralOnOffRamp _multiCollateralOnOffRamp,
         ISportsAMMV2RiskManager _riskManager
     ) external view {
+        if (_expectedQuote < _riskManager.maxSupportedOdds()) revert ExceededMaxOdds();
+        if (_ticketSize > _riskManager.maxTicketSize()) revert ExceededMaxSize();
+
         address defaultCollateral = address(_sportsAMM.defaultCollateral());
         address allowanceCollateral = _collateral == address(0) ? defaultCollateral : _collateral;
 
@@ -521,8 +524,6 @@ contract SportsAMMV2Utils {
         }
 
         if (buyInAmountUSD < _riskManager.minBuyInAmount()) revert LowBuyIn();
-        if (_expectedQuote < _riskManager.maxSupportedOdds()) revert ExceededMaxOdds();
-        if (_ticketSize > _riskManager.maxTicketSize()) revert ExceededMaxSize();
     }
 
     /* ========== PURE MATH HELPERS ========== */

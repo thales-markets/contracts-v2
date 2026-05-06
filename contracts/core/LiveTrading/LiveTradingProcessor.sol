@@ -88,8 +88,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             "Live trading not enabled on _sportId"
         );
 
-        require(_liveTradeData._expectedQuote >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
-
         SportsAMMV2Utils(sportsAMM.sportsAMMV2Utils()).checkTradeLimits(
             msg.sender,
             _liveTradeData._buyInAmount,
@@ -165,8 +163,6 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
                 "Live trading not enabled on leg"
             );
         }
-
-        require(_parlay.expectedPayout >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
 
         SportsAMMV2Utils(sportsAMM.sportsAMMV2Utils()).checkTradeLimits(
             msg.sender,
