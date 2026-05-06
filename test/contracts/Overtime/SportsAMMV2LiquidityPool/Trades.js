@@ -33,7 +33,8 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 		firstTrader,
 		tradeDataCurrentRound,
 		tradeDataNextRound,
-		tradeDataCrossRounds;
+		tradeDataCrossRounds,
+		tradeDataTenMarketsCurrentRound;
 
 	beforeEach(async () => {
 		({
@@ -49,6 +50,7 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			tradeDataCurrentRound,
 			tradeDataNextRound,
 			tradeDataCrossRounds,
+			tradeDataTenMarketsCurrentRound,
 		} = await loadFixture(deploySportsAMMV2Fixture));
 		({ owner, firstLiquidityProvider, firstTrader } = await loadFixture(deployAccountsFixture));
 
@@ -1395,6 +1397,191 @@ describe('SportsAMMV2LiquidityPool Trades', () => {
 			expect(await sportsAMMV2LiquidityPool.roundPerTicket(ticketAddress)).to.equal(1);
 			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(1);
 			expect(await sportsAMMV2LiquidityPool.tradingTicketsPerRound(1, 0)).to.equal(ticketAddress);
+		});
+	});
+
+	describe('defaultRoundHighQuoteThreshold', () => {
+		let sportsAMMV2LiquidityPoolWithFirstLiquidityProvider;
+
+		beforeEach(async () => {
+			sportsAMMV2LiquidityPoolWithFirstLiquidityProvider =
+				sportsAMMV2LiquidityPool.connect(firstLiquidityProvider);
+		});
+
+		it('feature disabled by default - high-quote parlay stays in current round', async () => {
+			const initialDeposit = ethers.parseEther('1000');
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
+			await sportsAMMV2LiquidityPool.start();
+
+			// threshold defaults to 0 - feature disabled
+			expect(await sportsAMMV2RiskManager.defaultRoundHighQuoteThreshold()).to.equal(0);
+
+			const currentRound = Number(await sportsAMMV2LiquidityPool.round());
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// Despite being a high-quote parlay, threshold=0 means no special routing
+			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(currentRound);
+			expect(
+				await sportsAMMV2LiquidityPool.isTradingTicketInARound(currentRound, ticketAddress)
+			).to.equal(true);
+		});
+
+		it('high-quote multi-leg ticket routed to default round when threshold is set', async () => {
+			const initialDeposit = ethers.parseEther('1000');
+			const defaultLpAddress = await sportsAMMV2LiquidityPool.defaultLiquidityProvider();
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
+			await sportsAMMV2LiquidityPool.start();
+
+			const currentRound = Number(await sportsAMMV2LiquidityPool.round());
+			const defaultRound = 1;
+
+			// Get the actual totalQuote of the 10-leg parlay
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+
+			// Set threshold just above the actual quote so totalQuote < threshold → deferred routing
+			const threshold = quote.totalQuote + 1n;
+			await sportsAMMV2RiskManager.setDefaultRoundHighQuoteThreshold(threshold);
+			expect(await sportsAMMV2RiskManager.defaultRoundHighQuoteThreshold()).to.equal(threshold);
+
+			const defaultLpBalanceBefore = await collateral.balanceOf(defaultLpAddress);
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// ticket must be in the default round (1), NOT the current round
+			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(defaultRound);
+			expect(await sportsAMMV2LiquidityPool.roundPerTicket(ticketAddress)).to.equal(defaultRound);
+			expect(
+				await sportsAMMV2LiquidityPool.isTradingTicketInARound(defaultRound, ticketAddress)
+			).to.equal(true);
+			expect(
+				await sportsAMMV2LiquidityPool.isTradingTicketInARound(currentRound, ticketAddress)
+			).to.equal(false);
+
+			// deferred mode: LP received buyIn so its balance went UP by buyIn
+			const defaultLpBalanceAfter = await collateral.balanceOf(defaultLpAddress);
+			expect(defaultLpBalanceAfter - defaultLpBalanceBefore).to.equal(BUY_IN_AMOUNT);
+
+			// current-round pool is untouched
+			const currentRoundPoolAddress = await sportsAMMV2LiquidityPool.roundPools(currentRound);
+			expect(await collateral.balanceOf(currentRoundPoolAddress)).to.equal(initialDeposit);
+		});
+
+		it('single-leg ticket not routed to default round even with threshold above its quote', async () => {
+			const initialDeposit = ethers.parseEther('1000');
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
+			await sportsAMMV2LiquidityPool.start();
+
+			const currentRound = Number(await sportsAMMV2LiquidityPool.round());
+			const defaultRound = 1;
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+			// Set threshold above the single-leg quote so the quote check alone would trigger,
+			// but numOfMarkets = 1 so the routing must NOT apply
+			const threshold = quote.totalQuote + 1n;
+			await sportsAMMV2RiskManager.setDefaultRoundHighQuoteThreshold(threshold);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// single-leg: numOfMarkets = 1, so routing guard is not triggered
+			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(currentRound);
+			expect(
+				await sportsAMMV2LiquidityPool.isTradingTicketInARound(currentRound, ticketAddress)
+			).to.equal(true);
+			expect(
+				await sportsAMMV2LiquidityPool.isTradingTicketInARound(defaultRound, ticketAddress)
+			).to.equal(false);
+		});
+
+		it('multi-leg ticket stays in current round when its quote equals the threshold', async () => {
+			const initialDeposit = ethers.parseEther('1000');
+			await sportsAMMV2LiquidityPoolWithFirstLiquidityProvider.deposit(initialDeposit);
+			await sportsAMMV2LiquidityPool.start();
+
+			const currentRound = Number(await sportsAMMV2LiquidityPool.round());
+
+			const quote = await sportsAMMV2.tradeQuote(
+				tradeDataTenMarketsCurrentRound,
+				BUY_IN_AMOUNT,
+				ZERO_ADDRESS,
+				false
+			);
+			// threshold == totalQuote: condition is totalQuote < threshold (strict), so NOT triggered
+			await sportsAMMV2RiskManager.setDefaultRoundHighQuoteThreshold(quote.totalQuote);
+
+			await sportsAMMV2
+				.connect(firstTrader)
+				.trade(
+					tradeDataTenMarketsCurrentRound,
+					BUY_IN_AMOUNT,
+					quote.totalQuote,
+					ADDITIONAL_SLIPPAGE,
+					ZERO_ADDRESS,
+					ZERO_ADDRESS,
+					false
+				);
+
+			const activeTickets = await sportsAMMV2Manager.getActiveTickets(0, 100);
+			const ticketAddress = activeTickets[0];
+
+			// quote == threshold → strict less-than fails → ticket stays in current round
+			expect(await sportsAMMV2LiquidityPool.getTicketRound(ticketAddress)).to.equal(currentRound);
+			expect(
+				await sportsAMMV2LiquidityPool.isTradingTicketInARound(currentRound, ticketAddress)
+			).to.equal(true);
 		});
 	});
 
