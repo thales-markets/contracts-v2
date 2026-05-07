@@ -475,7 +475,7 @@ contract SportsAMMV2Utils {
     }
 
     function checkTradeLimits(
-        address _requster,
+        address _requester,
         uint _buyInAmount,
         address _collateral,
         uint _expectedQuote,
@@ -490,7 +490,7 @@ contract SportsAMMV2Utils {
         address defaultCollateral = address(_sportsAMM.defaultCollateral());
         address allowanceCollateral = _collateral == address(0) ? defaultCollateral : _collateral;
 
-        if (IERC20(allowanceCollateral).allowance(_requster, address(_sportsAMM)) < _buyInAmount)
+        if (IERC20(allowanceCollateral).allowance(_requester, address(_sportsAMM)) < _buyInAmount)
             revert InsufficientAllowance();
 
         uint buyInAmountUSD;
