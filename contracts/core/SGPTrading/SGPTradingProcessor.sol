@@ -106,6 +106,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
         req.addUint("expectedQuote", _sgpTradeData._expectedQuote);
         req.addUint("additionalSlippage", _sgpTradeData._additionalSlippage);
         req.add("isLive", _sgpTradeData._isLive ? "true" : "false");
+        req.add("requester", Strings.toHexString(msg.sender));
 
         requestId = sendChainlinkRequest(req, paymentAmount);
         timestampPerRequest[requestId] = block.timestamp;
