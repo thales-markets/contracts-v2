@@ -467,16 +467,6 @@
         "internalType": "contract ISportsAMMV2",
         "name": "_sportsAMM",
         "type": "address"
-      },
-      {
-        "internalType": "contract IMultiCollateralOnOffRamp",
-        "name": "_multiCollateralOnOffRamp",
-        "type": "address"
-      },
-      {
-        "internalType": "contract ISportsAMMV2RiskManager",
-        "name": "_riskManager",
-        "type": "address"
       }
     ],
     "name": "checkTradeLimits",

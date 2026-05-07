@@ -70,9 +70,7 @@ contract SGPTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _sgpTradeData._collateral,
             _sgpTradeData._expectedQuote,
             _sgpTradeData._tradeData.length,
-            sportsAMM,
-            sportsAMM.multiCollateralOnOffRamp(),
-            sportsAMM.riskManager()
+            sportsAMM
         );
 
         if (!_sgpTradeData._isLive) {

@@ -480,12 +480,12 @@ contract SportsAMMV2Utils {
         address _collateral,
         uint _expectedQuote,
         uint _ticketSize,
-        ISportsAMMV2 _sportsAMM,
-        IMultiCollateralOnOffRamp _multiCollateralOnOffRamp,
-        ISportsAMMV2RiskManager _riskManager
+        ISportsAMMV2 _sportsAMM
     ) external view {
-        if (_expectedQuote < _riskManager.maxSupportedOdds()) revert ExceededMaxOdds();
-        if (_ticketSize > _riskManager.maxTicketSize()) revert ExceededMaxSize();
+        ISportsAMMV2RiskManager riskManager = _sportsAMM.riskManager();
+
+        if (_expectedQuote < riskManager.maxSupportedOdds()) revert ExceededMaxOdds();
+        if (_ticketSize > riskManager.maxTicketSize()) revert ExceededMaxSize();
 
         address defaultCollateral = address(_sportsAMM.defaultCollateral());
         address allowanceCollateral = _collateral == address(0) ? defaultCollateral : _collateral;
@@ -515,15 +515,16 @@ contract SportsAMMV2Utils {
                 );
             } else {
                 // onramping path
-                if (address(_multiCollateralOnOffRamp) == address(0)) revert OnRampNotSupported();
-                if (!IViewMultiCollateralOnOffRamp(address(_multiCollateralOnOffRamp)).collateralSupported(_collateral))
+                IMultiCollateralOnOffRamp multiCollateralOnOffRamp = _sportsAMM.multiCollateralOnOffRamp();
+                if (address(multiCollateralOnOffRamp) == address(0)) revert OnRampNotSupported();
+                if (!IViewMultiCollateralOnOffRamp(address(multiCollateralOnOffRamp)).collateralSupported(_collateral))
                     revert CollateralNotSupported();
 
-                buyInAmountUSD = _multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+                buyInAmountUSD = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
             }
         }
 
-        if (buyInAmountUSD < _riskManager.minBuyInAmount()) revert LowBuyIn();
+        if (buyInAmountUSD < riskManager.minBuyInAmount()) revert LowBuyIn();
     }
 
     /* ========== PURE MATH HELPERS ========== */

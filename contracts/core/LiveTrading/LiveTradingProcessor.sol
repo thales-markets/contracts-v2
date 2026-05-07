@@ -94,9 +94,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _liveTradeData._collateral,
             _liveTradeData._expectedQuote,
             1,
-            sportsAMM,
-            sportsAMM.multiCollateralOnOffRamp(),
-            sportsAMM.riskManager()
+            sportsAMM
         );
 
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
@@ -170,9 +168,7 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             _parlay.collateral,
             _parlay.expectedPayout,
             legsLen,
-            sportsAMM,
-            sportsAMM.multiCollateralOnOffRamp(),
-            sportsAMM.riskManager()
+            sportsAMM
         );
 
         Chainlink.Request memory req = buildChainlinkRequest(
@@ -294,7 +290,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             lTradeData._buyInAmount,
             _approvedQuote,
             lTradeData._collateral,
-            block.timestamp
+            block.timestamp,
+            lTradeData._playerId
         );
     }
 
@@ -581,7 +578,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint _buyInAmount,
         uint _expectedQuote,
         address _collateral,
-        uint timestamp
+        uint timestamp,
+        uint24 playerId
     );
 
     event LiveParlayTradeRequested(
