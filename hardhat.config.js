@@ -20,6 +20,12 @@ const EXCLUDED_EDGE_TESTS = [
 	'test/contracts/Overtime/Casino/EdgeAudit.js',
 	'test/contracts/Overtime/Casino/SlotsSimulation.js',
 	'test/contracts/Overtime/Casino/BlackjackStrategies.js',
+	'test/contracts/Overtime/Casino/ThreeCardPokerEdgeSim.js',
+	'test/contracts/Overtime/Casino/OvertimeHoldemEdgeSim.js',
+	'test/contracts/Overtime/Casino/CrashEdgeSim.js',
+	'test/contracts/Overtime/Casino/HiLoEdgeSim.js',
+	'test/contracts/Overtime/Casino/MinesEdgeSim.js',
+	'test/contracts/Overtime/Casino/PlinkoEdgeSim.js',
 ].map((p) => path.resolve(__dirname, p));
 
 task(TASK_TEST_GET_TEST_FILES).setAction(async (args, _hre, runSuper) => {

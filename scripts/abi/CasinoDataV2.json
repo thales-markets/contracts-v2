@@ -1,0 +1,2781 @@
+[
+  {
+    "inputs": [],
+    "name": "InvalidAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidInitialization",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LimitExceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldOwner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnerChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnerNominated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "acceptOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "core",
+    "outputs": [
+      {
+        "internalType": "contract ICasinoCoreV2",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "crash",
+    "outputs": [
+      {
+        "internalType": "contract ICasinoCrash",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCrashFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "crashPointE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.CrashFullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getCrashFullRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "crashPointE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.CrashFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "collaterals",
+        "type": "address[]"
+      }
+    ],
+    "name": "getGameStatus",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "game",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "registered",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "autoPaused",
+            "type": "bool"
+          },
+          {
+            "internalType": "int256",
+            "name": "houseNetUsd",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxNetLossUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address[]",
+            "name": "collaterals",
+            "type": "address[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "reservedPerCollateral",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.GameStatus",
+        "name": "s",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getHiLoFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "currentCard",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "guessCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "correctCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "pushCount",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.HiLoFullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getHiLoFullRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "currentCard",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "guessCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "correctCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "pushCount",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.HiLoFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMinesFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "mineCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "safeCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint32",
+            "name": "revealedMask",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "mineMask",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.MinesFullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getMinesFullRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "mineCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "safeCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint32",
+            "name": "revealedMask",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "mineMask",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.MinesFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getOvertimeHoldemFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "antePayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "callPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "playerHole",
+            "type": "uint8[2]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "community",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "dealerHole",
+            "type": "uint8[2]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getOvertimeHoldemFullRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "antePayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "callPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "playerHole",
+            "type": "uint8[2]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "community",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "dealerHole",
+            "type": "uint8[2]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPlinkoFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "rows",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "risk",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "slotIndex",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.PlinkoFullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getPlinkoFullRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "rows",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "risk",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "slotIndex",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.PlinkoFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentCrashRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "crashPointE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.CrashFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentHiLoRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "currentCard",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "guessCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "correctCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "pushCount",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.HiLoFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentMinesRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "mineCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "safeCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint32",
+            "name": "revealedMask",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "mineMask",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.MinesFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentOvertimeHoldemRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "antePayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "callPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "playerHole",
+            "type": "uint8[2]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "community",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "dealerHole",
+            "type": "uint8[2]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentPlinkoRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "rows",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "risk",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "slotIndex",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.PlinkoFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentThreeCardPokerRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAndPlayPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "playerCards",
+            "type": "uint8[3]"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "dealerCards",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getThreeCardPokerFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAndPlayPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "playerCards",
+            "type": "uint8[3]"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "dealerCards",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getThreeCardPokerFullRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAndPlayPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "playerCards",
+            "type": "uint8[3]"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "dealerCards",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "collaterals",
+        "type": "address[]"
+      }
+    ],
+    "name": "getTreasuryOverview",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "core",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "freeBetsHolder",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxProfitUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cancelTimeout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "defaultMaxNetLossPerGameUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address[]",
+            "name": "registeredGames",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "collaterals",
+            "type": "address[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "balancePerCollateral",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "reservedPerCollateral",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "availablePerCollateral",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.TreasuryOverview",
+        "name": "o",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserCrashRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "crashPointE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.CrashFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserHiLoRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "currentCard",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "guessCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "correctCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "pushCount",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.HiLoFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserMinesRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "mineCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "safeCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint32",
+            "name": "revealedMask",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "mineMask",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.MinesFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserOvertimeHoldemRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aaBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "antePayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "callPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "playerHole",
+            "type": "uint8[2]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "community",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "dealerHole",
+            "type": "uint8[2]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserPlinkoRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "rows",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "risk",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "slotIndex",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.PlinkoFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserRecentBetsV2",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum ICasinoDataV2.GameV2",
+            "name": "game",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.BetRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserThreeCardPokerRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAndPlayPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "playerCards",
+            "type": "uint8[3]"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "dealerCards",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord[]",
+        "name": "out",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hilo",
+    "outputs": [
+      {
+        "internalType": "contract ICasinoHiLo",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_core",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_threeCardPoker",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "mines",
+    "outputs": [
+      {
+        "internalType": "contract ICasinoMines",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      }
+    ],
+    "name": "nominateNewOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nominatedOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "overtimeHoldem",
+    "outputs": [
+      {
+        "internalType": "contract ICasinoOvertimeHoldem",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "plinko",
+    "outputs": [
+      {
+        "internalType": "contract ICasinoPlinko",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_core",
+        "type": "address"
+      }
+    ],
+    "name": "setCore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_crash",
+        "type": "address"
+      }
+    ],
+    "name": "setCrash",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_hilo",
+        "type": "address"
+      }
+    ],
+    "name": "setHiLo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_mines",
+        "type": "address"
+      }
+    ],
+    "name": "setMines",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_overtimeHoldem",
+        "type": "address"
+      }
+    ],
+    "name": "setOvertimeHoldem",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      }
+    ],
+    "name": "setOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_plinko",
+        "type": "address"
+      }
+    ],
+    "name": "setPlinko",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_threeCardPoker",
+        "type": "address"
+      }
+    ],
+    "name": "setThreeCardPoker",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "threeCardPoker",
+    "outputs": [
+      {
+        "internalType": "contract ICasinoThreeCardPoker",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "proxyAddress",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnershipAtInit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
