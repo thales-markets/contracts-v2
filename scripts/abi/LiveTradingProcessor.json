@@ -357,6 +357,12 @@
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint24",
+        "name": "playerId",
+        "type": "uint24"
       }
     ],
     "name": "LiveTradeFulfilled",

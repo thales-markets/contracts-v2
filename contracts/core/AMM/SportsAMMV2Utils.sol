@@ -7,6 +7,11 @@ import "../../interfaces/ISportsAMMV2LiquidityPool.sol";
 import "@thales-dao/contracts/contracts/interfaces/IMultiCollateralOnOffRamp.sol";
 import "@thales-dao/contracts/contracts/interfaces/IReferrals.sol";
 
+// Local interface to cast collateralSupported as view
+interface IViewMultiCollateralOnOffRamp {
+    function collateralSupported(address collateral) external view returns (bool);
+}
+
 /// @title SportsAMMV2 Utils - stateless helper for offloading computation from SportsAMMV2
 /// @author danijel
 contract SportsAMMV2Utils {
@@ -15,6 +20,13 @@ contract SportsAMMV2Utils {
     error InvalidPosition();
     error ZeroAmount();
     error IllegalInputAmounts();
+    error InsufficientAllowance();
+    error LpCollateralPriceZero();
+    error OnRampNotSupported();
+    error CollateralNotSupported();
+    error LowBuyIn();
+    error ExceededMaxOdds();
+    error ExceededMaxSize();
 
     struct TradeProcessingResult {
         uint _totalQuote;
@@ -223,13 +235,20 @@ contract SportsAMMV2Utils {
         uint numOfMarkets = _tradeData.length;
         uint maxSupportedOdds = _params._riskManager.maxSupportedOdds();
 
-        if (numOfMarkets == 1) {
-            uint legOdd = _tradeData[0].odds[_tradeData[0].position];
-            uint boosted = _applyBonusToOdd(legOdd, _calc._addedPayoutPercentage);
-            if (boosted < maxSupportedOdds) boosted = maxSupportedOdds;
-            result._totalQuote = boosted;
+        if (_calc._isSGP) {
+            uint expectedQuote = _divWithDecimals(_calc._buyInAmount, _calc._expectedPayout);
+            result._totalQuote =
+                (expectedQuote * ONE) /
+                ((ONE + _calc._addedPayoutPercentage) - _mulWithDecimals(_calc._addedPayoutPercentage, expectedQuote));
         } else {
-            result._totalQuote = _calculateLiveParlay(_tradeData, _calc, maxSupportedOdds);
+            if (numOfMarkets == 1) {
+                uint legOdd = _tradeData[0].odds[_tradeData[0].position];
+                uint boosted = _applyBonusToOdd(legOdd, _calc._addedPayoutPercentage);
+                if (boosted < maxSupportedOdds) boosted = maxSupportedOdds;
+                result._totalQuote = boosted;
+            } else {
+                result._totalQuote = _calculateLiveParlay(_tradeData, _calc, maxSupportedOdds);
+            }
         }
 
         result._payout = _divWithDecimals(_calc._buyInAmount, result._totalQuote);
@@ -453,6 +472,59 @@ contract SportsAMMV2Utils {
                 result.safeBoxTarget = _safeBoxPerCollateral != address(0) ? _safeBoxPerCollateral : _safeBox;
             }
         }
+    }
+
+    function checkTradeLimits(
+        address _requester,
+        uint _buyInAmount,
+        address _collateral,
+        uint _expectedQuote,
+        uint _ticketSize,
+        ISportsAMMV2 _sportsAMM
+    ) external view {
+        ISportsAMMV2RiskManager riskManager = _sportsAMM.riskManager();
+
+        if (_expectedQuote < riskManager.maxSupportedOdds()) revert ExceededMaxOdds();
+        if (_ticketSize > riskManager.maxTicketSize()) revert ExceededMaxSize();
+
+        address defaultCollateral = address(_sportsAMM.defaultCollateral());
+        address allowanceCollateral = _collateral == address(0) ? defaultCollateral : _collateral;
+
+        if (IERC20(allowanceCollateral).allowance(_requester, address(_sportsAMM)) < _buyInAmount)
+            revert InsufficientAllowance();
+
+        uint buyInAmountUSD;
+
+        if (_collateral == address(0) || _collateral == defaultCollateral) {
+            // Default collateral path (including address(0) case)
+            buyInAmountUSD = _buyInAmount;
+        } else {
+            // Non-default collateral path
+
+            // Check if direct liquidity pool exists for collateral
+            address lqPool = _sportsAMM.liquidityPoolForCollateral(_collateral);
+            if (lqPool != address(0)) {
+                uint collateralPriceInUSD = ISportsAMMV2LiquidityPool(lqPool).getCollateralPrice();
+                if (collateralPriceInUSD == 0) revert LpCollateralPriceZero();
+
+                buyInAmountUSD = _transformToUSD(
+                    _buyInAmount,
+                    collateralPriceInUSD,
+                    ISportsAMMV2Manager(_collateral).decimals(),
+                    ISportsAMMV2Manager(defaultCollateral).decimals()
+                );
+            } else {
+                // onramping path
+                IMultiCollateralOnOffRamp multiCollateralOnOffRamp = _sportsAMM.multiCollateralOnOffRamp();
+                if (address(multiCollateralOnOffRamp) == address(0)) revert OnRampNotSupported();
+                if (!IViewMultiCollateralOnOffRamp(address(multiCollateralOnOffRamp)).collateralSupported(_collateral))
+                    revert CollateralNotSupported();
+
+                buyInAmountUSD = multiCollateralOnOffRamp.getMinimumReceived(_collateral, _buyInAmount);
+            }
+        }
+
+        if (buyInAmountUSD < riskManager.minBuyInAmount()) revert LowBuyIn();
     }
 
     /* ========== PURE MATH HELPERS ========== */
