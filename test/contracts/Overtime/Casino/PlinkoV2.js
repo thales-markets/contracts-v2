@@ -410,4 +410,15 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			);
 		});
 	});
+
+	describe('VRF callback edge paths', () => {
+		it('onVrfFulfilled with unknown requestId is a silent no-op', async () => {
+			const { plinko, coreAddr } = ctx;
+			await ethers.provider.send('hardhat_impersonateAccount', [coreAddr]);
+			await ethers.provider.send('hardhat_setBalance', [coreAddr, '0x56BC75E2D63100000']);
+			const coreSigner = await ethers.getSigner(coreAddr);
+			await expect(plinko.connect(coreSigner).onVrfFulfilled(99999999n, [0n])).to.not.be.reverted;
+			await ethers.provider.send('hardhat_stopImpersonatingAccount', [coreAddr]);
+		});
+	});
 });

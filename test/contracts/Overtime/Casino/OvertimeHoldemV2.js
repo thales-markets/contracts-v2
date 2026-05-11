@@ -1145,5 +1145,32 @@ describe('CasinoCoreV2 + OvertimeHoldem (Phase 2)', () => {
 			const base = await holdem.getBetBase(betId);
 			expect(base.outcome).to.equal(Outcome.DEALER_NOT_QUALIFIED);
 		});
+
+		it('Full House on 5 cards — AA bonus 30x (FH branch)', async () => {
+			// AA bonus evaluates the first 5 cards (player hole + flop). Need a 5-card Full House:
+			// AAA + KK.
+			const player5 = [CARD.cAs, CARD.cAh, CARD.cAd, CARD.cKs, CARD.cKh];
+			const dealer4 = [CARD.c2c, CARD.c3c, CARD.c4d, CARD.c5d];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 31n); // 1 + 30
+		});
+
+		it('Tie with premium ante mult (4oK shared) — exercises tie + premium branch', async () => {
+			// Both player and dealer hit AAAA-K via shared community. anteMult = 10 > 1 → fires
+			// the `anteMult > ANTE_MULT_DEFAULT` branch on the TIE path.
+			// Community = [As, Ah, Ad, Ac, Ks]. Player hole = 2s, 3h. Dealer hole = 4s, 5h.
+			// Both players' best 5 = AAAA + K → tie. anteMult(4oK) = 10 > 1.
+			const player5 = [CARD.c2s, CARD.c3h, CARD.cAs, CARD.cAh, CARD.cAd];
+			const dealer4 = [CARD.c4s, CARD.c5h, CARD.cAc, CARD.cKs];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const base = await holdem.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.TIE);
+			const payouts = await holdem.getBetPayouts(betId);
+			// On tie with premium: antePayout = ante + ante * anteMult = ante * 11
+			expect(payouts.antePayout).to.equal(MIN_USDC_BET * 11n);
+		});
 	});
 });

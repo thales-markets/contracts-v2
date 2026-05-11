@@ -510,4 +510,34 @@ describe('CasinoCoreV2 + Keno', () => {
 			);
 		});
 	});
+
+	describe('placeBet + VRF callback edge paths', () => {
+		it('sets referrer on placeBet when referrer != 0', async () => {
+			const { keno, usdcAddr, player, owner, core } = ctx;
+			const Mock = await ethers.getContractFactory('MockReferrals');
+			const refContract = await Mock.deploy();
+			const refAddr = await refContract.getAddress();
+			await core
+				.connect(owner)
+				.setAddresses(
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					refAddr
+				);
+			const referrer = ethers.Wallet.createRandom().address;
+			await keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [5, 10, 15], referrer);
+			expect(await refContract.referrals(player.address)).to.equal(referrer);
+		});
+
+		it('onVrfFulfilled with unknown requestId is a silent no-op', async () => {
+			const { keno, coreAddr } = ctx;
+			await ethers.provider.send('hardhat_impersonateAccount', [coreAddr]);
+			await ethers.provider.send('hardhat_setBalance', [coreAddr, '0x56BC75E2D63100000']);
+			const coreSigner = await ethers.getSigner(coreAddr);
+			await expect(keno.connect(coreSigner).onVrfFulfilled(99999999n, [0n])).to.not.be.reverted;
+			await ethers.provider.send('hardhat_stopImpersonatingAccount', [coreAddr]);
+		});
+	});
 });
