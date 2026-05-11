@@ -38,6 +38,11 @@ contract ThreeCardPoker is
 
     uint256 public constant MIN_BET_USD = 3e18;
 
+    /// @notice After this long in PLAYER_TURN with no fold/play, the resolver role can
+    /// `adminForceFold` to release the ante-side reservation. Mitigates a bankroll-grief vector
+    /// where a user places a bet, lets VRF1 fulfill, then walks away.
+    uint256 public constant PLAYER_TURN_TIMEOUT = 24 hours;
+
     uint8 private constant DECK_SIZE = 52;
     uint8 private constant CARDS_PER_HAND = 3;
 
@@ -100,6 +105,7 @@ contract ThreeCardPoker is
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
+    error PlayerTurnTimeoutNotReached();
 
     /* ========== STRUCTS ========== */
 
@@ -122,6 +128,9 @@ contract ThreeCardPoker is
         uint256 pairPlusPayout;
         uint256 anteBonusPayout;
         uint256 anteAndPlayPayout;
+        // Bet placed with free-bet balance — stake (ante+PP at place, Play at play()) pulled
+        // from FreeBetsHolder. All settlements route through FBH; referrer payments suppressed
+        bool isFreeBet;
     }
 
     /* ========== STATE ========== */
@@ -159,6 +168,26 @@ contract ThreeCardPoker is
         uint256 pairPlusAmount,
         address referrer
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, anteAmount, pairPlusAmount, referrer, false);
+    }
+
+    /// @inheritdoc ICasinoThreeCardPoker
+    function placeBetWithFreeBet(
+        address collateral,
+        uint256 anteAmount,
+        uint256 pairPlusAmount,
+        address referrer
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, anteAmount, pairPlusAmount, referrer, true);
+    }
+
+    function _placeBet(
+        address collateral,
+        uint256 anteAmount,
+        uint256 pairPlusAmount,
+        address referrer,
+        bool isFreeBet
+    ) internal returns (uint256 betId, uint256 requestId) {
         if (anteAmount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
 
@@ -172,10 +201,14 @@ contract ThreeCardPoker is
             (MAX_PAYOUT_ANTE_MULT - 2) +
             core.getUsdValue(collateral, pairPlusAmount) *
             (MAX_PAYOUT_PAIR_PLUS_MULT - 1);
-        if (worstHouseProfitUsd > core.maxProfitUsd()) revert MaxProfitExceeded();
+        if (worstHouseProfitUsd > core.effectiveMaxProfitUsd(address(this))) revert MaxProfitExceeded();
 
-        // Pull Ante + Pair Plus from user via core (single approval target)
-        core.pullFromUser(msg.sender, collateral, anteAmount + pairPlusAmount);
+        // Pull Ante + Pair Plus — from FBH if free bet, else from user wallet (single approval target)
+        if (isFreeBet) {
+            core.useFreeBet(msg.sender, collateral, anteAmount + pairPlusAmount);
+        } else {
+            core.pullFromUser(msg.sender, collateral, anteAmount + pairPlusAmount);
+        }
 
         // Set referrer (no-op if zero / no referrals contract wired)
         if (referrer != address(0)) core.setReferrer(referrer, msg.sender);
@@ -198,6 +231,7 @@ contract ThreeCardPoker is
         b.requestId = requestId;
         b.status = BetStatus.AWAITING_DEAL;
         b.reservedAnteSide = anteAmount * MAX_PAYOUT_ANTE_MULT;
+        b.isFreeBet = isFreeBet;
 
         requestIdToBetId[requestId] = betId;
         userBetIds[msg.sender].push(betId);
@@ -210,7 +244,21 @@ contract ThreeCardPoker is
     function fold(uint256 betId) external override nonReentrant {
         Bet storage b = bets[betId];
         _requireOwnedPlayerTurn(b);
+        _doFold(betId, b);
+    }
 
+    /// @notice Operator force-fold for a bet stuck in PLAYER_TURN beyond `PLAYER_TURN_TIMEOUT`.
+    /// Treats the bet as a fold (ante forfeit) so the ante-side reservation is released and the
+    /// bankroll isn't grief-locked by an abandoned mid-game bet. PP already settled in VRF1.
+    function adminForceFold(uint256 betId) external override nonReentrant onlyResolver {
+        Bet storage b = bets[betId];
+        if (b.status == BetStatus.NONE) revert BetNotFound();
+        if (b.status != BetStatus.PLAYER_TURN) revert InvalidBetStatus();
+        if (block.timestamp < b.lastRequestAt + PLAYER_TURN_TIMEOUT) revert PlayerTurnTimeoutNotReached();
+        _doFold(betId, b);
+    }
+
+    function _doFold(uint256 betId, Bet storage b) internal {
         // Release ante-side reservation; ante itself stays in bankroll (forfeit)
         core.releaseReservation(b.collateral, b.reservedAnteSide);
         b.reservedAnteSide = 0;
@@ -219,8 +267,10 @@ contract ThreeCardPoker is
         // Pair Plus has its own settlement already recorded in VRF1 fulfill
         core.recordSettlement(b.collateral, b.anteAmount, 0);
 
-        // Best-effort referrer payout (non-free-bet only)
-        core.payReferrer(b.user, b.collateral, b.anteAmount);
+        // Best-effort referrer payout (skipped on free bets — user lost no real funds)
+        if (!b.isFreeBet) {
+            core.payReferrer(b.user, b.collateral, b.anteAmount);
+        }
 
         b.status = BetStatus.RESOLVED;
         b.outcome = Outcome.FOLDED;
@@ -235,8 +285,13 @@ contract ThreeCardPoker is
         Bet storage b = bets[betId];
         _requireOwnedPlayerTurn(b);
 
-        // Pull Play stake (= Ante) from user via core
-        core.pullFromUser(b.user, b.collateral, b.anteAmount);
+        // Pull Play stake (= Ante). Free-bet runs draw the play stake from FBH too; if the
+        // remaining FBH balance is insufficient the call reverts and the user must fold instead
+        if (b.isFreeBet) {
+            core.useFreeBet(b.user, b.collateral, b.anteAmount);
+        } else {
+            core.pullFromUser(b.user, b.collateral, b.anteAmount);
+        }
 
         requestId = core.requestRandomWords(1);
         b.requestId = requestId;
@@ -269,9 +324,16 @@ contract ThreeCardPoker is
     function _cancelBet(uint256 betId, bool adminCancelled) internal {
         Bet storage b = bets[betId];
 
-        // Refund: anything we pulled in. AWAITING_DEAL → ante + pairPlus; AWAITING_RESOLVE → also Play stake.
-        uint256 refund = b.anteAmount + b.pairPlusAmount;
-        if (b.status == BetStatus.AWAITING_RESOLVE) refund += b.anteAmount;
+        // Refund: stakes still owed to the user.
+        // AWAITING_DEAL → ante + pairPlus (PP not yet settled).
+        // AWAITING_RESOLVE → ante + Play stake (PP already settled in VRF1; do NOT refund pp again
+        // or the user double-banks the pp stake on a winning PP / recovers a lost pp on a losing PP).
+        uint256 refund = b.anteAmount;
+        if (b.status == BetStatus.AWAITING_DEAL) {
+            refund += b.pairPlusAmount;
+        } else {
+            refund += b.anteAmount;
+        }
 
         // Release reservation: ante-side still pending; pair-plus reservation already released on
         // VRF1 fulfill if status == AWAITING_RESOLVE; if AWAITING_DEAL, both legs still reserved.
@@ -280,10 +342,14 @@ contract ThreeCardPoker is
         b.reservedAnteSide = 0;
         core.releaseReservation(b.collateral, reservationToRelease);
 
-        // Refund stakes
-        core.payOut(b.user, b.collateral, refund, false, refund);
+        // Refund stakes — routes back to FBH if this was a free bet (credits user's free-bet
+        // balance via confirmCasinoBetResolved, exercised == stake → credit branch)
+        core.payOut(b.user, b.collateral, refund, b.isFreeBet, refund);
 
-        b.totalPayout = refund;
+        // `+=` instead of `=`: in AWAITING_RESOLVE, b.totalPayout already holds the PP payout
+        // recorded by VRF1; we want the FE-visible total to reflect both. From AWAITING_DEAL the
+        // prior value is 0, so the result is identical to `=`.
+        b.totalPayout += refund;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
         emit BetCancelled(betId, b.user, refund, adminCancelled);
@@ -327,7 +393,7 @@ contract ThreeCardPoker is
             // Release pair-plus side reservation in full (whether won or lost)
             core.releaseReservation(b.collateral, b.pairPlusAmount * MAX_PAYOUT_PAIR_PLUS_MULT);
             if (ppPayout > 0) {
-                core.payOut(b.user, b.collateral, ppPayout, false, b.pairPlusAmount);
+                core.payOut(b.user, b.collateral, ppPayout, b.isFreeBet, b.pairPlusAmount);
             }
             // Settlement accounting for Pair Plus leg
             core.recordSettlement(b.collateral, b.pairPlusAmount, ppPayout);
@@ -362,11 +428,12 @@ contract ThreeCardPoker is
         b.reservedAnteSide = 0;
 
         if (totalSideAPayout > 0) {
-            core.payOut(b.user, b.collateral, totalSideAPayout, false, stakeOut);
+            core.payOut(b.user, b.collateral, totalSideAPayout, b.isFreeBet, stakeOut);
         }
         core.recordSettlement(b.collateral, stakeOut, totalSideAPayout);
 
-        if (totalSideAPayout < stakeOut) {
+        // Skip referrer payment on free bets — user lost no real funds, so no referral fee
+        if (totalSideAPayout < stakeOut && !b.isFreeBet) {
             core.payReferrer(b.user, b.collateral, stakeOut - totalSideAPayout);
         }
 

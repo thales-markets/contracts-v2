@@ -286,7 +286,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 
 		it('deregisterGame reverts when reservations exist', async () => {
 			const { core, plinko, plinkoAddr, player, usdcAddr } = ctx;
-			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 8, 0, ethers.ZeroAddress);
+			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
 			await expect(core.deregisterGame(plinkoAddr)).to.be.revertedWithCustomError(
 				core,
 				'GameHasReservations'
@@ -322,45 +322,42 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 		});
 
 		it('setCollateralConfig adds new collateral to enumerable list; remove removes from list', async () => {
-			const { core, riskManager } = ctx;
+			const { core } = ctx;
 			const before = await core.getSupportedCollaterals();
 			expect(before.length).to.equal(3); // usdc, weth, over
 
 			const fake = ethers.Wallet.createRandom().address;
 			const KEY = ethers.encodeBytes32String('XYZ');
-			await core.connect(riskManager).setCollateralConfig(fake, KEY, true);
+			await core.setCollateralConfig(fake, KEY, true);
 			const afterAdd = await core.getSupportedCollaterals();
 			expect(afterAdd.length).to.equal(4);
 			expect(afterAdd).to.include(fake);
 
 			// Re-set with same isSupported=true → no duplicate add
-			await core.connect(riskManager).setCollateralConfig(fake, KEY, true);
+			await core.setCollateralConfig(fake, KEY, true);
 			expect((await core.getSupportedCollaterals()).length).to.equal(4);
 
 			// Remove
-			await core.connect(riskManager).setCollateralConfig(fake, KEY, false);
+			await core.setCollateralConfig(fake, KEY, false);
 			const afterRemove = await core.getSupportedCollaterals();
 			expect(afterRemove.length).to.equal(3);
 			expect(afterRemove).to.not.include(fake);
 
 			// Re-set with isSupported=false again → no underflow
-			await expect(core.connect(riskManager).setCollateralConfig(fake, KEY, false)).to.not.be
-				.reverted;
+			await expect(core.setCollateralConfig(fake, KEY, false)).to.not.be.reverted;
 			expect((await core.getSupportedCollaterals()).length).to.equal(3);
 		});
 
 		it('getSupportedCollaterals reflects setCollateralConfig changes (swap-and-pop ordering)', async () => {
-			const { core, riskManager } = ctx;
+			const { core } = ctx;
 			const a = ethers.Wallet.createRandom().address;
 			const b = ethers.Wallet.createRandom().address;
-			await core.connect(riskManager).setCollateralConfig(a, ethers.encodeBytes32String('A'), true);
-			await core.connect(riskManager).setCollateralConfig(b, ethers.encodeBytes32String('B'), true);
+			await core.setCollateralConfig(a, ethers.encodeBytes32String('A'), true);
+			await core.setCollateralConfig(b, ethers.encodeBytes32String('B'), true);
 			let list = await core.getSupportedCollaterals();
 			expect(list.length).to.equal(5);
 			// Remove a (mid-list) → swap-and-pop puts b in a's slot
-			await core
-				.connect(riskManager)
-				.setCollateralConfig(a, ethers.encodeBytes32String('A'), false);
+			await core.setCollateralConfig(a, ethers.encodeBytes32String('A'), false);
 			list = await core.getSupportedCollaterals();
 			expect(list).to.not.include(a);
 			expect(list).to.include(b);
@@ -384,31 +381,34 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			await expect(ctx.core.connect(ctx.player).setGamePaused(ctx.plinkoAddr, true)).to.be.reverted;
 		});
 
-		it('risk-manager can setMaxNetLossPerGameUsd', async () => {
-			const { core, plinkoAddr, riskManager } = ctx;
-			await expect(core.connect(riskManager).setMaxNetLossPerGameUsd(plinkoAddr, 555n))
+		it('owner can setMaxNetLossPerGameUsd', async () => {
+			const { core, plinkoAddr } = ctx;
+			await expect(core.setMaxNetLossPerGameUsd(plinkoAddr, 555n))
 				.to.emit(core, 'MaxNetLossPerGameUsdChanged')
 				.withArgs(plinkoAddr, 555n);
 			expect(await core.maxNetLossPerGameUsd(plinkoAddr)).to.equal(555n);
 		});
 
-		it('non-risk-manager cannot setMaxNetLossPerGameUsd', async () => {
+		it('non-owner (incl. risk-manager) cannot setMaxNetLossPerGameUsd', async () => {
 			await expect(ctx.core.connect(ctx.player).setMaxNetLossPerGameUsd(ctx.plinkoAddr, 1n)).to.be
 				.reverted;
+			await expect(ctx.core.connect(ctx.riskManager).setMaxNetLossPerGameUsd(ctx.plinkoAddr, 1n)).to
+				.be.reverted;
 		});
 
-		it('risk-manager can setDefaultMaxNetLossPerGameUsd', async () => {
-			const { core, riskManager } = ctx;
-			await expect(core.connect(riskManager).setDefaultMaxNetLossPerGameUsd(2000n * ONE))
+		it('owner can setDefaultMaxNetLossPerGameUsd', async () => {
+			const { core } = ctx;
+			await expect(core.setDefaultMaxNetLossPerGameUsd(2000n * ONE))
 				.to.emit(core, 'DefaultMaxNetLossPerGameUsdChanged')
 				.withArgs(2000n * ONE);
 			expect(await core.defaultMaxNetLossPerGameUsd()).to.equal(2000n * ONE);
 		});
 
 		it('rejects zero default max net loss', async () => {
-			await expect(
-				ctx.core.connect(ctx.riskManager).setDefaultMaxNetLossPerGameUsd(0)
-			).to.be.revertedWithCustomError(ctx.core, 'InvalidAmount');
+			await expect(ctx.core.setDefaultMaxNetLossPerGameUsd(0)).to.be.revertedWithCustomError(
+				ctx.core,
+				'InvalidAmount'
+			);
 		});
 
 		it('resetGameCircuitBreaker requires risk-manager', async () => {
@@ -430,43 +430,96 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 
 	describe('Risk + collateral + addresses + VRF setters', () => {
 		it('setRiskParams: pass nonzero updates, zero skips', async () => {
-			const { core, riskManager } = ctx;
-			await core.connect(riskManager).setRiskParams(7777n, 0);
+			const { core } = ctx;
+			await core.setRiskParams(7777n, 0);
 			expect(await core.maxProfitUsd()).to.equal(7777n);
 			expect(await core.cancelTimeout()).to.equal(CANCEL_TIMEOUT); // unchanged
-			await core.connect(riskManager).setRiskParams(0, 60);
+			await core.setRiskParams(0, 60);
 			expect(await core.maxProfitUsd()).to.equal(7777n); // unchanged
 			expect(await core.cancelTimeout()).to.equal(60n);
 		});
 
 		it('setRiskParams rejects cancelTimeout < min', async () => {
-			await expect(
-				ctx.core.connect(ctx.riskManager).setRiskParams(0, 5)
-			).to.be.revertedWithCustomError(ctx.core, 'InvalidAmount');
+			await expect(ctx.core.setRiskParams(0, 5)).to.be.revertedWithCustomError(
+				ctx.core,
+				'InvalidAmount'
+			);
 		});
 
-		it('non-risk-manager cannot setRiskParams', async () => {
+		it('non-owner (incl. risk-manager) cannot setRiskParams', async () => {
 			await expect(ctx.core.connect(ctx.player).setRiskParams(1n, 0)).to.be.reverted;
+			await expect(ctx.core.connect(ctx.riskManager).setRiskParams(1n, 0)).to.be.reverted;
+		});
+
+		it('setMaxProfitUsdOverride sets/clears the per-game override; effectiveMaxProfitUsd reflects it', async () => {
+			const { core, plinkoAddr } = ctx;
+			// Default: no override → effective = global
+			expect(await core.maxProfitUsdOverride(plinkoAddr)).to.equal(0n);
+			expect(await core.effectiveMaxProfitUsd(plinkoAddr)).to.equal(MAX_PROFIT_USD);
+
+			// Set override → effective = override
+			const overrideValue = 9999n * ONE;
+			await expect(core.setMaxProfitUsdOverride(plinkoAddr, overrideValue))
+				.to.emit(core, 'MaxProfitUsdOverrideChanged')
+				.withArgs(plinkoAddr, overrideValue);
+			expect(await core.maxProfitUsdOverride(plinkoAddr)).to.equal(overrideValue);
+			expect(await core.effectiveMaxProfitUsd(plinkoAddr)).to.equal(overrideValue);
+
+			// Clear with 0 → effective = global again
+			await core.setMaxProfitUsdOverride(plinkoAddr, 0);
+			expect(await core.maxProfitUsdOverride(plinkoAddr)).to.equal(0n);
+			expect(await core.effectiveMaxProfitUsd(plinkoAddr)).to.equal(MAX_PROFIT_USD);
+		});
+
+		it('setMaxProfitUsdOverride rejects zero address', async () => {
+			await expect(
+				ctx.core.setMaxProfitUsdOverride(ethers.ZeroAddress, 1n)
+			).to.be.revertedWithCustomError(ctx.core, 'InvalidAddress');
+		});
+
+		it('non-owner (incl. risk-manager) cannot setMaxProfitUsdOverride', async () => {
+			await expect(ctx.core.connect(ctx.player).setMaxProfitUsdOverride(ctx.plinkoAddr, 1n)).to.be
+				.reverted;
+			await expect(ctx.core.connect(ctx.riskManager).setMaxProfitUsdOverride(ctx.plinkoAddr, 1n)).to
+				.be.reverted;
+		});
+
+		it('effectiveMaxProfitUsd works for unregistered games too (returns global)', async () => {
+			// effectiveMaxProfitUsd is just a view that reads override-or-global. Not gated on
+			// registration — useful for the dapp to query before a game is wired up
+			const fake = ethers.Wallet.createRandom().address;
+			expect(await ctx.core.effectiveMaxProfitUsd(fake)).to.equal(MAX_PROFIT_USD);
+		});
+
+		it('per-game override actually loosens placeBet: Plinko 8-HIGH (29x) at $20 bet', async () => {
+			const { core, plinko, plinkoAddr, player, usdcAddr } = ctx;
+			// At $300 global, $20 × 28 = $560 worst case → fails. With $5000 override → passes
+			await core.setRiskParams(300n * ONE, 0);
+			const amount = 20n * USDC_UNIT;
+			await expect(
+				plinko.connect(player).placeBet(usdcAddr, amount, 2, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(plinko, 'MaxProfitExceeded');
+			await core.setMaxProfitUsdOverride(plinkoAddr, 5000n * ONE);
+			await expect(plinko.connect(player).placeBet(usdcAddr, amount, 2, ethers.ZeroAddress)).to.not
+				.be.reverted;
 		});
 
 		it('setCollateralConfig adds/removes collateral', async () => {
-			const { core, riskManager, owner } = ctx;
+			const { core } = ctx;
 			const NEW_KEY = ethers.encodeBytes32String('XYZ');
 			const fake = ethers.Wallet.createRandom().address;
-			await expect(core.connect(riskManager).setCollateralConfig(fake, NEW_KEY, true))
+			await expect(core.setCollateralConfig(fake, NEW_KEY, true))
 				.to.emit(core, 'CollateralConfigChanged')
 				.withArgs(fake, NEW_KEY, true);
 			expect(await core.supportedCollateral(fake)).to.be.true;
 			expect(await core.priceFeedKeyPerCollateral(fake)).to.equal(NEW_KEY);
-			await core.connect(riskManager).setCollateralConfig(fake, NEW_KEY, false);
+			await core.setCollateralConfig(fake, NEW_KEY, false);
 			expect(await core.supportedCollateral(fake)).to.be.false;
 		});
 
 		it('setCollateralConfig rejects zero address', async () => {
 			await expect(
-				ctx.core
-					.connect(ctx.riskManager)
-					.setCollateralConfig(ethers.ZeroAddress, ethers.ZeroHash, true)
+				ctx.core.setCollateralConfig(ethers.ZeroAddress, ethers.ZeroHash, true)
 			).to.be.revertedWithCustomError(ctx.core, 'InvalidAddress');
 		});
 
@@ -561,7 +614,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 		it('reverts when amount exceeds available (reserved blocks)', async () => {
 			const { core, owner, usdc, usdcAddr, plinko, player } = ctx;
 			// Reserve some bankroll via a placeBet
-			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 8, 2, ethers.ZeroAddress); // HIGH risk (29x reservation)
+			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 2, ethers.ZeroAddress); // HIGH risk (29x reservation)
 			const balance = await usdc.balanceOf(await core.getAddress());
 			const reserved = await core.reservedProfitPerCollateral(usdcAddr);
 			const available = balance - reserved;
@@ -755,7 +808,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			const fakeReferrer = ethers.Wallet.createRandom().address;
 			// placeBet should NOT revert despite broken referrals
 			await expect(
-				ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 8, 0, fakeReferrer)
+				ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, fakeReferrer)
 			).to.not.be.reverted;
 		});
 
@@ -763,7 +816,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			await pointAtBrokenReferrals();
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 8, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -798,7 +851,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 				);
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 8, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -812,6 +865,150 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [0x0fn]);
 			expect((await ctx.plinko.getBetBase(placed.args.betId)).status).to.equal(2);
 		});
+
+		it('payReferrer success path (working referrals + ERC20 transfer)', async () => {
+			// Wire a real MockReferrals, set a referrer + non-zero fee, and trigger a losing
+			// bet so payReferrer fires its success branch (lines 345-348)
+			const Mock = await ethers.getContractFactory('MockReferrals');
+			const refContract = await Mock.deploy();
+			const refContractAddr = await refContract.getAddress();
+			const referrer = ethers.Wallet.createRandom().address;
+			// Set a 1% referrer fee (1e16 in 1e18 precision)
+			await refContract.setReferrerFees(ethers.parseEther('0.01'), 0n, 0n);
+			await refContract.setReferrer(referrer, ctx.player.address);
+			await ctx.core
+				.connect(ctx.owner)
+				.setAddresses(
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					refContractAddr
+				);
+			const refBalBefore = await ctx.usdc.balanceOf(referrer);
+			// Plinko losing bet — payReferrer fires on (payout < amount)
+			const tx = await ctx.plinko
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.plinko.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [0x0fn]);
+			// Referrer got 1% of stake-loss
+			const refBalAfter = await ctx.usdc.balanceOf(referrer);
+			expect(refBalAfter).to.be.gt(refBalBefore);
+		});
+
+		it('payReferrer is no-op when Referrals returns address(0) for the user', async () => {
+			// Wire a MockReferrals but DO NOT set a referrer for this user → referrals(user) returns
+			// address(0) → hits line 337 (`if (referrer == address(0)) return;`). Trigger via a losing
+			// Plinko bet so the on-chain settlement call payReferrer fires naturally.
+			const Mock = await ethers.getContractFactory('MockReferrals');
+			const refContract = await Mock.deploy();
+			const refContractAddr = await refContract.getAddress();
+			await refContract.setReferrerFees(ethers.parseEther('0.01'), 0n, 0n);
+			await ctx.core
+				.connect(ctx.owner)
+				.setAddresses(
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					refContractAddr
+				);
+			const tx = await ctx.plinko
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.plinko.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await expect(ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [0x0fn])).to.not
+				.be.reverted;
+		});
+
+		it('payReferrer skips when referrerAmount rounds to zero', async () => {
+			// 1-wei referrer fee. stake * 1 / 1e18 == 0 for sub-1e18 stake-loss → hits line 346
+			// (`if (referrerAmount == 0) return;`). Plinko stake-loss is in 6-dec USDC units, so
+			// 3 USDC stake-loss = 3e6 * 1 / 1e18 = 0.
+			const Mock = await ethers.getContractFactory('MockReferrals');
+			const refContract = await Mock.deploy();
+			const refContractAddr = await refContract.getAddress();
+			const referrer = ethers.Wallet.createRandom().address;
+			await refContract.setReferrerFees(1n, 0n, 0n);
+			await refContract.setReferrer(referrer, ctx.player.address);
+			await ctx.core
+				.connect(ctx.owner)
+				.setAddresses(
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					refContractAddr
+				);
+			const tx = await ctx.plinko
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.plinko.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			const refBalBefore = await ctx.usdc.balanceOf(referrer);
+			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [0x0fn]);
+			// referrerAmount rounded to 0 → no transfer
+			expect(await ctx.usdc.balanceOf(referrer)).to.equal(refBalBefore);
+		});
+	});
+
+	describe('View helpers — gameInactiveReason AUTO_PAUSED + getCollateralPrice(usdc)', () => {
+		it('gameInactiveReason returns AUTO_PAUSED after circuit-breaker trip', async () => {
+			// Trip Plinko's auto-pause by lowering the net-loss threshold and playing a winning bet
+			const { core, plinko, plinkoAddr, player, usdcAddr, vrf, coreAddr } = ctx;
+			await core.setMaxNetLossPerGameUsd(plinkoAddr, ethers.parseEther('1'));
+			// Place a bet and resolve at the highest slot (1000x edge slot 0)
+			const tx = await plinko
+				.connect(player)
+				.placeBet(usdcAddr, 10n * USDC_UNIT, 0, ethers.ZeroAddress);
+			const receipt = await tx.wait();
+			const placed = receipt.logs
+				.map((l) => {
+					try {
+						return plinko.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			// Word 0x00 → slot 0 (top of paytable). Player wins big → tips the circuit breaker.
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [0n]);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.true;
+			expect(await core.gameInactiveReason(plinkoAddr)).to.equal(4); // AUTO_PAUSED
+		});
+
+		it('getCollateralPrice(usdc) returns 1e18 (the USDC fast-path)', async () => {
+			// Exercises line 645: `if (collateral == usdc) return ONE;`
+			const price = await ctx.core.getCollateralPrice(ctx.usdcAddr);
+			expect(price).to.equal(ethers.parseEther('1'));
+		});
 	});
 
 	describe('Circuit breaker bookkeeping', () => {
@@ -821,7 +1018,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 
 			const tx = await plinko
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, 8, 0, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {

@@ -23,7 +23,7 @@ import "../../interfaces/ICasinoGameCallback.sol";
 /// @title CasinoCoreV2
 /// @author Overtime
 /// @notice Singleton treasury and shared services for the V2 casino games (Three Card Poker,
-/// Overtime Hold'em, Plinko, Crash, Mines, Hi-Lo). Holds USDC/WETH/OVER liquidity, the VRF
+/// Overtime Hold'em, Plinko, Hi-Lo). Holds USDC/WETH/OVER liquidity, the VRF
 /// subscription configuration, the supported-collateral whitelist, and the free-bets / referrals
 /// wiring. Registered games call into core for funds movement, randomness, and settlement
 /// bookkeeping; core enforces a per-game cumulative-net-loss circuit breaker that auto-pauses
@@ -115,11 +115,6 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     mapping(address => bool) public override supportedCollateral;
     mapping(address => bytes32) public priceFeedKeyPerCollateral;
 
-    // --- enumerable collateral list (so deregisterGame can check reservations across all
-    // configured collaterals, not just the canonical 3). Maintained by setCollateralConfig
-    address[] private _supportedCollateralsList;
-    mapping(address => uint256) private _supportedCollateralIndex;
-
     // --- per-collateral aggregate reservation across all games ---
     mapping(address => uint) public override reservedProfitPerCollateral;
 
@@ -145,10 +140,23 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     // --- VRF dispatch ---
     mapping(uint256 => address) public requestIdToGame;
 
-    // --- forward-compat storage gap. Reduced from 40 → 38 when `_supportedCollateralsList`
-    // and `_supportedCollateralIndex` were added (they consume 2 slots from the gap). Existing
-    // upgrades remain layout-compatible because the new slots come BEFORE the gap
-    uint256[38] private __gap;
+    // --- enumerable collateral list (so deregisterGame can check reservations across all
+    // configured collaterals, not just the canonical 3). Maintained by setCollateralConfig.
+    // Placed here (after `requestIdToGame`) rather than alongside `supportedCollateral` to
+    // preserve storage layout compatibility with the original v2 deploy
+    address[] private _supportedCollateralsList;
+    mapping(address => uint256) private _supportedCollateralIndex;
+
+    // --- per-game override of the global `maxProfitUsd` cap. 0 = no override (fall back to
+    // global). Set via `setMaxProfitUsdOverride`. Read via `effectiveMaxProfitUsd(game)` from
+    // games at placeBet time. Lets V2 keep a single treasury while letting risk vary across games
+    // with very different worst-case payout structures (e.g. HiLo 25x vs Hold'em 102x ante)
+    mapping(address => uint256) public override maxProfitUsdOverride;
+
+    // --- forward-compat storage gap. Reduced from 40 → 37 when `_supportedCollateralsList`,
+    // `_supportedCollateralIndex`, and `maxProfitUsdOverride` were appended. Slots come AFTER all
+    // pre-existing variables so upgrades from the original v2 deploy remain layout-compatible
+    uint256[37] private __gap;
 
     /* ========== INITIALIZER ========== */
 
@@ -455,21 +463,21 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
 
     /// @notice Sets a per-game override for the circuit-breaker threshold. Pass 0 to revert to
     /// the default
-    function setMaxNetLossPerGameUsd(address game, uint256 value) external onlyRiskManager {
+    function setMaxNetLossPerGameUsd(address game, uint256 value) external onlyOwner {
         maxNetLossPerGameUsd[game] = value;
         emit MaxNetLossPerGameUsdChanged(game, value);
     }
 
     /// @notice Sets the default per-game circuit-breaker threshold applied to any game without
     /// an override
-    function setDefaultMaxNetLossPerGameUsd(uint256 value) external onlyRiskManager {
+    function setDefaultMaxNetLossPerGameUsd(uint256 value) external onlyOwner {
         if (value == 0) revert InvalidAmount();
         defaultMaxNetLossPerGameUsd = value;
         emit DefaultMaxNetLossPerGameUsdChanged(value);
     }
 
     /// @notice Updates risk params. Pass 0 on a field to leave it untouched
-    function setRiskParams(uint _maxProfitUsd, uint _cancelTimeout) external onlyRiskManager {
+    function setRiskParams(uint _maxProfitUsd, uint _cancelTimeout) external onlyOwner {
         if (_maxProfitUsd != 0) maxProfitUsd = _maxProfitUsd;
         if (_cancelTimeout != 0) {
             if (_cancelTimeout < MIN_CANCEL_TIMEOUT) revert InvalidAmount();
@@ -478,10 +486,28 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         emit RiskParamsChanged(_maxProfitUsd, _cancelTimeout);
     }
 
+    /// @notice Sets a per-game override of the global `maxProfitUsd`. Pass 0 to clear the
+    /// override and fall back to the global value. Lets the risk manager tune the per-bet
+    /// profit cap per game without affecting others — useful when games have very different
+    /// worst-case payout multipliers
+    function setMaxProfitUsdOverride(address game, uint256 value) external onlyOwner {
+        if (game == address(0)) revert InvalidAddress();
+        maxProfitUsdOverride[game] = value;
+        emit MaxProfitUsdOverrideChanged(game, value);
+    }
+
+    /// @notice Returns the effective per-bet profit cap for `game`: the override if set,
+    /// otherwise the global `maxProfitUsd`. Games should call this (not `maxProfitUsd()`) at
+    /// placeBet to enforce their cap
+    function effectiveMaxProfitUsd(address game) external view override returns (uint256) {
+        uint256 override_ = maxProfitUsdOverride[game];
+        return override_ == 0 ? maxProfitUsd : override_;
+    }
+
     /// @notice Adds, removes, or re-keys a collateral. Both `currencyKey` and `isSupported` are
     /// always written — pass current values for fields you don't want to change. Also maintains
     /// the enumerable collateral list (`_supportedCollateralsList`) used by `deregisterGame`
-    function setCollateralConfig(address collateral, bytes32 currencyKey, bool isSupported) external onlyRiskManager {
+    function setCollateralConfig(address collateral, bytes32 currencyKey, bool isSupported) external onlyOwner {
         if (collateral == address(0)) revert InvalidAddress();
         bool wasSupported = supportedCollateral[collateral];
         supportedCollateral[collateral] = isSupported;

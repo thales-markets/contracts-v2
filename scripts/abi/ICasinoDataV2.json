@@ -2,158 +2,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getCrashFullRecord",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "betId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "collateral",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "placedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "resolvedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "targetMultiplierE18",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "crashPointE18",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "won",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct ICasinoDataV2.CrashFullRecord",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "betIds",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "getCrashFullRecords",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "betId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "collateral",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "placedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "resolvedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "targetMultiplierE18",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "crashPointE18",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "won",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct ICasinoDataV2.CrashFullRecord[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "game",
         "type": "address"
@@ -276,7 +124,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "currentCard",
+            "name": "lastCard",
             "type": "uint8"
           },
           {
@@ -367,7 +215,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "currentCard",
+            "name": "lastCard",
             "type": "uint8"
           },
           {
@@ -407,7 +255,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getMinesFullRecord",
+    "name": "getKenoFullRecord",
     "outputs": [
       {
         "components": [
@@ -453,31 +301,31 @@
           },
           {
             "internalType": "uint8",
-            "name": "outcome",
+            "name": "picksCount",
             "type": "uint8"
           },
           {
             "internalType": "uint8",
-            "name": "mineCount",
+            "name": "hits",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
-            "name": "safeCount",
-            "type": "uint8"
+            "internalType": "uint128",
+            "name": "picksMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "revealedMask",
-            "type": "uint32"
+            "internalType": "uint128",
+            "name": "drawnMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "mineMask",
-            "type": "uint32"
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.MinesFullRecord",
+        "internalType": "struct ICasinoDataV2.KenoFullRecord",
         "name": "",
         "type": "tuple"
       }
@@ -493,7 +341,7 @@
         "type": "uint256[]"
       }
     ],
-    "name": "getMinesFullRecords",
+    "name": "getKenoFullRecords",
     "outputs": [
       {
         "components": [
@@ -539,33 +387,52 @@
           },
           {
             "internalType": "uint8",
-            "name": "outcome",
+            "name": "picksCount",
             "type": "uint8"
           },
           {
             "internalType": "uint8",
-            "name": "mineCount",
+            "name": "hits",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
-            "name": "safeCount",
-            "type": "uint8"
+            "internalType": "uint128",
+            "name": "picksMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "revealedMask",
-            "type": "uint32"
+            "internalType": "uint128",
+            "name": "drawnMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "mineMask",
-            "type": "uint32"
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.MinesFullRecord[]",
+        "internalType": "struct ICasinoDataV2.KenoFullRecord[]",
         "name": "",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ICasinoDataV2.GameV2",
+        "name": "game",
+        "type": "uint8"
+      }
+    ],
+    "name": "getNextBetId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -827,11 +694,6 @@
           },
           {
             "internalType": "uint8",
-            "name": "rows",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8",
             "name": "risk",
             "type": "uint8"
           },
@@ -908,11 +770,6 @@
           },
           {
             "internalType": "uint8",
-            "name": "rows",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8",
             "name": "risk",
             "type": "uint8"
           },
@@ -939,7 +796,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "offset",
+        "name": "offsetPerGame",
         "type": "uint256"
       },
       {
@@ -948,10 +805,15 @@
         "type": "uint256"
       }
     ],
-    "name": "getRecentCrashRecords",
+    "name": "getRecentBetsAllGamesV2",
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "enum ICasinoDataV2.GameV2",
+            "name": "game",
+            "type": "uint8"
+          },
           {
             "internalType": "uint256",
             "name": "betId",
@@ -983,24 +845,14 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint256",
-            "name": "resolvedAt",
-            "type": "uint256"
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
           },
           {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "targetMultiplierE18",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "crashPointE18",
-            "type": "uint256"
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
           },
           {
             "internalType": "bool",
@@ -1008,9 +860,9 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct ICasinoDataV2.CrashFullRecord[]",
+        "internalType": "struct ICasinoDataV2.BetRecord[][]",
         "name": "",
-        "type": "tuple[]"
+        "type": "tuple[][]"
       }
     ],
     "stateMutability": "view",
@@ -1080,7 +932,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "currentCard",
+            "name": "lastCard",
             "type": "uint8"
           },
           {
@@ -1125,7 +977,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getRecentMinesRecords",
+    "name": "getRecentKenoRecords",
     "outputs": [
       {
         "components": [
@@ -1171,31 +1023,31 @@
           },
           {
             "internalType": "uint8",
-            "name": "outcome",
+            "name": "picksCount",
             "type": "uint8"
           },
           {
             "internalType": "uint8",
-            "name": "mineCount",
+            "name": "hits",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
-            "name": "safeCount",
-            "type": "uint8"
+            "internalType": "uint128",
+            "name": "picksMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "revealedMask",
-            "type": "uint32"
+            "internalType": "uint128",
+            "name": "drawnMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "mineMask",
-            "type": "uint32"
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.MinesFullRecord[]",
+        "internalType": "struct ICasinoDataV2.KenoFullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1364,11 +1216,6 @@
           {
             "internalType": "uint8",
             "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8",
-            "name": "rows",
             "type": "uint8"
           },
           {
@@ -1782,92 +1629,6 @@
         "type": "uint256"
       }
     ],
-    "name": "getUserCrashRecords",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "betId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "collateral",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "payout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "placedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "resolvedAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "targetMultiplierE18",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "crashPointE18",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "won",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct ICasinoDataV2.CrashFullRecord[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "offset",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "limit",
-        "type": "uint256"
-      }
-    ],
     "name": "getUserHiLoRecords",
     "outputs": [
       {
@@ -1919,7 +1680,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "currentCard",
+            "name": "lastCard",
             "type": "uint8"
           },
           {
@@ -1969,7 +1730,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getUserMinesRecords",
+    "name": "getUserKenoRecords",
     "outputs": [
       {
         "components": [
@@ -2015,31 +1776,31 @@
           },
           {
             "internalType": "uint8",
-            "name": "outcome",
+            "name": "picksCount",
             "type": "uint8"
           },
           {
             "internalType": "uint8",
-            "name": "mineCount",
+            "name": "hits",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
-            "name": "safeCount",
-            "type": "uint8"
+            "internalType": "uint128",
+            "name": "picksMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "revealedMask",
-            "type": "uint32"
+            "internalType": "uint128",
+            "name": "drawnMask",
+            "type": "uint128"
           },
           {
-            "internalType": "uint32",
-            "name": "mineMask",
-            "type": "uint32"
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.MinesFullRecord[]",
+        "internalType": "struct ICasinoDataV2.KenoFullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -2218,11 +1979,6 @@
           {
             "internalType": "uint8",
             "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8",
-            "name": "rows",
             "type": "uint8"
           },
           {

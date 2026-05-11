@@ -76,6 +76,16 @@ interface ICasinoOvertimeHoldem {
         address referrer
     ) external returns (uint256 betId, uint256 requestId);
 
+    /// @notice Places a Hold'em bet using the user's free-bet balance held in FreeBetsHolder.
+    /// Ante + AA Bonus are pulled from FBH. A subsequent `callBet()` also draws from FBH —
+    /// if balance is insufficient at call time, the call reverts and the user must fold instead
+    function placeBetWithFreeBet(
+        address collateral,
+        uint256 anteAmount,
+        uint256 aaBonusAmount,
+        address referrer
+    ) external returns (uint256 betId, uint256 requestId);
+
     function fold(uint256 betId) external;
 
     function callBet(uint256 betId) external returns (uint256 requestId);
@@ -83,6 +93,10 @@ interface ICasinoOvertimeHoldem {
     function cancelBet(uint256 betId) external;
 
     function adminCancelBet(uint256 betId) external;
+
+    /// @notice Operator force-fold for a bet stuck in PLAYER_TURN beyond `PLAYER_TURN_TIMEOUT`.
+    /// Releases the ante-side reservation by treating the bet as a fold (ante forfeit).
+    function adminForceFold(uint256 betId) external;
 
     /* ========== VIEWS ========== */
 

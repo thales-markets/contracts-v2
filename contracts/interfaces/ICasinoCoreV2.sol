@@ -31,6 +31,7 @@ interface ICasinoCoreV2 {
 
     event CollateralConfigChanged(address indexed collateral, bytes32 currencyKey, bool supported);
     event RiskParamsChanged(uint256 maxProfitUsd, uint256 cancelTimeout);
+    event MaxProfitUsdOverrideChanged(address indexed game, uint256 value);
     event AddressesChanged(
         address manager,
         address priceFeed,
@@ -156,6 +157,10 @@ interface ICasinoCoreV2 {
     function freeBetsHolder() external view returns (address);
 
     function maxProfitUsd() external view returns (uint256);
+
+    function maxProfitUsdOverride(address game) external view returns (uint256);
+
+    function effectiveMaxProfitUsd(address game) external view returns (uint256);
 
     function cancelTimeout() external view returns (uint256);
 

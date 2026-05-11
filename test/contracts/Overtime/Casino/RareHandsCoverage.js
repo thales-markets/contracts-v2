@@ -117,9 +117,7 @@ async function deployStack() {
 		const c = await upgrades.deployProxy(Factory, [], { initializer: false });
 		await c.initialize(owner.address, coreAddr, managerAddr);
 		await core.registerGame(await c.getAddress());
-		await core
-			.connect(riskManager)
-			.setMaxNetLossPerGameUsd(await c.getAddress(), ethers.parseEther('100000'));
+		await core.setMaxNetLossPerGameUsd(await c.getAddress(), ethers.parseEther('100000'));
 		return c;
 	}
 	const tcp = await deployGame('ThreeCardPoker');

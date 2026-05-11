@@ -278,6 +278,19 @@
         "type": "uint256"
       }
     ],
+    "name": "adminForceFold",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
     "name": "callBet",
     "outputs": [
       {
@@ -514,6 +527,45 @@
       }
     ],
     "name": "placeBet",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "anteAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "aaBonusAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      }
+    ],
+    "name": "placeBetWithFreeBet",
     "outputs": [
       {
         "internalType": "uint256",

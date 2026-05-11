@@ -3,7 +3,6 @@
  *  - Core: getCollateralPrice + getUsdValue for WETH/OVER (non-USDC branch)
  *  - TCP: tie-break paths inside _compareHands
  *  - Hold'em: AA Bonus Pair-of-Aces special branch, dealer-non-qualify HC return
- *  - Mines: revealTile when status != ACTIVE
  *  - HiLo: edge ranks (rank 0, rank 12)
  */
 
@@ -116,14 +115,11 @@ async function deployFullStack() {
 		const c = await upgrades.deployProxy(Factory, [], { initializer: false });
 		await c.initialize(owner.address, coreAddr, managerAddr);
 		await core.registerGame(await c.getAddress());
-		await core
-			.connect(riskManager)
-			.setMaxNetLossPerGameUsd(await c.getAddress(), ethers.parseEther('100000'));
+		await core.setMaxNetLossPerGameUsd(await c.getAddress(), ethers.parseEther('100000'));
 		return c;
 	}
 	const tcp = await deployGame('ThreeCardPoker');
 	const holdem = await deployGame('OvertimeHoldem');
-	const mines = await deployGame('Mines');
 	const hilo = await deployGame('HiLo');
 
 	await usdc.mintForUser(owner.address);
@@ -151,8 +147,6 @@ async function deployFullStack() {
 		tcpAddr: await tcp.getAddress(),
 		holdem,
 		holdemAddr: await holdem.getAddress(),
-		mines,
-		minesAddr: await mines.getAddress(),
 		hilo,
 		hiloAddr: await hilo.getAddress(),
 	};
@@ -194,7 +188,7 @@ describe('Final coverage gaps', () => {
 		it('getCollateralPrice reverts when price feed key missing', async () => {
 			// Add a new collateral with empty key
 			const fake = ethers.Wallet.createRandom().address;
-			await ctx.core.connect(ctx.riskManager).setCollateralConfig(fake, ethers.ZeroHash, true);
+			await ctx.core.setCollateralConfig(fake, ethers.ZeroHash, true);
 			await expect(ctx.core.getCollateralPrice(fake)).to.be.revertedWithCustomError(
 				ctx.core,
 				'InvalidCollateral'
@@ -206,7 +200,7 @@ describe('Final coverage gaps', () => {
 			// rather than returning 0. The intent is: a missing/invalid price stops the read
 			const fake = ethers.Wallet.createRandom().address;
 			const unknownKey = ethers.encodeBytes32String('UNKNOWN');
-			await ctx.core.connect(ctx.riskManager).setCollateralConfig(fake, unknownKey, true);
+			await ctx.core.setCollateralConfig(fake, unknownKey, true);
 			await expect(ctx.core.getCollateralPrice(fake)).to.be.reverted;
 		});
 	});
@@ -400,60 +394,13 @@ describe('Final coverage gaps', () => {
 		});
 	});
 
-	describe('Mines: revealTile gating', () => {
-		it('revealTile reverts when status is RESOLVED (already cashed out)', async () => {
-			const tx = await ctx.mines
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 3, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.mines.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [0xdeadbeefn]);
-			// Find a safe tile to reveal
-			const mineMask = await ctx.mines.getMineMask(placed.args.betId);
-			let safeIdx = -1;
-			for (let i = 0; i < 25; i++) {
-				if ((Number(mineMask) & (1 << i)) === 0) {
-					safeIdx = i;
-					break;
-				}
-			}
-			await ctx.mines.connect(ctx.player).revealTile(placed.args.betId, safeIdx);
-			await ctx.mines.connect(ctx.player).cashout(placed.args.betId);
-			// Now revealTile after cashout should revert
-			await expect(
-				ctx.mines.connect(ctx.player).revealTile(placed.args.betId, safeIdx + 1)
-			).to.be.revertedWithCustomError(ctx.mines, 'InvalidBetStatus');
-		});
-
-		it('revealTile reverts when called for non-existent bet', async () => {
-			await expect(
-				ctx.mines.connect(ctx.player).revealTile(99999n, 0)
-			).to.be.revertedWithCustomError(ctx.mines, 'BetNotFound');
-		});
-
-		it('multiplier formula returns max cap when safeCount > GRID_SIZE - mines', async () => {
-			// Edge: safeCount > 25 - mines is impossible in normal play but the helper checks it
-			// mineCount=25 isn't allowed (must be <25), so test the upper boundary
-			const mult = await ctx.mines.multiplierE18(24, 1);
-			expect(mult).to.be.gt(0n);
-		});
-	});
-
 	describe('Core: recordSettlement USD-conversion catch path', () => {
 		it('catches price-feed revert and emits SettlementUsdConversionFailed', async () => {
-			const { core, owner, riskManager } = ctx;
+			const { core, owner } = ctx;
 			// Add a fake collateral with a key that has no price feed entry
 			const fake = ethers.Wallet.createRandom().address;
 			const fakeKey = ethers.encodeBytes32String('NOPRICE');
-			await core.connect(riskManager).setCollateralConfig(fake, fakeKey, true);
+			await core.setCollateralConfig(fake, fakeKey, true);
 
 			// Register a fake game and impersonate it
 			const fakeGame = ethers.Wallet.createRandom().address;
@@ -498,39 +445,6 @@ describe('Final coverage gaps', () => {
 			await expect(
 				core.connect(game).payOut(ctx.player.address, usdcAddr, 100n, true /* isFreeBet */, 50n)
 			).to.emit(core, 'FreeBetConfirmFailed');
-		});
-	});
-
-	describe('HiLo: edge guesses + mid-cap', () => {
-		// Find a word giving rank 0 (deuce); then "lower" must revert
-		it('LOWER guess at rank-0 reverts with InvalidDirection', async () => {
-			let word;
-			for (let i = 0; i < 1000; i++) {
-				const w = BigInt('0x' + ethers.id('rank0-' + i).slice(2));
-				const card = Number(w % 52n);
-				if (Math.floor(card / 4) === 0) {
-					word = w;
-					break;
-				}
-			}
-			expect(word).to.not.be.undefined;
-			const tx = await ctx.hilo
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.hilo.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [word]);
-			await expect(
-				ctx.hilo.connect(ctx.player).guess(placed.args.betId, 1 /* LOWER */)
-			).to.be.revertedWithCustomError(ctx.hilo, 'InvalidDirection');
 		});
 	});
 });

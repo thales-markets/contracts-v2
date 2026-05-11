@@ -124,8 +124,84 @@ function findWord(predicate, maxAttempts = 50000) {
 	throw new Error('findWord: no match in ' + maxAttempts);
 }
 
+// Card encoding: card = suit*13 + (rank-2). Suits 0=♠,1=♥,2=♦,3=♣.
+const CARD = {
+	c2s: 0,
+	c3s: 1,
+	c4s: 2,
+	c5s: 3,
+	c6s: 4,
+	c7s: 5,
+	c8s: 6,
+	c9s: 7,
+	cTs: 8,
+	cJs: 9,
+	cQs: 10,
+	cKs: 11,
+	cAs: 12,
+	c2h: 13,
+	c3h: 14,
+	c4h: 15,
+	c5h: 16,
+	c6h: 17,
+	c7h: 18,
+	c8h: 19,
+	c9h: 20,
+	cTh: 21,
+	cJh: 22,
+	cQh: 23,
+	cKh: 24,
+	cAh: 25,
+	c2d: 26,
+	c3d: 27,
+	c4d: 28,
+	c5d: 29,
+	c6d: 30,
+	c7d: 31,
+	c8d: 32,
+	c9d: 33,
+	cTd: 34,
+	cJd: 35,
+	cQd: 36,
+	cKd: 37,
+	cAd: 38,
+	c2c: 39,
+	c3c: 40,
+	c4c: 41,
+	c5c: 42,
+	c6c: 43,
+	c7c: 44,
+	c8c: 45,
+	c9c: 46,
+	cTc: 47,
+	cJc: 48,
+	cQc: 49,
+	cKc: 50,
+	cAc: 51,
+};
+
+// Deterministically build the VRF word that makes _partialFisherYates yield targetCards in order
+// (within a deck constructed by filtering out `excluded` from the 52-card deck).
+function craftWord(targetCards, excluded = []) {
+	const excludeSet = new Set(excluded);
+	const deck = [];
+	for (let c = 0; c < DECK_SIZE; c++) if (!excludeSet.has(c)) deck.push(c);
+	let word = 0n;
+	for (let i = 0; i < targetCards.length; i++) {
+		const target = targetCards[i];
+		const pos = deck.indexOf(target);
+		if (pos < 0) throw new Error(`craftWord: target ${target} not in remaining deck`);
+		if (pos < i) throw new Error(`craftWord: target ${target} already drawn`);
+		const chunkVal = BigInt(pos - i);
+		if (chunkVal > 0xffffn) throw new Error('craftWord: chunkVal exceeds 16 bits');
+		word |= chunkVal << (BigInt(i) * 16n);
+		[deck[i], deck[pos]] = [deck[pos], deck[i]];
+	}
+	return word;
+}
+
 async function deployFixture() {
-	const [owner, riskManager, resolver, pauser, player, player2, referrer, freeBetsHolderStub] =
+	const [owner, riskManager, resolver, pauser, player, player2, referrer, daoSink] =
 		await ethers.getSigners();
 
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
@@ -154,6 +230,10 @@ async function deployFixture() {
 	const vrf = await VRF.deploy();
 	const vrfAddr = await vrf.getAddress();
 
+	const FBH = await ethers.getContractFactory('MockFreeBetsHolder');
+	const fbh = await FBH.deploy(daoSink.address);
+	const fbhAddr = await fbh.getAddress();
+
 	// CasinoCoreV2 (proxy)
 	const Core = await ethers.getContractFactory('CasinoCoreV2');
 	const core = await upgrades.deployProxy(Core, [], { initializer: false });
@@ -164,7 +244,7 @@ async function deployFixture() {
 			manager: managerAddr,
 			priceFeed: priceFeedAddr,
 			vrfCoordinator: vrfAddr,
-			freeBetsHolder: freeBetsHolderStub.address, // stub — unused while free-bet TCP is disabled
+			freeBetsHolder: fbhAddr,
 			referrals: ethers.ZeroAddress,
 		},
 		{
@@ -233,7 +313,9 @@ async function deployFixture() {
 		player,
 		player2,
 		referrer,
-		freeBetsHolderStub,
+		fbh,
+		fbhAddr,
+		daoSink,
 	};
 }
 
@@ -708,7 +790,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			await expect(tcp.connect(resolver).adminCancelBet(betId)).to.not.be.reverted;
 		});
 
-		it('cancel from AWAITING_RESOLVE refunds ante + pp + play stake', async () => {
+		it('cancel from AWAITING_RESOLVE refunds ante + play stake (PP already settled in VRF1)', async () => {
 			const { tcp, usdc, player } = ctx;
 			const ante = MIN_USDC_BET;
 			const pp = MIN_USDC_BET;
@@ -718,9 +800,58 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			await tcp.connect(player).play(betId); // moves to AWAITING_RESOLVE
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await tcp.connect(player).cancelBet(betId);
-			// Pair Plus high-card paid 0; refund = ante + pp + play = 3*ante (since pp == ante)
-			// Net: balance == balBefore (no PP gain, all stakes refunded)
-			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+			// PP was already settled in VRF1 (high-card → lost). Cancel refunds only ante + play
+			// stake. The PP stake stays with the bankroll (do NOT double-refund a settled side bet).
+			// Net: user loses pp.
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - pp);
+		});
+
+		it('adminForceFold releases reservation for stale PLAYER_TURN bet', async () => {
+			const { tcp, tcpAddr, core, resolver, player } = ctx;
+			const ante = MIN_USDC_BET;
+			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
+			const { betId } = await placeAndDeal(ctx, ante, 0n, word);
+			// Bet now in PLAYER_TURN; reservation = 9 * ante still held in core
+			const reservedBefore = await core.reservedProfitPerGame(tcpAddr, ctx.usdcAddr);
+			expect(reservedBefore).to.equal(9n * ante);
+			// Cannot fold-force before timeout
+			await expect(tcp.connect(resolver).adminForceFold(betId)).to.be.revertedWithCustomError(
+				tcp,
+				'PlayerTurnTimeoutNotReached'
+			);
+			// Non-resolver cannot call
+			await expect(tcp.connect(player).adminForceFold(betId)).to.be.revertedWithCustomError(
+				tcp,
+				'InvalidSender'
+			);
+			// Advance time and force-fold
+			await time.increase(24 * 60 * 60 + 1);
+			await tcp.connect(resolver).adminForceFold(betId);
+			expect(await core.reservedProfitPerGame(tcpAddr, ctx.usdcAddr)).to.equal(0n);
+			const base = await tcp.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.FOLDED);
+			expect(base.status).to.equal(BetStatus.RESOLVED);
+		});
+
+		it('adminForceFold rejects non-PLAYER_TURN bets', async () => {
+			const { tcp, resolver, player } = ctx;
+			// AWAITING_DEAL bet
+			const tx = await tcp
+				.connect(player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return tcp.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await expect(
+				tcp.connect(resolver).adminForceFold(placed.args.betId)
+			).to.be.revertedWithCustomError(tcp, 'InvalidBetStatus');
 		});
 	});
 
@@ -728,9 +859,9 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 
 	describe('Circuit breaker', () => {
 		it('auto-pauses game when net loss exceeds threshold', async () => {
-			const { tcp, tcpAddr, core, riskManager, player } = ctx;
+			const { tcp, tcpAddr, core, player } = ctx;
 			// Lower threshold for predictable trip
-			await core.connect(riskManager).setMaxNetLossPerGameUsd(tcpAddr, ethers.parseEther('5'));
+			await core.setMaxNetLossPerGameUsd(tcpAddr, ethers.parseEther('5'));
 			// Force player to win big: SF + ante + play
 			const dealWord = findWord(
 				(w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.STRAIGHT_FLUSH
@@ -757,7 +888,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 
 		it('risk-manager can reset circuit breaker', async () => {
 			const { tcp, tcpAddr, core, riskManager, player } = ctx;
-			await core.connect(riskManager).setMaxNetLossPerGameUsd(tcpAddr, ethers.parseEther('1'));
+			await core.setMaxNetLossPerGameUsd(tcpAddr, ethers.parseEther('1'));
 			// Trigger via a single big win
 			const dealWord = findWord(
 				(w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.STRAIGHT_FLUSH
@@ -859,6 +990,231 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			}
 			const recs = await data.getUserThreeCardPokerRecords(player.address, 0, 10);
 			expect(recs.length).to.equal(3);
+		});
+	});
+
+	describe('free bet (placeBetWithFreeBet)', () => {
+		async function fundFB(ctx, amount) {
+			const { fbh, fbhAddr, usdc, owner, player, usdcAddr } = ctx;
+			await usdc.mintForUser(owner.address);
+			await usdc.connect(owner).transfer(fbhAddr, amount);
+			await fbh.setBalance(player.address, usdcAddr, amount);
+		}
+
+		async function placeFreeAndDeal(ctx, ante, pp, dealWord) {
+			const { tcp, vrf, coreAddr, usdcAddr, player } = ctx;
+			const tx = await tcp
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddr, ante, pp, ethers.ZeroAddress);
+			const receipt = await tx.wait();
+			const placed = receipt.logs
+				.map((l) => {
+					try {
+						return tcp.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [dealWord]);
+			return placed.args.betId;
+		}
+
+		it('reverts on insufficient FBH balance', async () => {
+			const { tcp, usdcAddr, player } = ctx;
+			await expect(
+				tcp
+					.connect(player)
+					.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress)
+			).to.be.revertedWith('MockFBH: InsufficientBalance');
+		});
+
+		it('place-time: pulls (ante + PP) from FBH, does not touch wallet', async () => {
+			const { tcp, fbh, usdc, usdcAddr, player } = ctx;
+			await fundFB(ctx, MIN_USDC_BET * 2n);
+			const balBefore = await usdc.balanceOf(player.address);
+			await tcp
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
+		});
+
+		it('fold: ante consumed by treasury, no referrer payment, no payOut call', async () => {
+			const { tcp, fbh, usdc, usdcAddr, player } = ctx;
+			await fundFB(ctx, MIN_USDC_BET); // ante only
+			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
+			const balBefore = await usdc.balanceOf(player.address);
+			const betId = await placeFreeAndDeal(ctx, MIN_USDC_BET, 0n, word);
+			await tcp.connect(player).fold(betId);
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
+		});
+
+		it('play: pulls additional ante from FBH (forced fold if FBH balance insufficient)', async () => {
+			const { tcp, fbh, usdcAddr, player } = ctx;
+			// Fund only enough for ante at place + zero left for play
+			await fundFB(ctx, MIN_USDC_BET);
+			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
+			const betId = await placeFreeAndDeal(ctx, MIN_USDC_BET, 0n, word);
+			// Play needs another anteAmount — FBH balance is now 0 → reverts → user must fold
+			await expect(tcp.connect(player).play(betId)).to.be.revertedWith(
+				'MockFBH: InsufficientBalance'
+			);
+			// Fold path works
+			await tcp.connect(player).fold(betId);
+			const base = await tcp.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.FOLDED);
+		});
+
+		it('cancel from AWAITING_DEAL: refund credits FBH balance (reusable)', async () => {
+			const { tcp, fbh, usdcAddr, usdc, owner, player } = ctx;
+			const stake = MIN_USDC_BET * 2n;
+			await fundFB(ctx, stake);
+			const tx = await tcp
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return tcp.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await time.increase(Number(CANCEL_TIMEOUT) + 1);
+			await tcp.connect(player).cancelBet(placed.args.betId);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(stake);
+		});
+	});
+
+	describe('placeBet + VRF callback edge paths', () => {
+		it('sets referrer on placeBet when referrer != 0', async () => {
+			const Mock = await ethers.getContractFactory('MockReferrals');
+			const refContract = await Mock.deploy();
+			const refAddr = await refContract.getAddress();
+			await ctx.core
+				.connect(ctx.owner)
+				.setAddresses(
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					refAddr
+				);
+			const referrer = ethers.Wallet.createRandom().address;
+			await placeAndDeal(ctx, MIN_USDC_BET, 0n, 0xdeadbeefn, { referrer });
+			expect(await refContract.referrals(ctx.player.address)).to.equal(referrer);
+		});
+
+		it('onVrfFulfilled with unknown requestId is a silent no-op', async () => {
+			const { tcp, coreAddr } = ctx;
+			await ethers.provider.send('hardhat_impersonateAccount', [coreAddr]);
+			await ethers.provider.send('hardhat_setBalance', [coreAddr, '0x56BC75E2D63100000']);
+			const coreSigner = await ethers.getSigner(coreAddr);
+			await expect(tcp.connect(coreSigner).onVrfFulfilled(99999999n, [0n])).to.not.be.reverted;
+			await ethers.provider.send('hardhat_stopImpersonatingAccount', [coreAddr]);
+		});
+	});
+
+	describe('Paytable + tie-breaker coverage (crafted seeds)', () => {
+		async function playWith(player3, dealer3) {
+			const { tcp, vrf, coreAddr, usdcAddr, player } = ctx;
+			const tx = await tcp
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return tcp.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			const w1 = craftWord(player3);
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [w1]);
+			const tx2 = await tcp.connect(player).play(placed.args.betId);
+			const r2 = await tx2.wait();
+			const played = r2.logs
+				.map((l) => {
+					try {
+						return tcp.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'PlayChosen');
+			const w2 = craftWord(dealer3, player3);
+			await vrf.fulfillRandomWords(coreAddr, played.args.requestId, [w2]);
+			return placed.args.betId;
+		}
+
+		it('Straight Flush — pair plus 40x', async () => {
+			// Player 9-8-7 of spades = SF (top 9)
+			const player3 = [CARD.c9s, CARD.c8s, CARD.c7s];
+			// Dealer A-K-Q mixed = high card A → qualifies, loses to SF
+			const dealer3 = [CARD.cAh, CARD.cKd, CARD.cQc];
+			const { tcp } = ctx;
+			const betId = await playWith(player3, dealer3);
+			const payouts = await tcp.getBetPayouts(betId);
+			expect(payouts.pairPlusPayout).to.equal(MIN_USDC_BET * 41n); // 1 + 40
+			// Ante bonus on SF = 5
+			expect(payouts.anteBonusPayout).to.equal(MIN_USDC_BET * 5n);
+		});
+
+		it('Three of a Kind — ante bonus 4x + pair plus 30x', async () => {
+			const player3 = [CARD.cKs, CARD.cKh, CARD.cKd]; // KKK
+			const dealer3 = [CARD.cAh, CARD.cQd, CARD.cJc]; // AKQ-like high card; qualifies
+			const { tcp } = ctx;
+			const betId = await playWith(player3, dealer3);
+			const payouts = await tcp.getBetPayouts(betId);
+			expect(payouts.pairPlusPayout).to.equal(MIN_USDC_BET * 31n);
+			expect(payouts.anteBonusPayout).to.equal(MIN_USDC_BET * 4n);
+		});
+
+		it('Straight — ante bonus 1x + pair plus 6x', async () => {
+			const player3 = [CARD.c9s, CARD.c8h, CARD.c7d]; // 7-8-9 mixed = STRAIGHT
+			const dealer3 = [CARD.cAc, CARD.cKh, CARD.cQd]; // AKQ qualifies (high card)
+			const { tcp } = ctx;
+			const betId = await playWith(player3, dealer3);
+			const payouts = await tcp.getBetPayouts(betId);
+			expect(payouts.pairPlusPayout).to.equal(MIN_USDC_BET * 7n); // 1 + 6
+			expect(payouts.anteBonusPayout).to.equal(MIN_USDC_BET * 1n);
+		});
+
+		it('Same class, player wins on tie-breaker (higher rank)', async () => {
+			// Both pairs; player has Kings, dealer has Queens → same class, player wins on tie
+			const player3 = [CARD.cKs, CARD.cKh, CARD.c2d];
+			const dealer3 = [CARD.cQs, CARD.cQh, CARD.c3d];
+			const { tcp } = ctx;
+			const betId = await playWith(player3, dealer3);
+			const base = await tcp.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.PLAYER_WIN);
+		});
+
+		it('Same class, dealer wins on tie-breaker (higher rank)', async () => {
+			// Both pairs; dealer has Aces, player has Twos → same class, dealer wins
+			const player3 = [CARD.c2s, CARD.c2h, CARD.c5d];
+			const dealer3 = [CARD.cAs, CARD.cAh, CARD.c4d];
+			const { tcp } = ctx;
+			const betId = await playWith(player3, dealer3);
+			const base = await tcp.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.DEALER_WIN);
+		});
+
+		it('Exact tie — same hand value yields TIE outcome', async () => {
+			// Both hands evaluate identically: K-Q-J (high card) for both. Pair Plus and tie-break
+			// equal → return 0 from _compareHands
+			const player3 = [CARD.cKs, CARD.cQs, CARD.cJh]; // K-Q-J — but flush risk: Ks Qs Jh = not flush
+			const dealer3 = [CARD.cKh, CARD.cQh, CARD.cJd]; // K-Q-J mixed
+			const { tcp } = ctx;
+			const betId = await playWith(player3, dealer3);
+			const base = await tcp.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.TIE);
 		});
 	});
 });

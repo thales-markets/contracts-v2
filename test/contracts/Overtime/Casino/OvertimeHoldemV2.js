@@ -253,10 +253,86 @@ function findWord(predicate, maxAttempts = 80000) {
 	throw new Error(`findWord: no match in ${maxAttempts}`);
 }
 
+// Card encoding: card = suit*13 + (rank-2). Suits 0=♠,1=♥,2=♦,3=♣.
+const CARD = {
+	c2s: 0,
+	c3s: 1,
+	c4s: 2,
+	c5s: 3,
+	c6s: 4,
+	c7s: 5,
+	c8s: 6,
+	c9s: 7,
+	cTs: 8,
+	cJs: 9,
+	cQs: 10,
+	cKs: 11,
+	cAs: 12,
+	c2h: 13,
+	c3h: 14,
+	c4h: 15,
+	c5h: 16,
+	c6h: 17,
+	c7h: 18,
+	c8h: 19,
+	c9h: 20,
+	cTh: 21,
+	cJh: 22,
+	cQh: 23,
+	cKh: 24,
+	cAh: 25,
+	c2d: 26,
+	c3d: 27,
+	c4d: 28,
+	c5d: 29,
+	c6d: 30,
+	c7d: 31,
+	c8d: 32,
+	c9d: 33,
+	cTd: 34,
+	cJd: 35,
+	cQd: 36,
+	cKd: 37,
+	cAd: 38,
+	c2c: 39,
+	c3c: 40,
+	c4c: 41,
+	c5c: 42,
+	c6c: 43,
+	c7c: 44,
+	c8c: 45,
+	c9c: 46,
+	cTc: 47,
+	cJc: 48,
+	cQc: 49,
+	cKc: 50,
+	cAc: 51,
+};
+
+// Deterministically build the VRF word that makes _partialFisherYates yield targetCards in order
+// (within a deck constructed by filtering out `excluded` from the 52-card deck).
+function craftWord(targetCards, excluded = []) {
+	const excludeSet = new Set(excluded);
+	const deck = [];
+	for (let c = 0; c < DECK_SIZE; c++) if (!excludeSet.has(c)) deck.push(c);
+	let word = 0n;
+	for (let i = 0; i < targetCards.length; i++) {
+		const target = targetCards[i];
+		const pos = deck.indexOf(target);
+		if (pos < 0) throw new Error(`craftWord: target ${target} not in remaining deck at step ${i}`);
+		if (pos < i) throw new Error(`craftWord: target ${target} already drawn at step ${i}`);
+		const chunkVal = BigInt(pos - i);
+		if (chunkVal > 0xffffn) throw new Error('craftWord: chunkVal exceeds 16 bits');
+		word |= chunkVal << (BigInt(i) * 16n);
+		[deck[i], deck[pos]] = [deck[pos], deck[i]];
+	}
+	return word;
+}
+
 /* ========== FIXTURE ========== */
 
 async function deployFixture() {
-	const [owner, riskManager, resolver, pauser, player, player2, freeBetsHolderStub] =
+	const [owner, riskManager, resolver, pauser, player, player2, daoSink] =
 		await ethers.getSigners();
 
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
@@ -266,6 +342,10 @@ async function deployFixture() {
 	const ExoticUSD = await ethers.getContractFactory('ExoticUSD');
 	const weth = await ExoticUSD.deploy();
 	const over = await ExoticUSD.deploy();
+
+	const FBH = await ethers.getContractFactory('MockFreeBetsHolder');
+	const fbh = await FBH.deploy(daoSink.address);
+	const fbhAddr = await fbh.getAddress();
 
 	const PriceFeed = await ethers.getContractFactory('MockPriceFeed');
 	const priceFeed = await PriceFeed.deploy();
@@ -291,7 +371,7 @@ async function deployFixture() {
 			manager: managerAddr,
 			priceFeed: await priceFeed.getAddress(),
 			vrfCoordinator: await vrf.getAddress(),
-			freeBetsHolder: freeBetsHolderStub.address,
+			freeBetsHolder: fbhAddr,
 			referrals: ethers.ZeroAddress,
 		},
 		{
@@ -319,7 +399,7 @@ async function deployFixture() {
 	await core.registerGame(holdemAddr);
 
 	// Lift circuit breaker for tests that intentionally trigger big wins
-	await core.connect(riskManager).setMaxNetLossPerGameUsd(holdemAddr, ethers.parseEther('100000'));
+	await core.setMaxNetLossPerGameUsd(holdemAddr, ethers.parseEther('100000'));
 
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
@@ -352,6 +432,9 @@ async function deployFixture() {
 		pauser,
 		player,
 		player2,
+		fbh,
+		fbhAddr,
+		daoSink,
 	};
 }
 
@@ -695,17 +778,69 @@ describe('CasinoCoreV2 + OvertimeHoldem (Phase 2)', () => {
 			expect(base.status).to.equal(BetStatus.CANCELLED);
 		});
 
-		it('cancel from AWAITING_RESOLVE refunds ante + aa + call stake', async () => {
+		it('cancel from AWAITING_RESOLVE refunds ante + call stake (AA already settled in VRF1)', async () => {
 			const { holdem, usdc, player } = ctx;
+			const aa = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
 			const word = findWord(
 				(w) => unpackClass(evaluateCards(dealHoleAndFlop(w))) === HandClass.HIGH_CARD
 			);
-			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, MIN_USDC_BET, word);
+			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, aa, word);
 			await holdem.connect(player).callBet(betId);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await holdem.connect(player).cancelBet(betId);
-			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+			// AA was already settled in VRF1 (high-card → lost). Cancel refunds only ante + call
+			// stake. The AA stake stays with the bankroll (do NOT double-refund a settled side bet).
+			// Net: user loses aa.
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - aa);
+		});
+
+		it('adminForceFold releases reservation for stale PLAYER_TURN bet', async () => {
+			const { holdem, holdemAddr, core, resolver, player, usdcAddr } = ctx;
+			const ante = MIN_USDC_BET;
+			const word = findWord(
+				(w) => unpackClass(evaluateCards(dealHoleAndFlop(w))) === HandClass.HIGH_CARD
+			);
+			const { betId } = await placeAndDeal(ctx, ante, 0n, word);
+			// PLAYER_TURN; reservation = 105 * ante still held
+			expect(await core.reservedProfitPerGame(holdemAddr, usdcAddr)).to.equal(105n * ante);
+			// Cannot fold-force before timeout
+			await expect(holdem.connect(resolver).adminForceFold(betId)).to.be.revertedWithCustomError(
+				holdem,
+				'PlayerTurnTimeoutNotReached'
+			);
+			// Non-resolver cannot call
+			await expect(holdem.connect(player).adminForceFold(betId)).to.be.revertedWithCustomError(
+				holdem,
+				'InvalidSender'
+			);
+			// Advance time and force-fold
+			await time.increase(24 * 60 * 60 + 1);
+			await holdem.connect(resolver).adminForceFold(betId);
+			expect(await core.reservedProfitPerGame(holdemAddr, usdcAddr)).to.equal(0n);
+			const base = await holdem.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.FOLDED);
+			expect(base.status).to.equal(BetStatus.RESOLVED);
+		});
+
+		it('adminForceFold rejects non-PLAYER_TURN bets', async () => {
+			const { holdem, resolver, player, usdcAddr } = ctx;
+			const tx = await holdem
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return holdem.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await expect(
+				holdem.connect(resolver).adminForceFold(placed.args.betId)
+			).to.be.revertedWithCustomError(holdem, 'InvalidBetStatus');
 		});
 	});
 
@@ -721,6 +856,294 @@ describe('CasinoCoreV2 + OvertimeHoldem (Phase 2)', () => {
 			expect(r.betId).to.equal(betId);
 			expect(r.user).to.equal(player.address);
 			expect(r.outcome).to.equal(Outcome.FOLDED);
+		});
+	});
+
+	describe('free bet (placeBetWithFreeBet)', () => {
+		async function fundFB(ctx, amount) {
+			const { fbh, fbhAddr, usdc, owner, player, usdcAddr } = ctx;
+			await usdc.mintForUser(owner.address);
+			await usdc.connect(owner).transfer(fbhAddr, amount);
+			await fbh.setBalance(player.address, usdcAddr, amount);
+		}
+
+		async function placeFreeAndDeal(ctx, ante, aa, dealWord) {
+			const { holdem, vrf, coreAddr, usdcAddr, player } = ctx;
+			const tx = await holdem
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddr, ante, aa, ethers.ZeroAddress);
+			const receipt = await tx.wait();
+			const placed = receipt.logs
+				.map((l) => {
+					try {
+						return holdem.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [dealWord]);
+			return placed.args.betId;
+		}
+
+		it('reverts on insufficient FBH balance', async () => {
+			const { holdem, usdcAddr, player } = ctx;
+			await expect(
+				holdem
+					.connect(player)
+					.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress)
+			).to.be.revertedWith('MockFBH: InsufficientBalance');
+		});
+
+		it('place-time: pulls (ante + AA) from FBH, does not touch wallet', async () => {
+			const { holdem, fbh, usdc, usdcAddr, player } = ctx;
+			await fundFB(ctx, MIN_USDC_BET * 2n);
+			const balBefore = await usdc.balanceOf(player.address);
+			await holdem
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
+		});
+
+		it('callBet: pulls 2× ante from FBH (forced fold if FBH balance insufficient)', async () => {
+			const { holdem, fbh, usdcAddr, player } = ctx;
+			// Fund only enough for ante at place — zero left for call (need 2*ante = 6)
+			await fundFB(ctx, MIN_USDC_BET);
+			const betId = await placeFreeAndDeal(ctx, MIN_USDC_BET, 0n, 0xdeadbeefn);
+			// Call needs 2*MIN_USDC_BET = 6 USDC — FBH balance is 0 → reverts
+			await expect(holdem.connect(player).callBet(betId)).to.be.revertedWith(
+				'MockFBH: InsufficientBalance'
+			);
+			// Fold path works (no extra FBH balance needed)
+			await holdem.connect(player).fold(betId);
+			const base = await holdem.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.FOLDED);
+		});
+
+		it('cancel from AWAITING_DEAL: refund credits FBH balance (reusable)', async () => {
+			const { holdem, fbh, usdcAddr, player } = ctx;
+			const stake = MIN_USDC_BET * 2n;
+			await fundFB(ctx, stake);
+			const tx = await holdem
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return holdem.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await time.increase(Number(CANCEL_TIMEOUT) + 1);
+			await holdem.connect(player).cancelBet(placed.args.betId);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(stake);
+		});
+
+		it('fold (free bet): ante consumed, no referrer payment', async () => {
+			const { holdem, fbh, usdcAddr, player } = ctx;
+			await fundFB(ctx, MIN_USDC_BET);
+			const betId = await placeFreeAndDeal(ctx, MIN_USDC_BET, 0n, 0xdeadbeefn);
+			await holdem.connect(player).fold(betId);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
+			const base = await holdem.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.FOLDED);
+		});
+	});
+
+	describe('placeBet edge paths', () => {
+		it('sets referrer on placeBet when referrer != 0', async () => {
+			// Wire a working MockReferrals so setReferrer actually records the link
+			const Mock = await ethers.getContractFactory('MockReferrals');
+			const refContract = await Mock.deploy();
+			const refAddr = await refContract.getAddress();
+			await ctx.core
+				.connect(ctx.owner)
+				.setAddresses(
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					refAddr
+				);
+			const referrer = ethers.Wallet.createRandom().address;
+			await placeAndDeal(ctx, MIN_USDC_BET, 0n, 0xdeadbeefn, { referrer });
+			expect(await refContract.referrals(ctx.player.address)).to.equal(referrer);
+		});
+	});
+
+	describe('VRF callback edge paths', () => {
+		it('onVrfFulfilled with unknown requestId is a silent no-op', async () => {
+			// Impersonate core and call onVrfFulfilled with a requestId that maps to no bet
+			const { holdem, holdemAddr, coreAddr } = ctx;
+			await ethers.provider.send('hardhat_impersonateAccount', [coreAddr]);
+			await ethers.provider.send('hardhat_setBalance', [coreAddr, '0x56BC75E2D63100000']);
+			const coreSigner = await ethers.getSigner(coreAddr);
+			await expect(holdem.connect(coreSigner).onVrfFulfilled(99999999n, [0n])).to.not.be.reverted;
+			await ethers.provider.send('hardhat_stopImpersonatingAccount', [coreAddr]);
+		});
+	});
+
+	describe('Hand evaluator branch coverage (crafted seeds)', () => {
+		// Helper: craft a VRF1 word that deals [hole0, hole1, flop0, flop1, flop2]
+		function vrf1Word(cards5) {
+			return craftWord(cards5);
+		}
+		// Helper: craft a VRF2 word that deals [dealerHole0, dealerHole1, turn, river]
+		// excluding the 5 cards already revealed.
+		function vrf2Word(cards4, excluded5) {
+			return craftWord(cards4, excluded5);
+		}
+
+		async function playWith(player5, dealer4) {
+			const { holdem, vrf, coreAddr, usdcAddr, player } = ctx;
+			const ante = MIN_USDC_BET;
+			const aa = MIN_USDC_BET;
+			const tx = await holdem.connect(player).placeBet(usdcAddr, ante, aa, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return holdem.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			const w1 = vrf1Word(player5);
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [w1]);
+			const tx2 = await holdem.connect(player).callBet(placed.args.betId);
+			const r2 = await tx2.wait();
+			const called = r2.logs
+				.map((l) => {
+					try {
+						return holdem.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'CallChosen');
+			const w2 = vrf2Word(dealer4, player5);
+			await vrf.fulfillRandomWords(coreAddr, called.args.requestId, [w2]);
+			return placed.args.betId;
+		}
+
+		it('Royal Flush — AA mult 100x + ante mult 100x', async () => {
+			const player5 = [CARD.cAs, CARD.cKs, CARD.cQs, CARD.cJs, CARD.cTs];
+			// Dealer is dealt non-conflicting low cards that yield HIGH_CARD only — dealer not qualified
+			const dealer4 = [CARD.c2h, CARD.c3h, CARD.c4d, CARD.c5c];
+			const { holdem, player, usdc } = ctx;
+			const balBefore = await usdc.balanceOf(player.address);
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 101n); // 1 + 100
+			// Player hand class = ROYAL_FLUSH → ante mult 100
+			expect(payouts.antePayout).to.equal(MIN_USDC_BET * 101n);
+			// Dealer 7 = [2h,3h, Qs,Js,Ts, 4d,5c] → straight T-Q? Ranks: T,J,Q,2,3,4,5. Best: Q-J-T-5-4? No 5-straight from these. So HIGH_CARD.
+			// Outcome: DEALER_NOT_QUALIFIED → call pushes (2*ante)
+			const base = await holdem.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.DEALER_NOT_QUALIFIED);
+			expect(payouts.callPayout).to.equal(MIN_USDC_BET * 2n);
+			expect(await usdc.balanceOf(player.address)).to.be.gt(balBefore);
+		});
+
+		it('Straight Flush (non-royal) — AA mult 50x', async () => {
+			const player5 = [CARD.c9s, CARD.c8s, CARD.c7s, CARD.c6s, CARD.c5s];
+			const dealer4 = [CARD.c2h, CARD.c3h, CARD.c2d, CARD.c2c]; // dealer has trips 2's, qualifies
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 51n); // 1 + 50
+			// Player 7 includes SF 5..9♠ → ante mult 20
+			expect(payouts.antePayout).to.equal(MIN_USDC_BET * 21n);
+		});
+
+		it('Four of a Kind — AA mult 40x', async () => {
+			const player5 = [CARD.cAs, CARD.cAh, CARD.cAd, CARD.cAc, CARD.c5s];
+			const dealer4 = [CARD.c2h, CARD.c3h, CARD.c4d, CARD.c6c];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 41n);
+			// Player 7 with AAAA → ante mult 10
+			expect(payouts.antePayout).to.equal(MIN_USDC_BET * 11n);
+		});
+
+		it('Full House (two 3-of-a-kinds in 7 cards)', async () => {
+			// Player hole: As, Ks. Flop: Ah, Kh, 5c. Turn/river adds Ad, Kd → AAA + KKK + 5
+			const player5 = [CARD.cAs, CARD.cKs, CARD.cAh, CARD.cKh, CARD.c5c];
+			const dealer4 = [CARD.c2h, CARD.c3h, CARD.cAd, CARD.cKd];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			// Player 7 = AAA KKK 5 → AAA KK best5 = FULL HOUSE (A over K)
+			const payouts = await holdem.getBetPayouts(betId);
+			// AA bonus is on first 5 only → AAs + Ks + Ah + Kh + 5c = AA KK 5 = TWO_PAIR (7x)
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 8n);
+		});
+
+		it('Flush (no straight)', async () => {
+			const player5 = [CARD.cAs, CARD.cKs, CARD.c9s, CARD.c5s, CARD.c2s];
+			const dealer4 = [CARD.c2h, CARD.c3h, CARD.c4d, CARD.c6c];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			// AA bonus on flush = 20x → 1 + 20
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 21n);
+		});
+
+		it('Straight (mixed suits)', async () => {
+			// A-K-Q-J-T across different suits
+			const player5 = [CARD.cAs, CARD.cKh, CARD.cQc, CARD.cJd, CARD.cTs];
+			const dealer4 = [CARD.c2h, CARD.c3h, CARD.c4d, CARD.c6c];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			// AA bonus on straight = 10x
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 11n);
+		});
+
+		it('Wheel straight (A-2-3-4-5)', async () => {
+			const player5 = [CARD.cAs, CARD.c5h, CARD.c4c, CARD.c3d, CARD.c2s];
+			const dealer4 = [CARD.c7h, CARD.c8h, CARD.c9d, CARD.cTc];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			// AA bonus on wheel = STRAIGHT = 10x
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 11n);
+		});
+
+		it('Pair of Aces (PoA) — AA bonus 7x', async () => {
+			// Player hole + flop: AsAh + 2c 5d 7s → AA only on first 5
+			const player5 = [CARD.cAs, CARD.cAh, CARD.c2c, CARD.c5d, CARD.c7s];
+			const dealer4 = [CARD.c3h, CARD.c4h, CARD.c8d, CARD.c9c];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 8n);
+		});
+
+		it('Three of a Kind — AA bonus 8x', async () => {
+			const player5 = [CARD.cAs, CARD.cAh, CARD.cAd, CARD.c5c, CARD.c7s];
+			const dealer4 = [CARD.c2h, CARD.c3h, CARD.c4d, CARD.c6c];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const payouts = await holdem.getBetPayouts(betId);
+			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 9n);
+		});
+
+		it('Dealer high-card disqualified — exercises _dealerQualifies false-return', async () => {
+			// Engineer a 7-card dealer hand with no pair, no straight, no flush.
+			// Player hole + flop chosen so dealer 7 = [Qc,Ad,2s,4d,6c,8h,Ts] → ranks A,Q,T,8,6,4,2.
+			// Best 5 = A Q T 8 6 = HIGH_CARD. Dealer fails to qualify (returns false at line 719).
+			const player5 = [CARD.c3h, CARD.c9c, CARD.c2s, CARD.c4d, CARD.c6c]; // player 7 will include 8h, Ts from dealer side
+			const dealer4 = [CARD.cQc, CARD.cAd, CARD.c8h, CARD.cTs];
+			const { holdem } = ctx;
+			const betId = await playWith(player5, dealer4);
+			const base = await holdem.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.DEALER_NOT_QUALIFIED);
 		});
 	});
 });

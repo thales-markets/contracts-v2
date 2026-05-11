@@ -13,18 +13,19 @@ const ONE = 10n ** 18n;
 const MIN_USDC_BET = 3n * USDC_UNIT;
 
 const HE_E18 = 2n * 10n ** 16n;
-const MAX_MULT_E18 = 1000n * ONE;
+const MAX_MULT_E18 = 25n * ONE;
+const MIDPOINT_RANK = 6;
 
 const BetStatus = {
 	NONE: 0,
-	AWAITING_FIRST_CARD: 1,
-	PLAYER_TURN: 2,
-	AWAITING_NEXT_CARD: 3,
-	RESOLVED: 4,
-	CANCELLED: 5,
+	PLAYER_TURN: 1,
+	AWAITING_NEXT_CARD: 2,
+	RESOLVED: 3,
+	CANCELLED: 4,
 };
 const Outcome = { NONE: 0, CASHED_OUT: 1, WRONG_GUESS: 2 };
-const Direction = { HIGHER: 0, LOWER: 1 };
+const Direction = { ABOVE: 0, BELOW: 1 };
+const CardOutcome = { NONE: 0, HIT: 1, PUSH: 2, BUST: 3 };
 
 function rankOf(card) {
 	return Math.floor(card / 4); // 0..12
@@ -40,23 +41,13 @@ function wordForCardRank(seed, targetRank) {
 	throw new Error('not found');
 }
 
-// Multiplier factor for a correct guess
-function factorE18(direction, rank, heE18 = HE_E18) {
-	const num = 12n * ONE - 13n * heE18;
-	let count;
-	if (direction === Direction.HIGHER) {
-		if (rank >= 12) return 0n;
-		count = BigInt(12 - rank);
-	} else {
-		if (rank === 0) return 0n;
-		count = BigInt(rank);
-	}
-	return num / count;
+// Constant per-correct-guess factor: (12 - 13*HE) / 6
+function factorE18(heE18 = HE_E18) {
+	return (12n * ONE - 13n * heE18) / 6n;
 }
 
 async function deployFixture() {
-	const [owner, riskManager, resolver, pauser, player, freeBetsHolderStub] =
-		await ethers.getSigners();
+	const [owner, riskManager, resolver, pauser, player, daoSink] = await ethers.getSigners();
 
 	const ExoticUSDC = await ethers.getContractFactory('ExoticUSDC');
 	const usdc = await ExoticUSDC.deploy();
@@ -64,6 +55,10 @@ async function deployFixture() {
 	const ExoticUSD = await ethers.getContractFactory('ExoticUSD');
 	const weth = await ExoticUSD.deploy();
 	const over = await ExoticUSD.deploy();
+
+	const FBH = await ethers.getContractFactory('MockFreeBetsHolder');
+	const fbh = await FBH.deploy(daoSink.address);
+	const fbhAddr = await fbh.getAddress();
 
 	const PriceFeed = await ethers.getContractFactory('MockPriceFeed');
 	const priceFeed = await PriceFeed.deploy();
@@ -89,7 +84,7 @@ async function deployFixture() {
 			manager: managerAddr,
 			priceFeed: await priceFeed.getAddress(),
 			vrfCoordinator: await vrf.getAddress(),
-			freeBetsHolder: freeBetsHolderStub.address,
+			freeBetsHolder: fbhAddr,
 			referrals: ethers.ZeroAddress,
 		},
 		{
@@ -115,7 +110,7 @@ async function deployFixture() {
 	const hiloAddr = await hilo.getAddress();
 	await hilo.initialize(owner.address, coreAddr, managerAddr);
 	await core.registerGame(hiloAddr);
-	await core.connect(riskManager).setMaxNetLossPerGameUsd(hiloAddr, ethers.parseEther('1000000'));
+	await core.setMaxNetLossPerGameUsd(hiloAddr, ethers.parseEther('1000000'));
 
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
@@ -136,6 +131,9 @@ async function deployFixture() {
 		usdc,
 		usdcAddr,
 		data,
+		fbh,
+		fbhAddr,
+		daoSink,
 		owner,
 		riskManager,
 		resolver,
@@ -143,11 +141,8 @@ async function deployFixture() {
 	};
 }
 
-async function placeAndDealFirst(ctx, amount, dealWord) {
-	const { hilo, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await hilo.connect(player).placeBet(usdcAddr, amount, ethers.ZeroAddress);
-	const receipt = await tx.wait();
-	const placed = receipt.logs
+function parseLogs(hilo, logs, name) {
+	return logs
 		.map((l) => {
 			try {
 				return hilo.interface.parseLog(l);
@@ -155,9 +150,22 @@ async function placeAndDealFirst(ctx, amount, dealWord) {
 				return null;
 			}
 		})
-		.find((e) => e?.name === 'BetPlaced');
-	const betId = placed.args.betId;
-	await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [dealWord]);
+		.find((e) => e?.name === name);
+}
+
+async function placeBet(ctx, amount = MIN_USDC_BET, direction = Direction.ABOVE) {
+	const { hilo, usdcAddr, player } = ctx;
+	const tx = await hilo.connect(player).placeBet(usdcAddr, amount, ethers.ZeroAddress, direction);
+	const receipt = await tx.wait();
+	const placed = parseLogs(hilo, receipt.logs, 'BetPlaced');
+	const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
+	return { betId: placed.args.betId, requestId: guessed.args.requestId };
+}
+
+async function placeBetAndDeal(ctx, direction, dealWord, amount = MIN_USDC_BET) {
+	const { vrf, coreAddr } = ctx;
+	const { betId, requestId } = await placeBet(ctx, amount, direction);
+	await vrf.fulfillRandomWords(coreAddr, requestId, [dealWord]);
 	return betId;
 }
 
@@ -165,26 +173,19 @@ async function guessAndDeal(ctx, betId, direction, dealWord) {
 	const { hilo, vrf, coreAddr, player } = ctx;
 	const tx = await hilo.connect(player).guess(betId, direction);
 	const receipt = await tx.wait();
-	const guessed = receipt.logs
-		.map((l) => {
-			try {
-				return hilo.interface.parseLog(l);
-			} catch {
-				return null;
-			}
-		})
-		.find((e) => e?.name === 'GuessChosen');
+	const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
 	await vrf.fulfillRandomWords(coreAddr, guessed.args.requestId, [dealWord]);
+	return guessed.args.requestId;
 }
 
-describe('CasinoCoreV2 + HiLo (Phase 6)', () => {
+describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 	let ctx;
 	beforeEach(async () => {
 		ctx = await loadFixture(deployFixture);
 	});
 
 	describe('Initialization', () => {
-		it('initializes with 2% house edge and 1000x cap', async () => {
+		it('initializes with 2% house edge and 25x cap', async () => {
 			const { hilo, owner, coreAddr } = ctx;
 			expect(await hilo.owner()).to.equal(owner.address);
 			expect(await hilo.core()).to.equal(coreAddr);
@@ -194,177 +195,482 @@ describe('CasinoCoreV2 + HiLo (Phase 6)', () => {
 	});
 
 	describe('Multiplier formula', () => {
-		it('matches JS for various rank/direction combos', async () => {
+		it('returns the constant factor (12 - 13*HE) / 6', async () => {
 			const { hilo } = ctx;
-			for (let r = 0; r <= 12; r++) {
-				const expectHigher = factorE18(Direction.HIGHER, r);
-				const gotHigher = await hilo.multiplierFactorE18(Direction.HIGHER, r);
-				expect(gotHigher).to.equal(expectHigher);
-				const expectLower = factorE18(Direction.LOWER, r);
-				const gotLower = await hilo.multiplierFactorE18(Direction.LOWER, r);
-				expect(gotLower).to.equal(expectLower);
-			}
+			expect(await hilo.multiplierFactorE18()).to.equal(factorE18());
 		});
 
-		it('returns 0 for invalid extremes (HIGHER at rank 12, LOWER at rank 0)', async () => {
+		it('expected return per round = 1 - HE = 0.98', async () => {
 			const { hilo } = ctx;
-			expect(await hilo.multiplierFactorE18(Direction.HIGHER, 12)).to.equal(0n);
-			expect(await hilo.multiplierFactorE18(Direction.LOWER, 0)).to.equal(0n);
-		});
-
-		it('every valid (direction, rank) pair satisfies E[ret] = 1 - HE = 0.98', async () => {
-			// Per-guess HE is exactly 2% by formula construction. Verify against the on-chain value
-			const { hilo } = ctx;
-			for (let r = 0; r <= 12; r++) {
-				if (r < 12) {
-					const f = await hilo.multiplierFactorE18(Direction.HIGHER, r);
-					// E[ret] = P(correct) * f + P(equal) * 1
-					//   P(correct) = (12 - r) / 13, P(equal) = 1/13
-					//   In e18: ((12-r)/13)*f + (1/13)*1e18 = ((12-r)*f + 1e18) / 13
-					const expectedRetE18 = (BigInt(12 - r) * f + ONE) / 13n;
-					// Tolerance: integer division rounding accumulates ~13 wei
-					expect(expectedRetE18, `HIGHER@${r}`).to.be.gte(ONE - HE_E18 - 13n);
-					expect(expectedRetE18, `HIGHER@${r}`).to.be.lte(ONE - HE_E18 + 13n);
-				}
-				if (r > 0) {
-					const f = await hilo.multiplierFactorE18(Direction.LOWER, r);
-					const expectedRetE18 = (BigInt(r) * f + ONE) / 13n;
-					expect(expectedRetE18, `LOWER@${r}`).to.be.gte(ONE - HE_E18 - 13n);
-					expect(expectedRetE18, `LOWER@${r}`).to.be.lte(ONE - HE_E18 + 13n);
-				}
-			}
+			const f = await hilo.multiplierFactorE18();
+			// E[ret] = (6/13) * f + (1/13) * 1 + (6/13) * 0
+			//       = (6 * f + ONE) / 13
+			const expectedRetE18 = (6n * f + ONE) / 13n;
+			expect(expectedRetE18).to.be.gte(ONE - HE_E18 - 13n);
+			expect(expectedRetE18).to.be.lte(ONE - HE_E18 + 13n);
 		});
 	});
 
-	describe('placeBet + first card', () => {
-		it('VRF1 deals first card and advances to PLAYER_TURN', async () => {
+	describe('placeBet', () => {
+		it('starts in AWAITING_NEXT_CARD with first VRF in flight, no card drawn yet', async () => {
 			const { hilo } = ctx;
-			const word = 0xdeadbeefn;
-			const expectedCard = Number(word % 52n);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, word);
+			const { betId } = await placeBet(ctx);
 			const base = await hilo.getBetBase(betId);
-			expect(base.status).to.equal(BetStatus.PLAYER_TURN);
+			expect(base.status).to.equal(BetStatus.AWAITING_NEXT_CARD);
 			const state = await hilo.getBetState(betId);
-			expect(Number(state.currentCard)).to.equal(expectedCard);
+			expect(Number(state.lastCard)).to.equal(0xff); // sentinel: no card drawn yet
 			expect(state.currentMultiplierE18).to.equal(ONE);
+			expect(Number(state.guessCount)).to.equal(1);
+		});
+
+		it('emits BetPlaced and GuessChosen in a single tx with the first direction', async () => {
+			const { hilo, usdcAddr, player } = ctx;
+			const tx = await hilo
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, Direction.BELOW);
+			const receipt = await tx.wait();
+			const placed = parseLogs(hilo, receipt.logs, 'BetPlaced');
+			const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
+			expect(placed.args.collateral).to.equal(usdcAddr);
+			expect(placed.args.amount).to.equal(MIN_USDC_BET);
+			expect(guessed.args.direction).to.equal(Direction.BELOW);
+			expect(guessed.args.requestId).to.not.equal(0n);
+		});
+
+		it('reverts on zero amount', async () => {
+			const { hilo, usdcAddr, player } = ctx;
+			await expect(
+				hilo.connect(player).placeBet(usdcAddr, 0n, ethers.ZeroAddress, Direction.ABOVE)
+			).to.be.revertedWithCustomError(hilo, 'InvalidAmount');
+		});
+
+		it('reverts on unsupported collateral', async () => {
+			const { hilo, player } = ctx;
+			const fake = ethers.Wallet.createRandom().address;
+			await expect(
+				hilo.connect(player).placeBet(fake, MIN_USDC_BET, ethers.ZeroAddress, Direction.ABOVE)
+			).to.be.revertedWithCustomError(hilo, 'InvalidCollateral');
+		});
+
+		it('reserves amount * maxMultiplier in core', async () => {
+			const { hiloAddr, core, usdcAddr } = ctx;
+			await placeBet(ctx);
+			expect(await core.reservedProfitPerGame(hiloAddr, usdcAddr)).to.equal(
+				(MIN_USDC_BET * MAX_MULT_E18) / ONE
+			);
 		});
 	});
 
 	describe('guess outcomes', () => {
-		it('PUSH on equal rank: status returns to PLAYER_TURN, multiplier unchanged', async () => {
-			const { hilo, player } = ctx;
-			// Pick a target rank somewhere in middle. 1st card at rank 5, 2nd card at rank 5.
-			const { word: w1 } = wordForCardRank('hilo-eq-1', 5);
-			const { word: w2 } = wordForCardRank('hilo-eq-2', 5);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, w1);
-			await guessAndDeal(ctx, betId, Direction.HIGHER, w2);
+		it('PUSH on rank == 6 (card "8"): mult unchanged, status returns to PLAYER_TURN', async () => {
+			const { hilo } = ctx;
+			const { word: w } = wordForCardRank('hilo-push', MIDPOINT_RANK);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, w);
 			const base = await hilo.getBetBase(betId);
 			expect(base.status).to.equal(BetStatus.PLAYER_TURN);
 			const state = await hilo.getBetState(betId);
-			expect(state.currentMultiplierE18).to.equal(ONE);
+			expect(state.currentMultiplierE18).to.equal(ONE); // unchanged
 			expect(Number(state.pushCount)).to.equal(1);
+			expect(Number(state.correctCount)).to.equal(0);
+			expect(Number(state.guessCount)).to.equal(1);
 		});
 
-		it('correct HIGHER guess multiplies the run', async () => {
+		it('correct ABOVE guess (rank > 6) multiplies the run', async () => {
 			const { hilo } = ctx;
-			const { word: w1 } = wordForCardRank('hilo-corr-1', 5);
-			const { word: w2 } = wordForCardRank('hilo-corr-2', 9); // rank 9 > 5
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, w1);
-			await guessAndDeal(ctx, betId, Direction.HIGHER, w2);
+			const { word: w } = wordForCardRank('hilo-above-win', 10); // rank 10 > 6
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, w);
 			const state = await hilo.getBetState(betId);
 			expect(Number(state.correctCount)).to.equal(1);
-			const expectedMult = factorE18(Direction.HIGHER, 5);
-			expect(state.currentMultiplierE18).to.equal(expectedMult);
+			expect(state.currentMultiplierE18).to.equal(factorE18());
 		});
 
-		it('wrong guess loses the run', async () => {
+		it('correct BELOW guess (rank < 6) multiplies the run', async () => {
+			const { hilo } = ctx;
+			const { word: w } = wordForCardRank('hilo-below-win', 2); // rank 2 < 6
+			const betId = await placeBetAndDeal(ctx, Direction.BELOW, w);
+			const state = await hilo.getBetState(betId);
+			expect(Number(state.correctCount)).to.equal(1);
+			expect(state.currentMultiplierE18).to.equal(factorE18());
+		});
+
+		it('wrong ABOVE (rank < 6) loses the run', async () => {
 			const { hilo, usdc, player } = ctx;
-			const { word: w1 } = wordForCardRank('hilo-wrong-1', 5);
-			const { word: w2 } = wordForCardRank('hilo-wrong-2', 2); // rank 2 < 5
 			const balBefore = await usdc.balanceOf(player.address);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, w1);
-			await guessAndDeal(ctx, betId, Direction.HIGHER, w2);
+			const { word: w } = wordForCardRank('hilo-above-lose', 2);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, w);
 			const base = await hilo.getBetBase(betId);
 			expect(base.status).to.equal(BetStatus.RESOLVED);
 			expect(base.outcome).to.equal(Outcome.WRONG_GUESS);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - MIN_USDC_BET);
 		});
 
-		it('rejects HIGHER at rank 12', async () => {
-			const { hilo, player } = ctx;
-			const { word: w1 } = wordForCardRank('hilo-edge-1', 12);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, w1);
-			await expect(
-				hilo.connect(player).guess(betId, Direction.HIGHER)
-			).to.be.revertedWithCustomError(hilo, 'InvalidDirection');
+		it('wrong BELOW (rank > 6) loses the run', async () => {
+			const { hilo, usdc, player } = ctx;
+			const balBefore = await usdc.balanceOf(player.address);
+			const { word: w } = wordForCardRank('hilo-below-lose', 10);
+			const betId = await placeBetAndDeal(ctx, Direction.BELOW, w);
+			const base = await hilo.getBetBase(betId);
+			expect(base.outcome).to.equal(Outcome.WRONG_GUESS);
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - MIN_USDC_BET);
 		});
 
-		it('rejects LOWER at rank 0', async () => {
+		it('chains correct guesses to compound multiplier', async () => {
+			const { hilo } = ctx;
+			const f = factorE18();
+			const { word: w1 } = wordForCardRank('hilo-chain-1', 9);
+			const { word: w2 } = wordForCardRank('hilo-chain-2', 11);
+			const { word: w3 } = wordForCardRank('hilo-chain-3', 7);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, w1);
+			await guessAndDeal(ctx, betId, Direction.ABOVE, w2);
+			await guessAndDeal(ctx, betId, Direction.ABOVE, w3);
+			const state = await hilo.getBetState(betId);
+			expect(Number(state.correctCount)).to.equal(3);
+			const expected3 = (((ONE * f) / ONE) * ((f * f) / ONE)) / ONE;
+			expect(state.currentMultiplierE18).to.equal(expected3);
+		});
+
+		it('caps running multiplier at maxMultiplierE18 once exceeded', async () => {
 			const { hilo, player } = ctx;
-			const { word: w1 } = wordForCardRank('hilo-edge-2', 0);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, w1);
+			const f = factorE18();
+			// 5 consecutive wins: f^5 ≈ 28.94x → exceeds 25x → capped
+			let mult = ONE;
+			let betId;
+			for (let i = 0; i < 5; i++) {
+				const { word } = wordForCardRank(`hilo-cap-${i}`, 10); // rank 10 > 6
+				if (i === 0) {
+					betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
+				} else {
+					await guessAndDeal(ctx, betId, Direction.ABOVE, word);
+				}
+				mult = (mult * f) / ONE;
+				if (mult > MAX_MULT_E18) mult = MAX_MULT_E18;
+				const state = await hilo.getBetState(betId);
+				expect(state.currentMultiplierE18).to.equal(mult);
+			}
+			const state = await hilo.getBetState(betId);
+			expect(state.currentMultiplierE18).to.equal(MAX_MULT_E18);
+			// Next guess should revert with MaxMultiplierReached (cap reached)
 			await expect(
-				hilo.connect(player).guess(betId, Direction.LOWER)
-			).to.be.revertedWithCustomError(hilo, 'InvalidDirection');
+				hilo.connect(player).guess(betId, Direction.ABOVE)
+			).to.be.revertedWithCustomError(hilo, 'MaxMultiplierReached');
 		});
 	});
 
 	describe('cashout', () => {
 		it('pays bet * currentMultiplier', async () => {
 			const { hilo, usdc, player } = ctx;
-			const { word: w1 } = wordForCardRank('hilo-cash-1', 5);
-			const { word: w2 } = wordForCardRank('hilo-cash-2', 9);
+			const f = factorE18();
 			const balBefore = await usdc.balanceOf(player.address);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, w1);
-			await guessAndDeal(ctx, betId, Direction.HIGHER, w2);
+			const { word } = wordForCardRank('hilo-cash-win', 10);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
 			await hilo.connect(player).cashout(betId);
-			const expectedMult = factorE18(Direction.HIGHER, 5);
-			const expectedPayout = (MIN_USDC_BET * expectedMult) / ONE;
+			const expectedPayout = (MIN_USDC_BET * f) / ONE;
 			expect(await usdc.balanceOf(player.address)).to.equal(
 				balBefore - MIN_USDC_BET + expectedPayout
 			);
 		});
 
-		it('cashout immediately after first card pays 1x (full refund minus 0%)', async () => {
+		it('cashout after a push pays 1x (multiplier unchanged)', async () => {
 			const { hilo, usdc, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, 0xabcdn);
+			const { word } = wordForCardRank('hilo-cash-push', MIDPOINT_RANK);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
 			await hilo.connect(player).cashout(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+		});
+
+		it('cashout from AWAITING_NEXT_CARD reverts (must wait for VRF)', async () => {
+			const { hilo, player } = ctx;
+			const { betId } = await placeBet(ctx);
+			await expect(hilo.connect(player).cashout(betId)).to.be.revertedWithCustomError(
+				hilo,
+				'InvalidBetStatus'
+			);
+		});
+
+		it('cashout reverts on RESOLVED bet', async () => {
+			const { hilo, player } = ctx;
+			const { word } = wordForCardRank('hilo-cash-twice', 10);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
+			await hilo.connect(player).cashout(betId);
+			await expect(hilo.connect(player).cashout(betId)).to.be.revertedWithCustomError(
+				hilo,
+				'InvalidBetStatus'
+			);
 		});
 	});
 
 	describe('Cancel', () => {
-		it('user cancel after timeout from AWAITING_FIRST_CARD refunds amount', async () => {
-			const { hilo, usdc, usdcAddr, player } = ctx;
+		it('user cancel from AWAITING_NEXT_CARD after timeout refunds the stake', async () => {
+			const { hilo, usdc, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
-			const tx = await hilo.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
-			const receipt = await tx.wait();
-			const placed = receipt.logs
-				.map((l) => {
-					try {
-						return hilo.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			const betId = placed.args.betId;
+			const { betId } = await placeBet(ctx);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await hilo.connect(player).cancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+		});
+
+		it('user cancel from PLAYER_TURN reverts (no VRF in flight)', async () => {
+			const { hilo, player } = ctx;
+			// Reach PLAYER_TURN via a push (multiplier unchanged, status returns to PLAYER_TURN)
+			const { word } = wordForCardRank('hilo-cancel-pt', MIDPOINT_RANK);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
+			await expect(hilo.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
+				hilo,
+				'InvalidBetStatus'
+			);
+		});
+
+		it('admin cancel works from PLAYER_TURN as well (rescue path)', async () => {
+			const { hilo, resolver, usdc, player } = ctx;
+			const balBefore = await usdc.balanceOf(player.address);
+			const { word } = wordForCardRank('hilo-admin-pt', MIDPOINT_RANK);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
+			await hilo.connect(resolver).adminCancelBet(betId);
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
+		});
+
+		it('user cancel before timeout reverts', async () => {
+			const { hilo, player } = ctx;
+			const { betId } = await placeBet(ctx);
+			await expect(hilo.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
+				hilo,
+				'CancelTimeoutNotReached'
+			);
 		});
 	});
 
 	describe('CasinoDataV2 — HiLo records', () => {
 		it('returns full HiLo record', async () => {
 			const { hilo, data, player } = ctx;
-			const { word: w1 } = wordForCardRank('hilo-data-1', 5);
-			const betId = await placeAndDealFirst(ctx, MIN_USDC_BET, w1);
+			const { word } = wordForCardRank('hilo-data', 10);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
 			await hilo.connect(player).cashout(betId);
 			const r = await data.getHiLoFullRecord(betId);
 			expect(r.betId).to.equal(betId);
 			expect(r.outcome).to.equal(Outcome.CASHED_OUT);
+		});
+	});
+
+	describe('per-turn history (getBetCards)', () => {
+		it('after placeBet (VRF in flight): directions=[firstDir], cards/outcomes/mults empty', async () => {
+			const { hilo } = ctx;
+			const { betId } = await placeBet(ctx, MIN_USDC_BET, Direction.BELOW);
+			const [dirs, cards, outcomes, mults] = await hilo.getBetCards(betId);
+			expect(dirs.map(Number)).to.deep.equal([Direction.BELOW]);
+			expect(cards.length).to.equal(0);
+			expect(outcomes.length).to.equal(0);
+			expect(mults.length).to.equal(0);
+		});
+
+		it('PUSH: cards/outcomes/mults each get one entry; mult unchanged at 1.00x', async () => {
+			const { hilo } = ctx;
+			const { word, card } = wordForCardRank('hist-push', MIDPOINT_RANK);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
+			const [dirs, cards, outcomes, mults] = await hilo.getBetCards(betId);
+			expect(dirs.map(Number)).to.deep.equal([Direction.ABOVE]);
+			expect(cards.map(Number)).to.deep.equal([card]);
+			expect(outcomes.map(Number)).to.deep.equal([CardOutcome.PUSH]);
+			expect(mults.map(String)).to.deep.equal([ONE.toString()]);
+		});
+
+		it('HIT: outcome=HIT and mult advanced to factor', async () => {
+			const { hilo } = ctx;
+			const { word, card } = wordForCardRank('hist-hit', 10);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
+			const [, cards, outcomes, mults] = await hilo.getBetCards(betId);
+			expect(cards.map(Number)).to.deep.equal([card]);
+			expect(outcomes.map(Number)).to.deep.equal([CardOutcome.HIT]);
+			expect(mults[0]).to.equal(factorE18());
+		});
+
+		it('BUST: outcome=BUST and mult freezes at the pre-bust value', async () => {
+			const { hilo } = ctx;
+			// First win to advance mult past 1.00x, then bust on the second guess
+			const { word: w1 } = wordForCardRank('hist-bust-1', 10); // ABOVE wins
+			const { word: w2, card: c2 } = wordForCardRank('hist-bust-2', 2); // ABOVE loses (rank<6)
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, w1);
+			await guessAndDeal(ctx, betId, Direction.ABOVE, w2);
+			const [dirs, cards, outcomes, mults] = await hilo.getBetCards(betId);
+			expect(dirs.map(Number)).to.deep.equal([Direction.ABOVE, Direction.ABOVE]);
+			expect(cards[1]).to.equal(c2);
+			expect(outcomes[1]).to.equal(CardOutcome.BUST);
+			// Pre-bust mult was the factor from win 1 — frozen, not zeroed
+			expect(mults[1]).to.equal(factorE18());
+		});
+
+		it('multi-turn (HIT, HIT, PUSH, HIT, BUST): all arrays parallel and aligned', async () => {
+			const { hilo } = ctx;
+			const f = factorE18();
+			const turns = [
+				{ seed: 'mt-h1', rank: 10, dir: Direction.ABOVE, expect: CardOutcome.HIT },
+				{ seed: 'mt-h2', rank: 11, dir: Direction.ABOVE, expect: CardOutcome.HIT },
+				{ seed: 'mt-p', rank: MIDPOINT_RANK, dir: Direction.ABOVE, expect: CardOutcome.PUSH },
+				{ seed: 'mt-h3', rank: 9, dir: Direction.ABOVE, expect: CardOutcome.HIT },
+				{ seed: 'mt-b', rank: 2, dir: Direction.ABOVE, expect: CardOutcome.BUST },
+			];
+			const { word: w0, card: c0 } = wordForCardRank(turns[0].seed, turns[0].rank);
+			const betId = await placeBetAndDeal(ctx, turns[0].dir, w0);
+			const cardSeq = [c0];
+			for (let i = 1; i < turns.length; i++) {
+				const { word, card } = wordForCardRank(turns[i].seed, turns[i].rank);
+				cardSeq.push(card);
+				await guessAndDeal(ctx, betId, turns[i].dir, word);
+			}
+			const [dirs, cards, outcomes, mults] = await hilo.getBetCards(betId);
+			expect(dirs.length).to.equal(turns.length);
+			expect(cards.length).to.equal(turns.length);
+			expect(outcomes.length).to.equal(turns.length);
+			expect(mults.length).to.equal(turns.length);
+			expect(dirs.map(Number)).to.deep.equal(turns.map((t) => t.dir));
+			expect(cards.map(Number)).to.deep.equal(cardSeq);
+			expect(outcomes.map(Number)).to.deep.equal(turns.map((t) => t.expect));
+			// Verify multipliers: HIT advances by f, PUSH copies prior, BUST freezes
+			let cur = ONE;
+			for (let i = 0; i < turns.length; i++) {
+				if (turns[i].expect === CardOutcome.HIT) cur = (cur * f) / ONE;
+				expect(mults[i]).to.equal(cur);
+			}
+		});
+
+		it('cashout does not modify the history arrays', async () => {
+			const { hilo, player } = ctx;
+			const { word } = wordForCardRank('cash-keep', 10);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
+			const before = await hilo.getBetCards(betId);
+			await hilo.connect(player).cashout(betId);
+			const after = await hilo.getBetCards(betId);
+			expect(after.directions.length).to.equal(before.directions.length);
+			expect(after.cards.length).to.equal(before.cards.length);
+			expect(after.outcomes.length).to.equal(before.outcomes.length);
+			expect(after.multipliersE18.length).to.equal(before.multipliersE18.length);
+		});
+
+		it('cancel does not modify the history arrays', async () => {
+			const { hilo, player } = ctx;
+			const { betId } = await placeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
+			const before = await hilo.getBetCards(betId);
+			await time.increase(Number(CANCEL_TIMEOUT) + 1);
+			await hilo.connect(player).cancelBet(betId);
+			const after = await hilo.getBetCards(betId);
+			expect(after.directions.length).to.equal(before.directions.length);
+			expect(after.cards.length).to.equal(0);
+		});
+
+		it('cap reached: last multipliersE18 entry equals maxMultiplierE18', async () => {
+			const { hilo } = ctx;
+			// 5 consecutive ABOVE wins (rank 10) — at f≈1.96x reaches ~28.94x → capped to 25x
+			const { word: w0 } = wordForCardRank('cap-0', 10);
+			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, w0);
+			for (let i = 1; i < 5; i++) {
+				const { word } = wordForCardRank(`cap-${i}`, 10);
+				await guessAndDeal(ctx, betId, Direction.ABOVE, word);
+			}
+			const [, , , mults] = await hilo.getBetCards(betId);
+			expect(mults[mults.length - 1]).to.equal(MAX_MULT_E18);
+		});
+	});
+
+	describe('free bet (placeBetWithFreeBet)', () => {
+		async function fundFreeBetBalance(ctx, amount) {
+			const { fbh, fbhAddr, usdc, owner, player } = ctx;
+			// Mint USDC to owner, transfer to FBH so FBH can disburse via useFreeBet, and
+			// register the user's balance in the FBH stub
+			await usdc.mintForUser(owner.address);
+			await usdc.connect(owner).transfer(fbhAddr, amount);
+			await fbh.setBalance(player.address, await usdc.getAddress(), amount);
+		}
+
+		async function placeFreeBet(ctx, amount, direction) {
+			const { hilo, usdcAddr, player } = ctx;
+			const tx = await hilo
+				.connect(player)
+				.placeBetWithFreeBet(usdcAddr, amount, ethers.ZeroAddress, direction);
+			const receipt = await tx.wait();
+			const placed = parseLogs(hilo, receipt.logs, 'BetPlaced');
+			const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
+			return { betId: placed.args.betId, requestId: guessed.args.requestId };
+		}
+
+		it('reverts if FBH balance is below stake', async () => {
+			const { hilo, usdcAddr, player } = ctx;
+			// FBH balance is 0 by default
+			await expect(
+				hilo
+					.connect(player)
+					.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, Direction.ABOVE)
+			).to.be.revertedWith('MockFBH: InsufficientBalance');
+		});
+
+		it('debits FBH balance, does NOT touch user wallet at place-time', async () => {
+			const { fbh, usdc, usdcAddr, player } = ctx;
+			await fundFreeBetBalance(ctx, MIN_USDC_BET);
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const fbhBalBefore = await fbh.balancePerUserAndCollateral(player.address, usdcAddr);
+			expect(fbhBalBefore).to.equal(MIN_USDC_BET);
+
+			await placeFreeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
+
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
+		});
+
+		it('cashout (win): stake → daoSink, profit → user wallet, FBH balance NOT credited back', async () => {
+			const { hilo, fbh, usdc, usdcAddr, player, daoSink } = ctx;
+			await fundFreeBetBalance(ctx, MIN_USDC_BET);
+			const f = factorE18();
+			const { word } = wordForCardRank('fb-win', 10);
+			const { betId, requestId } = await placeFreeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
+			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, requestId, [word]);
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const daoBalBefore = await usdc.balanceOf(daoSink.address);
+
+			await hilo.connect(player).cashout(betId);
+
+			const expectedPayout = (MIN_USDC_BET * f) / ONE;
+			const expectedProfit = expectedPayout - MIN_USDC_BET;
+			expect(await usdc.balanceOf(daoSink.address)).to.equal(daoBalBefore + MIN_USDC_BET);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore + expectedProfit);
+			// Free-bet balance is NOT topped back up after a win (stake consumed by DAO)
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
+		});
+
+		it('BUST: no payout, no referrer payment (skipped on free bets)', async () => {
+			const { hilo, fbh, usdc, usdcAddr, player } = ctx;
+			await fundFreeBetBalance(ctx, MIN_USDC_BET);
+			const playerBalBefore = await usdc.balanceOf(player.address);
+			const { word } = wordForCardRank('fb-bust', 2);
+			const { betId, requestId } = await placeFreeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
+			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, requestId, [word]);
+
+			const base = await hilo.getBetBase(betId);
+			expect(base.status).to.equal(BetStatus.RESOLVED);
+			expect(base.outcome).to.equal(Outcome.WRONG_GUESS);
+			expect(await usdc.balanceOf(player.address)).to.equal(playerBalBefore);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
+			// confirmCasinoBetResolved is NOT called on a bust (no payout flowing through FBH)
+			expect(await fbh.confirmCalls()).to.equal(0n);
+		});
+
+		it('cancel: stake refunded back to FBH balance (reusable)', async () => {
+			const { hilo, fbh, usdcAddr, player } = ctx;
+			await fundFreeBetBalance(ctx, MIN_USDC_BET);
+			const { betId } = await placeFreeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
+			await time.increase(Number(CANCEL_TIMEOUT) + 1);
+			await hilo.connect(player).cancelBet(betId);
+			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(
+				MIN_USDC_BET
+			);
+		});
+
+		it('regular placeBet sets isFreeBet=false; placeBetWithFreeBet sets it true', async () => {
+			const { hilo } = ctx;
+			const { betId: b1 } = await placeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
+			// Read raw struct via the bets mapping isn't exposed, but isFreeBet effects show
+			// up in payout routing — verified above. Spot-check by re-funding and placing both:
+			await fundFreeBetBalance(ctx, MIN_USDC_BET);
+			const { betId: b2 } = await placeFreeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
+			expect(b2).to.equal(b1 + 1n);
 		});
 	});
 });

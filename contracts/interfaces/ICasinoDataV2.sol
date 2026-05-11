@@ -3,17 +3,16 @@ pragma solidity ^0.8.20;
 
 /// @title ICasinoDataV2
 /// @author Overtime
-/// @notice Read-only aggregator interface for the V2 casino games + treasury. Grows
-/// phase-by-phase as new games ship (TCP first, then Hold'em, Plinko, Crash, Mines, Hi-Lo)
+/// @notice Read-only aggregator interface for the V2 casino games + treasury. Covers
+/// ThreeCardPoker, OvertimeHoldem, Plinko, HiLo, and Keno
 interface ICasinoDataV2 {
     /// @notice Canonical game identifier shared with the frontend
     enum GameV2 {
         ThreeCardPoker,
-        OvertimeHoldem, // not wired in Phase 1
+        OvertimeHoldem,
         Plinko,
-        Crash,
-        Mines,
-        HiLo
+        HiLo,
+        Keno
     }
 
     /// @notice Treasury-wide summary view
@@ -79,7 +78,10 @@ interface ICasinoDataV2 {
         uint8[3] dealerCards;
     }
 
-    /// @notice Full Hi-Lo record
+    /// @notice Full Hi-Lo record. For the per-turn history (directions / cards / outcomes /
+    /// multipliers per turn), call `HiLo.getBetCards(betId)` directly — kept off this struct so
+    /// CasinoDataV2 stays under EIP-170. Two reads per bet for the full picture, but each is a
+    /// single static call
     struct HiLoFullRecord {
         uint256 betId;
         address user;
@@ -90,46 +92,14 @@ interface ICasinoDataV2 {
         uint256 resolvedAt;
         uint8 status; // HiLo.BetStatus
         uint8 outcome; // HiLo.Outcome
-        uint8 currentCard;
+        uint8 lastCard; // last drawn card; 0xFF if no card has been drawn yet
         uint256 currentMultiplierE18;
         uint8 guessCount;
         uint8 correctCount;
         uint8 pushCount;
     }
 
-    /// @notice Full Mines record
-    struct MinesFullRecord {
-        uint256 betId;
-        address user;
-        address collateral;
-        uint256 amount;
-        uint256 payout;
-        uint256 placedAt;
-        uint256 resolvedAt;
-        uint8 status; // Mines.BetStatus
-        uint8 outcome; // Mines.Outcome
-        uint8 mineCount;
-        uint8 safeCount;
-        uint32 revealedMask;
-        uint32 mineMask; // populated only when status == RESOLVED
-    }
-
-    /// @notice Full Crash record
-    struct CrashFullRecord {
-        uint256 betId;
-        address user;
-        address collateral;
-        uint256 amount;
-        uint256 payout;
-        uint256 placedAt;
-        uint256 resolvedAt;
-        uint8 status; // Crash.BetStatus
-        uint256 targetMultiplierE18;
-        uint256 crashPointE18;
-        bool won;
-    }
-
-    /// @notice Full Plinko record
+    /// @notice Full Plinko record (8-row, single mode)
     struct PlinkoFullRecord {
         uint256 betId;
         address user;
@@ -139,7 +109,6 @@ interface ICasinoDataV2 {
         uint256 placedAt;
         uint256 resolvedAt;
         uint8 status; // Plinko.BetStatus
-        uint8 rows;
         uint8 risk; // Plinko.Risk
         uint8 slotIndex;
         uint256 multiplierE18;
@@ -163,6 +132,23 @@ interface ICasinoDataV2 {
         uint8[2] playerHole;
         uint8[5] community; // [flop0, flop1, flop2, turn, river]
         uint8[2] dealerHole;
+    }
+
+    /// @notice Full Keno record
+    struct KenoFullRecord {
+        uint256 betId;
+        address user;
+        address collateral;
+        uint256 amount;
+        uint256 payout;
+        uint256 placedAt;
+        uint256 resolvedAt;
+        uint8 status; // Keno.BetStatus
+        uint8 picksCount;
+        uint8 hits;
+        uint128 picksMask; // bitmask of player's picks (numbers 1..80 → bits 0..79)
+        uint128 drawnMask; // bitmask of the 20 drawn numbers (set when status == RESOLVED)
+        uint256 multiplierE18;
     }
 
     /* ========== TREASURY VIEWS ========== */
@@ -223,34 +209,6 @@ interface ICasinoDataV2 {
 
     function getRecentPlinkoRecords(uint256 offset, uint256 limit) external view returns (PlinkoFullRecord[] memory);
 
-    /* ========== CRASH VIEWS ========== */
-
-    function getCrashFullRecord(uint256 betId) external view returns (CrashFullRecord memory);
-
-    function getCrashFullRecords(uint256[] calldata betIds) external view returns (CrashFullRecord[] memory);
-
-    function getUserCrashRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (CrashFullRecord[] memory);
-
-    function getRecentCrashRecords(uint256 offset, uint256 limit) external view returns (CrashFullRecord[] memory);
-
-    /* ========== MINES VIEWS ========== */
-
-    function getMinesFullRecord(uint256 betId) external view returns (MinesFullRecord memory);
-
-    function getMinesFullRecords(uint256[] calldata betIds) external view returns (MinesFullRecord[] memory);
-
-    function getUserMinesRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (MinesFullRecord[] memory);
-
-    function getRecentMinesRecords(uint256 offset, uint256 limit) external view returns (MinesFullRecord[] memory);
-
     /* ========== HI-LO VIEWS ========== */
 
     function getHiLoFullRecord(uint256 betId) external view returns (HiLoFullRecord memory);
@@ -261,7 +219,28 @@ interface ICasinoDataV2 {
 
     function getRecentHiLoRecords(uint256 offset, uint256 limit) external view returns (HiLoFullRecord[] memory);
 
-    /* ========== CROSS-GAME (grows per phase) ========== */
+    /* ========== KENO VIEWS ========== */
 
+    function getKenoFullRecord(uint256 betId) external view returns (KenoFullRecord memory);
+
+    function getKenoFullRecords(uint256[] calldata betIds) external view returns (KenoFullRecord[] memory);
+
+    function getUserKenoRecords(address user, uint256 offset, uint256 limit) external view returns (KenoFullRecord[] memory);
+
+    function getRecentKenoRecords(uint256 offset, uint256 limit) external view returns (KenoFullRecord[] memory);
+
+    /* ========== CROSS-GAME (monitoring) ========== */
+
+    /// @notice Recent bets per game in lite `BetRecord` shape, returned as one inner array per
+    /// game in `GameV2` enum order. `offsetPerGame` and `limit` apply identically to each
+    /// game's pagination. Outer array is dynamic so adding a new game (e.g. Keno) just appends
+    function getRecentBetsAllGamesV2(uint256 offsetPerGame, uint256 limit) external view returns (BetRecord[][] memory);
+
+    /// @notice User's recent bets across all games, sorted by `placedAt` desc, sliced by
+    /// offset/limit. Pulls `offset+limit` from each game and merge-sorts in memory
     function getUserRecentBetsV2(address user, uint256 offset, uint256 limit) external view returns (BetRecord[] memory);
+
+    /// @notice Returns the next bet id (= total placed bets + 1) for `game`. Useful for "Page X
+    /// of Y" displays — total resolved bets is `getNextBetId(game) - 1`
+    function getNextBetId(GameV2 game) external view returns (uint256);
 }

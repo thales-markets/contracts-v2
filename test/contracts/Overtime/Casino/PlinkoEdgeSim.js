@@ -127,7 +127,7 @@ async function deployFixture() {
 	const plinkoAddr = await plinko.getAddress();
 	await plinko.initialize(owner.address, coreAddr, managerAddr);
 	await core.registerGame(plinkoAddr);
-	await core.connect(riskManager).setMaxNetLossPerGameUsd(plinkoAddr, ethers.parseEther('5000000'));
+	await core.setMaxNetLossPerGameUsd(plinkoAddr, ethers.parseEther('5000000'));
 
 	await usdc.mintForUser(owner.address);
 	await usdc.mintForUser(owner.address);

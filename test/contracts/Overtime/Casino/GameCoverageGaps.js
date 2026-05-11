@@ -84,17 +84,14 @@ async function deployFullStack() {
 		const c = await upgrades.deployProxy(Factory, [], { initializer: false });
 		await c.initialize(owner.address, coreAddr, managerAddr);
 		await core.registerGame(await c.getAddress());
-		await core
-			.connect(riskManager)
-			.setMaxNetLossPerGameUsd(await c.getAddress(), ethers.parseEther('1000000'));
+		await core.setMaxNetLossPerGameUsd(await c.getAddress(), ethers.parseEther('1000000'));
 		return c;
 	}
 	const tcp = await deployGame('ThreeCardPoker');
 	const holdem = await deployGame('OvertimeHoldem');
 	const plinko = await deployGame('Plinko');
-	const crash = await deployGame('Crash');
-	const mines = await deployGame('Mines');
 	const hilo = await deployGame('HiLo');
+	const keno = await deployGame('Keno');
 
 	await usdc.mintForUser(owner.address);
 	await usdc.mintForUser(owner.address); // top up — need 8k for tests
@@ -122,12 +119,10 @@ async function deployFullStack() {
 		holdemAddr: await holdem.getAddress(),
 		plinko,
 		plinkoAddr: await plinko.getAddress(),
-		crash,
-		crashAddr: await crash.getAddress(),
-		mines,
-		minesAddr: await mines.getAddress(),
 		hilo,
 		hiloAddr: await hilo.getAddress(),
+		keno,
+		kenoAddr: await keno.getAddress(),
 	};
 }
 
@@ -154,7 +149,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 	});
 
 	describe('Per-game admin: setCore, setManager, setPausedByRole', () => {
-		const games = ['tcp', 'holdem', 'plinko', 'crash', 'mines', 'hilo'];
+		const games = ['tcp', 'holdem', 'plinko', 'hilo', 'keno'];
 		const gAddr = (g) => g + 'Addr';
 
 		for (const g of games) {
@@ -250,7 +245,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		it('Plinko: adminCancelBet works', async () => {
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 8, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -265,46 +260,10 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 				.reverted;
 		});
 
-		it('Crash: adminCancelBet works', async () => {
-			const tx = await ctx.crash
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 5n * ONE, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.crash.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await expect(ctx.crash.connect(ctx.resolver).adminCancelBet(placed.args.betId)).to.not.be
-				.reverted;
-		});
-
-		it('Mines: adminCancelBet works', async () => {
-			const tx = await ctx.mines
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 3, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.mines.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await expect(ctx.mines.connect(ctx.resolver).adminCancelBet(placed.args.betId)).to.not.be
-				.reverted;
-		});
-
 		it('HiLo: adminCancelBet works', async () => {
 			const tx = await ctx.hilo
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -318,10 +277,28 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			await expect(ctx.hilo.connect(ctx.resolver).adminCancelBet(placed.args.betId)).to.not.be
 				.reverted;
 		});
+
+		it('Keno: adminCancelBet works', async () => {
+			const tx = await ctx.keno
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, [1, 2, 3], ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.keno.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await expect(ctx.keno.connect(ctx.resolver).adminCancelBet(placed.args.betId)).to.not.be
+				.reverted;
+		});
 	});
 
 	describe('Game getUserBetIds / getRecentBetIds edge cases', () => {
-		const games = ['tcp', 'holdem', 'plinko', 'crash', 'mines', 'hilo'];
+		const games = ['tcp', 'holdem', 'plinko', 'hilo', 'keno'];
 		for (const g of games) {
 			it(`${g}: empty user returns []`, async () => {
 				const random = ethers.Wallet.createRandom().address;
@@ -331,248 +308,71 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		}
 	});
 
-	describe('Plinko: setPaytable error paths + 12/16 row coverage', () => {
-		it('rejects unsupported rows (non-8/12/16)', async () => {
-			const newPt = new Array(11).fill(ONE); // 10 rows = invalid
+	describe('Plinko: setPaytable error paths + edge cases', () => {
+		it('setPaytable reverts on length mismatch', async () => {
+			const newPt = new Array(8).fill(ONE); // wrong length (need 9)
 			await expect(
-				ctx.plinko.connect(ctx.owner).setPaytable(10, 0, newPt)
-			).to.be.revertedWithCustomError(ctx.plinko, 'InvalidRows');
-		});
-
-		it('placeBet works for 12 and 16 rows', async () => {
-			// 12 rows + LOW
-			await expect(
-				ctx.plinko
-					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, 12, 0, ethers.ZeroAddress)
-			).to.not.be.reverted;
-			// 16 rows + MED
-			await expect(
-				ctx.plinko
-					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, 16, 1, ethers.ZeroAddress)
-			).to.not.be.reverted;
+				ctx.plinko.connect(ctx.owner).setPaytable(0, newPt)
+			).to.be.revertedWithCustomError(ctx.plinko, 'PaytableLengthMismatch');
 		});
 
 		it('placeBet with referrer triggers core.setReferrer path', async () => {
 			const ref = ctx.freeBetsHolderStub.address; // any non-zero
 			// First a referrals contract must exist for this to do anything visible, but
 			// when referrals==0 the call is silent. Just verify the path
-			await expect(ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 8, 0, ref))
-				.to.not.be.reverted;
+			await expect(ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ref)).to
+				.not.be.reverted;
 		});
 
-		it('placeBet rejects if maxProfit exceeded (1000x cap × big bet)', async () => {
-			const { core, riskManager } = ctx;
-			// Tighten core's per-bet maxProfitUsd very low
-			await core.connect(riskManager).setRiskParams(ethers.parseEther('1'), 0);
+		it('placeBet rejects if maxProfit exceeded', async () => {
+			const { core } = ctx;
+			// Tighten core's per-bet maxProfitUsd very low so even HIGH (29x) min bet fails
+			await core.setRiskParams(ethers.parseEther('1'), 0);
 			await expect(
 				ctx.plinko
 					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, 16, 2 /* HIGH */, ethers.ZeroAddress)
+					.placeBet(ctx.usdcAddr, MIN_USDC_BET, 2 /* HIGH */, ethers.ZeroAddress)
 			).to.be.revertedWithCustomError(ctx.plinko, 'MaxProfitExceeded');
-		});
-	});
-
-	describe('Crash: validation + admin', () => {
-		it('placeBet rejects unsupported collateral', async () => {
-			await expect(
-				ctx.crash
-					.connect(ctx.player)
-					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, 5n * ONE, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.crash, 'InvalidCollateral');
-		});
-
-		it('placeBet rejects below MIN_BET_USD', async () => {
-			await expect(
-				ctx.crash
-					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, USDC_UNIT, 5n * ONE, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.crash, 'InvalidAmount');
-		});
-
-		it('placeBet rejects when target × bet exceeds maxProfit', async () => {
-			const { core, riskManager } = ctx;
-			await core.connect(riskManager).setRiskParams(ethers.parseEther('5'), 0);
-			await expect(
-				ctx.crash
-					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, 100n * ONE, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.crash, 'MaxProfitExceeded');
-		});
-
-		it('admin can setMaxTarget; rejects below 2x', async () => {
-			await expect(
-				ctx.crash.connect(ctx.riskManager).setMaxTarget(ONE)
-			).to.be.revertedWithCustomError(ctx.crash, 'InvalidAmount');
-			await ctx.crash.connect(ctx.riskManager).setMaxTarget(500n * ONE);
-			expect(await ctx.crash.maxTargetE18()).to.equal(500n * ONE);
-		});
-
-		it('cancel before timeout reverts', async () => {
-			const tx = await ctx.crash
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 5n * ONE, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.crash.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await expect(
-				ctx.crash.connect(ctx.player).cancelBet(placed.args.betId)
-			).to.be.revertedWithCustomError(ctx.crash, 'CancelTimeoutNotReached');
-		});
-
-		it('cancel with non-owner reverts', async () => {
-			const tx = await ctx.crash
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 5n * ONE, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.crash.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await expect(
-				ctx.crash.connect(ctx.owner).cancelBet(placed.args.betId)
-			).to.be.revertedWithCustomError(ctx.crash, 'BetNotOwner');
-		});
-
-		it('cancel non-pending reverts InvalidBetStatus', async () => {
-			await expect(ctx.crash.connect(ctx.player).cancelBet(99999n)).to.be.revertedWithCustomError(
-				ctx.crash,
-				'BetNotFound'
-			);
-		});
-	});
-
-	describe('Mines: validation, edge paths', () => {
-		it('placeBet rejects below MIN_BET_USD', async () => {
-			await expect(
-				ctx.mines.connect(ctx.player).placeBet(ctx.usdcAddr, USDC_UNIT, 3, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.mines, 'InvalidAmount');
-		});
-
-		it('placeBet rejects unsupported collateral', async () => {
-			await expect(
-				ctx.mines
-					.connect(ctx.player)
-					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, 3, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.mines, 'InvalidCollateral');
-		});
-
-		it('placeBet rejects when maxProfit exceeded', async () => {
-			await ctx.core.connect(ctx.riskManager).setRiskParams(ethers.parseEther('1'), 0);
-			await expect(
-				ctx.mines.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 3, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.mines, 'MaxProfitExceeded');
-		});
-
-		it('revealTile out of range reverts', async () => {
-			const id = await placeAndDeal(
-				ctx,
-				ctx.mines,
-				[ctx.usdcAddr, MIN_USDC_BET, 3, ethers.ZeroAddress],
-				0xdeadbeefn
-			);
-			await expect(ctx.mines.connect(ctx.player).revealTile(id, 25)).to.be.revertedWithCustomError(
-				ctx.mines,
-				'InvalidTileIndex'
-			);
-		});
-
-		it('cashout / revealTile reject non-owner', async () => {
-			const id = await placeAndDeal(
-				ctx,
-				ctx.mines,
-				[ctx.usdcAddr, MIN_USDC_BET, 3, ethers.ZeroAddress],
-				0xdeadbeefn
-			);
-			const [, , , , , attacker] = await ethers.getSigners();
-			await expect(ctx.mines.connect(attacker).revealTile(id, 0)).to.be.revertedWithCustomError(
-				ctx.mines,
-				'BetNotOwner'
-			);
-			await expect(ctx.mines.connect(attacker).cashout(id)).to.be.revertedWithCustomError(
-				ctx.mines,
-				'BetNotOwner'
-			);
-		});
-
-		it('admin can setHouseEdge / setMaxMultiplier', async () => {
-			await ctx.mines.connect(ctx.riskManager).setHouseEdge(3n * 10n ** 16n); // 3%
-			expect(await ctx.mines.houseEdgeE18()).to.equal(3n * 10n ** 16n);
-			await expect(
-				ctx.mines.connect(ctx.riskManager).setHouseEdge(1n * 10n ** 16n)
-			).to.be.revertedWithCustomError(ctx.mines, 'InvalidHouseEdge');
-			await expect(
-				ctx.mines.connect(ctx.riskManager).setHouseEdge(6n * 10n ** 16n)
-			).to.be.revertedWithCustomError(ctx.mines, 'InvalidHouseEdge');
-			await ctx.mines.connect(ctx.riskManager).setMaxMultiplier(500n * ONE);
-			await expect(
-				ctx.mines.connect(ctx.riskManager).setMaxMultiplier(ONE)
-			).to.be.revertedWithCustomError(ctx.mines, 'InvalidAmount');
-		});
-
-		it('cancel before timeout reverts', async () => {
-			const tx = await ctx.mines
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 3, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.mines.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await expect(
-				ctx.mines.connect(ctx.player).cancelBet(placed.args.betId)
-			).to.be.revertedWithCustomError(ctx.mines, 'CancelTimeoutNotReached');
 		});
 	});
 
 	describe('HiLo: validation, edge paths', () => {
 		it('placeBet rejects below MIN_BET_USD', async () => {
 			await expect(
-				ctx.hilo.connect(ctx.player).placeBet(ctx.usdcAddr, USDC_UNIT, ethers.ZeroAddress)
+				ctx.hilo
+					.connect(ctx.player)
+					.placeBet(ctx.usdcAddr, USDC_UNIT, ethers.ZeroAddress, 0 /* ABOVE */)
 			).to.be.revertedWithCustomError(ctx.hilo, 'InvalidAmount');
 		});
 
 		it('placeBet rejects unsupported collateral', async () => {
 			await expect(
-				ctx.hilo.connect(ctx.player).placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress)
+				ctx.hilo
+					.connect(ctx.player)
+					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */)
 			).to.be.revertedWithCustomError(ctx.hilo, 'InvalidCollateral');
 		});
 
 		it('placeBet rejects when maxProfit exceeded', async () => {
-			await ctx.core.connect(ctx.riskManager).setRiskParams(ethers.parseEther('1'), 0);
+			await ctx.core.setRiskParams(ethers.parseEther('1'), 0);
 			await expect(
-				ctx.hilo.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)
+				ctx.hilo
+					.connect(ctx.player)
+					.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */)
 			).to.be.revertedWithCustomError(ctx.hilo, 'MaxProfitExceeded');
 		});
 
 		it('admin: setHouseEdge / setMaxMultiplier validation', async () => {
-			await expect(ctx.hilo.connect(ctx.riskManager).setHouseEdge(0)).to.be.revertedWithCustomError(
+			await expect(ctx.hilo.setHouseEdge(0)).to.be.revertedWithCustomError(
 				ctx.hilo,
 				'InvalidHouseEdge'
 			);
-			await ctx.hilo.connect(ctx.riskManager).setHouseEdge(3n * 10n ** 16n);
-			await expect(
-				ctx.hilo.connect(ctx.riskManager).setMaxMultiplier(ONE)
-			).to.be.revertedWithCustomError(ctx.hilo, 'InvalidAmount');
-			await ctx.hilo.connect(ctx.riskManager).setMaxMultiplier(500n * ONE);
+			await ctx.hilo.setHouseEdge(3n * 10n ** 16n);
+			await expect(ctx.hilo.setMaxMultiplier(ONE)).to.be.revertedWithCustomError(
+				ctx.hilo,
+				'InvalidAmount'
+			);
+			await ctx.hilo.setMaxMultiplier(500n * ONE);
 		});
 
 		it('guess on non-existent bet reverts', async () => {
@@ -606,7 +406,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		});
 
 		it('placeBet rejects when maxProfit exceeded', async () => {
-			await ctx.core.connect(ctx.riskManager).setRiskParams(ethers.parseEther('1'), 0);
+			await ctx.core.setRiskParams(ethers.parseEther('1'), 0);
 			await expect(
 				ctx.tcp
 					.connect(ctx.player)
@@ -644,7 +444,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		});
 
 		it('placeBet rejects when maxProfit exceeded', async () => {
-			await ctx.core.connect(ctx.riskManager).setRiskParams(ethers.parseEther('1'), 0);
+			await ctx.core.setRiskParams(ethers.parseEther('1'), 0);
 			await expect(
 				ctx.holdem
 					.connect(ctx.player)
@@ -665,7 +465,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 	});
 
 	describe('Game callback: rejects non-core caller', () => {
-		const games = ['tcp', 'holdem', 'plinko', 'crash', 'mines', 'hilo'];
+		const games = ['tcp', 'holdem', 'plinko', 'hilo', 'keno'];
 		for (const g of games) {
 			it(`${g}: onVrfFulfilled rejects non-core sender`, async () => {
 				await expect(
@@ -695,7 +495,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			// Place with referrer set
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 8, 0, referrer);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, referrer);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {

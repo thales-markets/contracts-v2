@@ -36,12 +36,12 @@
   },
   {
     "inputs": [],
-    "name": "InvalidHouseEdge",
+    "name": "InvalidInitialization",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "InvalidInitialization",
+    "name": "InvalidPicks",
     "type": "error"
   },
   {
@@ -51,17 +51,22 @@
   },
   {
     "inputs": [],
-    "name": "InvalidTarget",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "MaxProfitExceeded",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "MultiplierTooHigh",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotInitializing",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PaytableLengthMismatch",
     "type": "error"
   },
   {
@@ -130,9 +135,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "targetMultiplierE18",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "picksMask",
+        "type": "uint128"
       }
     ],
     "name": "BetPlaced",
@@ -161,15 +172,21 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "crashPointE18",
-        "type": "uint256"
+        "internalType": "uint128",
+        "name": "drawnMask",
+        "type": "uint128"
       },
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "won",
-        "type": "bool"
+        "internalType": "uint8",
+        "name": "hits",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "multiplierE18",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -186,38 +203,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "newHouseEdgeE18",
-        "type": "uint256"
-      }
-    ],
-    "name": "HouseEdgeChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint64",
         "name": "version",
         "type": "uint64"
       }
     ],
     "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newMaxTargetE18",
-        "type": "uint256"
-      }
-    ],
-    "name": "MaxTargetChanged",
     "type": "event"
   },
   {
@@ -266,8 +257,40 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "multipliersE18",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "PaytableUpdated",
+    "type": "event"
+  },
+  {
     "inputs": [],
-    "name": "DEFAULT_MAX_TARGET_E18",
+    "name": "DRAW_COUNT",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_BET_USD",
     "outputs": [
       {
         "internalType": "uint256",
@@ -280,12 +303,25 @@
   },
   {
     "inputs": [],
-    "name": "MAX_HOUSE_EDGE_E18",
+    "name": "MAX_MULTIPLIER_E18",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_PICKS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -306,12 +342,12 @@
   },
   {
     "inputs": [],
-    "name": "MIN_HOUSE_EDGE_E18",
+    "name": "MIN_PICKS",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -319,12 +355,12 @@
   },
   {
     "inputs": [],
-    "name": "MIN_TARGET_E18",
+    "name": "POOL_SIZE",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint8",
         "name": "",
-        "type": "uint256"
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -417,24 +453,66 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ICasinoCrash.BetStatus",
+        "internalType": "enum ICasinoKeno.BetStatus",
         "name": "status",
         "type": "uint8"
       },
       {
-        "internalType": "uint256",
-        "name": "targetMultiplierE18",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hits",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint128",
+        "name": "picksMask",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "drawnMask",
+        "type": "uint128"
       },
       {
         "internalType": "uint256",
-        "name": "crashPointE18",
+        "name": "multiplierE18",
         "type": "uint256"
-      },
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMaxMultiplierE18",
+    "outputs": [
       {
-        "internalType": "bool",
-        "name": "won",
-        "type": "bool"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      }
+    ],
+    "name": "getPaytable",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -495,19 +573,6 @@
   },
   {
     "inputs": [],
-    "name": "houseEdgeE18",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "initNonReentrant",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -557,19 +622,6 @@
         "internalType": "contract ISportsAMMV2Manager",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxTargetE18",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -671,9 +723,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "targetMultiplierE18",
-        "type": "uint256"
+        "internalType": "uint8[]",
+        "name": "picks",
+        "type": "uint8[]"
       },
       {
         "internalType": "address",
@@ -682,6 +734,45 @@
       }
     ],
     "name": "placeBet",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "picks",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      }
+    ],
+    "name": "placeBetWithFreeBet",
     "outputs": [
       {
         "internalType": "uint256",
@@ -732,38 +823,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "newHouseEdgeE18",
-        "type": "uint256"
-      }
-    ],
-    "name": "setHouseEdge",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_manager",
         "type": "address"
       }
     ],
     "name": "setManager",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "newMaxTargetE18",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMaxTarget",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -803,6 +868,24 @@
       }
     ],
     "name": "setPausedByRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "multipliers",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "setPaytable",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

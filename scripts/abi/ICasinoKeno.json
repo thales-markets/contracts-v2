@@ -65,9 +65,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "targetMultiplierE18",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "picksMask",
+        "type": "uint128"
       }
     ],
     "name": "BetPlaced",
@@ -96,15 +102,21 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "crashPointE18",
-        "type": "uint256"
+        "internalType": "uint128",
+        "name": "drawnMask",
+        "type": "uint128"
       },
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "won",
-        "type": "bool"
+        "internalType": "uint8",
+        "name": "hits",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "multiplierE18",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -120,26 +132,19 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newHouseEdgeE18",
-        "type": "uint256"
-      }
-    ],
-    "name": "HouseEdgeChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
+        "indexed": true,
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "newMaxTargetE18",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "multipliersE18",
+        "type": "uint256[]"
       }
     ],
-    "name": "MaxTargetChanged",
+    "name": "PaytableUpdated",
     "type": "event"
   },
   {
@@ -209,24 +214,66 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ICasinoCrash.BetStatus",
+        "internalType": "enum ICasinoKeno.BetStatus",
         "name": "status",
         "type": "uint8"
       },
       {
-        "internalType": "uint256",
-        "name": "targetMultiplierE18",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hits",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint128",
+        "name": "picksMask",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "drawnMask",
+        "type": "uint128"
       },
       {
         "internalType": "uint256",
-        "name": "crashPointE18",
+        "name": "multiplierE18",
         "type": "uint256"
-      },
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMaxMultiplierE18",
+    "outputs": [
       {
-        "internalType": "bool",
-        "name": "won",
-        "type": "bool"
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "picksCount",
+        "type": "uint8"
+      }
+    ],
+    "name": "getPaytable",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "multipliersE18",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -286,29 +333,42 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "houseEdgeE18",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "picks",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      }
+    ],
+    "name": "placeBet",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "betId",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxTargetE18",
-    "outputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "requestId",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -324,9 +384,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "targetMultiplierE18",
-        "type": "uint256"
+        "internalType": "uint8[]",
+        "name": "picks",
+        "type": "uint8[]"
       },
       {
         "internalType": "address",
@@ -334,7 +394,7 @@
         "type": "address"
       }
     ],
-    "name": "placeBet",
+    "name": "placeBetWithFreeBet",
     "outputs": [
       {
         "internalType": "uint256",

@@ -331,7 +331,7 @@ async function deployFixture() {
 	await usdc.connect(player).approve(coreAddr, ethers.MaxUint256);
 
 	// Lift circuit breaker for validation runs (we expect player to win sometimes)
-	await core.connect(riskManager).setMaxNetLossPerGameUsd(tcpAddr, ethers.parseEther('100000'));
+	await core.setMaxNetLossPerGameUsd(tcpAddr, ethers.parseEther('100000'));
 
 	return { tcp, tcpAddr, vrf, core, coreAddr, usdc, usdcAddr, owner, player };
 }

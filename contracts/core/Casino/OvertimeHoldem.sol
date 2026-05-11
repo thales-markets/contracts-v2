@@ -39,6 +39,11 @@ contract OvertimeHoldem is
     uint256 private constant ONE = 1e18;
     uint256 public constant MIN_BET_USD = 3e18;
 
+    /// @notice After this long in PLAYER_TURN with no fold/call, the resolver role can
+    /// `adminForceFold` to release the ante-side reservation. Mitigates a bankroll-grief vector
+    /// where a user places a bet, lets VRF1 fulfill, then walks away.
+    uint256 public constant PLAYER_TURN_TIMEOUT = 24 hours;
+
     uint8 private constant DECK_SIZE = 52;
 
     uint8 private constant HOLE_CARDS = 2;
@@ -109,6 +114,7 @@ contract OvertimeHoldem is
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
+    error PlayerTurnTimeoutNotReached();
 
     /* ========== STRUCTS ========== */
 
@@ -131,6 +137,9 @@ contract OvertimeHoldem is
         uint256 aaBonusPayout;
         uint256 antePayout;
         uint256 callPayout;
+        // Bet placed with free-bet balance — Ante+AA at place and Call at callBet() pulled from
+        // FreeBetsHolder. All settlements route through FBH; referrer payments suppressed on loss
+        bool isFreeBet;
     }
 
     /* ========== STATE ========== */
@@ -166,6 +175,26 @@ contract OvertimeHoldem is
         uint256 aaBonusAmount,
         address referrer
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, anteAmount, aaBonusAmount, referrer, false);
+    }
+
+    /// @inheritdoc ICasinoOvertimeHoldem
+    function placeBetWithFreeBet(
+        address collateral,
+        uint256 anteAmount,
+        uint256 aaBonusAmount,
+        address referrer
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, anteAmount, aaBonusAmount, referrer, true);
+    }
+
+    function _placeBet(
+        address collateral,
+        uint256 anteAmount,
+        uint256 aaBonusAmount,
+        address referrer,
+        bool isFreeBet
+    ) internal returns (uint256 betId, uint256 requestId) {
         if (anteAmount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
 
@@ -177,9 +206,13 @@ contract OvertimeHoldem is
             (MAX_PAYOUT_ANTE_MULT - 3) +
             core.getUsdValue(collateral, aaBonusAmount) *
             (MAX_PAYOUT_AA_MULT - 1);
-        if (worstHouseProfitUsd > core.maxProfitUsd()) revert MaxProfitExceeded();
+        if (worstHouseProfitUsd > core.effectiveMaxProfitUsd(address(this))) revert MaxProfitExceeded();
 
-        core.pullFromUser(msg.sender, collateral, anteAmount + aaBonusAmount);
+        if (isFreeBet) {
+            core.useFreeBet(msg.sender, collateral, anteAmount + aaBonusAmount);
+        } else {
+            core.pullFromUser(msg.sender, collateral, anteAmount + aaBonusAmount);
+        }
         if (referrer != address(0)) core.setReferrer(referrer, msg.sender);
 
         uint256 reservation = anteAmount * MAX_PAYOUT_ANTE_MULT + aaBonusAmount * MAX_PAYOUT_AA_MULT;
@@ -198,6 +231,7 @@ contract OvertimeHoldem is
         b.requestId = requestId;
         b.status = BetStatus.AWAITING_DEAL;
         b.reservedAnteSide = anteAmount * MAX_PAYOUT_ANTE_MULT;
+        b.isFreeBet = isFreeBet;
 
         requestIdToBetId[requestId] = betId;
         userBetIds[msg.sender].push(betId);
@@ -210,11 +244,28 @@ contract OvertimeHoldem is
     function fold(uint256 betId) external override nonReentrant {
         Bet storage b = bets[betId];
         _requireOwnedPlayerTurn(b);
+        _doFold(betId, b);
+    }
 
+    /// @notice Operator force-fold for a bet stuck in PLAYER_TURN beyond `PLAYER_TURN_TIMEOUT`.
+    /// Treats the bet as a fold (ante forfeit) so the ante-side reservation is released and the
+    /// bankroll isn't grief-locked by an abandoned mid-game bet. AA Bonus already settled in VRF1.
+    function adminForceFold(uint256 betId) external override nonReentrant onlyResolver {
+        Bet storage b = bets[betId];
+        if (b.status == BetStatus.NONE) revert BetNotFound();
+        if (b.status != BetStatus.PLAYER_TURN) revert InvalidBetStatus();
+        if (block.timestamp < b.lastRequestAt + PLAYER_TURN_TIMEOUT) revert PlayerTurnTimeoutNotReached();
+        _doFold(betId, b);
+    }
+
+    function _doFold(uint256 betId, Bet storage b) internal {
         core.releaseReservation(b.collateral, b.reservedAnteSide);
         b.reservedAnteSide = 0;
         core.recordSettlement(b.collateral, b.anteAmount, 0);
-        core.payReferrer(b.user, b.collateral, b.anteAmount);
+        // Skip referrer payment on free bets — user lost no real funds
+        if (!b.isFreeBet) {
+            core.payReferrer(b.user, b.collateral, b.anteAmount);
+        }
 
         b.status = BetStatus.RESOLVED;
         b.outcome = Outcome.FOLDED;
@@ -229,7 +280,13 @@ contract OvertimeHoldem is
         _requireOwnedPlayerTurn(b);
 
         uint256 callAmount = b.anteAmount * 2;
-        core.pullFromUser(b.user, b.collateral, callAmount);
+        // Free-bet runs draw the call stake from FBH too; if FBH balance < call amount the
+        // call reverts and the user must fold instead
+        if (b.isFreeBet) {
+            core.useFreeBet(b.user, b.collateral, callAmount);
+        } else {
+            core.pullFromUser(b.user, b.collateral, callAmount);
+        }
 
         requestId = core.requestRandomWords(1);
         b.requestId = requestId;
@@ -260,9 +317,17 @@ contract OvertimeHoldem is
     function _cancelBet(uint256 betId, bool adminCancelled) internal {
         Bet storage b = bets[betId];
 
-        // Refund: stakes pulled in so far
-        uint256 refund = b.anteAmount + b.aaBonusAmount;
-        if (b.status == BetStatus.AWAITING_RESOLVE) refund += b.anteAmount * 2; // call stake
+        // Refund: stakes still owed to the user.
+        // AWAITING_DEAL → ante + AA Bonus (AA not yet settled).
+        // AWAITING_RESOLVE → ante + 2·ante Call stake (AA already settled in VRF1; do NOT refund
+        // aaBonus again or the user double-banks the AA stake on a winning AA / recovers a lost AA
+        // on a losing AA).
+        uint256 refund = b.anteAmount;
+        if (b.status == BetStatus.AWAITING_DEAL) {
+            refund += b.aaBonusAmount;
+        } else {
+            refund += b.anteAmount * 2; // call stake
+        }
 
         // Reservation: ante-side still held; aa-bonus side already released on VRF1 fulfill if
         // status is AWAITING_RESOLVE. If still AWAITING_DEAL, both legs remain.
@@ -271,9 +336,12 @@ contract OvertimeHoldem is
         b.reservedAnteSide = 0;
         core.releaseReservation(b.collateral, reservationToRelease);
 
-        core.payOut(b.user, b.collateral, refund, false, refund);
+        core.payOut(b.user, b.collateral, refund, b.isFreeBet, refund);
 
-        b.totalPayout = refund;
+        // `+=` instead of `=`: in AWAITING_RESOLVE, b.totalPayout already holds the AA payout
+        // recorded by VRF1; we want the FE-visible total to reflect both. From AWAITING_DEAL the
+        // prior value is 0, so the result is identical to `=`.
+        b.totalPayout += refund;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
         emit BetCancelled(betId, b.user, refund, adminCancelled);
@@ -317,7 +385,7 @@ contract OvertimeHoldem is
             }
             core.releaseReservation(b.collateral, b.aaBonusAmount * MAX_PAYOUT_AA_MULT);
             if (aaPayout > 0) {
-                core.payOut(b.user, b.collateral, aaPayout, false, b.aaBonusAmount);
+                core.payOut(b.user, b.collateral, aaPayout, b.isFreeBet, b.aaBonusAmount);
             }
             core.recordSettlement(b.collateral, b.aaBonusAmount, aaPayout);
         }
@@ -346,11 +414,12 @@ contract OvertimeHoldem is
         b.reservedAnteSide = 0;
 
         if (totalSidePayout > 0) {
-            core.payOut(b.user, b.collateral, totalSidePayout, false, stakeOut);
+            core.payOut(b.user, b.collateral, totalSidePayout, b.isFreeBet, stakeOut);
         }
         core.recordSettlement(b.collateral, stakeOut, totalSidePayout);
 
-        if (totalSidePayout < stakeOut) {
+        // Skip referrer payment on free bets — user lost no real funds
+        if (totalSidePayout < stakeOut && !b.isFreeBet) {
             core.payReferrer(b.user, b.collateral, stakeOut - totalSidePayout);
         }
 
@@ -427,7 +496,14 @@ contract OvertimeHoldem is
             // Ante and Call both lose (paid 0)
         } else {
             r.outcome = Outcome.TIE;
-            r.antePayout = b.anteAmount; // push
+            // Ante & Call both push. Per standard Casino Hold'em, the Ante Bonus paytable pays
+            // on top of the push for premium hands (Royal/SF/4oK/FH where mult > 1×). The default
+            // 1× is the win-only payout — not a tie bonus — so high-card/pair/straight/flush ties
+            // just push.
+            r.antePayout = b.anteAmount;
+            if (anteMult > ANTE_MULT_DEFAULT) {
+                r.antePayout += b.anteAmount * anteMult;
+            }
             r.callPayout = callAmount; // push
         }
     }

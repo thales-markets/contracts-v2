@@ -313,7 +313,7 @@ async function deployFixture() {
 	const holdemAddr = await holdem.getAddress();
 	await holdem.initialize(owner.address, coreAddr, managerAddr);
 	await core.registerGame(holdemAddr);
-	await core.connect(riskManager).setMaxNetLossPerGameUsd(holdemAddr, ethers.parseEther('100000'));
+	await core.setMaxNetLossPerGameUsd(holdemAddr, ethers.parseEther('100000'));
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -415,7 +415,9 @@ function simulateRound(dealWord, resolveWord, ante, aa) {
 		callPayout = 0n;
 	} else {
 		outcome = Outcome.TIE;
+		// Push + premium-hand bonus (Royal/SF/4oK/FH where mult > 1). Mirrors the contract.
 		antePayout = BigInt(ante);
+		if (anteMult > 1) antePayout += BigInt(ante) * BigInt(anteMult);
 		callPayout = callAmount;
 	}
 

@@ -14,13 +14,14 @@ import "../../interfaces/ICasinoHiLo.sol";
 
 /// @title HiLo
 /// @author Overtime
-/// @notice Card-guess run with cashout. Player is shown a card; guesses higher/lower for the
-/// next card; correct guesses multiply the running multiplier; wrong guess loses the bet;
-/// cashout pays `bet * multiplier`. Equal-rank cards push (multiplier unchanged, run continues)
-/// @dev Cards are drawn fresh from a 52-card deck each guess (no without-replacement tracking).
-/// Multiplier per correct guess: `(12 - 13*HE) / countOfWinningRanks` in 1e18 precision.
-/// At extreme ranks (0 or 12), only one direction is valid; the other reverts.
-/// Per-bet liability capped by `maxMultiplierE18`
+/// @notice "Above/below 8" card-guess run with cashout. Each round the player picks ABOVE or
+/// BELOW the rank-6 midpoint (card "8"); a fresh card is drawn from a 52-card deck; correct
+/// guesses multiply the running multiplier by a constant factor; wrong guess loses the bet;
+/// cashout pays `bet * multiplier`. Drawing card "8" is a push (multiplier unchanged, run continues)
+/// @dev No "current card" feeds into the decision — the comparison point is always rank 6. Per-
+/// correct-guess factor is constant: `factor = (12 - 13*HE) / 6` in 1e18 precision (≈ 1.96x at
+/// HE=2%). Per-bet liability capped by `maxMultiplierE18`. Cards are drawn fresh each guess
+/// (no without-replacement tracking)
 contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, ProxyPausable, ProxyReentrancyGuard {
     /* ========== CONSTANTS ========== */
 
@@ -30,10 +31,18 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     uint8 private constant DECK_SIZE = 52;
     uint8 private constant RANKS_PER_DECK = 13;
 
+    /// @notice Reference rank for the above/below decision. Rank 6 is card "8" (rank 0 = "2",
+    /// rank 12 = "Ace"). Splits the deck symmetrically: 6 ranks below (2-7), 6 above (9-A), 1
+    /// push (8 itself). Probability of correct guess = 6/13 per round
+    uint8 private constant MIDPOINT_RANK = 6;
+    uint8 private constant WINNING_RANKS_PER_DIRECTION = 6;
+
     uint256 public constant MIN_HOUSE_EDGE_E18 = 0.02e18;
     uint256 public constant MAX_HOUSE_EDGE_E18 = 0.05e18;
 
-    uint256 public constant DEFAULT_MAX_MULTIPLIER_E18 = 1000e18;
+    /// @notice Default per-bet multiplier cap. With a constant ≈1.96x per win, 25x corresponds to
+    /// ~5 consecutive wins. Realistic 99th-percentile cashouts sit well below this
+    uint256 public constant DEFAULT_MAX_MULTIPLIER_E18 = 25e18;
 
     /* ========== ERRORS ========== */
 
@@ -41,7 +50,6 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     error InvalidSender();
     error InvalidAmount();
     error InvalidCollateral();
-    error InvalidDirection();
     error MaxMultiplierReached();
     error MaxProfitExceeded();
     error InvalidHouseEdge();
@@ -63,13 +71,28 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         uint256 reserved;
         uint256 requestId;
         uint256 currentMultiplierE18;
-        uint8 currentCard;
+        uint8 lastCard; // last drawn card (0..51); 0xFF if no card drawn yet
         uint8 guessCount;
         uint8 correctCount;
         uint8 pushCount;
         Direction pendingDirection;
         BetStatus status;
         Outcome outcome;
+        // --- per-turn history (Bet-struct extension; storage-safe append for upgrade) ---
+        // Parallel arrays for FE rendering of the full bet history without log scanning.
+        // `directions` has one entry per submitted guess (length = `guessCount`). `cards`,
+        // `outcomes`, `multipliersE18` have one entry per resolved card (length = `guessCount`
+        // when no VRF in flight, or `guessCount - 1` while AWAITING_NEXT_CARD).
+        // `multipliersE18[i]` holds the multiplier AFTER turn i (HIT advances; PUSH copies
+        // prior; BUST writes the frozen pre-bust value)
+        uint8[] directions;
+        uint8[] cards;
+        uint8[] outcomes; // CardOutcome cast to uint8
+        uint256[] multipliersE18;
+        // --- free bet flag. Set when stake was pulled from FreeBetsHolder via core.useFreeBet
+        // instead of core.pullFromUser. Routes payouts back to FBH on resolve and suppresses
+        // referrer payment on BUST (no real loss to user)
+        bool isFreeBet;
     }
 
     /* ========== STATE ========== */
@@ -103,11 +126,35 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /* ========== PLACE / GUESS / CASHOUT ========== */
 
+    /// @notice Places a bet and submits the first guess in one transaction. The bet starts in
+    /// AWAITING_NEXT_CARD with the first VRF request already in flight. Subsequent rounds use
+    /// `guess()` once the bet returns to PLAYER_TURN
     function placeBet(
         address collateral,
         uint256 amount,
-        address referrer
+        address referrer,
+        Direction firstDirection
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, amount, referrer, firstDirection, false);
+    }
+
+    /// @inheritdoc ICasinoHiLo
+    function placeBetWithFreeBet(
+        address collateral,
+        uint256 amount,
+        address referrer,
+        Direction firstDirection
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, amount, referrer, firstDirection, true);
+    }
+
+    function _placeBet(
+        address collateral,
+        uint256 amount,
+        address referrer,
+        Direction firstDirection,
+        bool isFreeBet
+    ) internal returns (uint256 betId, uint256 requestId) {
         if (amount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
 
@@ -115,16 +162,20 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         if (amountUsd < MIN_BET_USD) revert InvalidAmount();
 
         uint256 worstHouseProfitUsd = (amountUsd * (maxMultiplierE18 - ONE)) / ONE;
-        if (worstHouseProfitUsd > core.maxProfitUsd()) revert MaxProfitExceeded();
+        if (worstHouseProfitUsd > core.effectiveMaxProfitUsd(address(this))) revert MaxProfitExceeded();
 
-        core.pullFromUser(msg.sender, collateral, amount);
+        if (isFreeBet) {
+            core.useFreeBet(msg.sender, collateral, amount);
+        } else {
+            core.pullFromUser(msg.sender, collateral, amount);
+        }
         if (referrer != address(0)) core.setReferrer(referrer, msg.sender);
 
         uint256 reservation = (amount * maxMultiplierE18) / ONE;
         core.reserveOrRevert(collateral, reservation);
 
-        requestId = core.requestRandomWords(1);
         betId = nextBetId++;
+        requestId = core.requestRandomWords(1);
 
         Bet storage b = bets[betId];
         b.user = msg.sender;
@@ -132,15 +183,21 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         b.amount = amount;
         b.placedAt = block.timestamp;
         b.lastRequestAt = block.timestamp;
-        b.requestId = requestId;
         b.reserved = reservation;
         b.currentMultiplierE18 = ONE; // 1.00x to start
-        b.status = BetStatus.AWAITING_FIRST_CARD;
+        b.lastCard = 0xFF; // sentinel: no card drawn yet
+        b.requestId = requestId;
+        b.pendingDirection = firstDirection;
+        b.guessCount = 1;
+        b.directions.push(uint8(firstDirection));
+        b.status = BetStatus.AWAITING_NEXT_CARD;
+        b.isFreeBet = isFreeBet;
 
         requestIdToBetId[requestId] = betId;
         userBetIds[msg.sender].push(betId);
 
-        emit BetPlaced(betId, requestId, msg.sender, collateral, amount);
+        emit BetPlaced(betId, msg.sender, collateral, amount);
+        emit GuessChosen(betId, requestId, msg.sender, firstDirection);
     }
 
     function guess(uint256 betId, Direction direction) external override nonReentrant returns (uint256 requestId) {
@@ -148,11 +205,6 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();
         if (b.status != BetStatus.PLAYER_TURN) revert InvalidBetStatus();
-
-        uint8 rank = _rank(b.currentCard);
-        // Validate direction has nonzero probability
-        if (direction == Direction.HIGHER && rank == RANKS_PER_DECK - 1) revert InvalidDirection();
-        if (direction == Direction.LOWER && rank == 0) revert InvalidDirection();
 
         // Cap reached → no more guesses
         if (b.currentMultiplierE18 >= maxMultiplierE18) revert MaxMultiplierReached();
@@ -163,9 +215,10 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         b.lastRequestAt = block.timestamp;
         b.status = BetStatus.AWAITING_NEXT_CARD;
         ++b.guessCount;
+        b.directions.push(uint8(direction));
         requestIdToBetId[requestId] = betId;
 
-        emit GuessChosen(betId, requestId, msg.sender, direction, b.currentCard);
+        emit GuessChosen(betId, requestId, msg.sender, direction);
     }
 
     function cashout(uint256 betId) external override nonReentrant {
@@ -180,7 +233,7 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         core.releaseReservation(b.collateral, b.reserved);
         b.reserved = 0;
         if (payout > 0) {
-            core.payOut(b.user, b.collateral, payout, false, b.amount);
+            core.payOut(b.user, b.collateral, payout, b.isFreeBet, b.amount);
         }
         core.recordSettlement(b.collateral, b.amount, payout);
 
@@ -197,7 +250,7 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();
-        if (b.status != BetStatus.AWAITING_FIRST_CARD && b.status != BetStatus.AWAITING_NEXT_CARD) revert InvalidBetStatus();
+        if (b.status != BetStatus.AWAITING_NEXT_CARD) revert InvalidBetStatus();
         if (block.timestamp < b.lastRequestAt + core.cancelTimeout()) revert CancelTimeoutNotReached();
         _cancelBet(betId, false);
     }
@@ -205,17 +258,25 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.status != BetStatus.AWAITING_FIRST_CARD && b.status != BetStatus.AWAITING_NEXT_CARD) revert InvalidBetStatus();
+        if (b.status != BetStatus.PLAYER_TURN && b.status != BetStatus.AWAITING_NEXT_CARD) revert InvalidBetStatus();
         _cancelBet(betId, true);
     }
 
     function _cancelBet(uint256 betId, bool adminCancelled) internal {
         Bet storage b = bets[betId];
+        // Clear any in-flight VRF mapping so a late callback can't be matched back to this bet.
+        // The bet's status check inside `onVrfFulfilled` already guards against double-spend
+        // (cancelled bets early-return), but deleting the mapping avoids dangling storage and
+        // is required hygiene for AWAITING_NEXT_CARD cancels (HiLo is multi-round, unlike the
+        // other games whose cancel paths can only run with no VRF in flight)
+        if (b.requestId != 0) delete requestIdToBetId[b.requestId];
+
         // Refund: original stake (running multiplier doesn't add stake; only the original bet
-        // was pulled). Mid-run cancellation forfeits any accumulated multiplier
+        // was pulled). Mid-run cancellation forfeits any accumulated multiplier. For free bets,
+        // the refund routes back to FBH and credits the user's free-bet balance (reusable)
         core.releaseReservation(b.collateral, b.reserved);
         b.reserved = 0;
-        core.payOut(b.user, b.collateral, b.amount, false, b.amount);
+        core.payOut(b.user, b.collateral, b.amount, b.isFreeBet, b.amount);
         b.payout = b.amount;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
@@ -233,77 +294,68 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         delete requestIdToBetId[requestId];
 
         Bet storage b = bets[betId];
+        if (b.status != BetStatus.AWAITING_NEXT_CARD) return;
+
         uint8 newCard = uint8(randomWords[0] % DECK_SIZE);
+        uint8 newRank = _rank(newCard);
+        Direction dir = b.pendingDirection;
 
-        if (b.status == BetStatus.AWAITING_FIRST_CARD) {
-            b.currentCard = newCard;
+        bool isPush = newRank == MIDPOINT_RANK;
+        bool isCorrect = !isPush &&
+            ((dir == Direction.ABOVE && newRank > MIDPOINT_RANK) || (dir == Direction.BELOW && newRank < MIDPOINT_RANK));
+
+        b.lastCard = newCard;
+        b.cards.push(newCard);
+
+        if (isPush) {
+            ++b.pushCount;
+            b.outcomes.push(uint8(CardOutcome.PUSH));
+            b.multipliersE18.push(b.currentMultiplierE18); // unchanged
             b.status = BetStatus.PLAYER_TURN;
-            emit FirstCardDealt(betId, b.requestId, b.user, newCard);
-            return;
-        }
-
-        if (b.status == BetStatus.AWAITING_NEXT_CARD) {
-            uint8 oldRank = _rank(b.currentCard);
-            uint8 newRank = _rank(newCard);
-            Direction dir = b.pendingDirection;
-
-            bool isPush = newRank == oldRank;
-            bool isCorrect = !isPush &&
-                ((dir == Direction.HIGHER && newRank > oldRank) || (dir == Direction.LOWER && newRank < oldRank));
-
-            b.currentCard = newCard;
-
-            if (isPush) {
-                ++b.pushCount;
-                b.status = BetStatus.PLAYER_TURN;
-                emit NextCardDealt(betId, b.requestId, b.user, newCard, false, true, b.currentMultiplierE18);
-            } else if (isCorrect) {
-                ++b.correctCount;
-                uint256 factor = _multiplierFactorE18(dir, oldRank);
-                uint256 newMult = (b.currentMultiplierE18 * factor) / ONE;
-                if (newMult > maxMultiplierE18) newMult = maxMultiplierE18;
-                b.currentMultiplierE18 = newMult;
-                b.status = BetStatus.PLAYER_TURN;
-                emit NextCardDealt(betId, b.requestId, b.user, newCard, true, false, newMult);
-            } else {
-                // Wrong guess — lose
-                core.releaseReservation(b.collateral, b.reserved);
-                b.reserved = 0;
-                core.recordSettlement(b.collateral, b.amount, 0);
+            emit NextCardDealt(betId, b.requestId, b.user, newCard, false, true, b.currentMultiplierE18);
+        } else if (isCorrect) {
+            ++b.correctCount;
+            uint256 factor = _multiplierFactorE18();
+            uint256 newMult = (b.currentMultiplierE18 * factor) / ONE;
+            if (newMult > maxMultiplierE18) newMult = maxMultiplierE18;
+            b.currentMultiplierE18 = newMult;
+            b.outcomes.push(uint8(CardOutcome.HIT));
+            b.multipliersE18.push(newMult);
+            b.status = BetStatus.PLAYER_TURN;
+            emit NextCardDealt(betId, b.requestId, b.user, newCard, true, false, newMult);
+        } else {
+            // Wrong guess — lose. Per-turn history records the pre-bust (frozen) multiplier so
+            // FE can render "you were at Nx before busting". Skip referrer payment when the
+            // bet was placed with a free bet — the user lost no real funds, so no referral fee
+            uint256 frozenMult = b.currentMultiplierE18;
+            b.outcomes.push(uint8(CardOutcome.BUST));
+            b.multipliersE18.push(frozenMult);
+            core.releaseReservation(b.collateral, b.reserved);
+            b.reserved = 0;
+            core.recordSettlement(b.collateral, b.amount, 0);
+            if (!b.isFreeBet) {
                 core.payReferrer(b.user, b.collateral, b.amount);
-                b.outcome = Outcome.WRONG_GUESS;
-                b.status = BetStatus.RESOLVED;
-                b.resolvedAt = block.timestamp;
-                emit NextCardDealt(betId, b.requestId, b.user, newCard, false, false, 0);
-                emit BetResolved(betId, b.user, Outcome.WRONG_GUESS, 0);
             }
+            b.outcome = Outcome.WRONG_GUESS;
+            b.status = BetStatus.RESOLVED;
+            b.resolvedAt = block.timestamp;
+            emit NextCardDealt(betId, b.requestId, b.user, newCard, false, false, 0);
+            emit BetResolved(betId, b.user, Outcome.WRONG_GUESS, 0);
         }
     }
 
     /* ========== MULTIPLIER ========== */
 
     /// @inheritdoc ICasinoHiLo
-    function multiplierFactorE18(Direction direction, uint8 cardRank) external view override returns (uint256) {
-        return _multiplierFactorE18(direction, cardRank);
+    function multiplierFactorE18() external view override returns (uint256) {
+        return _multiplierFactorE18();
     }
 
-    /// @notice Per-correct-guess multiplier factor.
-    /// Formula: factor = (12 - 13*HE) / countOfWinningRanks (in 1e18 precision)
-    /// - HIGHER: count = 12 - rank (ranks rank+1..12)
-    /// - LOWER: count = rank (ranks 0..rank-1)
-    /// At edge ranks the opposite-direction guess is forbidden (count = 0)
-    function _multiplierFactorE18(Direction direction, uint8 rank) internal view returns (uint256) {
-        // numerator = 12*ONE - 13*houseEdge
-        uint256 numerator = 12 * ONE - 13 * houseEdgeE18;
-        uint8 count;
-        if (direction == Direction.HIGHER) {
-            if (rank >= RANKS_PER_DECK - 1) return 0;
-            count = (RANKS_PER_DECK - 1) - rank;
-        } else {
-            if (rank == 0) return 0;
-            count = rank;
-        }
-        return numerator / count;
+    /// @notice Per-correct-guess multiplier factor: `(12 - 13*HE) / 6` in 1e18 precision.
+    /// Constant across rounds (no rank dependency in the above/below-8 game).
+    /// At HE=2%: (12 - 0.26) / 6 = 1.9567x
+    function _multiplierFactorE18() internal view returns (uint256) {
+        return (12 * ONE - 13 * houseEdgeE18) / WINNING_RANKS_PER_DIRECTION;
     }
 
     function _rank(uint8 card) internal pure returns (uint8) {
@@ -312,12 +364,12 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /* ========== ADMIN ========== */
 
-    function setHouseEdge(uint256 newHouseEdgeE18) external onlyRiskManager {
+    function setHouseEdge(uint256 newHouseEdgeE18) external onlyOwner {
         if (newHouseEdgeE18 < MIN_HOUSE_EDGE_E18 || newHouseEdgeE18 > MAX_HOUSE_EDGE_E18) revert InvalidHouseEdge();
         houseEdgeE18 = newHouseEdgeE18;
     }
 
-    function setMaxMultiplier(uint256 newMaxE18) external onlyRiskManager {
+    function setMaxMultiplier(uint256 newMaxE18) external onlyOwner {
         if (newMaxE18 < 2e18) revert InvalidAmount();
         maxMultiplierE18 = newMaxE18;
     }
@@ -369,10 +421,23 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         external
         view
         override
-        returns (uint8 currentCard, uint256 currentMultiplierE18, uint8 guessCount, uint8 correctCount, uint8 pushCount)
+        returns (uint8 lastCard, uint256 currentMultiplierE18, uint8 guessCount, uint8 correctCount, uint8 pushCount)
     {
         Bet storage b = bets[betId];
-        return (b.currentCard, b.currentMultiplierE18, b.guessCount, b.correctCount, b.pushCount);
+        return (b.lastCard, b.currentMultiplierE18, b.guessCount, b.correctCount, b.pushCount);
+    }
+
+    /// @inheritdoc ICasinoHiLo
+    function getBetCards(
+        uint256 betId
+    )
+        external
+        view
+        override
+        returns (uint8[] memory directions, uint8[] memory cards, uint8[] memory outcomes, uint256[] memory multipliersE18)
+    {
+        Bet storage b = bets[betId];
+        return (b.directions, b.cards, b.outcomes, b.multipliersE18);
     }
 
     function getUserBetIds(

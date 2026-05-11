@@ -65,12 +65,6 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
-        "name": "rows",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
         "internalType": "enum ICasinoPlinko.Risk",
         "name": "risk",
         "type": "uint8"
@@ -125,12 +119,6 @@
   {
     "anonymous": false,
     "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint8",
-        "name": "rows",
-        "type": "uint8"
-      },
       {
         "indexed": true,
         "internalType": "enum ICasinoPlinko.Risk",
@@ -219,11 +207,6 @@
         "type": "uint8"
       },
       {
-        "internalType": "uint8",
-        "name": "rows",
-        "type": "uint8"
-      },
-      {
         "internalType": "enum ICasinoPlinko.Risk",
         "name": "risk",
         "type": "uint8"
@@ -245,11 +228,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
-        "name": "rows",
-        "type": "uint8"
-      },
-      {
         "internalType": "enum ICasinoPlinko.Risk",
         "name": "risk",
         "type": "uint8"
@@ -268,11 +246,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "rows",
-        "type": "uint8"
-      },
       {
         "internalType": "enum ICasinoPlinko.Risk",
         "name": "risk",
@@ -356,9 +329,43 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint8",
-        "name": "rows",
+        "internalType": "enum ICasinoPlinko.Risk",
+        "name": "risk",
         "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      }
+    ],
+    "name": "placeBet",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       },
       {
         "internalType": "enum ICasinoPlinko.Risk",
@@ -371,7 +378,7 @@
         "type": "address"
       }
     ],
-    "name": "placeBet",
+    "name": "placeBetWithFreeBet",
     "outputs": [
       {
         "internalType": "uint256",

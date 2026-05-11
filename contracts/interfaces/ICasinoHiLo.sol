@@ -3,10 +3,13 @@ pragma solidity ^0.8.20;
 
 /// @title ICasinoHiLo
 /// @author Overtime
+/// @notice Above/below 8 card-guess run with cashout. Each round the player picks ABOVE or
+/// BELOW the rank-6 midpoint (card "8"); a fresh card is drawn from a 52-card deck; correct
+/// guesses multiply the running multiplier by a constant factor; wrong guess loses the bet;
+/// cashout pays `bet * multiplier`. Drawing card "8" is a push (mult unchanged, run continues)
 interface ICasinoHiLo {
     enum BetStatus {
         NONE,
-        AWAITING_FIRST_CARD,
         PLAYER_TURN,
         AWAITING_NEXT_CARD,
         RESOLVED,
@@ -20,27 +23,22 @@ interface ICasinoHiLo {
     }
 
     enum Direction {
-        HIGHER,
-        LOWER
+        ABOVE, // bet that next card's rank > MIDPOINT_RANK (i.e., card 9 or higher)
+        BELOW // bet that next card's rank < MIDPOINT_RANK (i.e., card 7 or lower)
     }
 
-    event BetPlaced(
-        uint256 indexed betId,
-        uint256 indexed requestId,
-        address indexed user,
-        address collateral,
-        uint256 amount
-    );
+    /// @notice Per-turn outcome stored alongside the drawn card. NONE only exists for the
+    /// default-zero readability of the storage slot — never written
+    enum CardOutcome {
+        NONE,
+        HIT, // correct guess: multiplier advanced
+        PUSH, // drew the midpoint card (8): multiplier unchanged, run continues
+        BUST // wrong guess: bet resolved, multiplier frozen at pre-bust value in `multipliersE18`
+    }
 
-    event FirstCardDealt(uint256 indexed betId, uint256 indexed requestId, address indexed user, uint8 card);
+    event BetPlaced(uint256 indexed betId, address indexed user, address collateral, uint256 amount);
 
-    event GuessChosen(
-        uint256 indexed betId,
-        uint256 indexed requestId,
-        address indexed user,
-        Direction direction,
-        uint8 currentCard
-    );
+    event GuessChosen(uint256 indexed betId, uint256 indexed requestId, address indexed user, Direction direction);
 
     event NextCardDealt(
         uint256 indexed betId,
@@ -58,10 +56,24 @@ interface ICasinoHiLo {
 
     event BetCancelled(uint256 indexed betId, address indexed user, uint256 refundAmount, bool adminCancelled);
 
+    /// @notice Places a bet and submits the first guess in a single transaction. The bet starts
+    /// in AWAITING_NEXT_CARD with the first VRF request already in flight. Subsequent rounds use
+    /// `guess()` once the bet returns to PLAYER_TURN
     function placeBet(
         address collateral,
         uint256 amount,
-        address referrer
+        address referrer,
+        Direction firstDirection
+    ) external returns (uint256 betId, uint256 requestId);
+
+    /// @notice Places a bet using the user's free-bet balance held in FreeBetsHolder. Same flow
+    /// as `placeBet` but the stake is pulled from FBH instead of the user's wallet, and the bet
+    /// is flagged so payouts route back to FBH on resolution. Reverts if FBH balance < amount
+    function placeBetWithFreeBet(
+        address collateral,
+        uint256 amount,
+        address referrer,
+        Direction firstDirection
     ) external returns (uint256 betId, uint256 requestId);
 
     function guess(uint256 betId, Direction direction) external returns (uint256 requestId);
@@ -93,9 +105,27 @@ interface ICasinoHiLo {
     )
         external
         view
-        returns (uint8 currentCard, uint256 currentMultiplierE18, uint8 guessCount, uint8 correctCount, uint8 pushCount);
+        returns (uint8 lastCard, uint256 currentMultiplierE18, uint8 guessCount, uint8 correctCount, uint8 pushCount);
 
-    function multiplierFactorE18(Direction direction, uint8 cardRank) external view returns (uint256);
+    /// @notice Returns the full per-turn history for `betId`. The four arrays are parallel and
+    /// aligned (one entry per resolved card), except `directions` which has one entry per
+    /// submitted guess: while VRF for the latest guess is in flight, `directions.length ==
+    /// cards.length + 1`. The bust branch writes the pre-bust (frozen) multiplier so the FE can
+    /// render "you were at Nx before busting"
+    function getBetCards(
+        uint256 betId
+    )
+        external
+        view
+        returns (
+            uint8[] memory directions,
+            uint8[] memory cards,
+            uint8[] memory outcomes, // CardOutcome cast to uint8
+            uint256[] memory multipliersE18
+        );
+
+    /// @notice Constant per-correct-guess multiplier factor: `(12 - 13*HE) / 6` in 1e18 precision
+    function multiplierFactorE18() external view returns (uint256);
 
     function getUserBetIds(address user, uint256 offset, uint256 limit) external view returns (uint256[] memory);
 

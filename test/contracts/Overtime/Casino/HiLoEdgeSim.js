@@ -26,7 +26,7 @@ const CANCEL_TIMEOUT = 3600n;
 const USDC_UNIT = 1_000_000n;
 const ONE = 10n ** 18n;
 const HE_E18 = 2n * 10n ** 16n; // 2%
-const MAX_MULT_E18 = 1000n * ONE;
+const MAX_MULT_E18 = 100n * ONE;
 
 const SIM_ROUNDS = 100_000;
 const VALIDATION_ROUNDS = 30;
@@ -166,7 +166,7 @@ async function deployFixture() {
 	const hiloAddr = await hilo.getAddress();
 	await hilo.initialize(owner.address, coreAddr, managerAddr);
 	await core.registerGame(hiloAddr);
-	await core.connect(riskManager).setMaxNetLossPerGameUsd(hiloAddr, ethers.parseEther('1000000'));
+	await core.setMaxNetLossPerGameUsd(hiloAddr, ethers.parseEther('1000000'));
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -176,11 +176,13 @@ async function deployFixture() {
 	return { hilo, hiloAddr, vrf, core, coreAddr, usdc, usdcAddr, player };
 }
 
-async function placeAndDrawFirst(ctx, firstWord) {
+async function placeAndDrawFirst(ctx, firstWord, firstDirection = Direction.HIGHER) {
 	const { hilo, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await hilo.connect(player).placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress);
+	const tx = await hilo
+		.connect(player)
+		.placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress, firstDirection);
 	const receipt = await tx.wait();
-	const placed = receipt.logs
+	const guessed = receipt.logs
 		.map((l) => {
 			try {
 				return hilo.interface.parseLog(l);
@@ -188,9 +190,9 @@ async function placeAndDrawFirst(ctx, firstWord) {
 				return null;
 			}
 		})
-		.find((e) => e?.name === 'BetPlaced');
-	const betId = placed.args.betId;
-	await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [firstWord]);
+		.find((e) => e?.name === 'GuessChosen');
+	const betId = guessed.args.betId;
+	await vrf.fulfillRandomWords(coreAddr, guessed.args.requestId, [firstWord]);
 	return betId;
 }
 
