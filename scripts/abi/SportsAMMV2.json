@@ -1900,6 +1900,11 @@
         "internalType": "address",
         "name": "_collateral",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isLive",
+        "type": "bool"
       }
     ],
     "name": "tradeSGP",

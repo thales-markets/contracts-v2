@@ -11,6 +11,7 @@ const { ethers } = require('hardhat');
 describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () => {
 	let owner,
 		sportsAMMV2,
+		sportsAMMV2Utils,
 		sportsAMMV2LiquidityPool,
 		sportsAMMV2LiquidityPoolETH,
 		tradeDataTenMarketsCurrentRound,
@@ -29,6 +30,7 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 	beforeEach(async () => {
 		({
 			sportsAMMV2,
+			sportsAMMV2Utils,
 			sportsAMMV2LiquidityPool,
 			sportsAMMV2LiquidityPoolETH,
 			tradeDataTenMarketsCurrentRound,
@@ -370,7 +372,7 @@ describe('SportsAMMV2Live Live Parlay Trades - Quote Assertions (3 legs)', () =>
 				referrer: ZERO_ADDRESS,
 				collateral: ZERO_ADDRESS,
 			})
-		).to.be.revertedWith('ExceededMaxOdds');
+		).to.be.revertedWithCustomError(sportsAMMV2Utils, 'ExceededMaxOdds');
 	});
 
 	it('Should not revert on live parlay when additionalSlippage=0 due to rounding (off-by-1)', async () => {

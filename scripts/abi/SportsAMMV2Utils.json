@@ -1,12 +1,47 @@
 [
   {
     "inputs": [],
+    "name": "CollateralNotSupported",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededMaxOdds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExceededMaxSize",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "IllegalInputAmounts",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "InsufficientAllowance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidPosition",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LowBuyIn",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LpCollateralPriceZero",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnRampNotSupported",
     "type": "error"
   },
   {
@@ -398,6 +433,44 @@
         "type": "uint256"
       }
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_requester",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_buyInAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_expectedQuote",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_ticketSize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract ISportsAMMV2",
+        "name": "_sportsAMM",
+        "type": "address"
+      }
+    ],
+    "name": "checkTradeLimits",
+    "outputs": [],
     "stateMutability": "view",
     "type": "function"
   },

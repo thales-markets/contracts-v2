@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "../../interfaces/ISportsAMMV2.sol";
 import "../../interfaces/IFreeBetsHolder.sol";
 import "../../interfaces/ILiveTradingProcessor.sol";
+import "../../core/AMM/SportsAMMV2Utils.sol";
 
 contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
     using Chainlink for Chainlink.Request;
@@ -87,7 +88,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             "Live trading not enabled on _sportId"
         );
 
-        require(_liveTradeData._expectedQuote >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
+        SportsAMMV2Utils(sportsAMM.sportsAMMV2Utils()).checkTradeLimits(
+            msg.sender,
+            _liveTradeData._buyInAmount,
+            _liveTradeData._collateral,
+            _liveTradeData._expectedQuote,
+            1,
+            sportsAMM
+        );
 
         Chainlink.Request memory req = buildChainlinkRequest(jobSpecId, address(this), this.fulfillLiveTrade.selector);
 
@@ -154,7 +162,14 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             );
         }
 
-        require(_parlay.expectedPayout >= sportsAMM.riskManager().maxSupportedOdds(), "ExceededMaxOdds");
+        SportsAMMV2Utils(sportsAMM.sportsAMMV2Utils()).checkTradeLimits(
+            msg.sender,
+            _parlay.buyInAmount,
+            _parlay.collateral,
+            _parlay.expectedPayout,
+            legsLen,
+            sportsAMM
+        );
 
         Chainlink.Request memory req = buildChainlinkRequest(
             parlayJobSpecId,
@@ -275,7 +290,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
             lTradeData._buyInAmount,
             _approvedQuote,
             lTradeData._collateral,
-            block.timestamp
+            block.timestamp,
+            lTradeData._playerId
         );
     }
 
@@ -562,7 +578,8 @@ contract LiveTradingProcessor is ChainlinkClient, Ownable, Pausable {
         uint _buyInAmount,
         uint _expectedQuote,
         address _collateral,
-        uint timestamp
+        uint timestamp,
+        uint24 playerId
     );
 
     event LiveParlayTradeRequested(
