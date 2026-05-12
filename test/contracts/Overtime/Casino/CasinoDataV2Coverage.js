@@ -78,18 +78,18 @@ async function deployFullStack() {
 		return c;
 	}
 	const tcp = await deployGame('ThreeCardPoker');
-	const holdem = await deployGame('OvertimeHoldem');
 	const plinko = await deployGame('Plinko');
 	const hilo = await deployGame('HiLo');
 	const keno = await deployGame('Keno');
 
+	const uth = await deployGame('OvertimeUltimateHoldem');
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
 	await data.initialize(owner.address, coreAddr, await tcp.getAddress());
-	await data.setOvertimeHoldem(await holdem.getAddress());
 	await data.setPlinko(await plinko.getAddress());
 	await data.setHiLo(await hilo.getAddress());
 	await data.setKeno(await keno.getAddress());
+	await data.setUltimateHoldem(await uth.getAddress());
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -114,14 +114,14 @@ async function deployFullStack() {
 		coreAddr,
 		tcp,
 		tcpAddr: await tcp.getAddress(),
-		holdem,
-		holdemAddr: await holdem.getAddress(),
 		plinko,
 		plinkoAddr: await plinko.getAddress(),
 		hilo,
 		hiloAddr: await hilo.getAddress(),
 		keno,
 		kenoAddr: await keno.getAddress(),
+		uth,
+		uthAddr: await uth.getAddress(),
 		data,
 		dataAddr: await data.getAddress(),
 	};
@@ -143,14 +143,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		});
 
 		it('all setters require owner + reject zero', async () => {
-			const setters = [
-				'setCore',
-				'setThreeCardPoker',
-				'setOvertimeHoldem',
-				'setPlinko',
-				'setHiLo',
-				'setKeno',
-			];
+			const setters = ['setCore', 'setThreeCardPoker', 'setPlinko', 'setHiLo', 'setKeno'];
 			for (const s of setters) {
 				await expect(ctx.data.connect(ctx.player)[s](ctx.tcpAddr)).to.be.reverted;
 				await expect(
@@ -159,7 +152,6 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			}
 			// owner can set them
 			await ctx.data.connect(ctx.owner).setThreeCardPoker(ctx.tcpAddr);
-			await ctx.data.connect(ctx.owner).setOvertimeHoldem(ctx.holdemAddr);
 			await ctx.data.connect(ctx.owner).setPlinko(ctx.plinkoAddr);
 			await ctx.data.connect(ctx.owner).setHiLo(ctx.hiloAddr);
 			await ctx.data.connect(ctx.owner).setKeno(ctx.kenoAddr);
@@ -287,32 +279,6 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		return placed.args.betId;
 	}
 
-	describe("Hold'em readers", () => {
-		it('getOvertimeHoldemFullRecord/full batch/user/recent readers', async () => {
-			const id = await placeFulfill(
-				ctx.holdem,
-				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
-				0xdeadbeefn
-			);
-			expect((await ctx.data.getOvertimeHoldemFullRecord(id)).user).to.equal(ctx.player.address);
-			expect((await ctx.data.getOvertimeHoldemFullRecords([id])).length).to.equal(1);
-			await expect(
-				ctx.data.getOvertimeHoldemFullRecords(new Array(101).fill(1))
-			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
-			expect(
-				(await ctx.data.getUserOvertimeHoldemRecords(ctx.player.address, 0, 10)).length
-			).to.equal(1);
-			await expect(
-				ctx.data.getUserOvertimeHoldemRecords(ctx.player.address, 0, 201)
-			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
-			expect((await ctx.data.getRecentOvertimeHoldemRecords(0, 10)).length).to.equal(1);
-			await expect(ctx.data.getRecentOvertimeHoldemRecords(0, 201)).to.be.revertedWithCustomError(
-				ctx.data,
-				'LimitExceeded'
-			);
-		});
-	});
-
 	describe('Plinko readers', () => {
 		it('full / batch / user / recent', async () => {
 			const id = await placeFulfill(
@@ -377,15 +343,10 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			expect(recs.length).to.equal(0);
 		});
 
-		it('getUserRecentBetsV2 returns merged bets across all 5 games sorted by placedAt desc', async () => {
+		it('getUserRecentBetsV2 returns merged bets across all games sorted by placedAt desc', async () => {
 			// Place a bet on each game in order; expect the most recent first (Keno last → idx 0).
 			await placeFulfill(
 				ctx.tcp,
-				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
-				0xdeadbeefn
-			);
-			await placeFulfill(
-				ctx.holdem,
 				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
 				0xdeadbeefn
 			);
@@ -406,13 +367,12 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			);
 
 			const recs = await ctx.data.getUserRecentBetsV2(ctx.player.address, 0, 50);
-			expect(recs.length).to.equal(5);
-			// Most recent first per GameV2 enum: Keno (4), HiLo (3), Plinko (2), Hold'em (1), TCP (0)
-			expect(recs[0].game).to.equal(4); // Keno
-			expect(recs[1].game).to.equal(3); // HiLo
-			expect(recs[2].game).to.equal(2); // Plinko
-			expect(recs[3].game).to.equal(1); // OvertimeHoldem
-			expect(recs[4].game).to.equal(0); // TCP
+			expect(recs.length).to.equal(4);
+			// Most recent first per GameV2 enum: Keno (3), HiLo (2), Plinko (1), TCP (0)
+			expect(recs[0].game).to.equal(3); // Keno
+			expect(recs[1].game).to.equal(2); // HiLo
+			expect(recs[2].game).to.equal(1); // Plinko
+			expect(recs[3].game).to.equal(0); // TCP
 			for (const r of recs) {
 				expect(r.user).to.equal(ctx.player.address);
 				expect(r.collateral).to.equal(ctx.usdcAddr);
@@ -439,7 +399,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 
 			const page = await ctx.data.getUserRecentBetsV2(ctx.player.address, 1, 1);
 			expect(page.length).to.equal(1);
-			expect(page[0].game).to.equal(2); // 2nd most recent = Plinko
+			expect(page[0].game).to.equal(1); // 2nd most recent = Plinko
 		});
 
 		it('getUserRecentBetsV2 reverts when limit too high', async () => {
@@ -522,21 +482,17 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 	describe('Cross-game pagination — getRecentBetsAllGamesV2 / getNextBetId', () => {
 		const GameV2 = {
 			ThreeCardPoker: 0,
-			OvertimeHoldem: 1,
-			Plinko: 2,
-			HiLo: 3,
-			Keno: 4,
+			Plinko: 1,
+			HiLo: 2,
+			Keno: 3,
+			OvertimeUltimateHoldem: 4,
+			VideoPoker: 5,
 		};
 
 		it('getRecentBetsAllGamesV2 returns one inner array per wired game', async () => {
 			// Place at least one bet per game so each inner array is non-empty
 			await placeFulfill(
 				ctx.tcp,
-				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
-				0xdeadbeefn
-			);
-			await placeFulfill(
-				ctx.holdem,
 				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
 				0xdeadbeefn
 			);
@@ -555,14 +511,15 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			);
 
 			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
-			expect(all.length).to.equal(5);
+			expect(all.length).to.equal(6);
 			expect(all[GameV2.ThreeCardPoker].length).to.equal(1);
-			expect(all[GameV2.OvertimeHoldem].length).to.equal(1);
 			expect(all[GameV2.Plinko].length).to.equal(1);
 			expect(all[GameV2.HiLo].length).to.equal(1);
 			expect(all[GameV2.Keno].length).to.equal(1);
-			// Each BetRecord should have user / game / amount populated
-			for (let g = 0; g < 5; g++) {
+			expect(all[GameV2.OvertimeUltimateHoldem].length).to.equal(0); // no bets placed
+			expect(all[GameV2.VideoPoker].length).to.equal(0); // no bets placed
+			// Each BetRecord (for the 4 games we placed bets on) should have user / game populated
+			for (let g = 0; g < 4; g++) {
 				expect(all[g][0].user).to.equal(ctx.player.address);
 				expect(Number(all[g][0].game)).to.equal(g);
 			}
@@ -577,7 +534,6 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 
 		it('getNextBetId returns 1 before any bets', async () => {
 			expect(await ctx.data.getNextBetId(GameV2.ThreeCardPoker)).to.equal(1n);
-			expect(await ctx.data.getNextBetId(GameV2.OvertimeHoldem)).to.equal(1n);
 			expect(await ctx.data.getNextBetId(GameV2.Plinko)).to.equal(1n);
 			expect(await ctx.data.getNextBetId(GameV2.HiLo)).to.equal(1n);
 			expect(await ctx.data.getNextBetId(GameV2.Keno)).to.equal(1n);
@@ -586,11 +542,6 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		it('getNextBetId advances to 2 after one bet on each game', async () => {
 			await placeFulfill(
 				ctx.tcp,
-				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
-				0xdeadbeefn
-			);
-			await placeFulfill(
-				ctx.holdem,
 				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
 				0xdeadbeefn
 			);
@@ -609,10 +560,318 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			);
 
 			expect(await ctx.data.getNextBetId(GameV2.ThreeCardPoker)).to.equal(2n);
-			expect(await ctx.data.getNextBetId(GameV2.OvertimeHoldem)).to.equal(2n);
 			expect(await ctx.data.getNextBetId(GameV2.Plinko)).to.equal(2n);
 			expect(await ctx.data.getNextBetId(GameV2.HiLo)).to.equal(2n);
 			expect(await ctx.data.getNextBetId(GameV2.Keno)).to.equal(2n);
+		});
+	});
+
+	/* ===================================================================================
+	 * Added coverage: VideoPoker wiring, UTH readers, cross-lib UTH/VP base records,
+	 * library calldata + LimitExceeded branches, and unwired-game fallbacks.
+	 * =================================================================================== */
+	describe('Setter coverage — setVideoPoker', () => {
+		it('rejects non-owner and zero-address; owner can set', async () => {
+			// fixture starts with VP unwired. Deploy a VP and use it as a target.
+			const VP = await ethers.getContractFactory('VideoPoker');
+			const vp = await upgrades.deployProxy(VP, [], { initializer: false });
+			await vp.initialize(ctx.owner.address, ctx.coreAddr, await ctx.manager.getAddress());
+			const vpAddr = await vp.getAddress();
+			// non-owner reverts
+			await expect(ctx.data.connect(ctx.player).setVideoPoker(vpAddr)).to.be.reverted;
+			// zero-address reverts InvalidAddress
+			await expect(
+				ctx.data.connect(ctx.owner).setVideoPoker(ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(ctx.data, 'InvalidAddress');
+			// owner can set
+			await ctx.data.connect(ctx.owner).setVideoPoker(vpAddr);
+			expect(await ctx.data.videoPoker()).to.equal(vpAddr);
+		});
+
+		it('setUltimateHoldem rejects non-owner and zero-address; owner can set', async () => {
+			await expect(ctx.data.connect(ctx.player).setUltimateHoldem(ctx.uthAddr)).to.be.reverted;
+			await expect(
+				ctx.data.connect(ctx.owner).setUltimateHoldem(ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(ctx.data, 'InvalidAddress');
+			await ctx.data.connect(ctx.owner).setUltimateHoldem(ctx.uthAddr);
+		});
+	});
+
+	describe('getNextBetId — VideoPoker + unwired fallback', () => {
+		const GameV2 = {
+			ThreeCardPoker: 0,
+			Plinko: 1,
+			HiLo: 2,
+			Keno: 3,
+			OvertimeUltimateHoldem: 4,
+			VideoPoker: 5,
+		};
+
+		it('returns 1 for VideoPoker when unwired (falls to default branch)', async () => {
+			// fixture leaves VP unwired → hits the `return 1` fallback line.
+			expect(await ctx.data.getNextBetId(GameV2.VideoPoker)).to.equal(1n);
+		});
+
+		it('returns nextBetId for OvertimeUltimateHoldem when wired (covers UTH branch body)', async () => {
+			expect(await ctx.data.getNextBetId(GameV2.OvertimeUltimateHoldem)).to.equal(1n);
+			await ctx.uth.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			expect(await ctx.data.getNextBetId(GameV2.OvertimeUltimateHoldem)).to.equal(2n);
+		});
+
+		it('returns nextBetId = 2 for VideoPoker once wired with one bet', async () => {
+			// Deploy + register VP, then wire it on the data aggregator.
+			const VP = await ethers.getContractFactory('VideoPoker');
+			const vp = await upgrades.deployProxy(VP, [], { initializer: false });
+			await vp.initialize(ctx.owner.address, ctx.coreAddr, await ctx.manager.getAddress());
+			const vpAddr = await vp.getAddress();
+			await ctx.core.registerGame(vpAddr);
+			await ctx.core.setMaxNetLossPerGameUsd(vpAddr, ethers.parseEther('100000'));
+			await ctx.data.connect(ctx.owner).setVideoPoker(vpAddr);
+
+			// Place one VP bet (request stays in AWAITING_DEAL — fine, bet id is allocated)
+			await vp.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+
+			expect(await ctx.data.getNextBetId(GameV2.VideoPoker)).to.equal(2n);
+		});
+	});
+
+	describe('UTH readers — placed-bet + library calldata + LimitExceeded paths', () => {
+		async function placeUthBet() {
+			const tx = await ctx.uth
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.uth.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			return placed.args.betId;
+		}
+
+		it('getOvertimeUltimateHoldemFullRecord returns the bet shape', async () => {
+			const betId = await placeUthBet();
+			const r = await ctx.data.getOvertimeUltimateHoldemFullRecord(betId);
+			expect(r.betId).to.equal(betId);
+			expect(r.user).to.equal(ctx.player.address);
+			expect(r.anteAmount).to.equal(MIN_USDC_BET);
+		});
+
+		it('getOvertimeUltimateHoldemFullRecords (batch via calldata library) returns matching rows', async () => {
+			const id1 = await placeUthBet();
+			const id2 = await placeUthBet();
+			const recs = await ctx.data.getOvertimeUltimateHoldemFullRecords([id1, id2]);
+			expect(recs.length).to.equal(2);
+			expect(recs[0].user).to.equal(ctx.player.address);
+			expect(recs[1].user).to.equal(ctx.player.address);
+		});
+
+		it('getOvertimeUltimateHoldemFullRecords reverts above MAX_BATCH_IDS', async () => {
+			// LimitExceeded comes from the library; ethers v6 reverts surface as panic/revert reason.
+			await expect(ctx.data.getOvertimeUltimateHoldemFullRecords(new Array(101).fill(1))).to.be
+				.reverted;
+		});
+
+		it('getUserOvertimeUltimateHoldemRecords paginates', async () => {
+			await placeUthBet();
+			const recs = await ctx.data.getUserOvertimeUltimateHoldemRecords(ctx.player.address, 0, 10);
+			expect(recs.length).to.equal(1);
+		});
+
+		it('getUserOvertimeUltimateHoldemRecords reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getUserOvertimeUltimateHoldemRecords(ctx.player.address, 0, 201)).to.be
+				.reverted;
+		});
+
+		it('getRecentOvertimeUltimateHoldemRecords paginates', async () => {
+			await placeUthBet();
+			const recs = await ctx.data.getRecentOvertimeUltimateHoldemRecords(0, 10);
+			expect(recs.length).to.be.gte(1);
+		});
+
+		it('getRecentOvertimeUltimateHoldemRecords reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getRecentOvertimeUltimateHoldemRecords(0, 201)).to.be.reverted;
+		});
+	});
+
+	/* ===================================================================================
+	 * VideoPoker — needs an extra fixture that wires VP into the data aggregator. The base
+	 * `deployFullStack` leaves VP unwired so we can also test the unwired branches above.
+	 * =================================================================================== */
+	async function wireVideoPoker(ctxLocal) {
+		const VP = await ethers.getContractFactory('VideoPoker');
+		const vp = await upgrades.deployProxy(VP, [], { initializer: false });
+		await vp.initialize(
+			ctxLocal.owner.address,
+			ctxLocal.coreAddr,
+			await ctxLocal.manager.getAddress()
+		);
+		const vpAddr = await vp.getAddress();
+		await ctxLocal.core.registerGame(vpAddr);
+		await ctxLocal.core.setMaxNetLossPerGameUsd(vpAddr, ethers.parseEther('100000'));
+		await ctxLocal.data.connect(ctxLocal.owner).setVideoPoker(vpAddr);
+		return { vp, vpAddr };
+	}
+
+	async function placeVpBet(vp) {
+		const tx = await vp
+			.connect(ctx.player)
+			.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+		const r = await tx.wait();
+		const placed = r.logs
+			.map((l) => {
+				try {
+					return vp.interface.parseLog(l);
+				} catch {
+					return null;
+				}
+			})
+			.find((e) => e?.name === 'BetPlaced');
+		return placed.args.betId;
+	}
+
+	describe('VideoPoker readers — placed-bet + library calldata + LimitExceeded paths', () => {
+		let vp, vpAddr;
+		beforeEach(async () => {
+			({ vp, vpAddr } = await wireVideoPoker(ctx));
+		});
+
+		it('getVideoPokerFullRecord returns the bet shape', async () => {
+			const id = await placeVpBet(vp);
+			const r = await ctx.data.getVideoPokerFullRecord(id);
+			expect(r.betId).to.equal(id);
+			expect(r.user).to.equal(ctx.player.address);
+			expect(r.amount).to.equal(MIN_USDC_BET);
+		});
+
+		it('getVideoPokerFullRecords (batch) returns matching rows', async () => {
+			const id = await placeVpBet(vp);
+			const recs = await ctx.data.getVideoPokerFullRecords([id]);
+			expect(recs.length).to.equal(1);
+			expect(recs[0].user).to.equal(ctx.player.address);
+		});
+
+		it('getVideoPokerFullRecords reverts above MAX_BATCH_IDS', async () => {
+			await expect(ctx.data.getVideoPokerFullRecords(new Array(101).fill(1))).to.be.reverted;
+		});
+
+		it('getUserVideoPokerRecords paginates', async () => {
+			await placeVpBet(vp);
+			const recs = await ctx.data.getUserVideoPokerRecords(ctx.player.address, 0, 10);
+			expect(recs.length).to.equal(1);
+		});
+
+		it('getUserVideoPokerRecords reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getUserVideoPokerRecords(ctx.player.address, 0, 201)).to.be.reverted;
+		});
+
+		it('getRecentVideoPokerRecords paginates', async () => {
+			await placeVpBet(vp);
+			const recs = await ctx.data.getRecentVideoPokerRecords(0, 10);
+			expect(recs.length).to.equal(1);
+		});
+
+		it('getRecentVideoPokerRecords reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getRecentVideoPokerRecords(0, 201)).to.be.reverted;
+		});
+
+		it('getRecentBetsAllGamesV2 includes the VP inner array once wired with a bet', async () => {
+			await placeVpBet(vp);
+			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
+			expect(all.length).to.equal(6);
+			expect(all[5].length).to.equal(1); // VideoPoker
+			expect(all[5][0].user).to.equal(ctx.player.address);
+			expect(Number(all[5][0].game)).to.equal(5);
+		});
+
+		it('getUserRecentBetsV2 picks up VP bets in the gather (covers readVpBase)', async () => {
+			await placeVpBet(vp);
+			const recs = await ctx.data.getUserRecentBetsV2(ctx.player.address, 0, 50);
+			// VP is the only game with a bet for this player on this branch
+			expect(recs.some((r) => Number(r.game) === 5)).to.equal(true);
+		});
+	});
+
+	/* ===================================================================================
+	 * Cross-lib coverage — explicitly exercise UTH base-record builders via gatherUserBets
+	 * (covers readUthBase) and via getRecentBetsAllGamesV2 (covers readRecentUthBaseRecords).
+	 * =================================================================================== */
+	describe('CrossLib UTH base-record paths', () => {
+		it('getUserRecentBetsV2 picks up UTH bets via _gatherSecondary (covers readUthBase)', async () => {
+			// Place UTH bet
+			await ctx.uth.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const recs = await ctx.data.getUserRecentBetsV2(ctx.player.address, 0, 50);
+			expect(recs.some((r) => Number(r.game) === 4)).to.equal(true);
+			const uthRec = recs.find((r) => Number(r.game) === 4);
+			expect(uthRec.user).to.equal(ctx.player.address);
+			// UTH amount = ante*2 + play; play=0 pre-flop. Expect ante*2.
+			expect(uthRec.amount).to.equal(MIN_USDC_BET * 2n);
+		});
+
+		it('getRecentBetsAllGamesV2 fills the UTH inner array (covers readRecentUthBaseRecords body)', async () => {
+			await ctx.uth.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
+			expect(all[4].length).to.equal(1);
+			expect(all[4][0].user).to.equal(ctx.player.address);
+		});
+	});
+
+	/* ===================================================================================
+	 * Unwired-game branches — deploy a fresh CasinoDataV2 with Keno/UTH/VP unwired, then
+	 * call user/recent aggregators. These exercise the `address(X) != address(0) ? ... :
+	 * new uint256[](0)` and zero-game-address fallbacks in the cross-game paths
+	 * =================================================================================== */
+	describe('Cross-game unwired branches', () => {
+		let dataUnwired;
+		beforeEach(async () => {
+			const Data = await ethers.getContractFactory('CasinoDataV2');
+			dataUnwired = await upgrades.deployProxy(Data, [], { initializer: false });
+			// Wire only the "primary" games (TCP/Plinko/HiLo) and leave Keno/UTH/VP unwired.
+			await dataUnwired.initialize(ctx.owner.address, ctx.coreAddr, ctx.tcpAddr);
+			await dataUnwired.setPlinko(ctx.plinkoAddr);
+			await dataUnwired.setHiLo(ctx.hiloAddr);
+			// Note: setKeno + setUltimateHoldem + setVideoPoker intentionally not called.
+		});
+
+		it('getUserRecentBetsV2 works with Keno/UTH/VP unwired', async () => {
+			// Place a TCP bet so something exists
+			const tx = await ctx.tcp
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.tcp.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [0xdeadbeefn]);
+
+			const recs = await dataUnwired.getUserRecentBetsV2(ctx.player.address, 0, 10);
+			// Only TCP wired with bets — Keno/UTH/VP all skipped via the address(0) branches
+			expect(recs.length).to.equal(1);
+			expect(Number(recs[0].game)).to.equal(0);
+		});
+
+		it('getRecentBetsAllGamesV2 returns empty inner arrays for unwired Keno/UTH/VP', async () => {
+			const all = await dataUnwired.getRecentBetsAllGamesV2(0, 10);
+			expect(all.length).to.equal(6);
+			expect(all[3].length).to.equal(0); // Keno unwired
+			expect(all[4].length).to.equal(0); // UTH unwired
+			expect(all[5].length).to.equal(0); // VP unwired
+		});
+
+		it('getNextBetId(Keno) returns 1 when Keno unwired (falls to default branch)', async () => {
+			expect(await dataUnwired.getNextBetId(3)).to.equal(1n); // Keno
+			expect(await dataUnwired.getNextBetId(4)).to.equal(1n); // UTH
+			expect(await dataUnwired.getNextBetId(5)).to.equal(1n); // VP
 		});
 	});
 });

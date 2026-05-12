@@ -362,6 +362,25 @@
         "type": "uint256"
       }
     ],
+    "name": "MaxBetPerGameUsdChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
     "name": "MaxNetLossPerGameUsdChanged",
     "type": "event"
   },
@@ -382,6 +401,25 @@
       }
     ],
     "name": "MaxProfitUsdOverrideChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "MinBetPerGameUsdChanged",
     "type": "event"
   },
   {
@@ -880,6 +918,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "usdAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "collateralFromUsd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "defaultMaxNetLossPerGameUsd",
     "outputs": [
@@ -913,7 +975,45 @@
         "type": "address"
       }
     ],
+    "name": "effectiveMaxBetUsd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      }
+    ],
     "name": "effectiveMaxProfitUsd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      }
+    ],
+    "name": "effectiveMinBetUsd",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1293,6 +1393,25 @@
         "type": "address"
       }
     ],
+    "name": "maxBetPerGameUsd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "maxNetLossPerGameUsd",
     "outputs": [
       {
@@ -1326,6 +1445,25 @@
       }
     ],
     "name": "maxProfitUsdOverride",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "minBetPerGameUsd",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1835,6 +1973,24 @@
         "type": "uint256"
       }
     ],
+    "name": "setMaxBetPerGameUsd",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
     "name": "setMaxNetLossPerGameUsd",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1854,6 +2010,24 @@
       }
     ],
     "name": "setMaxProfitUsdOverride",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinBetPerGameUsd",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

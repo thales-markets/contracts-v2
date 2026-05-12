@@ -412,6 +412,102 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pairPlusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteBonusPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAndPlayPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoThreeCardPoker.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoThreeCardPoker.Outcome",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "playerCards",
+            "type": "uint8[3]"
+          },
+          {
+            "internalType": "uint8[3]",
+            "name": "dealerCards",
+            "type": "uint8[3]"
+          }
+        ],
+        "internalType": "struct ICasinoThreeCardPoker.FullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "offset",
         "type": "uint256"
       },
@@ -456,6 +552,19 @@
         "internalType": "uint256[]",
         "name": "",
         "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextBetId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

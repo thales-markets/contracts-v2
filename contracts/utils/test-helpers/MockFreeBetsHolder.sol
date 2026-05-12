@@ -34,6 +34,21 @@ contract MockFreeBetsHolder {
         IERC20(collateral).safeTransfer(msg.sender, amount);
     }
 
+    /// @notice Test-only forwarder. Some V2 games (e.g. OvertimeUltimateHoldem, VideoPoker)
+    /// gate `placeBetWithFreeBet` to be callable ONLY by the FBH address and identify the user
+    /// via `tx.origin`. This helper lets a test EOA call through the mock FBH so that
+    /// `msg.sender == this` and `tx.origin == EOA` inside the game contract
+    function forwardCall(address target, bytes calldata data) external returns (bytes memory) {
+        (bool ok, bytes memory ret) = target.call(data);
+        if (!ok) {
+            // bubble the revert reason
+            assembly {
+                revert(add(ret, 32), mload(ret))
+            }
+        }
+        return ret;
+    }
+
     /// @notice Mirror of the real FBH. Caller has already transferred `exercised` to this
     /// contract before calling. exercised > stake → stake → daoSink, profit → user.
     /// exercised <= stake → credited back to user's free-bet balance

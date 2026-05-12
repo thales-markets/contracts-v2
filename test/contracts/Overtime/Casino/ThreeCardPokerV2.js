@@ -271,7 +271,6 @@ async function deployFixture() {
 	const tcpAddr = await tcp.getAddress();
 	await tcp.initialize(owner.address, coreAddr, managerAddr);
 
-	// CasinoDataV2 (proxy)
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
 	const dataAddr = await data.getAddress();

@@ -33,6 +33,27 @@ interface ICasinoThreeCardPoker {
         TIE
     }
 
+    /* ========== STRUCTS ========== */
+
+    /// @notice Full TCP record — all on-chain fields needed to render a single TCP row in the FE
+    struct FullRecord {
+        uint256 betId;
+        address user;
+        address collateral;
+        uint256 anteAmount;
+        uint256 pairPlusAmount;
+        uint256 totalPayout;
+        uint256 pairPlusPayout;
+        uint256 anteBonusPayout;
+        uint256 anteAndPlayPayout;
+        uint256 placedAt;
+        uint256 resolvedAt;
+        BetStatus status;
+        Outcome outcome;
+        uint8[3] playerCards;
+        uint8[3] dealerCards;
+    }
+
     /* ========== EVENTS ========== */
 
     event BetPlaced(
@@ -130,4 +151,12 @@ interface ICasinoThreeCardPoker {
     function getUserBetIds(address user, uint256 offset, uint256 limit) external view returns (uint256[] memory);
 
     function getRecentBetIds(uint256 offset, uint256 limit) external view returns (uint256[] memory);
+
+    /// @notice One-shot full record reader. Returns every on-chain field needed to render a TCP
+    /// row in the FE in a single staticcall
+    function getFullRecord(uint256 betId) external view returns (FullRecord memory);
+
+    /// @notice Next bet id to be assigned. Total placed bets = `nextBetId - 1`. Auto-generated
+    /// getter on the public state variable
+    function nextBetId() external view returns (uint256);
 }

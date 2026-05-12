@@ -100,7 +100,7 @@ contract ThreeCardPoker is
     error InvalidSender();
     error InvalidAmount();
     error InvalidCollateral();
-    error MaxProfitExceeded();
+    error AboveMaxBet();
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
@@ -131,6 +131,12 @@ contract ThreeCardPoker is
         // Bet placed with free-bet balance — stake (ante+PP at place, Play at play()) pulled
         // from FreeBetsHolder. All settlements route through FBH; referrer payments suppressed
         bool isFreeBet;
+        // Remaining net-profit budget for this bet in collateral units. Sized at placeBet from
+        // `effectiveMaxProfitUsd × price`, capped against the worst-case uncapped profit.
+        // Each settle leg (PP at VRF1, ante+play at VRF2) deducts profit_paid from this budget
+        // so the per-hand net loss to the house never exceeds the configured USD cap, regardless
+        // of stake size. Appended at end of struct for storage-safe upgrade
+        uint256 profitCapRemaining;
     }
 
     /* ========== STATE ========== */
@@ -191,17 +197,8 @@ contract ThreeCardPoker is
         if (anteAmount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
 
-        uint256 anteUsd = core.getUsdValue(collateral, anteAmount);
-        if (anteUsd < MIN_BET_USD) revert InvalidAmount();
-
-        // Cap the per-bet profit (USD) — at risk on the ante side is up to ANTE_BONUS_SF + Play
-        // 1:1 = 6x ante in pure house contribution (excluding Pair Plus, which has its own ceiling
-        // implicitly capped by core's per-bet limit applied to the worst-case payout)
-        uint256 worstHouseProfitUsd = anteUsd *
-            (MAX_PAYOUT_ANTE_MULT - 2) +
-            core.getUsdValue(collateral, pairPlusAmount) *
-            (MAX_PAYOUT_PAIR_PLUS_MULT - 1);
-        if (worstHouseProfitUsd > core.effectiveMaxProfitUsd(address(this))) revert MaxProfitExceeded();
+        _checkBetSize(collateral, anteAmount);
+        uint256 cappedProfit = _cappedProfit(collateral, anteAmount, pairPlusAmount);
 
         // Pull Ante + Pair Plus — from FBH if free bet, else from user wallet (single approval target)
         if (isFreeBet) {
@@ -213,8 +210,9 @@ contract ThreeCardPoker is
         // Set referrer (no-op if zero / no referrals contract wired)
         if (referrer != address(0)) core.setReferrer(referrer, msg.sender);
 
-        // Reserve worst-case payout = 9*ante + 41*pairPlus
-        uint256 reservation = anteAmount * MAX_PAYOUT_ANTE_MULT + pairPlusAmount * MAX_PAYOUT_PAIR_PLUS_MULT;
+        // Reserve worst-case capped payout = stake_total + cappedProfit
+        // stake_total = (ante + max-Play=ante) + PP = 2*ante + PP
+        uint256 reservation = anteAmount * 2 + pairPlusAmount + cappedProfit;
         core.reserveOrRevert(collateral, reservation);
 
         // Request VRF1 (player cards)
@@ -230,7 +228,8 @@ contract ThreeCardPoker is
         b.lastRequestAt = block.timestamp;
         b.requestId = requestId;
         b.status = BetStatus.AWAITING_DEAL;
-        b.reservedAnteSide = anteAmount * MAX_PAYOUT_ANTE_MULT;
+        b.reservedAnteSide = reservation; // repurposed: total remaining reservation for this bet
+        b.profitCapRemaining = cappedProfit;
         b.isFreeBet = isFreeBet;
 
         requestIdToBetId[requestId] = betId;
@@ -335,10 +334,9 @@ contract ThreeCardPoker is
             refund += b.anteAmount;
         }
 
-        // Release reservation: ante-side still pending; pair-plus reservation already released on
-        // VRF1 fulfill if status == AWAITING_RESOLVE; if AWAITING_DEAL, both legs still reserved.
-        uint256 reservationToRelease = b.reservedAnteSide +
-            (b.status == BetStatus.AWAITING_DEAL ? b.pairPlusAmount * MAX_PAYOUT_PAIR_PLUS_MULT : 0);
+        // Release whatever reservation is still held for this bet. `reservedAnteSide` now
+        // represents the entire remaining reservation (decremented at VRF1 PP settle)
+        uint256 reservationToRelease = b.reservedAnteSide;
         b.reservedAnteSide = 0;
         core.releaseReservation(b.collateral, reservationToRelease);
 
@@ -381,17 +379,27 @@ contract ThreeCardPoker is
         uint8[3] memory pCards = _drawThreeCards(word);
         b.playerCards = pCards;
 
-        // Settle Pair Plus (independent of dealer / fold)
+        // Settle Pair Plus (independent of dealer / fold). PP profit consumes the shared
+        // per-bet profit budget. After settle, right-size the reservation to ante-side worst
+        // case = 2*ante + min(7*ante, profitCapRemaining) — releases both the PP stake slot
+        // and any cap slot no longer reachable by the ante side
         uint256 ppPayout = 0;
         if (b.pairPlusAmount > 0) {
             (uint8 pClass, ) = _evaluate3Card(pCards);
             uint256 ppMult = _pairPlusMultiplier(pClass);
             if (ppMult > 0) {
-                // Pay Pair Plus stake-back + multiplier × stake = stake * (1 + mult)
-                ppPayout = b.pairPlusAmount * (1 + ppMult);
+                uint256 ppProfitRaw = b.pairPlusAmount * ppMult;
+                uint256 ppProfit = ppProfitRaw > b.profitCapRemaining ? b.profitCapRemaining : ppProfitRaw;
+                ppPayout = b.pairPlusAmount + ppProfit;
+                b.profitCapRemaining -= ppProfit;
             }
-            // Release pair-plus side reservation in full (whether won or lost)
-            core.releaseReservation(b.collateral, b.pairPlusAmount * MAX_PAYOUT_PAIR_PLUS_MULT);
+            uint256 anteMaxProfit = b.anteAmount * (MAX_PAYOUT_ANTE_MULT - 2);
+            uint256 anteSideLiability = b.anteAmount *
+                2 +
+                (anteMaxProfit > b.profitCapRemaining ? b.profitCapRemaining : anteMaxProfit);
+            uint256 toRelease = b.reservedAnteSide - anteSideLiability;
+            b.reservedAnteSide = anteSideLiability;
+            core.releaseReservation(b.collateral, toRelease);
             if (ppPayout > 0) {
                 core.payOut(b.user, b.collateral, ppPayout, b.isFreeBet, b.pairPlusAmount);
             }
@@ -421,9 +429,24 @@ contract ThreeCardPoker is
         b.dealerCards = dCards;
 
         Resolution memory r = _computeResolution(b.playerCards, dCards, b.anteAmount);
-        uint256 totalSideAPayout = r.anteAndPlayPayout + r.anteBonusPayout;
         uint256 stakeOut = b.anteAmount * 2;
 
+        // Apply soft cap on ante-side profit
+        uint256 totalSideAPayout = r.anteAndPlayPayout + r.anteBonusPayout;
+        if (totalSideAPayout > stakeOut) {
+            uint256 profit = totalSideAPayout - stakeOut;
+            if (profit > b.profitCapRemaining) profit = b.profitCapRemaining;
+            totalSideAPayout = stakeOut + profit;
+            b.profitCapRemaining -= profit;
+            // Reflect truncation in the bet's reported breakdown (anteBonus capped first since
+            // it's the most variance-heavy on this side)
+            if (r.anteBonusPayout > profit) {
+                r.anteBonusPayout = profit;
+                r.anteAndPlayPayout = stakeOut;
+            }
+        }
+
+        // Release ALL remaining reservation for this bet — VRF2 is the terminal leg
         core.releaseReservation(b.collateral, b.reservedAnteSide);
         b.reservedAnteSide = 0;
 
@@ -682,6 +705,25 @@ contract ThreeCardPoker is
         if (b.status != BetStatus.PLAYER_TURN) revert InvalidBetStatus();
     }
 
+    function _checkBetSize(address collateral, uint256 anteAmount) internal view {
+        uint256 anteUsd = core.getUsdValue(collateral, anteAmount);
+        uint256 minBet = core.effectiveMinBetUsd(address(this));
+        if (minBet == 0) minBet = MIN_BET_USD;
+        if (anteUsd < minBet) revert InvalidAmount();
+        uint256 maxBet = core.effectiveMaxBetUsd(address(this));
+        if (maxBet != 0 && anteUsd > maxBet) revert AboveMaxBet();
+    }
+
+    /// @notice Worst-case net profit for this bet truncated by the per-game USD profit cap,
+    /// returned in collateral units. Uncapped worst = 7*ante (ante side excl stake-backs) +
+    /// 40*PP. Per-leg settle paths deduct profit_paid from `b.profitCapRemaining`
+    function _cappedProfit(address collateral, uint256 anteAmount, uint256 pairPlusAmount) internal view returns (uint256) {
+        uint256 worst = anteAmount * (MAX_PAYOUT_ANTE_MULT - 2) + pairPlusAmount * (MAX_PAYOUT_PAIR_PLUS_MULT - 1);
+        uint256 capUsd = core.effectiveMaxProfitUsd(address(this));
+        uint256 capCollateral = core.collateralFromUsd(collateral, capUsd);
+        return worst > capCollateral ? capCollateral : worst;
+    }
+
     /* ========== VIEWS ========== */
 
     function getBetBase(
@@ -733,6 +775,25 @@ contract ThreeCardPoker is
     {
         Bet storage b = bets[betId];
         return (b.pairPlusPayout, b.anteBonusPayout, b.anteAndPlayPayout, b.totalPayout);
+    }
+
+    function getFullRecord(uint256 betId) external view override returns (FullRecord memory r) {
+        Bet storage b = bets[betId];
+        r.betId = betId;
+        r.user = b.user;
+        r.collateral = b.collateral;
+        r.anteAmount = b.anteAmount;
+        r.pairPlusAmount = b.pairPlusAmount;
+        r.totalPayout = b.totalPayout;
+        r.pairPlusPayout = b.pairPlusPayout;
+        r.anteBonusPayout = b.anteBonusPayout;
+        r.anteAndPlayPayout = b.anteAndPlayPayout;
+        r.placedAt = b.placedAt;
+        r.resolvedAt = b.resolvedAt;
+        r.status = b.status;
+        r.outcome = b.outcome;
+        r.playerCards = b.playerCards;
+        r.dealerCards = b.dealerCards;
     }
 
     function getUserBetIds(

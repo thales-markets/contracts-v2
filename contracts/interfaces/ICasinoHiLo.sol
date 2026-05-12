@@ -36,6 +36,26 @@ interface ICasinoHiLo {
         BUST // wrong guess: bet resolved, multiplier frozen at pre-bust value in `multipliersE18`
     }
 
+    /// @notice Full Hi-Lo record. For the per-turn history (directions / cards / outcomes /
+    /// multipliers per turn), call `getBetCards(betId)` directly — kept off this struct so reads
+    /// stay bounded. Two reads per bet for the full picture, but each is a single staticcall
+    struct FullRecord {
+        uint256 betId;
+        address user;
+        address collateral;
+        uint256 amount;
+        uint256 payout;
+        uint256 placedAt;
+        uint256 resolvedAt;
+        BetStatus status;
+        Outcome outcome;
+        uint8 lastCard; // last drawn card; 0xFF if no card has been drawn yet
+        uint256 currentMultiplierE18;
+        uint8 guessCount;
+        uint8 correctCount;
+        uint8 pushCount;
+    }
+
     event BetPlaced(uint256 indexed betId, address indexed user, address collateral, uint256 amount);
 
     event GuessChosen(uint256 indexed betId, uint256 indexed requestId, address indexed user, Direction direction);
@@ -130,4 +150,10 @@ interface ICasinoHiLo {
     function getUserBetIds(address user, uint256 offset, uint256 limit) external view returns (uint256[] memory);
 
     function getRecentBetIds(uint256 offset, uint256 limit) external view returns (uint256[] memory);
+
+    /// @notice One-shot full record reader. Per-turn history is intentionally not bundled here —
+    /// call `getBetCards(betId)` for that
+    function getFullRecord(uint256 betId) external view returns (FullRecord memory);
+
+    function nextBetId() external view returns (uint256);
 }

@@ -373,6 +373,97 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoHiLo.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoHiLo.Outcome",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "lastCard",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "currentMultiplierE18",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "guessCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "correctCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "pushCount",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct ICasinoHiLo.FullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "offset",
         "type": "uint256"
       },
@@ -449,6 +540,19 @@
   {
     "inputs": [],
     "name": "multiplierFactorE18",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextBetId",
     "outputs": [
       {
         "internalType": "uint256",

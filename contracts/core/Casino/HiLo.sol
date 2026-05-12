@@ -440,6 +440,24 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         return (b.directions, b.cards, b.outcomes, b.multipliersE18);
     }
 
+    function getFullRecord(uint256 betId) external view override returns (FullRecord memory r) {
+        Bet storage b = bets[betId];
+        r.betId = betId;
+        r.user = b.user;
+        r.collateral = b.collateral;
+        r.amount = b.amount;
+        r.payout = b.payout;
+        r.placedAt = b.placedAt;
+        r.resolvedAt = b.resolvedAt;
+        r.status = b.status;
+        r.outcome = b.outcome;
+        r.lastCard = b.lastCard;
+        r.currentMultiplierE18 = b.currentMultiplierE18;
+        r.guessCount = b.guessCount;
+        r.correctCount = b.correctCount;
+        r.pushCount = b.pushCount;
+    }
+
     function getUserBetIds(
         address user,
         uint256 offset,

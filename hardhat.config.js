@@ -21,7 +21,6 @@ const EXCLUDED_EDGE_TESTS = [
 	'test/contracts/Overtime/Casino/SlotsSimulation.js',
 	'test/contracts/Overtime/Casino/BlackjackStrategies.js',
 	'test/contracts/Overtime/Casino/ThreeCardPokerEdgeSim.js',
-	'test/contracts/Overtime/Casino/OvertimeHoldemEdgeSim.js',
 	'test/contracts/Overtime/Casino/HiLoEdgeSim.js',
 	'test/contracts/Overtime/Casino/PlinkoEdgeSim.js',
 	'test/contracts/Overtime/Casino/KenoEdgeSim.js',
@@ -29,8 +28,14 @@ const EXCLUDED_EDGE_TESTS = [
 
 task(TASK_TEST_GET_TEST_FILES).setAction(async (args, _hre, runSuper) => {
 	const files = await runSuper(args);
-	// If the user passed explicit test files, respect their selection.
-	if (args.testFiles && args.testFiles.length > 0) return files;
+	// Respect explicit naming of an edge sim (e.g. `hardhat test ...EdgeAudit.js`) but
+	// always filter when files arrive via glob expansion (coverage's `--testfiles
+	// "test/.../**/*.js"` or the default `hardhat test`). Edge sims are 10k–100k-hand
+	// simulations that take hours under coverage instrumentation
+	const explicitEdgeSim = (args.testFiles || []).some((tf) =>
+		EXCLUDED_EDGE_TESTS.includes(path.resolve(tf))
+	);
+	if (explicitEdgeSim) return files;
 	return files.filter((f) => !EXCLUDED_EDGE_TESTS.includes(path.resolve(f)));
 });
 

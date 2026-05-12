@@ -153,10 +153,16 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     // with very different worst-case payout structures (e.g. HiLo 25x vs Hold'em 102x ante)
     mapping(address => uint256) public override maxProfitUsdOverride;
 
-    // --- forward-compat storage gap. Reduced from 40 → 37 when `_supportedCollateralsList`,
-    // `_supportedCollateralIndex`, and `maxProfitUsdOverride` were appended. Slots come AFTER all
-    // pre-existing variables so upgrades from the original v2 deploy remain layout-compatible
-    uint256[37] private __gap;
+    // --- per-game min/max bet floor/ceiling in USD-18-dec. 0 = "no override" (use global
+    // defaults / no max). Read via `effectiveMinBetUsd(game)` / `effectiveMaxBetUsd(game)`.
+    // Lets poker games gate ante size at placement so the soft-cap on payout (driven by
+    // `maxProfitUsdOverride`) doesn't have to keep up with arbitrarily-large stakes
+    mapping(address => uint256) public override minBetPerGameUsd;
+    mapping(address => uint256) public override maxBetPerGameUsd;
+
+    // --- forward-compat storage gap. Reduced 37 → 35 when `minBetPerGameUsd` and
+    // `maxBetPerGameUsd` were appended
+    uint256[35] private __gap;
 
     /* ========== INITIALIZER ========== */
 
@@ -502,6 +508,41 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     function effectiveMaxProfitUsd(address game) external view override returns (uint256) {
         uint256 override_ = maxProfitUsdOverride[game];
         return override_ == 0 ? maxProfitUsd : override_;
+    }
+
+    /// @notice Per-game ante floor in USD-18-dec. 0 = "use the game's local default"
+    function setMinBetPerGameUsd(address game, uint256 value) external onlyOwner {
+        if (game == address(0)) revert InvalidAddress();
+        minBetPerGameUsd[game] = value;
+        emit MinBetPerGameUsdChanged(game, value);
+    }
+
+    /// @notice Per-game ante ceiling in USD-18-dec. 0 = no max
+    function setMaxBetPerGameUsd(address game, uint256 value) external onlyOwner {
+        if (game == address(0)) revert InvalidAddress();
+        maxBetPerGameUsd[game] = value;
+        emit MaxBetPerGameUsdChanged(game, value);
+    }
+
+    function effectiveMinBetUsd(address game) external view override returns (uint256) {
+        return minBetPerGameUsd[game];
+    }
+
+    function effectiveMaxBetUsd(address game) external view override returns (uint256) {
+        return maxBetPerGameUsd[game];
+    }
+
+    /// @notice Inverse of `getUsdValue`. Converts a USD-18-dec amount into native collateral
+    /// decimals (6 for USDC, 18 for WETH/OVER). Used by games to derive collateral-denominated
+    /// payout caps from the per-game USD profit ceiling. Reverts on unsupported collateral or
+    /// missing price
+    function collateralFromUsd(address collateral, uint256 usdAmount) external view override returns (uint256) {
+        if (usdAmount == 0) return 0;
+        _requireSupported(collateral);
+        if (collateral == usdc) return usdAmount / 1e12; // 1e18 → 1e6
+        uint price = priceFeed.rateForCurrency(priceFeedKeyPerCollateral[collateral]);
+        if (price == 0) revert InvalidPrice();
+        return (usdAmount * ONE) / price;
     }
 
     /// @notice Adds, removes, or re-keys a collateral. Both `currencyKey` and `isSupported` are

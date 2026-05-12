@@ -119,7 +119,6 @@ async function deployFullStack() {
 		return c;
 	}
 	const tcp = await deployGame('ThreeCardPoker');
-	const holdem = await deployGame('OvertimeHoldem');
 	const hilo = await deployGame('HiLo');
 
 	await usdc.mintForUser(owner.address);
@@ -145,8 +144,6 @@ async function deployFullStack() {
 		coreAddr,
 		tcp,
 		tcpAddr: await tcp.getAddress(),
-		holdem,
-		holdemAddr: await holdem.getAddress(),
 		hilo,
 		hiloAddr: await hilo.getAddress(),
 	};
@@ -336,61 +333,6 @@ describe('Final coverage gaps', () => {
 			const payouts = await ctx.tcp.getBetPayouts(placed.args.betId);
 			// Pair Plus on Straight = 6:1 → payout = 7 * stake
 			expect(payouts.pairPlusPayout).to.equal(MIN_USDC_BET * 7n);
-		});
-	});
-
-	describe("Hold'em: AA Bonus Pair-of-Aces, dealer-HC paths", () => {
-		function dealHF(word) {
-			return partialFisherYates(fullDeck(), 5, word);
-		}
-		const acesPair = (cards) => {
-			// 5 cards. Pair of aces only (no other pair, not 3oK).
-			// Aces have rank index 12 (when card%13). Ranks 12 = ace high in our encoding.
-			const ranks = cards.map((c) => c % 13);
-			const aces = ranks.filter((r) => r === 12).length;
-			if (aces !== 2) return false;
-			// Check no other pair
-			const count = {};
-			for (const r of ranks) count[r] = (count[r] || 0) + 1;
-			let pairs = 0;
-			let threes = 0;
-			for (const r in count) {
-				if (count[r] === 2) pairs++;
-				if (count[r] >= 3) threes++;
-			}
-			return pairs === 1 && threes === 0;
-		};
-
-		it('AA Bonus pays 7:1 on Pair of Aces in first 5 cards', async () => {
-			let word;
-			for (let i = 0; i < 200000; i++) {
-				const w = BigInt('0x' + ethers.id('aaPair-' + i).slice(2));
-				if (acesPair(dealHF(w))) {
-					word = w;
-					break;
-				}
-			}
-			if (!word) {
-				console.log('  (skip — pair of aces not found)');
-				return;
-			}
-			const tx = await ctx.holdem
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.holdem.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [word]);
-			const payouts = await ctx.holdem.getBetPayouts(placed.args.betId);
-			// Pair of Aces = 7:1 → payout = 8 * stake
-			expect(payouts.aaBonusPayout).to.equal(MIN_USDC_BET * 8n);
 		});
 	});
 

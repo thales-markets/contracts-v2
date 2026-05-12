@@ -20,6 +20,21 @@ interface ICasinoPlinko {
         HIGH
     }
 
+    /// @notice Full Plinko record (8-row, single mode)
+    struct FullRecord {
+        uint256 betId;
+        address user;
+        address collateral;
+        uint256 amount;
+        uint256 payout;
+        uint256 placedAt;
+        uint256 resolvedAt;
+        BetStatus status;
+        Risk risk;
+        uint8 slotIndex;
+        uint256 multiplierE18;
+    }
+
     event BetPlaced(
         uint256 indexed betId,
         uint256 indexed requestId,
@@ -88,4 +103,9 @@ interface ICasinoPlinko {
     function getUserBetIds(address user, uint256 offset, uint256 limit) external view returns (uint256[] memory);
 
     function getRecentBetIds(uint256 offset, uint256 limit) external view returns (uint256[] memory);
+
+    /// @notice One-shot full record reader. Single staticcall, all FE-renderable fields
+    function getFullRecord(uint256 betId) external view returns (FullRecord memory);
+
+    function nextBetId() external view returns (uint256);
 }

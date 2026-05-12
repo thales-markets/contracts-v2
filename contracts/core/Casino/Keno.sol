@@ -416,6 +416,23 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         );
     }
 
+    function getFullRecord(uint256 betId) external view override returns (FullRecord memory r) {
+        Bet storage b = bets[betId];
+        r.betId = betId;
+        r.user = b.user;
+        r.collateral = b.collateral;
+        r.amount = b.amount;
+        r.payout = b.payout;
+        r.placedAt = b.placedAt;
+        r.resolvedAt = b.resolvedAt;
+        r.status = b.status;
+        r.picksCount = b.picksCount;
+        r.hits = b.hits;
+        r.picksMask = b.picksMask;
+        r.drawnMask = b.drawnMask;
+        r.multiplierE18 = b.multiplierE18;
+    }
+
     function getPaytable(uint8 picksCount) external view override returns (uint256[] memory) {
         return paytables[picksCount];
     }

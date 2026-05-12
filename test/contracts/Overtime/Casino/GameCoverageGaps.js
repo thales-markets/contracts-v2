@@ -88,7 +88,6 @@ async function deployFullStack() {
 		return c;
 	}
 	const tcp = await deployGame('ThreeCardPoker');
-	const holdem = await deployGame('OvertimeHoldem');
 	const plinko = await deployGame('Plinko');
 	const hilo = await deployGame('HiLo');
 	const keno = await deployGame('Keno');
@@ -115,8 +114,6 @@ async function deployFullStack() {
 		priceFeed,
 		tcp,
 		tcpAddr: await tcp.getAddress(),
-		holdem,
-		holdemAddr: await holdem.getAddress(),
 		plinko,
 		plinkoAddr: await plinko.getAddress(),
 		hilo,
@@ -149,7 +146,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 	});
 
 	describe('Per-game admin: setCore, setManager, setPausedByRole', () => {
-		const games = ['tcp', 'holdem', 'plinko', 'hilo', 'keno'];
+		const games = ['tcp', 'plinko', 'hilo', 'keno'];
 		const gAddr = (g) => g + 'Addr';
 
 		for (const g of games) {
@@ -224,24 +221,6 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			).to.be.revertedWithCustomError(ctx.tcp, 'BetNotFound');
 		});
 
-		it("Hold'em: adminCancelBet works", async () => {
-			const tx = await ctx.holdem
-				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return ctx.holdem.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await expect(ctx.holdem.connect(ctx.resolver).adminCancelBet(placed.args.betId)).to.not.be
-				.reverted;
-		});
-
 		it('Plinko: adminCancelBet works', async () => {
 			const tx = await ctx.plinko
 				.connect(ctx.player)
@@ -298,7 +277,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 	});
 
 	describe('Game getUserBetIds / getRecentBetIds edge cases', () => {
-		const games = ['tcp', 'holdem', 'plinko', 'hilo', 'keno'];
+		const games = ['tcp', 'plinko', 'hilo', 'keno'];
 		for (const g of games) {
 			it(`${g}: empty user returns []`, async () => {
 				const random = ethers.Wallet.createRandom().address;
@@ -405,13 +384,14 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			).to.be.revertedWithCustomError(ctx.tcp, 'InvalidAmount');
 		});
 
-		it('placeBet rejects when maxProfit exceeded', async () => {
+		it('placeBet soft-caps reservation when maxProfit < worst-case', async () => {
+			// TCP is now a SOFT cap: bet succeeds, reservation = stake + capCollateral
 			await ctx.core.setRiskParams(ethers.parseEther('1'), 0);
 			await expect(
 				ctx.tcp
 					.connect(ctx.player)
 					.placeBet(ctx.usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.tcp, 'MaxProfitExceeded');
+			).to.not.be.reverted;
 		});
 
 		it('play on non-existent bet reverts', async () => {
@@ -436,36 +416,8 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		});
 	});
 
-	describe("Hold'em: validation, edge paths", () => {
-		it('placeBet rejects below MIN_BET_USD', async () => {
-			await expect(
-				ctx.holdem.connect(ctx.player).placeBet(ctx.usdcAddr, USDC_UNIT, 0n, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.holdem, 'InvalidAmount');
-		});
-
-		it('placeBet rejects when maxProfit exceeded', async () => {
-			await ctx.core.setRiskParams(ethers.parseEther('1'), 0);
-			await expect(
-				ctx.holdem
-					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.holdem, 'MaxProfitExceeded');
-		});
-
-		it('callBet/fold on non-existent bet reverts', async () => {
-			await expect(ctx.holdem.connect(ctx.player).callBet(99999n)).to.be.revertedWithCustomError(
-				ctx.holdem,
-				'BetNotFound'
-			);
-			await expect(ctx.holdem.connect(ctx.player).fold(99999n)).to.be.revertedWithCustomError(
-				ctx.holdem,
-				'BetNotFound'
-			);
-		});
-	});
-
 	describe('Game callback: rejects non-core caller', () => {
-		const games = ['tcp', 'holdem', 'plinko', 'hilo', 'keno'];
+		const games = ['tcp', 'plinko', 'hilo', 'keno'];
 		for (const g of games) {
 			it(`${g}: onVrfFulfilled rejects non-core sender`, async () => {
 				await expect(

@@ -248,6 +248,92 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoKeno.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "picksCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "hits",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint128",
+            "name": "picksMask",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "drawnMask",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplierE18",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ICasinoKeno.FullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getMaxMultiplierE18",
     "outputs": [
@@ -327,6 +413,19 @@
         "internalType": "uint256[]",
         "name": "",
         "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextBetId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

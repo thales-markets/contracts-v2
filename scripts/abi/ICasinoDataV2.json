@@ -113,12 +113,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -148,7 +148,7 @@
             "type": "uint8"
           }
         ],
-        "internalType": "struct ICasinoDataV2.HiLoFullRecord",
+        "internalType": "struct ICasinoHiLo.FullRecord",
         "name": "",
         "type": "tuple"
       }
@@ -204,12 +204,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -239,7 +239,7 @@
             "type": "uint8"
           }
         ],
-        "internalType": "struct ICasinoDataV2.HiLoFullRecord[]",
+        "internalType": "struct ICasinoHiLo.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -295,7 +295,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoKeno.BetStatus",
             "name": "status",
             "type": "uint8"
           },
@@ -325,7 +325,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.KenoFullRecord",
+        "internalType": "struct ICasinoKeno.FullRecord",
         "name": "",
         "type": "tuple"
       }
@@ -381,7 +381,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoKeno.BetStatus",
             "name": "status",
             "type": "uint8"
           },
@@ -411,7 +411,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.KenoFullRecord[]",
+        "internalType": "struct ICasinoKeno.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -446,7 +446,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getOvertimeHoldemFullRecord",
+    "name": "getOvertimeUltimateHoldemFullRecord",
     "outputs": [
       {
         "components": [
@@ -472,7 +472,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusAmount",
+            "name": "playAmount",
             "type": "uint256"
           },
           {
@@ -482,17 +482,17 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusPayout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
             "name": "antePayout",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "callPayout",
+            "name": "blindPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playPayout",
             "type": "uint256"
           },
           {
@@ -506,12 +506,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -531,7 +531,7 @@
             "type": "uint8[2]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord",
+        "internalType": "struct ICasinoOvertimeUltimateHoldem.FullRecord",
         "name": "",
         "type": "tuple"
       }
@@ -547,7 +547,7 @@
         "type": "uint256[]"
       }
     ],
-    "name": "getOvertimeHoldemFullRecords",
+    "name": "getOvertimeUltimateHoldemFullRecords",
     "outputs": [
       {
         "components": [
@@ -573,7 +573,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusAmount",
+            "name": "playAmount",
             "type": "uint256"
           },
           {
@@ -583,17 +583,17 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusPayout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
             "name": "antePayout",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "callPayout",
+            "name": "blindPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playPayout",
             "type": "uint256"
           },
           {
@@ -607,12 +607,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -632,7 +632,7 @@
             "type": "uint8[2]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord[]",
+        "internalType": "struct ICasinoOvertimeUltimateHoldem.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -688,12 +688,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.Risk",
             "name": "risk",
             "type": "uint8"
           },
@@ -708,7 +708,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.PlinkoFullRecord",
+        "internalType": "struct ICasinoPlinko.FullRecord",
         "name": "",
         "type": "tuple"
       }
@@ -764,12 +764,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.Risk",
             "name": "risk",
             "type": "uint8"
           },
@@ -784,7 +784,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.PlinkoFullRecord[]",
+        "internalType": "struct ICasinoPlinko.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -921,12 +921,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -956,7 +956,7 @@
             "type": "uint8"
           }
         ],
-        "internalType": "struct ICasinoDataV2.HiLoFullRecord[]",
+        "internalType": "struct ICasinoHiLo.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1017,7 +1017,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoKeno.BetStatus",
             "name": "status",
             "type": "uint8"
           },
@@ -1047,7 +1047,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.KenoFullRecord[]",
+        "internalType": "struct ICasinoKeno.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1068,7 +1068,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getRecentOvertimeHoldemRecords",
+    "name": "getRecentOvertimeUltimateHoldemRecords",
     "outputs": [
       {
         "components": [
@@ -1094,7 +1094,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusAmount",
+            "name": "playAmount",
             "type": "uint256"
           },
           {
@@ -1104,17 +1104,17 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusPayout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
             "name": "antePayout",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "callPayout",
+            "name": "blindPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playPayout",
             "type": "uint256"
           },
           {
@@ -1128,12 +1128,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -1153,7 +1153,7 @@
             "type": "uint8[2]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord[]",
+        "internalType": "struct ICasinoOvertimeUltimateHoldem.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1214,12 +1214,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.Risk",
             "name": "risk",
             "type": "uint8"
           },
@@ -1234,7 +1234,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.PlinkoFullRecord[]",
+        "internalType": "struct ICasinoPlinko.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1315,12 +1315,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -1335,7 +1335,98 @@
             "type": "uint8[3]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord[]",
+        "internalType": "struct ICasinoThreeCardPoker.FullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentVideoPokerRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.HandClass",
+            "name": "handClass",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "holdMask",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "initialCards",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "finalCards",
+            "type": "uint8[5]"
+          }
+        ],
+        "internalType": "struct ICasinoVideoPoker.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1411,12 +1502,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -1431,7 +1522,7 @@
             "type": "uint8[3]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord",
+        "internalType": "struct ICasinoThreeCardPoker.FullRecord",
         "name": "",
         "type": "tuple"
       }
@@ -1507,12 +1598,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -1527,7 +1618,7 @@
             "type": "uint8[3]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord[]",
+        "internalType": "struct ICasinoThreeCardPoker.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1669,12 +1760,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoHiLo.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -1704,7 +1795,7 @@
             "type": "uint8"
           }
         ],
-        "internalType": "struct ICasinoDataV2.HiLoFullRecord[]",
+        "internalType": "struct ICasinoHiLo.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1770,7 +1861,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoKeno.BetStatus",
             "name": "status",
             "type": "uint8"
           },
@@ -1800,7 +1891,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.KenoFullRecord[]",
+        "internalType": "struct ICasinoKeno.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1826,7 +1917,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getUserOvertimeHoldemRecords",
+    "name": "getUserOvertimeUltimateHoldemRecords",
     "outputs": [
       {
         "components": [
@@ -1852,7 +1943,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusAmount",
+            "name": "playAmount",
             "type": "uint256"
           },
           {
@@ -1862,17 +1953,17 @@
           },
           {
             "internalType": "uint256",
-            "name": "aaBonusPayout",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
             "name": "antePayout",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "callPayout",
+            "name": "blindPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playPayout",
             "type": "uint256"
           },
           {
@@ -1886,12 +1977,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -1911,7 +2002,7 @@
             "type": "uint8[2]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.OvertimeHoldemFullRecord[]",
+        "internalType": "struct ICasinoOvertimeUltimateHoldem.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -1977,12 +2068,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoPlinko.Risk",
             "name": "risk",
             "type": "uint8"
           },
@@ -1997,7 +2088,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ICasinoDataV2.PlinkoFullRecord[]",
+        "internalType": "struct ICasinoPlinko.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -2164,12 +2255,12 @@
             "type": "uint256"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.BetStatus",
             "name": "status",
             "type": "uint8"
           },
           {
-            "internalType": "uint8",
+            "internalType": "enum ICasinoThreeCardPoker.Outcome",
             "name": "outcome",
             "type": "uint8"
           },
@@ -2184,7 +2275,275 @@
             "type": "uint8[3]"
           }
         ],
-        "internalType": "struct ICasinoDataV2.ThreeCardPokerFullRecord[]",
+        "internalType": "struct ICasinoThreeCardPoker.FullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserVideoPokerRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.HandClass",
+            "name": "handClass",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "holdMask",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "initialCards",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "finalCards",
+            "type": "uint8[5]"
+          }
+        ],
+        "internalType": "struct ICasinoVideoPoker.FullRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getVideoPokerFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.HandClass",
+            "name": "handClass",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "holdMask",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "initialCards",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "finalCards",
+            "type": "uint8[5]"
+          }
+        ],
+        "internalType": "struct ICasinoVideoPoker.FullRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getVideoPokerFullRecords",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.HandClass",
+            "name": "handClass",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "holdMask",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "initialCards",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "finalCards",
+            "type": "uint8[5]"
+          }
+        ],
+        "internalType": "struct ICasinoVideoPoker.FullRecord[]",
         "name": "",
         "type": "tuple[]"
       }

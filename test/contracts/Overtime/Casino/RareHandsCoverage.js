@@ -121,7 +121,6 @@ async function deployStack() {
 		return c;
 	}
 	const tcp = await deployGame('ThreeCardPoker');
-	const holdem = await deployGame('OvertimeHoldem');
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -140,8 +139,6 @@ async function deployStack() {
 		coreAddr,
 		tcp,
 		tcpAddr: await tcp.getAddress(),
-		holdem,
-		holdemAddr: await holdem.getAddress(),
 	};
 }
 
@@ -225,84 +222,6 @@ describe('Rare hand classes — coverage push', () => {
 			);
 			expect((await ctx.tcp.getBetPayouts(id1)).pairPlusPayout).to.equal(MIN_USDC_BET * 2n);
 			expect((await ctx.tcp.getBetPayouts(id2)).pairPlusPayout).to.equal(MIN_USDC_BET * 2n);
-		});
-	});
-
-	describe("Hold'em eval branches", () => {
-		it('hits dealer-non-qualify HC class via low-rank dealer', async () => {
-			// Find dealWord giving player some hand class, then resolveWord giving dealer with no
-			// pair and all cards < 4. Hard but not impossible
-			let dealWord, resolveWord;
-			for (let i = 0; i < 10000 && !dealWord; i++) {
-				const w = BigInt('0x' + ethers.id('h-deal-' + i).slice(2));
-				const five = partialFisherYates(fullDeck(), 5, w);
-				const ranks5 = five.map(rankOf);
-				if (ranks5.some((r) => r > 12)) continue; // keep things low to make dealer-NQ likely
-				const hasNoPair = new Set(ranks5).size === 5;
-				if (!hasNoPair) continue;
-				dealWord = w;
-			}
-			if (!dealWord) {
-				console.log("  (skip — couldn't find suitable deal word)");
-				return;
-			}
-			// Try a bunch of resolveWords
-			const five = partialFisherYates(fullDeck(), 5, dealWord);
-			for (let j = 0; j < 5000 && !resolveWord; j++) {
-				const w = BigInt('0x' + ethers.id('h-res-' + j).slice(2));
-				const four = partialFisherYates(
-					fullDeck().filter((c) => !five.includes(c)),
-					4,
-					w
-				);
-				const dHole = [four[0], four[1]];
-				const board = [five[2], five[3], five[4], four[2], four[3]];
-				const dCards = [...dHole, ...board];
-				const dRanks = dCards.map(rankOf);
-				// Dealer must NOT qualify: best 5 hand has class HC OR pair < 4
-				const counts = {};
-				for (const r of dRanks) counts[r] = (counts[r] || 0) + 1;
-				let pairs = 0;
-				let highestPair = 0;
-				let triples = 0;
-				for (const k in counts) {
-					if (counts[k] === 2) {
-						pairs++;
-						if (+k > highestPair) highestPair = +k;
-					}
-					if (counts[k] >= 3) triples++;
-				}
-				const noBigHand = triples === 0;
-				const noPairAtAll = pairs === 0;
-				const lowPair = pairs >= 1 && highestPair < 4;
-				if (noBigHand && (noPairAtAll || lowPair)) {
-					resolveWord = w;
-				}
-			}
-			if (!resolveWord) {
-				console.log("  (skip — couldn't construct dealer-NQ scenario)");
-				return;
-			}
-			const id = await placeAndDeal(
-				ctx,
-				ctx.holdem,
-				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
-				dealWord
-			);
-			const tx = await ctx.holdem.connect(ctx.player).callBet(id);
-			const r = await tx.wait();
-			const called = r.logs
-				.map((l) => {
-					try {
-						return ctx.holdem.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'CallChosen');
-			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, called.args.requestId, [resolveWord]);
-			const base = await ctx.holdem.getBetBase(id);
-			expect(base.outcome).to.equal(2); // DEALER_NOT_QUALIFIED
 		});
 	});
 

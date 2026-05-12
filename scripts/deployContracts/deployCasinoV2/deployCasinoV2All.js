@@ -1,11 +1,11 @@
 /**
  * One-shot end-to-end deployer for the V2 casino stack:
- *   CasinoCoreV2 → ThreeCardPoker → OvertimeHoldem → Plinko → HiLo → Keno → CasinoDataV2
+ *   CasinoCoreV2 → ThreeCardPoker → Plinko → HiLo → Keno → VideoPoker → OvertimeUltimateHoldem → CasinoDataV2
  * Plus per-game maxProfitUsd overrides and a USDC bankroll top-up.
  *
  * Idempotent: skips any contract already in deployments.json. To force a fresh redeploy
  * of the whole stack, delete the relevant keys from deployments.json first (CasinoCoreV2,
- * ThreeCardPoker, OvertimeHoldem, Plinko, HiLo, Keno, CasinoDataV2 — and their *Implementation /
+ * ThreeCardPoker, Plinko, HiLo, Keno, VideoPoker, OvertimeUltimateHoldem, CasinoDataV2 — and their *Implementation /
  * *ProxyAdmin counterparts).
  *
  * Post-deploy manual steps (printed at the end):
@@ -30,13 +30,32 @@ const VRF_CALLBACK_GAS_LIMIT = 1_000_000;
 const VRF_REQUEST_CONFIRMATIONS = 1;
 const VRF_NATIVE_PAYMENT = true; // V1+V2 casino convention — pay VRF in native ETH
 
-// Per-game maxProfitUsd overrides (0 = no override, fall back to global)
+// Per-game maxProfitUsd overrides (0 = no override, fall back to global).
+// For non-poker games this is a hard cap at placeBet — used to gate worst-case payout.
+// For poker games (TCP, VideoPoker, OvertimeUltimateHoldem) it's a SOFT CAP applied at
+// settle: bets above the cap-implied stake are accepted, but the per-hand net profit is
+// truncated so the house never loses more than this USD value on a single hand
 const GAME_OVERRIDES = {
 	HiLo: 0n, // 25x cap × $300 = $12.50 max bet — global is fine
 	Plinko: 0n, // 8-row HIGH 29x × $300 = $10.71 max bet — global is fine
-	ThreeCardPoker: ethers.parseEther('1000'), // 7·ante + 40·PP ≤ 1000 → max ante $142
-	OvertimeHoldem: ethers.parseEther('3000'), // 102·ante + 100·AA ≤ 3000 → max ante $29.41 (no AA); $3 ante leaves $26.94 AA headroom
+	ThreeCardPoker: ethers.parseEther('2000'), // soft cap: max $2000 net profit per hand
 	Keno: ethers.parseEther('1000'), // 100x cap × $10 max bet → $1000 max payout per bet
+	VideoPoker: ethers.parseEther('2000'), // soft cap: max $2000 net profit per hand
+	OvertimeUltimateHoldem: ethers.parseEther('2000'), // soft cap: max $2000 net profit per hand
+};
+
+// Per-game min/max ante in USD-18-dec (0 = no override). Frontend quick-pick buttons should
+// fall in this range. For poker games we cap ante at $50; combined with the $2000 profit cap
+// this gives a usable bet range without ever exceeding house exposure
+const MIN_BET_OVERRIDES = {
+	ThreeCardPoker: 0n, // global $3
+	VideoPoker: 0n,
+	OvertimeUltimateHoldem: 0n,
+};
+const MAX_BET_OVERRIDES = {
+	ThreeCardPoker: ethers.parseEther('50'),
+	VideoPoker: ethers.parseEther('50'),
+	OvertimeUltimateHoldem: ethers.parseEther('50'),
 };
 
 // USDC bankroll seed for core (6 decimals)
@@ -177,7 +196,9 @@ async function deployData(network, owner, coreAddr, addresses) {
 	}
 
 	const Data = await ethers.getContractFactory('CasinoDataV2');
-	const deployed = await upgrades.deployProxy(Data, [], { initializer: false });
+	const deployed = await upgrades.deployProxy(Data, [], {
+		initializer: false,
+	});
 	await deployed.waitForDeployment();
 	const addr = await deployed.getAddress();
 	console.log('  CasinoDataV2 proxy:', addr);
@@ -187,11 +208,6 @@ async function deployData(network, owner, coreAddr, addresses) {
 	let tx = await deployed.initialize(owner.address, coreAddr, addresses.ThreeCardPoker);
 	await tx.wait();
 	console.log('  CasinoDataV2 initialized (TCP wired)');
-	await delay(STEP_DELAY);
-
-	tx = await deployed.setOvertimeHoldem(addresses.OvertimeHoldem);
-	await tx.wait();
-	console.log('  setOvertimeHoldem');
 	await delay(STEP_DELAY);
 
 	tx = await deployed.setPlinko(addresses.Plinko);
@@ -208,6 +224,20 @@ async function deployData(network, owner, coreAddr, addresses) {
 		tx = await deployed.setKeno(addresses.Keno);
 		await tx.wait();
 		console.log('  setKeno');
+		await delay(STEP_DELAY);
+	}
+
+	if (addresses.OvertimeUltimateHoldem) {
+		tx = await deployed.setUltimateHoldem(addresses.OvertimeUltimateHoldem);
+		await tx.wait();
+		console.log('  setUltimateHoldem');
+		await delay(STEP_DELAY);
+	}
+
+	if (addresses.VideoPoker) {
+		tx = await deployed.setVideoPoker(addresses.VideoPoker);
+		await tx.wait();
+		console.log('  setVideoPoker');
 		await delay(STEP_DELAY);
 	}
 
@@ -233,16 +263,43 @@ async function applyOverrides(network, coreAddr, addresses) {
 		const gameAddr = addresses[key];
 		const before = await core.maxProfitUsdOverride(gameAddr);
 		if (before === value) {
-			console.log(`  ${key}: override already $${ethers.formatEther(before)} — skipped`);
+			console.log(`  ${key} maxProfitUsd: already $${ethers.formatEther(before)} — skipped`);
 			continue;
 		}
 		const tx = await core.setMaxProfitUsdOverride(gameAddr, value);
 		await tx.wait();
-		const eff = await core.effectiveMaxProfitUsd(gameAddr);
 		console.log(
-			`  ${key}: override $${ethers.formatEther(before)} → $${ethers.formatEther(
-				value
-			)}  effective $${ethers.formatEther(eff)}`
+			`  ${key} maxProfitUsd: $${ethers.formatEther(before)} → $${ethers.formatEther(value)}`
+		);
+		await delay(STEP_DELAY);
+	}
+	for (const [key, value] of Object.entries(MIN_BET_OVERRIDES)) {
+		const gameAddr = addresses[key];
+		if (!gameAddr) continue;
+		const before = await core.minBetPerGameUsd(gameAddr);
+		if (before === value) {
+			console.log(`  ${key} minBetUsd: already $${ethers.formatEther(before)} — skipped`);
+			continue;
+		}
+		const tx = await core.setMinBetPerGameUsd(gameAddr, value);
+		await tx.wait();
+		console.log(
+			`  ${key} minBetUsd: $${ethers.formatEther(before)} → $${ethers.formatEther(value)}`
+		);
+		await delay(STEP_DELAY);
+	}
+	for (const [key, value] of Object.entries(MAX_BET_OVERRIDES)) {
+		const gameAddr = addresses[key];
+		if (!gameAddr) continue;
+		const before = await core.maxBetPerGameUsd(gameAddr);
+		if (before === value) {
+			console.log(`  ${key} maxBetUsd: already $${ethers.formatEther(before)} — skipped`);
+			continue;
+		}
+		const tx = await core.setMaxBetPerGameUsd(gameAddr, value);
+		await tx.wait();
+		console.log(
+			`  ${key} maxBetUsd: $${ethers.formatEther(before)} → $${ethers.formatEther(value)}`
 		);
 		await delay(STEP_DELAY);
 	}
@@ -303,49 +360,61 @@ async function main() {
 		managerAddr
 	);
 
-	console.log('\n--- 3. OvertimeHoldem ---');
-	const holdemAddr = await deployGame(
+	console.log('\n--- 3. Plinko ---');
+	const plinkoAddr = await deployGame(network, signer, 'Plinko', 'Plinko', coreAddr, managerAddr);
+
+	console.log('\n--- 4. HiLo ---');
+	const hiloAddr = await deployGame(network, signer, 'HiLo', 'HiLo', coreAddr, managerAddr);
+
+	console.log('\n--- 5. Keno ---');
+	const kenoAddr = await deployGame(network, signer, 'Keno', 'Keno', coreAddr, managerAddr);
+
+	console.log('\n--- 6. VideoPoker ---');
+	const videoPokerAddr = await deployGame(
 		network,
 		signer,
-		'OvertimeHoldem',
-		'OvertimeHoldem',
+		'VideoPoker',
+		'VideoPoker',
 		coreAddr,
 		managerAddr
 	);
 
-	console.log('\n--- 4. Plinko ---');
-	const plinkoAddr = await deployGame(network, signer, 'Plinko', 'Plinko', coreAddr, managerAddr);
-
-	console.log('\n--- 5. HiLo ---');
-	const hiloAddr = await deployGame(network, signer, 'HiLo', 'HiLo', coreAddr, managerAddr);
-
-	console.log('\n--- 6. Keno ---');
-	const kenoAddr = await deployGame(network, signer, 'Keno', 'Keno', coreAddr, managerAddr);
+	console.log('\n--- 7. OvertimeUltimateHoldem ---');
+	const uthAddr = await deployGame(
+		network,
+		signer,
+		'OvertimeUltimateHoldem',
+		'OvertimeUltimateHoldem',
+		coreAddr,
+		managerAddr
+	);
 
 	const addresses = {
 		ThreeCardPoker: tcpAddr,
-		OvertimeHoldem: holdemAddr,
 		Plinko: plinkoAddr,
 		HiLo: hiloAddr,
 		Keno: kenoAddr,
+		VideoPoker: videoPokerAddr,
+		OvertimeUltimateHoldem: uthAddr,
 	};
 
-	console.log('\n--- 7. CasinoDataV2 ---');
+	console.log('\n--- 9. CasinoDataV2 ---');
 	const dataAddr = await deployData(network, signer, coreAddr, addresses);
 
-	console.log('\n--- 8. Per-game maxProfitUsd overrides ---');
+	console.log('\n--- 10. Per-game maxProfitUsd overrides ---');
 	await applyOverrides(network, coreAddr, addresses);
 
-	console.log('\n--- 9. USDC bankroll top-up ---');
+	console.log('\n--- 11. USDC bankroll top-up ---');
 	await topUpBankroll(network, signer, coreAddr);
 
 	console.log('\n==== DEPLOYED ====');
 	console.log('CasinoCoreV2 :', coreAddr);
 	console.log('TCP          :', tcpAddr);
-	console.log("Hold'em      :", holdemAddr);
 	console.log('Plinko       :', plinkoAddr);
 	console.log('HiLo         :', hiloAddr);
 	console.log('Keno         :', kenoAddr);
+	console.log('VideoPoker   :', videoPokerAddr);
+	console.log("Ultimate Hold'em:", uthAddr);
 	console.log('CasinoDataV2 :', dataAddr);
 	console.log('');
 	console.log('==== POST-DEPLOY MANUAL STEPS ====');

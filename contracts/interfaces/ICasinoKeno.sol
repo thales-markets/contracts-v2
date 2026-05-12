@@ -16,6 +16,23 @@ interface ICasinoKeno {
         CANCELLED
     }
 
+    /// @notice Full Keno record
+    struct FullRecord {
+        uint256 betId;
+        address user;
+        address collateral;
+        uint256 amount;
+        uint256 payout;
+        uint256 placedAt;
+        uint256 resolvedAt;
+        BetStatus status;
+        uint8 picksCount;
+        uint8 hits;
+        uint128 picksMask; // bitmask of player's picks (numbers 1..80 → bits 0..79)
+        uint128 drawnMask; // bitmask of the 20 drawn numbers (set when status == RESOLVED)
+        uint256 multiplierE18;
+    }
+
     event BetPlaced(
         uint256 indexed betId,
         uint256 indexed requestId,
@@ -90,4 +107,9 @@ interface ICasinoKeno {
     function getUserBetIds(address user, uint256 offset, uint256 limit) external view returns (uint256[] memory);
 
     function getRecentBetIds(uint256 offset, uint256 limit) external view returns (uint256[] memory);
+
+    /// @notice One-shot full record reader
+    function getFullRecord(uint256 betId) external view returns (FullRecord memory);
+
+    function nextBetId() external view returns (uint256);
 }

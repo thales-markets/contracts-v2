@@ -1,65 +1,5 @@
 [
   {
-    "inputs": [],
-    "name": "BetNotFound",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "BetNotOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CancelTimeoutNotReached",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidAmount",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidBetStatus",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidCollateral",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidInitialization",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidSender",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MaxProfitExceeded",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "PlayerTurnTimeoutNotReached",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -122,12 +62,6 @@
         "internalType": "uint256",
         "name": "anteAmount",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "aaBonusAmount",
-        "type": "uint256"
       }
     ],
     "name": "BetPlaced",
@@ -156,7 +90,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ICasinoOvertimeHoldem.Outcome",
+        "internalType": "enum ICasinoOvertimeUltimateHoldem.Outcome",
         "name": "outcome",
         "type": "uint8"
       },
@@ -174,18 +108,6 @@
       },
       {
         "indexed": false,
-        "internalType": "uint8",
-        "name": "turn",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "river",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "antePayout",
         "type": "uint256"
@@ -193,7 +115,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "callPayout",
+        "name": "blindPayout",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "playPayout",
         "type": "uint256"
       },
       {
@@ -226,15 +154,77 @@
         "internalType": "address",
         "name": "user",
         "type": "address"
+      }
+    ],
+    "name": "CheckedPostFlop",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "CheckedPreFlop",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "callAmount",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "flop0",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "flop1",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "flop2",
+        "type": "uint8"
       }
     ],
-    "name": "CallChosen",
+    "name": "FlopDealt",
     "type": "event"
   },
   {
@@ -288,125 +278,128 @@
         "internalType": "uint8",
         "name": "hole1",
         "type": "uint8"
+      }
+    ],
+    "name": "PlayerHoleDealt",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "playAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RaisedPostFlop",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "playAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RaisedPreFlop",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "playAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RaisedRiver",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "flop0",
+        "name": "turn",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "flop1",
+        "name": "river",
         "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "flop2",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "aaBonusPayout",
-        "type": "uint256"
       }
     ],
-    "name": "HoleAndFlopDealt",
+    "name": "TurnRiverDealt",
     "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "version",
-        "type": "uint64"
-      }
-    ],
-    "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "oldOwner",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnerChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnerNominated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isPaused",
-        "type": "bool"
-      }
-    ],
-    "name": "PauseChanged",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "MIN_BET_USD",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "PLAYER_TURN_TIMEOUT",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "acceptOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
   },
   {
     "inputs": [
@@ -429,7 +422,7 @@
         "type": "uint256"
       }
     ],
-    "name": "adminForceFold",
+    "name": "cancelBet",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -442,7 +435,7 @@
         "type": "uint256"
       }
     ],
-    "name": "callBet",
+    "name": "checkPostFlop",
     "outputs": [
       {
         "internalType": "uint256",
@@ -461,22 +454,15 @@
         "type": "uint256"
       }
     ],
-    "name": "cancelBet",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "core",
+    "name": "checkPreFlop",
     "outputs": [
       {
-        "internalType": "contract ICasinoCoreV2",
-        "name": "",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -519,7 +505,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "aaBonusAmount",
+        "name": "playAmount",
         "type": "uint256"
       },
       {
@@ -538,12 +524,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ICasinoOvertimeHoldem.BetStatus",
+        "internalType": "enum ICasinoOvertimeUltimateHoldem.BetStatus",
         "name": "status",
         "type": "uint8"
       },
       {
-        "internalType": "enum ICasinoOvertimeHoldem.Outcome",
+        "internalType": "enum ICasinoOvertimeUltimateHoldem.Outcome",
         "name": "outcome",
         "type": "uint8"
       }
@@ -592,23 +578,124 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "aaBonusPayout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "antePayout",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "callPayout",
+        "name": "blindPayout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "playPayout",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
         "name": "totalPayout",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFullRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "anteAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "antePayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blindPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "playPayout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoOvertimeUltimateHoldem.Outcome",
+            "name": "outcome",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "playerHole",
+            "type": "uint8[2]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "community",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "dealerHole",
+            "type": "uint8[2]"
+          }
+        ],
+        "internalType": "struct ICasinoOvertimeUltimateHoldem.FullRecord",
+        "name": "",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -631,7 +718,7 @@
     "outputs": [
       {
         "internalType": "uint256[]",
-        "name": "ids",
+        "name": "",
         "type": "uint256[]"
       }
     ],
@@ -660,64 +747,8 @@
     "outputs": [
       {
         "internalType": "uint256[]",
-        "name": "ids",
+        "name": "",
         "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "initNonReentrant",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_core",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_manager",
-        "type": "address"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "lastPauseTime",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "manager",
-    "outputs": [
-      {
-        "internalType": "contract ISportsAMMV2Manager",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -740,87 +771,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      }
-    ],
-    "name": "nominateNewOwner",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "nominatedOwner",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "requestId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "randomWords",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "onVrfFulfilled",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "paused",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "collateral",
         "type": "address"
       },
       {
         "internalType": "uint256",
         "name": "anteAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "aaBonusAmount",
         "type": "uint256"
       },
       {
@@ -858,11 +814,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "aaBonusAmount",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "referrer",
         "type": "address"
@@ -888,96 +839,56 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "betId",
         "type": "uint256"
       }
     ],
-    "name": "requestIdToBetId",
+    "name": "playPostFlop",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "requestId",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_core",
-        "type": "address"
-      }
-    ],
-    "name": "setCore",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_manager",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
       }
     ],
-    "name": "setManager",
-    "outputs": [],
+    "name": "playPreFlop",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_owner",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
       }
     ],
-    "name": "setOwner",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+    "name": "playRiver",
+    "outputs": [
       {
-        "internalType": "bool",
-        "name": "_paused",
-        "type": "bool"
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
       }
     ],
-    "name": "setPaused",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "_paused",
-        "type": "bool"
-      }
-    ],
-    "name": "setPausedByRole",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "proxyAddress",
-        "type": "address"
-      }
-    ],
-    "name": "transferOwnershipAtInit",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   }

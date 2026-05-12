@@ -60,13 +60,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "anteAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "aaBonusAmount",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -96,50 +90,50 @@
       },
       {
         "indexed": false,
-        "internalType": "enum ICasinoOvertimeHoldem.Outcome",
-        "name": "outcome",
+        "internalType": "uint8",
+        "name": "finalCard0",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "dealerHole0",
+        "name": "finalCard1",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "dealerHole1",
+        "name": "finalCard2",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "turn",
+        "name": "finalCard3",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "river",
+        "name": "finalCard4",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ICasinoVideoPoker.HandClass",
+        "name": "handClass",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "antePayout",
+        "name": "multiplier",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "callPayout",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "totalPayout",
+        "name": "payout",
         "type": "uint256"
       }
     ],
@@ -169,31 +163,12 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "callAmount",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "holdMask",
+        "type": "uint8"
       }
     ],
-    "name": "CallChosen",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
-    ],
-    "name": "Folded",
+    "name": "DrawRequested",
     "type": "event"
   },
   {
@@ -220,41 +195,35 @@
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "hole0",
+        "name": "card0",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "hole1",
+        "name": "card1",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "flop0",
+        "name": "card2",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "flop1",
+        "name": "card3",
         "type": "uint8"
       },
       {
         "indexed": false,
         "internalType": "uint8",
-        "name": "flop2",
+        "name": "card4",
         "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "aaBonusPayout",
-        "type": "uint256"
       }
     ],
-    "name": "HoleAndFlopDealt",
+    "name": "InitialDealRevealed",
     "type": "event"
   },
   {
@@ -278,38 +247,6 @@
         "type": "uint256"
       }
     ],
-    "name": "adminForceFold",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      }
-    ],
-    "name": "callBet",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "requestId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      }
-    ],
     "name": "cancelBet",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -321,10 +258,21 @@
         "internalType": "uint256",
         "name": "betId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "holdMask",
+        "type": "uint8"
       }
     ],
-    "name": "fold",
-    "outputs": [],
+    "name": "draw",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -350,17 +298,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "anteAmount",
+        "name": "amount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "aaBonusAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalPayout",
+        "name": "payout",
         "type": "uint256"
       },
       {
@@ -374,14 +317,24 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ICasinoOvertimeHoldem.BetStatus",
+        "internalType": "enum ICasinoVideoPoker.BetStatus",
         "name": "status",
         "type": "uint8"
       },
       {
-        "internalType": "enum ICasinoOvertimeHoldem.Outcome",
-        "name": "outcome",
+        "internalType": "enum ICasinoVideoPoker.HandClass",
+        "name": "handClass",
         "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "holdMask",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "multiplier",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -398,19 +351,14 @@
     "name": "getBetCards",
     "outputs": [
       {
-        "internalType": "uint8[2]",
-        "name": "playerHole",
-        "type": "uint8[2]"
-      },
-      {
         "internalType": "uint8[5]",
-        "name": "community",
+        "name": "initialCards",
         "type": "uint8[5]"
       },
       {
-        "internalType": "uint8[2]",
-        "name": "dealerHole",
-        "type": "uint8[2]"
+        "internalType": "uint8[5]",
+        "name": "finalCards",
+        "type": "uint8[5]"
       }
     ],
     "stateMutability": "view",
@@ -424,27 +372,79 @@
         "type": "uint256"
       }
     ],
-    "name": "getBetPayouts",
+    "name": "getFullRecord",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "aaBonusPayout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "antePayout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "callPayout",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalPayout",
-        "type": "uint256"
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "resolvedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.BetStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum ICasinoVideoPoker.HandClass",
+            "name": "handClass",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "holdMask",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "multiplier",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "initialCards",
+            "type": "uint8[5]"
+          },
+          {
+            "internalType": "uint8[5]",
+            "name": "finalCards",
+            "type": "uint8[5]"
+          }
+        ],
+        "internalType": "struct ICasinoVideoPoker.FullRecord",
+        "name": "",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -504,6 +504,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "nextBetId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -512,12 +525,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "anteAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "aaBonusAmount",
+        "name": "amount",
         "type": "uint256"
       },
       {
@@ -551,12 +559,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "anteAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "aaBonusAmount",
+        "name": "amount",
         "type": "uint256"
       },
       {
