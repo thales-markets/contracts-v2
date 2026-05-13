@@ -268,15 +268,21 @@ async function main() {
 	await ensureDataWiredToVideoPoker(network, dataAddr, videoPokerAddr);
 	await ensureDataWiredToUltimateHoldem(network, dataAddr, uthAddr);
 
-	console.log('\n===== Phase 4: per-game overrides =====');
-	await applyOverrides(network, coreAddr, {
-		HiLo: getTargetAddress('HiLo', network),
-		Plinko: getTargetAddress('Plinko', network),
-		ThreeCardPoker: getTargetAddress('ThreeCardPoker', network),
-		Keno: kenoAddr,
-		VideoPoker: videoPokerAddr,
-		OvertimeUltimateHoldem: uthAddr,
-	});
+	// Phase 4 (per-game maxProfit / min-max bet overrides) intentionally disabled here.
+	// Risk-config tuning is operator policy and belongs in dedicated scripts
+	// (setMaxProfitV2AndTopUpUsdc.js, setKenoMaxBet.js, etc.) — not bundled with impl upgrades.
+	// Re-enable only if you want the upgrade to also reset config to the GAME_OVERRIDES /
+	// MIN_BET_OVERRIDES / MAX_BET_OVERRIDES tables at the top of this file.
+	//
+	// console.log('\n===== Phase 4: per-game overrides =====');
+	// await applyOverrides(network, coreAddr, {
+	//     HiLo: getTargetAddress('HiLo', network),
+	//     Plinko: getTargetAddress('Plinko', network),
+	//     ThreeCardPoker: getTargetAddress('ThreeCardPoker', network),
+	//     Keno: kenoAddr,
+	//     VideoPoker: videoPokerAddr,
+	//     OvertimeUltimateHoldem: uthAddr,
+	// });
 
 	console.log('\n==== ALL UP-TO-DATE ====');
 	for (const k of [

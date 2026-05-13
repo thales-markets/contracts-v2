@@ -1172,7 +1172,7 @@ describe('OvertimeUltimateHoldem', () => {
 
 	/* ========== Free bet path (FBH forwards via tx.origin) ========== */
 
-	describe('free bet (placeBetWithFreeBet via FBH forwarder)', () => {
+	describe('free bet (direct user call — matches V1 / HiLo / Keno / Plinko / TCP)', () => {
 		async function fundFB(amount) {
 			const { fbh, fbhAddr, usdc, owner, player, usdcAddr } = ctx;
 			await usdc.mintForUser(owner.address);
@@ -1181,14 +1181,8 @@ describe('OvertimeUltimateHoldem', () => {
 		}
 
 		async function placeFreeBet(ante) {
-			const { fbh, uthAddr, usdcAddr, player, uth } = ctx;
-			// Encode the placeBetWithFreeBet calldata and have FBH forward it from player EOA
-			const data = uth.interface.encodeFunctionData('placeBetWithFreeBet', [
-				usdcAddr,
-				ante,
-				ethers.ZeroAddress,
-			]);
-			const tx = await fbh.connect(player).forwardCall(uthAddr, data);
+			const { usdcAddr, player, uth } = ctx;
+			const tx = await uth.connect(player).placeBetWithFreeBet(usdcAddr, ante, ethers.ZeroAddress);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -1201,13 +1195,6 @@ describe('OvertimeUltimateHoldem', () => {
 				.find((e) => e?.name === 'BetPlaced');
 			return { betId: placed.args.betId, requestId: placed.args.requestId };
 		}
-
-		it('rejects placeBetWithFreeBet called directly by user (not FBH)', async () => {
-			const { uth, usdcAddr, player } = ctx;
-			await expect(
-				uth.connect(player).placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(uth, 'InvalidSender');
-		});
 
 		it('forwarded place pulls 2× ante from FBH balance, not user wallet', async () => {
 			const { fbh, usdc, usdcAddr, player } = ctx;

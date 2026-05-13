@@ -25,13 +25,13 @@ import "../../interfaces/ICasinoOvertimeUltimateHoldem.sol";
 ///
 /// @dev All funds, randomness, free-bets, and circuit-breaker accounting live in `CasinoCoreV2`.
 ///
-/// Locked paytables:
+/// Locked paytables (Vegas / Shuffle Master standard rules):
 /// - Ante: pays 1:1 on player win, pushes on dealer not qualified, loses on dealer win
-/// - Play: pays 1:1 on player win, loses on dealer win, pushes on tie/dealer-not-qualified
-/// - Blind (paid only when player wins): Royal 500:1 / SF 50:1 / 4oK 10:1 / FH 3:1 / Flush 1:1 /
-///   Straight 1:1; less than Straight pushes (Flush dropped from 3:2 → 1:1 for EoR margin).
-///
-/// House edge per ante ~5%, EoR ~1.4% (capped 3× pre-flop raise vs standard 4×).
+/// - Play: resolves on hand comparison regardless of dealer qualification — 1:1 on player win,
+///   push on tie, loses on dealer win
+/// - Blind (only when player wins, otherwise pushes on tie / loses on dealer win): Royal 500:1 /
+///   SF 50:1 / 4oK 10:1 / FH 3:1 / Flush 1:1 / Straight 1:1; less than Straight pushes (Flush
+///   dropped from 3:2 → 1:1 for EoR margin).
 contract OvertimeUltimateHoldem is
     ICasinoOvertimeUltimateHoldem,
     ICasinoGameCallback,
@@ -179,10 +179,7 @@ contract OvertimeUltimateHoldem is
         uint256 anteAmount,
         address referrer
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        address freeBetsHolder = core.freeBetsHolder();
-        if (msg.sender != freeBetsHolder) revert InvalidSender();
-        // tx.origin convention used elsewhere in V2: FBH forwards calls; user identity = origin
-        return _placeBet(tx.origin, collateral, anteAmount, referrer, true);
+        return _placeBet(msg.sender, collateral, anteAmount, referrer, true);
     }
 
     function _placeBet(
@@ -203,8 +200,8 @@ contract OvertimeUltimateHoldem is
             core.useFreeBet(user, collateral, stakeIn);
         } else {
             core.pullFromUser(user, collateral, stakeIn);
-            if (referrer != address(0)) core.setReferrer(referrer, user);
         }
+        if (referrer != address(0)) core.setReferrer(referrer, user);
 
         // Reservation = stakes_pulled_so_far + capped net-profit budget. Raise paths top this
         // up with the raise amount (covers larger stake-back potential)
@@ -236,7 +233,7 @@ contract OvertimeUltimateHoldem is
 
     /// @notice Pre-flop raise (3× ante). Triggers VRF2 to reveal flop + turn + river + dealer hole
     /// in one shot — game is going to showdown
-    function playPreFlop(uint256 betId) external override nonReentrant returns (uint256 requestId) {
+    function playPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         _pullPlayStake(b, PRE_FLOP_RAISE_MULT);
@@ -245,7 +242,7 @@ contract OvertimeUltimateHoldem is
     }
 
     /// @notice Pre-flop check. Triggers VRF2 to reveal flop only; defer raise/check to post-flop
-    function checkPreFlop(uint256 betId) external override nonReentrant returns (uint256 requestId) {
+    function checkPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_FLOP);
@@ -253,7 +250,7 @@ contract OvertimeUltimateHoldem is
     }
 
     /// @notice Post-flop raise (2× ante). Triggers VRF3 to reveal turn + river + dealer hole
-    function playPostFlop(uint256 betId) external override nonReentrant returns (uint256 requestId) {
+    function playPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_FLOP_TURN);
         _pullPlayStake(b, POST_FLOP_RAISE_MULT);
@@ -262,7 +259,7 @@ contract OvertimeUltimateHoldem is
     }
 
     /// @notice Post-flop check. Triggers VRF3 to reveal turn + river only; defer to river
-    function checkPostFlop(uint256 betId) external override nonReentrant returns (uint256 requestId) {
+    function checkPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_FLOP_TURN);
         requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_TURN_RIVER);
@@ -270,7 +267,7 @@ contract OvertimeUltimateHoldem is
     }
 
     /// @notice Post-river raise (1× ante). Final decision — triggers VRF4 to reveal dealer hole
-    function playRiver(uint256 betId) external override nonReentrant returns (uint256 requestId) {
+    function playRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_RIVER_TURN);
         _pullPlayStake(b, RIVER_RAISE_MULT);
@@ -280,7 +277,7 @@ contract OvertimeUltimateHoldem is
 
     /// @notice Fold after seeing the river — player forfeits Ante AND Blind. Only available at
     /// POST_RIVER_TURN; folds earlier in the hand aren't a thing in UTH (player can check for free)
-    function fold(uint256 betId) external override nonReentrant {
+    function fold(uint256 betId) external override nonReentrant notPaused {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_RIVER_TURN);
 
@@ -332,6 +329,9 @@ contract OvertimeUltimateHoldem is
 
     function _cancelBet(uint256 betId, bool adminCancelled) internal {
         Bet storage b = bets[betId];
+        // Clear any in-flight VRF mapping so a late callback's mapping lookup is a no-op
+        // (status-check would also catch it, but matches the hygiene pattern of the other 4 games)
+        if (b.requestId != 0) delete requestIdToBetId[b.requestId];
 
         // Refund: ante + blind + whatever play stake was pulled. playAmount is 0 unless the
         // player has already committed a raise at some decision point
@@ -343,6 +343,9 @@ contract OvertimeUltimateHoldem is
 
         // Refund stakes — routes back to FBH if free-bet
         core.payOut(b.user, b.collateral, refund, b.isFreeBet, refund);
+
+        // Decrement core's pending-stake counter (stake == refund → zero P&L impact)
+        core.recordSettlement(b.collateral, refund, refund);
 
         b.totalPayout = refund;
         b.status = BetStatus.CANCELLED;
@@ -412,6 +415,13 @@ contract OvertimeUltimateHoldem is
     /// @notice Final VRF — deal whatever community cards remain plus dealer hole, then resolve.
     /// Routes by `playAmount` (the raise multiplier identifies the path)
     function _onResolveFulfilled(uint256 betId, Bet storage b, uint256 word) internal {
+        // Defensive: every path that sets status=AWAITING_RESOLVE first calls _pullPlayStake,
+        // which sets playAmount = ante * mult. A zero playAmount here means a future regression
+        // bypassed that — without this guard, playMult would be 0 and silently misroute to the
+        // river-raise branch with stale community cards, producing a wrong-hand payout. Revert
+        // instead; the bet stays in AWAITING_RESOLVE and is recoverable via adminCancelBet
+        if (b.playAmount == 0) revert InvalidBetStatus();
+
         // playAmount is 3×, 2×, or 1× ante depending on which raise put us in AWAITING_RESOLVE.
         // It uniquely identifies how many cards still need dealing.
         uint256 playMult = b.playAmount / b.anteAmount;
@@ -446,12 +456,15 @@ contract OvertimeUltimateHoldem is
                 } else {
                     cut -= r.blindPayout;
                     r.blindPayout = 0;
-                    // Spill remaining cut into ante/play (rare; would only happen if cap is tiny)
+                    // Spill remaining cut into ante/play (rare; would only happen if cap is tiny).
+                    // Symmetric guards across all 3 legs defend against future paytable changes
+                    // that could rebalance the worst-case math and otherwise underflow this branch
                     if (r.antePayout >= cut) r.antePayout -= cut;
                     else {
                         cut -= r.antePayout;
                         r.antePayout = 0;
-                        r.playPayout -= cut;
+                        if (r.playPayout >= cut) r.playPayout -= cut;
+                        else r.playPayout = 0;
                     }
                 }
                 profit = b.profitCapRemaining;
@@ -550,12 +563,20 @@ contract OvertimeUltimateHoldem is
 
         bool dealerQualifies = _dealerQualifies(dVal);
 
+        // Vegas / Shuffle Master standard: dealer-qualification only protects the Ante. Play and
+        // Blind always resolve on player-vs-dealer hand comparison. When dealer doesn't qualify,
+        // Ante pushes regardless of who has the better hand
         if (!dealerQualifies) {
-            // Ante pushes (returns stake). Play and Blind pay normally based on player hand
             r.outcome = Outcome.DEALER_NOT_QUALIFIED;
-            r.antePayout = b.anteAmount; // push
-            r.playPayout = _playWinPayout(b);
-            r.blindPayout = _blindWinPayout(b, pVal);
+            r.antePayout = b.anteAmount; // push (the qualifies rule's player benefit)
+            if (pVal > dVal) {
+                r.playPayout = _playWinPayout(b);
+                r.blindPayout = _blindWinPayout(b, pVal);
+            } else if (pVal == dVal) {
+                r.playPayout = b.playAmount; // push
+                r.blindPayout = b.anteAmount; // push
+            }
+            // pVal < dVal: play and blind both lose (paid 0)
             return r;
         }
 

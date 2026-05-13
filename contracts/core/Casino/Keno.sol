@@ -36,12 +36,14 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     uint8 public constant MIN_PICKS = 1;
     uint8 public constant MAX_PICKS = 10;
 
-    /// @notice Min/max stake in USD (1e18 precision)
+    /// @notice Default minimum stake in USD (1e18 precision). Overridden when
+    /// `core.effectiveMinBetUsd(keno)` is non-zero
     uint256 public constant MIN_BET_USD = 3e18;
-    uint256 public constant MAX_BET_USD = 10e18;
 
-    /// @notice Hard cap on any paytable entry. With MAX_BET_USD = $10, per-bet liability ≤ $3000;
-    /// `effectiveMaxProfitUsd(keno)` should be ≥ $3000 for max bets to be allowed
+    /// @notice Hard cap on any paytable entry. Per-bet liability = `bet × MAX_MULTIPLIER_E18`;
+    /// `effectiveMaxProfitUsd(keno)` must clear that liability or `MaxProfitExceeded` reverts.
+    /// To preserve the legacy $10 ceiling at deploy time, call
+    /// `CasinoCoreV2.setMaxBetPerGameUsd(keno, 10e18)`
     uint256 public constant MAX_MULTIPLIER_E18 = 300e18;
 
     /// @dev Bits per Fisher-Yates swap from the VRF word. 16 bits gives <0.04% bias on any
@@ -58,6 +60,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     error InvalidAmount();
     error InvalidCollateral();
     error InvalidPicks();
+    error AboveMaxBet();
     error PaytableLengthMismatch();
     error MultiplierTooHigh();
     error MaxProfitExceeded();
@@ -87,6 +90,12 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         // Stake was pulled from FreeBetsHolder via core.useFreeBet instead of core.pullFromUser.
         // Routes payouts back to FBH on resolve / cancel and skips referrer payment on losses
         bool isFreeBet;
+        // Remaining net-profit budget for this bet in collateral units. Sized at placeBet from
+        // `effectiveMaxProfitUsd × price`, capped against the worst-case uncapped profit
+        // (`amount × (MAX_MULTIPLIER - 1)`). Resolve truncates final payout to stake + this so
+        // the per-bet house loss never exceeds the configured USD cap regardless of stake size.
+        // Appended at end of struct for storage-safe upgrade
+        uint256 profitCapRemaining;
     }
 
     /* ========== STATE ========== */
@@ -182,7 +191,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         address referrer,
         bool isFreeBet
     ) internal returns (uint256 betId, uint256 requestId) {
-        (uint128 picksMask, uint256 reservation) = _validateAndReserve(collateral, amount, picks);
+        (uint128 picksMask, uint256 reservation, uint256 cappedProfit) = _validateAndReserve(collateral, amount, picks);
         if (isFreeBet) {
             core.useFreeBet(msg.sender, collateral, amount);
         } else {
@@ -192,26 +201,59 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         core.reserveOrRevert(collateral, reservation);
         requestId = core.requestRandomWords(1);
         betId = nextBetId++;
-        _writeBet(betId, requestId, collateral, amount, uint8(picks.length), picksMask, reservation, isFreeBet);
+        _writeBet(
+            betId,
+            requestId,
+            collateral,
+            amount,
+            uint8(picks.length),
+            picksMask,
+            reservation,
+            cappedProfit,
+            isFreeBet
+        );
         emit BetPlaced(betId, requestId, msg.sender, collateral, amount, uint8(picks.length), picksMask);
     }
 
+    /// @notice Validates picks/size, computes the soft-truncated profit budget for this bet, and
+    /// returns the reservation (stake + cappedProfit). Mirrors the 3CP/UTH/VideoPoker pattern:
+    /// allow any bet size up to `effectiveMaxBetUsd`, then clamp the actual payout at resolve so
+    /// the per-bet house loss never exceeds `effectiveMaxProfitUsd`. Previous behaviour
+    /// hard-rejected at place time, which capped max bet at `cap / (MAX_MULTIPLIER - 1)` — only
+    /// ~$3.34 under a $1000 cap with the 300× multiplier
     function _validateAndReserve(
         address collateral,
         uint256 amount,
         uint8[] calldata picks
-    ) internal view returns (uint128 picksMask, uint256 reservation) {
+    ) internal view returns (uint128 picksMask, uint256 reservation, uint256 cappedProfit) {
         if (amount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
         uint256 picksLen = picks.length;
         if (picksLen < MIN_PICKS || picksLen > MAX_PICKS) revert InvalidPicks();
         picksMask = _picksToMask(picks); // enforces sorted+unique+range
+        _checkBetSize(collateral, amount);
+        // Uncapped worst-case profit = amount × (MAX_MULTIPLIER - 1). Truncate to the per-game
+        // USD profit cap (converted to collateral units). Used both for the reservation here
+        // and as `profitCapRemaining` at resolve
+        uint256 worst = (amount * (MAX_MULTIPLIER_E18 - ONE)) / ONE;
+        uint256 capCollateral = core.collateralFromUsd(collateral, core.effectiveMaxProfitUsd(address(this)));
+        cappedProfit = worst > capCollateral ? capCollateral : worst;
+        // Reservation = stake-back + capped worst-case profit (matches max actual payout)
+        reservation = amount + cappedProfit;
+    }
+
+    /// @notice Per-game bet-size gate. `core.effectiveMinBetUsd` / `effectiveMaxBetUsd` overrides
+    /// (set via `CasinoCoreV2.setMinBetPerGameUsd` / `setMaxBetPerGameUsd`) take precedence; when
+    /// unset (zero), `MIN_BET_USD` is the default floor and there is no explicit max ceiling —
+    /// the per-bet house loss is then implicitly bounded by the profit-cap soft-truncation in
+    /// `onVrfFulfilled`
+    function _checkBetSize(address collateral, uint256 amount) internal view {
         uint256 amountUsd = core.getUsdValue(collateral, amount);
-        if (amountUsd < MIN_BET_USD || amountUsd > MAX_BET_USD) revert InvalidAmount();
-        if ((amountUsd * (MAX_MULTIPLIER_E18 - ONE)) / ONE > core.effectiveMaxProfitUsd(address(this))) {
-            revert MaxProfitExceeded();
-        }
-        reservation = (amount * MAX_MULTIPLIER_E18) / ONE;
+        uint256 minBet = core.effectiveMinBetUsd(address(this));
+        if (minBet == 0) minBet = MIN_BET_USD;
+        if (amountUsd < minBet) revert InvalidAmount();
+        uint256 maxBet = core.effectiveMaxBetUsd(address(this));
+        if (maxBet != 0 && amountUsd > maxBet) revert AboveMaxBet();
     }
 
     function _writeBet(
@@ -222,6 +264,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         uint8 picksCount,
         uint128 picksMask,
         uint256 reservation,
+        uint256 cappedProfit,
         bool isFreeBet
     ) internal {
         Bet storage b = bets[betId];
@@ -236,6 +279,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         b.picksCount = picksCount;
         b.status = BetStatus.PENDING;
         b.isFreeBet = isFreeBet;
+        b.profitCapRemaining = cappedProfit;
         requestIdToBetId[requestId] = betId;
         userBetIds[msg.sender].push(betId);
     }
@@ -261,6 +305,8 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         core.releaseReservation(b.collateral, b.reserved);
         b.reserved = 0;
         core.payOut(b.user, b.collateral, b.amount, b.isFreeBet, b.amount);
+        // Decrement core's pending-stake counter (stake == refund → zero P&L impact)
+        core.recordSettlement(b.collateral, b.amount, b.amount);
         b.payout = b.amount;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
@@ -285,6 +331,16 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         uint8 hits = _popcount128(drawnMask & b.picksMask);
         uint256 mult = paytables[b.picksCount][hits];
         uint256 payout = (b.amount * mult) / ONE;
+
+        // Soft-cap net profit at the per-bet budget. The paytable's top tier (Pick 8/9/10 at 300×)
+        // can produce payouts well above the cap on large stakes; truncating here keeps the
+        // per-bet house loss within `effectiveMaxProfitUsd` (matches 3CP/UTH/VideoPoker)
+        if (payout > b.amount) {
+            uint256 profit = payout - b.amount;
+            if (profit > b.profitCapRemaining) profit = b.profitCapRemaining;
+            payout = b.amount + profit;
+            b.profitCapRemaining -= profit;
+        }
 
         core.releaseReservation(b.collateral, b.reserved);
         b.reserved = 0;
@@ -658,10 +714,6 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         if (msg.sender != owner && !manager.isWhitelistedAddress(msg.sender, role)) revert InvalidSender();
     }
 
-    modifier onlyRiskManager() {
-        _requireRole(ISportsAMMV2Manager.Role.RISK_MANAGING);
-        _;
-    }
     modifier onlyResolver() {
         _requireRole(ISportsAMMV2Manager.Role.MARKET_RESOLVING);
         _;

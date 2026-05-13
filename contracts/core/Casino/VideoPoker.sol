@@ -14,14 +14,16 @@ import "../../interfaces/ICasinoVideoPoker.sol";
 
 /// @title VideoPoker
 /// @author Overtime
-/// @notice Jacks-or-Better Video Poker, 8/5 paytable, single-coin only. Two-VRF flow:
+/// @notice Jacks-or-Better Video Poker, "for 1" paytable with FH=8 / Flush=5 / Royal=500,
+/// single-coin only. Two-VRF flow:
 ///   1. placeBet — pulls ante, VRF1 deals 5 cards, status → PLAYER_TURN
 ///   2. draw(holdMask) — VRF2 deals replacement cards for non-held slots, evaluates, resolves
 ///
-/// Reservation: 801 × stake (worst case = Royal Flush stake-back + 800x win).
-/// House edge ≈ 2.70% with optimal hold strategy. See `_paytableMultiplier` for the locked
-/// paytable. Pair-of-Jacks rule is enforced in the multiplier lookup, NOT in the evaluator —
-/// the evaluator returns CLASS_PAIR for any pair and the multiplier discriminates by rank
+/// Reservation: 500 × stake (Royal Flush = 500-for-1 max payout). RTP under optimal play ≈
+/// 96.5% / house edge ≈ 3.5%, between standard 1-coin (Royal=250, 96.15%) and 5-coin
+/// (Royal=800, 97.30%) variants. See `_paytableMultiplier` for the locked paytable. Pair-of-
+/// Jacks rule is enforced in the multiplier lookup, NOT in the evaluator — the evaluator
+/// returns CLASS_PAIR for any pair and the multiplier discriminates by rank
 contract VideoPoker is
     ICasinoVideoPoker,
     ICasinoGameCallback,
@@ -60,7 +62,7 @@ contract VideoPoker is
     uint8 private constant RANK_ACE = 14;
 
     // 8/5 Jacks-or-Better paytable (multipliers on stake; lose otherwise)
-    uint256 private constant MULT_ROYAL_FLUSH = 800;
+    uint256 private constant MULT_ROYAL_FLUSH = 500;
     uint256 private constant MULT_STRAIGHT_FLUSH = 50;
     uint256 private constant MULT_FOUR_OF_A_KIND = 25;
     uint256 private constant MULT_FULL_HOUSE = 8;
@@ -70,8 +72,10 @@ contract VideoPoker is
     uint256 private constant MULT_TWO_PAIR = 2;
     uint256 private constant MULT_JACKS_OR_BETTER = 1;
 
-    /// @notice Reservation per bet = stake-back (1) + max win (800) = 801 × stake
-    uint256 private constant MAX_PAYOUT_MULT = 801;
+    /// @notice Largest paytable multiplier ("for 1" semantics — totalReturn = stake × mult on win,
+    /// 0 on loss, stake-back on JoB push at mult=1). Worst-case payout is `stake × 500` (Royal),
+    /// so worst-case net profit reservation is `stake × (MAX_PAYOUT_MULT - 1) = 499 × stake`
+    uint256 private constant MAX_PAYOUT_MULT = 500;
 
     /* ========== ERRORS ========== */
 
@@ -152,10 +156,7 @@ contract VideoPoker is
         uint256 amount,
         address referrer
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        address freeBetsHolder = core.freeBetsHolder();
-        if (msg.sender != freeBetsHolder) revert InvalidSender();
-        // tx.origin convention used elsewhere in V2: FBH forwards calls; actual user = origin
-        return _placeBet(tx.origin, collateral, amount, referrer, true);
+        return _placeBet(msg.sender, collateral, amount, referrer, true);
     }
 
     function _placeBet(
@@ -174,8 +175,8 @@ contract VideoPoker is
             core.useFreeBet(user, collateral, amount);
         } else {
             core.pullFromUser(user, collateral, amount);
-            if (referrer != address(0)) core.setReferrer(referrer, user);
         }
+        if (referrer != address(0)) core.setReferrer(referrer, user);
 
         // Reservation = stake + cappedProfit (worst-case capped payout)
         uint256 reservation = amount + cappedProfit;
@@ -202,7 +203,7 @@ contract VideoPoker is
         emit BetPlaced(betId, requestId, user, collateral, amount);
     }
 
-    function draw(uint256 betId, uint8 holdMask) external override nonReentrant returns (uint256 requestId) {
+    function draw(uint256 betId, uint8 holdMask) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();
@@ -240,6 +241,8 @@ contract VideoPoker is
         core.releaseReservation(b.collateral, b.reservation);
         b.reservation = 0;
         core.payOut(b.user, b.collateral, b.amount, b.isFreeBet, b.amount);
+        // Decrement core's pending-stake counter (stake == refund → zero P&L impact)
+        core.recordSettlement(b.collateral, b.amount, b.amount);
         b.payout = b.amount;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
@@ -312,9 +315,12 @@ contract VideoPoker is
     function _resolve(uint256 betId, Bet storage b) internal {
         (uint8 class_, uint8 primaryRank) = _evaluateFive(b.finalCards);
         uint256 mult = _paytableMultiplier(class_, primaryRank);
-        uint256 payout = b.amount * mult;
-        // Add stake-back when there's a win (multiplier > 0 means at least 1x)
-        uint256 totalReturn = payout > 0 ? payout + b.amount : 0;
+        // "For 1" semantics: mult is the total-return multiplier on stake.
+        //   JoB pair (mult=1) → totalReturn = stake (push, no profit)
+        //   Two Pair (mult=2) → totalReturn = 2×stake (1× net profit)
+        //   Royal (mult=500) → totalReturn = 500×stake (499× net profit)
+        //   Loss (mult=0) → totalReturn = 0 (stake forfeit)
+        uint256 totalReturn = b.amount * mult;
 
         // Soft-cap net profit against the per-bet budget
         if (totalReturn > b.amount) {

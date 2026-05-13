@@ -24,18 +24,22 @@ const EXCLUDED_EDGE_TESTS = [
 	'test/contracts/Overtime/Casino/HiLoEdgeSim.js',
 	'test/contracts/Overtime/Casino/PlinkoEdgeSim.js',
 	'test/contracts/Overtime/Casino/KenoEdgeSim.js',
+	'test/contracts/Overtime/Casino/CrossValidatePlinko.js',
+	'test/contracts/Overtime/Casino/CrossValidateKeno.js',
+	'test/contracts/Overtime/Casino/CrossValidateHiLo.js',
+	'test/contracts/Overtime/Casino/CrossValidateThreeCardPoker.js',
+	'test/contracts/Overtime/Casino/CrossValidateVideoPoker.js',
+	'test/contracts/Overtime/Casino/CrossValidateUltimateHoldem.js',
 ].map((p) => path.resolve(__dirname, p));
 
 task(TASK_TEST_GET_TEST_FILES).setAction(async (args, _hre, runSuper) => {
 	const files = await runSuper(args);
-	// Respect explicit naming of an edge sim (e.g. `hardhat test ...EdgeAudit.js`) but
-	// always filter when files arrive via glob expansion (coverage's `--testfiles
-	// "test/.../**/*.js"` or the default `hardhat test`). Edge sims are 10k–100k-hand
-	// simulations that take hours under coverage instrumentation
-	const explicitEdgeSim = (args.testFiles || []).some((tf) =>
-		EXCLUDED_EDGE_TESTS.includes(path.resolve(tf))
-	);
-	if (explicitEdgeSim) return files;
+	// Always filter edge sims out of `hardhat test` and `hardhat coverage`. Edge sims are
+	// 10k–100k-hand simulations that take hours under coverage instrumentation. The previous
+	// "explicit-files-respected" branch was broken: coverage passes a glob-expanded list to
+	// `args.testFiles`, so distinguishing explicit naming from glob expansion isn't possible
+	// from this hook. To run a single edge sim, invoke it via mocha (`npx mocha --require
+	// hardhat/register test/.../EdgeAudit.js`) or temporarily remove it from EXCLUDED_EDGE_TESTS
 	return files.filter((f) => !EXCLUDED_EDGE_TESTS.includes(path.resolve(f)));
 });
 

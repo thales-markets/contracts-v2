@@ -251,12 +251,24 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 	describe('setPaytable', () => {
 		it('owner can replace paytable; length must equal 9', async () => {
 			const { plinko, owner } = ctx;
-			const newPt = new Array(9).fill(0).map((_, i) => BigInt(i + 1) * ONE);
+			// Symmetric multipliers chosen to clear the 2% edge floor: weighted RTP with
+			// binomial weights [1,8,28,56,70,56,28,8,1]/256 = 128/256 = 0.5 ≤ 0.98 ✓
+			const newPt = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (BigInt(n) * ONE) / 10n);
 			await plinko.connect(owner).setPaytable(Risk.LOW, newPt);
 			const pt = await plinko.getPaytable(Risk.LOW);
-			expect(pt[0]).to.equal(ONE);
-			expect(pt[8]).to.equal(9n * ONE);
-			expect(await plinko.getMaxMultiplierE18(Risk.LOW)).to.equal(9n * ONE);
+			expect(pt[0]).to.equal(ONE / 10n);
+			expect(pt[8]).to.equal((9n * ONE) / 10n);
+			expect(await plinko.getMaxMultiplierE18(Risk.LOW)).to.equal((9n * ONE) / 10n);
+		});
+
+		it('reverts when paytable breaches the 2% edge floor', async () => {
+			const { plinko, owner } = ctx;
+			// All slots paying 1.0× → RTP = 256/256 = 1.0 > 0.98 → revert
+			const bad = new Array(9).fill(ONE);
+			await expect(plinko.connect(owner).setPaytable(Risk.LOW, bad)).to.be.revertedWithCustomError(
+				plinko,
+				'EdgeFloorBreached'
+			);
 		});
 
 		it('reverts on length mismatch', async () => {

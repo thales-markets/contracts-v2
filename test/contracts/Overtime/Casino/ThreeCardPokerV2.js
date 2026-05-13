@@ -497,6 +497,34 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			).to.be.revertedWithCustomError(tcp, 'InvalidAmount');
 		});
 
+		it('reverts when ante exceeds effectiveMaxBetUsd override', async () => {
+			const { tcp, tcpAddr, core, usdcAddr, player } = ctx;
+			// Cap per-game max bet at $5; ante of $10 must revert
+			await core.setMaxBetPerGameUsd(tcpAddr, ethers.parseEther('5'));
+			await expect(
+				tcp.connect(player).placeBet(usdcAddr, 10n * USDC_UNIT, 0n, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(tcp, 'AboveMaxBet');
+		});
+
+		it('reverts when pair-plus exceeds effectiveMaxBetUsd override (cannot sidestep via PP)', async () => {
+			const { tcp, tcpAddr, core, usdcAddr, player } = ctx;
+			// Cap per-game max at $5. Ante of $3 passes, but PP of $10 must revert with the
+			// same AboveMaxBet — otherwise a user could bet ante=$3, PP=$10M to sidestep the cap
+			await core.setMaxBetPerGameUsd(tcpAddr, ethers.parseEther('5'));
+			await expect(
+				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 10n * USDC_UNIT, ethers.ZeroAddress)
+			).to.be.revertedWithCustomError(tcp, 'AboveMaxBet');
+		});
+
+		it('allows pair-plus up to and including effectiveMaxBetUsd', async () => {
+			const { tcp, tcpAddr, core, usdcAddr, player } = ctx;
+			await core.setMaxBetPerGameUsd(tcpAddr, ethers.parseEther('5'));
+			// Ante $3, PP $5 — both at-or-below the cap
+			await expect(
+				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 5n * USDC_UNIT, ethers.ZeroAddress)
+			).to.not.be.reverted;
+		});
+
 		it('reverts when treasury has insufficient liquidity', async () => {
 			const { tcp, core, usdcAddr, owner, player } = ctx;
 			// drain bankroll close to zero (bankroll started at 4000 USDC)
@@ -805,36 +833,31 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - pp);
 		});
 
-		it('adminForceFold releases reservation for stale PLAYER_TURN bet', async () => {
-			const { tcp, tcpAddr, core, resolver, player } = ctx;
+		it('adminCancelBet refunds ante from PLAYER_TURN (matches V1 blackjack adminCancelHand)', async () => {
+			const { tcp, tcpAddr, core, usdc, resolver, player } = ctx;
 			const ante = MIN_USDC_BET;
 			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 			const { betId } = await placeAndDeal(ctx, ante, 0n, word);
 			// Bet now in PLAYER_TURN; reservation = 9 * ante still held in core
-			const reservedBefore = await core.reservedProfitPerGame(tcpAddr, ctx.usdcAddr);
-			expect(reservedBefore).to.equal(9n * ante);
-			// Cannot fold-force before timeout
-			await expect(tcp.connect(resolver).adminForceFold(betId)).to.be.revertedWithCustomError(
-				tcp,
-				'PlayerTurnTimeoutNotReached'
-			);
+			expect(await core.reservedProfitPerGame(tcpAddr, ctx.usdcAddr)).to.equal(9n * ante);
 			// Non-resolver cannot call
-			await expect(tcp.connect(player).adminForceFold(betId)).to.be.revertedWithCustomError(
+			await expect(tcp.connect(player).adminCancelBet(betId)).to.be.revertedWithCustomError(
 				tcp,
 				'InvalidSender'
 			);
-			// Advance time and force-fold
-			await time.increase(24 * 60 * 60 + 1);
-			await tcp.connect(resolver).adminForceFold(betId);
+			// Resolver cancels — no timeout floor (unlike old adminForceFold)
+			const balBefore = await usdc.balanceOf(player.address);
+			await tcp.connect(resolver).adminCancelBet(betId);
 			expect(await core.reservedProfitPerGame(tcpAddr, ctx.usdcAddr)).to.equal(0n);
+			// Ante refunded; PP stake (here 0) already settled in VRF1
+			expect(await usdc.balanceOf(player.address)).to.equal(balBefore + ante);
 			const base = await tcp.getBetBase(betId);
-			expect(base.outcome).to.equal(Outcome.FOLDED);
-			expect(base.status).to.equal(BetStatus.RESOLVED);
+			expect(base.status).to.equal(BetStatus.CANCELLED);
 		});
 
-		it('adminForceFold rejects non-PLAYER_TURN bets', async () => {
+		it('adminCancelBet rejects RESOLVED / CANCELLED bets', async () => {
 			const { tcp, resolver, player } = ctx;
-			// AWAITING_DEAL bet
+			// AWAITING_DEAL bet → cancel once
 			const tx = await tcp
 				.connect(player)
 				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
@@ -848,9 +871,13 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 					}
 				})
 				.find((e) => e?.name === 'BetPlaced');
-			await expect(
-				tcp.connect(resolver).adminForceFold(placed.args.betId)
-			).to.be.revertedWithCustomError(tcp, 'InvalidBetStatus');
+			const betId = placed.args.betId;
+			await tcp.connect(resolver).adminCancelBet(betId);
+			// Second cancel must revert — bet is now CANCELLED
+			await expect(tcp.connect(resolver).adminCancelBet(betId)).to.be.revertedWithCustomError(
+				tcp,
+				'InvalidBetStatus'
+			);
 		});
 	});
 

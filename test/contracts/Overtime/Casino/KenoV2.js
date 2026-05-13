@@ -202,7 +202,6 @@ describe('CasinoCoreV2 + Keno', () => {
 			expect(await keno.MIN_PICKS()).to.equal(1);
 			expect(await keno.MAX_PICKS()).to.equal(10);
 			expect(await keno.MIN_BET_USD()).to.equal(ethers.parseEther('3'));
-			expect(await keno.MAX_BET_USD()).to.equal(ethers.parseEther('10'));
 		});
 	});
 
@@ -249,11 +248,14 @@ describe('CasinoCoreV2 + Keno', () => {
 			).to.be.revertedWithCustomError(keno, 'InvalidAmount');
 		});
 
-		it('rejects bet above MAX_BET_USD', async () => {
-			const { keno, usdcAddr, player } = ctx;
+		it('rejects bet above effectiveMaxBetUsd override', async () => {
+			const { keno, core, usdcAddr, player } = ctx;
+			// Set per-game max bet to $10; without this override there is no explicit cap
+			// (only the implicit profit-cap-driven ceiling)
+			await core.setMaxBetPerGameUsd(await keno.getAddress(), ethers.parseEther('10'));
 			await expect(
 				keno.connect(player).placeBet(usdcAddr, 11n * USDC_UNIT, [1], ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(keno, 'InvalidAmount');
+			).to.be.revertedWithCustomError(keno, 'AboveMaxBet');
 		});
 
 		it('rejects unsupported collateral', async () => {
@@ -263,13 +265,92 @@ describe('CasinoCoreV2 + Keno', () => {
 			).to.be.revertedWithCustomError(keno, 'InvalidCollateral');
 		});
 
-		it('rejects when maxProfit not enough for 300x cap', async () => {
-			const { keno, core, usdcAddr, player } = ctx;
-			// Tighten core's per-bet maxProfitUsd well below 300x × $3 = $900
-			await core.setRiskParams(ethers.parseEther('100'), 0);
+		it('soft-truncation: $20 bet now accepted under a $1000 cap (was hard-rejected pre-port)', async () => {
+			const { keno, kenoAddr, core, usdcAddr, player } = ctx;
+			// Mirror the production setup: per-bet profit cap at $1000 (poker-aligned).
+			// Pre-port this would have reverted with `MaxProfitExceeded` because
+			// $20 × (300 − 1) = $5980 > $1000. Soft-cap path lets the bet through;
+			// truncation applies at resolve
+			await core.setMaxProfitUsdOverride(kenoAddr, ethers.parseEther('1000'));
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [5, 10], ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(keno, 'MaxProfitExceeded');
+				keno.connect(player).placeBet(usdcAddr, 20n * USDC_UNIT, [1], ethers.ZeroAddress)
+			).to.not.be.reverted;
+		});
+	});
+
+	describe('soft-truncation at resolve', () => {
+		it('Pick 2 jackpot ($30 payout) truncated to $23 under a $20 profit cap', async () => {
+			const { keno, kenoAddr, core, vrf, coreAddr, usdcAddr, player } = ctx;
+			// $20 per-bet profit cap → on a 10× hit with $3 stake, raw payout = $30 (profit $27),
+			// capped payout = stake + min(profit, cap) = 3 + 20 = $23
+			await core.setMaxProfitUsdOverride(kenoAddr, ethers.parseEther('20'));
+			const word = 0x123456789abcdefn;
+			const drawn = drawNumbers(word);
+			const picks = [drawn[0], drawn[1]].sort((a, b) => a - b);
+
+			const balBefore = await ctx.usdc.balanceOf(player.address);
+			const tx = await keno
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress);
+			const placed = (await tx.wait()).logs
+				.map((l) => {
+					try {
+						return keno.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [word]);
+			const base = await keno.getBetBase(placed.args.betId);
+
+			expect(Number(base.hits)).to.equal(2); // guaranteed jackpot
+			// Raw paytable multiplier still recorded as 10× (no rewrite of `b.multiplierE18`)
+			expect(base.multiplierE18).to.equal(ethers.parseEther('10'));
+			// But the actual payout is truncated: $3 stake + $20 cap = $23
+			const expectedPayout = MIN_USDC_BET + 20n * USDC_UNIT;
+			expect(base.payout).to.equal(expectedPayout);
+
+			// Net player gain = $20 (the cap), not $27 (the raw profit)
+			const balAfter = await ctx.usdc.balanceOf(player.address);
+			expect(balAfter - balBefore).to.equal(20n * USDC_UNIT);
+		});
+
+		it('reservation reflects soft-capped profit, not 300× stake', async () => {
+			const { keno, kenoAddr, core, usdcAddr, player } = ctx;
+			await core.setMaxProfitUsdOverride(kenoAddr, ethers.parseEther('1000'));
+			// $20 bet: reservation = stake + min($5980, $1000) = $20 + $1000 = $1020
+			// Pre-port reservation would have been amount × 300 = $6000
+			await keno.connect(player).placeBet(usdcAddr, 20n * USDC_UNIT, [1], ethers.ZeroAddress);
+			const reserved = await core.reservedProfitPerGame(kenoAddr, usdcAddr);
+			expect(reserved).to.equal(1020n * USDC_UNIT);
+		});
+
+		it('full-tier payout passes through unchanged when under the cap', async () => {
+			const { keno, vrf, coreAddr, usdcAddr, player } = ctx;
+			// Default per-game cap is the global $100k (fixture). $3 Pick 2 jackpot $30 < cap
+			// so no truncation — payout = full $30
+			const word = 0x123456789abcdefn;
+			const drawn = drawNumbers(word);
+			const picks = [drawn[0], drawn[1]].sort((a, b) => a - b);
+
+			const tx = await keno
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress);
+			const placed = (await tx.wait()).logs
+				.map((l) => {
+					try {
+						return keno.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [word]);
+
+			const base = await keno.getBetBase(placed.args.betId);
+			expect(base.payout).to.equal(MIN_USDC_BET * 10n); // $30
 		});
 	});
 

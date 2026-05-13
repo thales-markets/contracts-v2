@@ -38,11 +38,6 @@ contract ThreeCardPoker is
 
     uint256 public constant MIN_BET_USD = 3e18;
 
-    /// @notice After this long in PLAYER_TURN with no fold/play, the resolver role can
-    /// `adminForceFold` to release the ante-side reservation. Mitigates a bankroll-grief vector
-    /// where a user places a bet, lets VRF1 fulfill, then walks away.
-    uint256 public constant PLAYER_TURN_TIMEOUT = 24 hours;
-
     uint8 private constant DECK_SIZE = 52;
     uint8 private constant CARDS_PER_HAND = 3;
 
@@ -105,7 +100,6 @@ contract ThreeCardPoker is
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
-    error PlayerTurnTimeoutNotReached();
 
     /* ========== STRUCTS ========== */
 
@@ -197,7 +191,7 @@ contract ThreeCardPoker is
         if (anteAmount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
 
-        _checkBetSize(collateral, anteAmount);
+        _checkBetSize(collateral, anteAmount, pairPlusAmount);
         uint256 cappedProfit = _cappedProfit(collateral, anteAmount, pairPlusAmount);
 
         // Pull Ante + Pair Plus — from FBH if free bet, else from user wallet (single approval target)
@@ -240,20 +234,9 @@ contract ThreeCardPoker is
 
     /// @notice User folds — forfeits Ante, no Play stake taken. Pair Plus has already settled in
     /// VRF1 fulfillment; this call only releases the remaining ante-side reservation
-    function fold(uint256 betId) external override nonReentrant {
+    function fold(uint256 betId) external override nonReentrant notPaused {
         Bet storage b = bets[betId];
         _requireOwnedPlayerTurn(b);
-        _doFold(betId, b);
-    }
-
-    /// @notice Operator force-fold for a bet stuck in PLAYER_TURN beyond `PLAYER_TURN_TIMEOUT`.
-    /// Treats the bet as a fold (ante forfeit) so the ante-side reservation is released and the
-    /// bankroll isn't grief-locked by an abandoned mid-game bet. PP already settled in VRF1.
-    function adminForceFold(uint256 betId) external override nonReentrant onlyResolver {
-        Bet storage b = bets[betId];
-        if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.status != BetStatus.PLAYER_TURN) revert InvalidBetStatus();
-        if (block.timestamp < b.lastRequestAt + PLAYER_TURN_TIMEOUT) revert PlayerTurnTimeoutNotReached();
         _doFold(betId, b);
     }
 
@@ -280,7 +263,7 @@ contract ThreeCardPoker is
     /// @notice User commits to Play — pulls additional Ante-sized stake and triggers VRF2
     /// for dealer cards. Dealer cards are dealt from a fresh 49-card deck (excluding the player's
     /// 3 cards) so no duplicates can occur
-    function play(uint256 betId) external override nonReentrant returns (uint256 requestId) {
+    function play(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedPlayerTurn(b);
 
@@ -312,25 +295,31 @@ contract ThreeCardPoker is
         _cancelBet(betId, false);
     }
 
-    /// @notice Operator emergency cancel — bypasses timeout
+    /// @notice Operator emergency cancel — bypasses timeout. Also accepts PLAYER_TURN so the
+    /// resolver can rescue a bet whose user walked away mid-decision (matches V1 Blackjack
+    /// `adminCancelHand`). Refunds the user; admin must avoid abuse
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.status != BetStatus.AWAITING_DEAL && b.status != BetStatus.AWAITING_RESOLVE) revert InvalidBetStatus();
+        if (b.status == BetStatus.RESOLVED || b.status == BetStatus.CANCELLED) revert InvalidBetStatus();
         _cancelBet(betId, true);
     }
 
     function _cancelBet(uint256 betId, bool adminCancelled) internal {
         Bet storage b = bets[betId];
+        // Clear any in-flight VRF mapping so a late callback's mapping lookup is a no-op
+        // (status-check would also catch it, but matches the hygiene pattern of the other 4 games)
+        if (b.requestId != 0) delete requestIdToBetId[b.requestId];
 
         // Refund: stakes still owed to the user.
-        // AWAITING_DEAL → ante + pairPlus (PP not yet settled).
+        // AWAITING_DEAL  → ante + pairPlus (PP not yet settled).
+        // PLAYER_TURN    → ante only (PP already settled in VRF1; Play stake not yet pulled).
         // AWAITING_RESOLVE → ante + Play stake (PP already settled in VRF1; do NOT refund pp again
         // or the user double-banks the pp stake on a winning PP / recovers a lost pp on a losing PP).
         uint256 refund = b.anteAmount;
         if (b.status == BetStatus.AWAITING_DEAL) {
             refund += b.pairPlusAmount;
-        } else {
+        } else if (b.status == BetStatus.AWAITING_RESOLVE) {
             refund += b.anteAmount;
         }
 
@@ -343,6 +332,12 @@ contract ThreeCardPoker is
         // Refund stakes — routes back to FBH if this was a free bet (credits user's free-bet
         // balance via confirmCasinoBetResolved, exercised == stake → credit branch)
         core.payOut(b.user, b.collateral, refund, b.isFreeBet, refund);
+
+        // Decrement core's pending-stake counter (stake == refund → zero P&L impact). PP stake
+        // was already decremented at VRF1 PP settlement; the `refund` here is exactly the
+        // stake still in-flight at this status (ante; ante+pp from AWAITING_DEAL; ante+play
+        // from AWAITING_RESOLVE)
+        core.recordSettlement(b.collateral, refund, refund);
 
         // `+=` instead of `=`: in AWAITING_RESOLVE, b.totalPayout already holds the PP payout
         // recorded by VRF1; we want the FE-visible total to reflect both. From AWAITING_DEAL the
@@ -438,11 +433,15 @@ contract ThreeCardPoker is
             if (profit > b.profitCapRemaining) profit = b.profitCapRemaining;
             totalSideAPayout = stakeOut + profit;
             b.profitCapRemaining -= profit;
-            // Reflect truncation in the bet's reported breakdown (anteBonus capped first since
-            // it's the most variance-heavy on this side)
+            // Redistribute the truncated profit across the reported per-leg breakdown so
+            // r.anteBonusPayout + r.anteAndPlayPayout == totalSideAPayout. anteBonus is the
+            // variance-heavy leg (paid even when dealer doesn't qualify), so cap it first; any
+            // residual profit flows to anteAndPlay on top of stake-back
             if (r.anteBonusPayout > profit) {
                 r.anteBonusPayout = profit;
                 r.anteAndPlayPayout = stakeOut;
+            } else {
+                r.anteAndPlayPayout = stakeOut + profit - r.anteBonusPayout;
             }
         }
 
@@ -705,13 +704,23 @@ contract ThreeCardPoker is
         if (b.status != BetStatus.PLAYER_TURN) revert InvalidBetStatus();
     }
 
-    function _checkBetSize(address collateral, uint256 anteAmount) internal view {
+    /// @notice Per-game bet-size gate. `MIN_BET_USD` floor applies only to the required Ante;
+    /// Pair Plus is optional (skipped when zero). The per-game `effectiveMaxBetUsd` ceiling caps
+    /// each leg independently so a user can't sidestep the ante max by loading the optional PP
+    /// side with a huge wager
+    function _checkBetSize(address collateral, uint256 anteAmount, uint256 pairPlusAmount) internal view {
         uint256 anteUsd = core.getUsdValue(collateral, anteAmount);
         uint256 minBet = core.effectiveMinBetUsd(address(this));
         if (minBet == 0) minBet = MIN_BET_USD;
         if (anteUsd < minBet) revert InvalidAmount();
         uint256 maxBet = core.effectiveMaxBetUsd(address(this));
-        if (maxBet != 0 && anteUsd > maxBet) revert AboveMaxBet();
+        if (maxBet != 0) {
+            if (anteUsd > maxBet) revert AboveMaxBet();
+            if (pairPlusAmount > 0) {
+                uint256 ppUsd = core.getUsdValue(collateral, pairPlusAmount);
+                if (ppUsd > maxBet) revert AboveMaxBet();
+            }
+        }
     }
 
     /// @notice Worst-case net profit for this bet truncated by the per-game USD profit cap,

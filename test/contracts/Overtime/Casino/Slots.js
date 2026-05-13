@@ -896,7 +896,8 @@ describe('Slots', () => {
 				slots,
 				'CancelTimeoutChanged'
 			);
-			await expect(slots.connect(riskManager).setHouseEdge(ethers.parseEther('0.01'))).to.emit(
+			// Must be ≥ MIN_HOUSE_EDGE (2%) and ≤ MAX_HOUSE_EDGE (5%)
+			await expect(slots.connect(riskManager).setHouseEdge(ethers.parseEther('0.025'))).to.emit(
 				slots,
 				'HouseEdgeChanged'
 			);

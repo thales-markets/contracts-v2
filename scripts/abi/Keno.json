@@ -1,6 +1,11 @@
 [
   {
     "inputs": [],
+    "name": "AboveMaxBet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "BetNotFound",
     "type": "error"
   },
@@ -283,19 +288,6 @@
         "internalType": "uint8",
         "name": "",
         "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MAX_BET_USD",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",

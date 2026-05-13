@@ -9,7 +9,7 @@ pragma solidity ^0.8.20;
 /// against the paytable and resolved.
 ///
 /// Paytable (multiplier on stake; lose otherwise):
-///   Royal Flush    : 800x
+///   Royal Flush    : 500x
 ///   Straight Flush : 50x
 ///   Four of a Kind : 25x
 ///   Full House     : 8x
@@ -18,8 +18,6 @@ pragma solidity ^0.8.20;
 ///   Three of a Kind: 3x
 ///   Two Pair       : 2x
 ///   Jacks-or-better: 1x  (pair of J/Q/K/A only — pairs of 2..10 lose)
-///
-/// House edge ~2.70% with optimal hold strategy, clearing the project's 2% floor.
 interface ICasinoVideoPoker {
     /* ========== ENUMS ========== */
 
@@ -115,8 +113,9 @@ interface ICasinoVideoPoker {
         address referrer
     ) external returns (uint256 betId, uint256 requestId);
 
-    /// @notice Places a bet via FreeBetsHolder. Caller must be the registered FBH; the actual
-    /// player is taken from `tx.origin`. Stake routes back to FBH on resolve / cancel
+    /// @notice Places a bet using the caller's free-bet balance held in FreeBetsHolder.
+    /// User is `msg.sender`; FBH debits their per-user balance. Stake routes back to FBH on
+    /// resolve / cancel (matches V1 Slots / Dice / Roulette / Blackjack / Baccarat pattern)
     function placeBetWithFreeBet(
         address collateral,
         uint256 amount,

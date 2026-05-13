@@ -705,6 +705,50 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			await expect(ctx.core.connect(game).reserveOrRevert(ctx.usdcAddr, 0n)).to.not.be.reverted;
 		});
 
+		it('reserveOrRevert allows cumulative over-commitment (per-bet check only)', async () => {
+			// V2 is fractionally reserved by design: each reservation is checked against the
+			// current balance independently. Stack two reservations whose sum > balance, the
+			// second still succeeds. Withdraw protection (separately tested) blocks admin drains.
+			const { core, usdcAddr } = ctx;
+			const game = await impersonateRegisteredGame();
+			const balance = await ctx.usdc.balanceOf(await core.getAddress());
+			// Each reservation is balance - 1 wei (just under). Two of them sum to ~2× balance.
+			const r = balance - 1n;
+			await expect(core.connect(game).reserveOrRevert(usdcAddr, r)).to.not.be.reverted;
+			await expect(core.connect(game).reserveOrRevert(usdcAddr, r)).to.not.be.reverted;
+			expect(await core.reservedProfitPerCollateral(usdcAddr)).to.equal(2n * r);
+			// Sanity: a third reservation of balance+1 (single bet exceeds balance) DOES still revert
+			await expect(
+				core.connect(game).reserveOrRevert(usdcAddr, balance + 1n)
+			).to.be.revertedWithCustomError(core, 'InsufficientAvailableLiquidity');
+		});
+
+		it('reserveOrRevert rejects a single bet whose own reservation exceeds balance', async () => {
+			const { core, usdcAddr } = ctx;
+			const game = await impersonateRegisteredGame();
+			const balance = await ctx.usdc.balanceOf(await core.getAddress());
+			await expect(
+				core.connect(game).reserveOrRevert(usdcAddr, balance + 1n)
+			).to.be.revertedWithCustomError(core, 'InsufficientAvailableLiquidity');
+			// State rolled back on revert
+			expect(await core.reservedProfitPerCollateral(usdcAddr)).to.equal(0n);
+		});
+
+		it('withdrawCollateral still uses cumulative reserved + pending (not per-bet)', async () => {
+			// Even though placement allows cumulative over-commitment, the admin withdraw path
+			// continues to use the full cumulative liability so it can't drain bankroll under
+			// in-flight bets. Stack two reservations exceeding balance, confirm withdraw is gated.
+			const { core, usdc, usdcAddr, owner } = ctx;
+			const game = await impersonateRegisteredGame();
+			const balance = await usdc.balanceOf(await core.getAddress());
+			await core.connect(game).reserveOrRevert(usdcAddr, balance - 1n);
+			await core.connect(game).reserveOrRevert(usdcAddr, balance - 1n);
+			// cumulative reserved = 2·(balance-1) > balance → no withdraw should succeed
+			await expect(
+				core.connect(owner).withdrawCollateral(usdcAddr, owner.address, 1n)
+			).to.be.revertedWithCustomError(core, 'InsufficientAvailableLiquidity');
+		});
+
 		it('releaseReservation underflow reverts with UnderReservation', async () => {
 			const game = await impersonateRegisteredGame();
 			await expect(
@@ -1035,6 +1079,154 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			// houseNetUsd should be positive (house gained ~1.5 USDC)
 			const net = await core.houseNetUsd(plinkoAddr);
 			expect(net).to.be.gt(0n);
+		});
+	});
+
+	describe('setMaxNetLossPerGameUsd — eager auto-pause on threshold lowering', () => {
+		// Drives houseNetUsd[plinko] negative by winning a Plinko HIGH bet (slot 0 = 29x).
+		// 10 USDC stake × 29 = 290 USDC payout → ~$280 house loss recorded.
+		async function driveHouseNegative() {
+			const { plinko, plinkoAddr, player, usdcAddr, vrf, coreAddr, core } = ctx;
+			const tx = await plinko
+				.connect(player)
+				.placeBet(usdcAddr, 10n * USDC_UNIT, 2, ethers.ZeroAddress);
+			const placed = (await tx.wait()).logs
+				.map((l) => {
+					try {
+						return plinko.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [0n]);
+			return await core.houseNetUsd(plinkoAddr);
+		}
+
+		it('auto-pauses immediately when new threshold is below the running loss', async () => {
+			const { core, plinkoAddr } = ctx;
+			const net = await driveHouseNegative();
+			expect(net).to.be.lt(0n);
+			// Default threshold (1000 USD) still covers the ~$280 loss → not paused yet
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.false;
+
+			// Drop the cap to half the current loss → must trip the breaker in the setter itself
+			const halfLoss = -net / 2n;
+			await expect(core.setMaxNetLossPerGameUsd(plinkoAddr, halfLoss))
+				.to.emit(core, 'GameAutoPaused')
+				.withArgs(plinkoAddr, net, halfLoss);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.true;
+		});
+
+		it('does NOT auto-pause when new threshold still exceeds the running loss', async () => {
+			const { core, plinkoAddr } = ctx;
+			const net = await driveHouseNegative();
+			const headroomCap = -net + ethers.parseEther('100');
+			await expect(core.setMaxNetLossPerGameUsd(plinkoAddr, headroomCap)).to.not.emit(
+				core,
+				'GameAutoPaused'
+			);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.false;
+		});
+
+		it('is a no-op when the game is already auto-paused (no double emit)', async () => {
+			const { core, plinkoAddr } = ctx;
+			const net = await driveHouseNegative();
+			// First call trips the breaker
+			await core.setMaxNetLossPerGameUsd(plinkoAddr, -net / 2n);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.true;
+
+			// Lowering further on an already-paused game: no second GameAutoPaused emit
+			await expect(core.setMaxNetLossPerGameUsd(plinkoAddr, -net / 4n)).to.not.emit(
+				core,
+				'GameAutoPaused'
+			);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.true;
+		});
+
+		it('does NOT auto-pause when houseNetUsd is non-negative regardless of new threshold', async () => {
+			const { core, plinkoAddr } = ctx;
+			// Gauge starts at 0 (house even). Lowering to 1 wei must not trip the breaker.
+			await expect(core.setMaxNetLossPerGameUsd(plinkoAddr, 1n)).to.not.emit(
+				core,
+				'GameAutoPaused'
+			);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.false;
+		});
+	});
+
+	describe('setDefaultMaxNetLossPerGameUsd — sweep auto-pause when lowered', () => {
+		// Same Plinko HIGH-bet trick: drives houseNetUsd[plinko] ≈ -$280
+		async function driveHouseNegative() {
+			const { plinko, plinkoAddr, player, usdcAddr, vrf, coreAddr, core } = ctx;
+			const tx = await plinko
+				.connect(player)
+				.placeBet(usdcAddr, 10n * USDC_UNIT, 2, ethers.ZeroAddress);
+			const placed = (await tx.wait()).logs
+				.map((l) => {
+					try {
+						return plinko.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [0n]);
+			return await core.houseNetUsd(plinkoAddr);
+		}
+
+		it('sweeps and pauses override-less games when default drops below their loss', async () => {
+			const { core, plinkoAddr } = ctx;
+			const net = await driveHouseNegative();
+			expect(await core.maxNetLossPerGameUsd(plinkoAddr)).to.equal(0n); // no per-game override
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.false;
+
+			const newDefault = -net / 2n; // half the current loss → must trip
+			await expect(core.setDefaultMaxNetLossPerGameUsd(newDefault))
+				.to.emit(core, 'GameAutoPaused')
+				.withArgs(plinkoAddr, net, newDefault);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.true;
+		});
+
+		it('skips the sweep entirely when raising the default', async () => {
+			const { core, plinkoAddr } = ctx;
+			const net = await driveHouseNegative();
+			// Raise the default well past the current loss — must not emit any GameAutoPaused
+			await expect(core.setDefaultMaxNetLossPerGameUsd(ethers.parseEther('10000'))).to.not.emit(
+				core,
+				'GameAutoPaused'
+			);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.false;
+			expect(net).to.be.lt(0n); // sanity
+		});
+
+		it('does NOT pause games that have their own (looser) override even when default drops', async () => {
+			const { core, plinkoAddr } = ctx;
+			const net = await driveHouseNegative();
+			const lossAbs = -net;
+			// Give Plinko an explicit override well above the loss
+			await core.setMaxNetLossPerGameUsd(plinkoAddr, lossAbs + ethers.parseEther('500'));
+			// Drop the default below the loss — Plinko has an override so it shouldn't be touched
+			await expect(core.setDefaultMaxNetLossPerGameUsd(lossAbs / 2n)).to.not.emit(
+				core,
+				'GameAutoPaused'
+			);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.false;
+		});
+
+		it('skips games already auto-paused (no double emit during sweep)', async () => {
+			const { core, plinkoAddr } = ctx;
+			const net = await driveHouseNegative();
+			// Pre-trip via the per-game setter
+			await core.setMaxNetLossPerGameUsd(plinkoAddr, -net / 2n);
+			expect(await core.gameAutoPaused(plinkoAddr)).to.be.true;
+			// Now clear the override so the default applies again
+			await core.setMaxNetLossPerGameUsd(plinkoAddr, 0n);
+			// Lower the default — Plinko is already paused, so no second GameAutoPaused
+			await expect(core.setDefaultMaxNetLossPerGameUsd(-net / 4n)).to.not.emit(
+				core,
+				'GameAutoPaused'
+			);
 		});
 	});
 });

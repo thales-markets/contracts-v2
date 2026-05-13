@@ -116,10 +116,6 @@ interface ICasinoThreeCardPoker {
 
     function adminCancelBet(uint256 betId) external;
 
-    /// @notice Operator force-fold for a bet stuck in PLAYER_TURN beyond `PLAYER_TURN_TIMEOUT`.
-    /// Releases the ante-side reservation by treating the bet as a fold (ante forfeit).
-    function adminForceFold(uint256 betId) external;
-
     /* ========== VIEWS ========== */
 
     function getBetBase(

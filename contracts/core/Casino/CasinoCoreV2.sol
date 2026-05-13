@@ -160,9 +160,18 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     mapping(address => uint256) public override minBetPerGameUsd;
     mapping(address => uint256) public override maxBetPerGameUsd;
 
+    /// @notice Per-collateral sum of stakes from bets that are placed but not yet terminated.
+    /// `balanceOf(core) - pendingStakes` is the bankroll genuinely available to back NEW profit
+    /// reservations. Without this, `reserveOrRevert` treats unsettled stakes as bankroll and can
+    /// briefly over-reserve under concurrent placement. Incremented in `pullFromUser` /
+    /// `useFreeBet`; decremented in `recordSettlement` (the single terminal hook every game
+    /// invokes — resolve, fold, and cancel paths all funnel through it post-audit fix)
+    mapping(address => uint256) public pendingStakesPerCollateral;
+
     // --- forward-compat storage gap. Reduced 37 → 35 when `minBetPerGameUsd` and
-    // `maxBetPerGameUsd` were appended
-    uint256[35] private __gap;
+    // `maxBetPerGameUsd` were appended. Reduced 35 → 34 when `pendingStakesPerCollateral` was
+    // appended (audit fix: tighten `reserveOrRevert` solvency check)
+    uint256[34] private __gap;
 
     /* ========== INITIALIZER ========== */
 
@@ -233,6 +242,7 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         _requireSupported(collateral);
         if (amount == 0) revert InvalidAmount();
         IERC20(collateral).safeTransferFrom(user, address(this), amount);
+        pendingStakesPerCollateral[collateral] += amount;
         emit StakePulled(msg.sender, user, collateral, amount);
     }
 
@@ -241,6 +251,7 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         _requireSupported(collateral);
         if (amount == 0) revert InvalidAmount();
         IFreeBetsHolder(freeBetsHolder).useFreeBet(user, collateral, amount);
+        pendingStakesPerCollateral[collateral] += amount;
         emit FreeBetUsed(msg.sender, user, collateral, amount);
     }
 
@@ -275,12 +286,28 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     }
 
     /// @inheritdoc ICasinoCoreV2
+    /// @dev **Per-bet solvency only.** Checks that the current balance covers THIS single bet's
+    /// worst-case payout (= `amount`, which every game sizes to `stake + cappedProfit` or its
+    /// `stake × maxMultiplier` equivalent — i.e., the max outflow for the bet). Does NOT check
+    /// cumulative `pending + reserved` — the V2 casino is intentionally fractionally reserved
+    /// under the assumption that multiple in-flight bets all hitting their max simultaneously
+    /// is statistically negligible (probabilities range from 10⁻²⁶ for 3CP Pair Plus SF down to
+    /// ~10⁻⁷⁰ for Keno Pick 10).
+    ///
+    /// Failure mode if the tail event happens: the unlucky-Nth winning settlement's
+    /// `safeTransfer` reverts → VRF callback reverts → bet stranded in pending → user can
+    /// `cancelBet` after timeout for stake refund (no winnings). Operator must monitor
+    /// `getAvailableLiquidity` off-chain and top up before bankroll runs dry.
+    ///
+    /// Reservation accounting is still updated and used by `withdrawCollateral` to block admin
+    /// drains while in-flight liability exists
     function reserveOrRevert(address collateral, uint256 amount) external override onlyActiveGame {
         if (amount == 0) return;
         _requireSupported(collateral);
         reservedProfitPerCollateral[collateral] += amount;
         reservedProfitPerGame[msg.sender][collateral] += amount;
-        if (IERC20(collateral).balanceOf(address(this)) < reservedProfitPerCollateral[collateral]) {
+        uint256 balance = IERC20(collateral).balanceOf(address(this));
+        if (balance < amount) {
             // rollback
             reservedProfitPerCollateral[collateral] -= amount;
             reservedProfitPerGame[msg.sender][collateral] -= amount;
@@ -350,10 +377,25 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         if (referrerFee == 0) return;
         uint256 referrerAmount = (stake * referrerFee) / ONE;
         if (referrerAmount == 0) return;
-        try IERC20(collateral).transfer(referrer, referrerAmount) returns (bool ok) {
-            if (ok) emit ReferrerPaid(referrer, user, referrerAmount, stake, collateral);
-            else emit ReferrerPayoutFailed(referrer, user, referrerAmount, stake, collateral);
-        } catch {
+        // Low-level call handles both bool-returning (USDC / WETH / OVER) and void-returning
+        // (USDT-style) ERC20s without reverting on the inner call. Crucially, `.call` does NOT
+        // propagate the revert from a USDC blacklist / sanctioned-address rejection — that
+        // preserves the invariant that a hostile referrer choice cannot block a losing-bet
+        // settlement (a SafeERC20.safeTransfer here would re-introduce the exploit because it
+        // bubbles up the underlying revert)
+        (bool success, bytes memory data) = collateral.call(
+            abi.encodeWithSelector(IERC20.transfer.selector, referrer, referrerAmount)
+        );
+        bool transferOk = success && (data.length == 0 || abi.decode(data, (bool)));
+        if (transferOk) {
+            // Deduct from the breaker gauge so it reflects real house P&L: referrer fee is
+            // paid out of core's bankroll on losing bets and would otherwise leave the gauge
+            // over-reporting house gains by cumulative fee, delaying auto-pause. Conversion
+            // is best-effort — a broken price feed leaves a tiny per-bet drift, never a revert
+            (bool conv, uint256 v) = _tryGetUsdValue(collateral, referrerAmount);
+            if (conv) houseNetUsd[msg.sender] -= int256(v);
+            emit ReferrerPaid(referrer, user, referrerAmount, stake, collateral);
+        } else {
             emit ReferrerPayoutFailed(referrer, user, referrerAmount, stake, collateral);
         }
     }
@@ -363,26 +405,30 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     /// house won, negative when the user won). Converted to USD-18-dec and added to the running
     /// gauge. When the gauge falls below `-_maxNetLossUsd(game)`, the game is auto-paused.
     ///
-    /// `_getUsdValue` is try/catch-wrapped: if the price feed reverts (e.g., stale or broken),
-    /// the bet still settles and the circuit breaker simply skips this round. Letting a price
-    /// feed revert block VRF callbacks would create another losing-bet cancel surface
+    /// USD conversion goes through `_tryGetUsdValue`, which is non-reverting: if the price feed
+    /// reverts (stale / broken) the bet still settles and the breaker simply skips this round.
+    /// Letting a price feed revert block VRF callbacks would create a losing-bet cancel surface
     function recordSettlement(address collateral, uint256 stake, uint256 payout) external override onlyRegisteredGame {
+        // Decrement pending-stake counter — clamp to zero so in-flight bets placed before this
+        // accounting was introduced can still resolve without underflow (their stakes weren't
+        // tracked at placement). New bets always satisfy `stake ≤ pending` by construction
+        uint256 p = pendingStakesPerCollateral[collateral];
+        pendingStakesPerCollateral[collateral] = stake > p ? 0 : p - stake;
+
         int256 deltaUsd;
         if (payout >= stake) {
-            uint256 lossCollateral = payout - stake;
-            try this.getUsdValue(collateral, lossCollateral) returns (uint256 v) {
+            (bool ok, uint256 v) = _tryGetUsdValue(collateral, payout - stake);
+            if (ok) {
                 deltaUsd = -int256(v);
-            } catch {
+            } else {
                 emit SettlementUsdConversionFailed(msg.sender, collateral, stake, payout);
-                deltaUsd = 0;
             }
         } else {
-            uint256 winCollateral = stake - payout;
-            try this.getUsdValue(collateral, winCollateral) returns (uint256 v) {
+            (bool ok, uint256 v) = _tryGetUsdValue(collateral, stake - payout);
+            if (ok) {
                 deltaUsd = int256(v);
-            } catch {
+            } else {
                 emit SettlementUsdConversionFailed(msg.sender, collateral, stake, payout);
-                deltaUsd = 0;
             }
         }
         int256 newNet = houseNetUsd[msg.sender] + deltaUsd;
@@ -468,18 +514,53 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     }
 
     /// @notice Sets a per-game override for the circuit-breaker threshold. Pass 0 to revert to
-    /// the default
+    /// the default.
+    /// @dev If the new effective threshold would put an already-losing game past the breaker, the
+    /// game is auto-paused immediately rather than waiting for the next `recordSettlement` to
+    /// trip it. Closes a window where an operator lowers the cap on a game that's already drifted
+    /// negative and a handful of in-flight bets keep playing until the next settlement
     function setMaxNetLossPerGameUsd(address game, uint256 value) external onlyOwner {
         maxNetLossPerGameUsd[game] = value;
         emit MaxNetLossPerGameUsdChanged(game, value);
+
+        if (!gameAutoPaused[game]) {
+            int256 net = houseNetUsd[game];
+            if (net < 0) {
+                uint256 maxLoss = _maxNetLossUsd(game);
+                if (uint256(-net) >= maxLoss) {
+                    gameAutoPaused[game] = true;
+                    emit GameAutoPaused(game, net, maxLoss);
+                }
+            }
+        }
     }
 
     /// @notice Sets the default per-game circuit-breaker threshold applied to any game without
-    /// an override
+    /// an override.
+    /// @dev When LOWERING the default, sweep registered games: any game using the default (no
+    /// per-game override) and already in net loss past the new value is auto-paused immediately.
+    /// Closes the same eager-pause gap as `setMaxNetLossPerGameUsd` but scoped to override-less
+    /// games. Raising the default skips the sweep — auto-pause is one-way (cleared by
+    /// `resetGameCircuitBreaker`), so a higher default can't *un*-pause anything
     function setDefaultMaxNetLossPerGameUsd(uint256 value) external onlyOwner {
         if (value == 0) revert InvalidAmount();
+        uint256 prev = defaultMaxNetLossPerGameUsd;
         defaultMaxNetLossPerGameUsd = value;
         emit DefaultMaxNetLossPerGameUsdChanged(value);
+
+        if (value >= prev) return;
+        uint256 nGames = _registeredGamesList.length;
+        for (uint256 i; i < nGames; ++i) {
+            address game = _registeredGamesList[i];
+            // Skip games with their own override — they're unaffected by the default
+            if (maxNetLossPerGameUsd[game] != 0) continue;
+            if (gameAutoPaused[game]) continue;
+            int256 net = houseNetUsd[game];
+            if (net < 0 && uint256(-net) >= value) {
+                gameAutoPaused[game] = true;
+                emit GameAutoPaused(game, net, value);
+            }
+        }
     }
 
     /// @notice Updates risk params. Pass 0 on a field to leave it untouched
@@ -608,11 +689,16 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         }
     }
 
-    /// @notice Withdraws non-reserved collateral from the treasury bankroll
+    /// @notice Withdraws non-reserved, non-pending collateral from the treasury bankroll.
+    /// @dev Withdraw uses **cumulative** liability (`reserved + pending`) — unlike
+    /// `reserveOrRevert` which only checks per-bet solvency. Asymmetric on purpose: place-time
+    /// admits over-commitment because concurrent max-wins are statistically negligible, but
+    /// admin withdraws must not be able to drain bankroll out from under in-flight bets
     function withdrawCollateral(address _collateral, address _recipient, uint _amount) external onlyOwner nonReentrant {
         uint balance = IERC20(_collateral).balanceOf(address(this));
         uint reserved = reservedProfitPerCollateral[_collateral];
-        if (_amount > balance || balance - _amount < reserved) revert InsufficientAvailableLiquidity();
+        uint pending = pendingStakesPerCollateral[_collateral];
+        if (_amount > balance || balance - _amount < reserved + pending) revert InsufficientAvailableLiquidity();
         address recipient = _recipient == address(0) ? owner : _recipient;
         IERC20(_collateral).safeTransfer(recipient, _amount);
         emit WithdrawnCollateral(_collateral, recipient, _amount);
@@ -695,6 +781,24 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         if (collateral == usdc) return (amount * ONE) / USDC_UNIT;
         uint price = _getCollateralPrice(collateral);
         return (amount * price) / ONE;
+    }
+
+    /// @dev Non-reverting USD-value lookup used by the circuit-breaker P&L gauge. Returns
+    /// `(false, 0)` on any failure (unsupported collateral, missing currency key, broken / stale
+    /// price feed) so settlement isn't blocked. Replaces the previous `try this.getUsdValue(...)`
+    /// self-call which forwarded only 63/64 of remaining gas and exposed the breaker to a 1/64
+    /// gas-grief surface
+    function _tryGetUsdValue(address collateral, uint256 amount) internal view returns (bool ok, uint256 value) {
+        if (collateral == usdc) return (true, (amount * ONE) / USDC_UNIT);
+        if (!supportedCollateral[collateral]) return (false, 0);
+        bytes32 currencyKey = priceFeedKeyPerCollateral[collateral];
+        if (currencyKey == bytes32(0)) return (false, 0);
+        try priceFeed.rateForCurrency(currencyKey) returns (uint256 price) {
+            if (price == 0) return (false, 0);
+            return (true, (amount * price) / ONE);
+        } catch {
+            return (false, 0);
+        }
     }
 
     function _maxNetLossUsd(address game) internal view returns (uint256) {

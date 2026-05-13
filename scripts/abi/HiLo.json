@@ -1,6 +1,11 @@
 [
   {
     "inputs": [],
+    "name": "AboveMaxBet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "BetNotFound",
     "type": "error"
   },

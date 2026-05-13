@@ -50,6 +50,7 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     error InvalidSender();
     error InvalidAmount();
     error InvalidCollateral();
+    error AboveMaxBet();
     error MaxMultiplierReached();
     error MaxProfitExceeded();
     error InvalidHouseEdge();
@@ -157,10 +158,9 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     ) internal returns (uint256 betId, uint256 requestId) {
         if (amount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
+        _checkBetSize(collateral, amount);
 
         uint256 amountUsd = core.getUsdValue(collateral, amount);
-        if (amountUsd < MIN_BET_USD) revert InvalidAmount();
-
         uint256 worstHouseProfitUsd = (amountUsd * (maxMultiplierE18 - ONE)) / ONE;
         if (worstHouseProfitUsd > core.effectiveMaxProfitUsd(address(this))) revert MaxProfitExceeded();
 
@@ -200,7 +200,7 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         emit GuessChosen(betId, requestId, msg.sender, firstDirection);
     }
 
-    function guess(uint256 betId, Direction direction) external override nonReentrant returns (uint256 requestId) {
+    function guess(uint256 betId, Direction direction) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();
@@ -221,7 +221,7 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         emit GuessChosen(betId, requestId, msg.sender, direction);
     }
 
-    function cashout(uint256 betId) external override nonReentrant {
+    function cashout(uint256 betId) external override nonReentrant notPaused {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();
@@ -277,6 +277,9 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         core.releaseReservation(b.collateral, b.reserved);
         b.reserved = 0;
         core.payOut(b.user, b.collateral, b.amount, b.isFreeBet, b.amount);
+        // Decrement core's pending-stake counter (stake == refund so zero P&L impact on the
+        // breaker gauge — cancels don't generate house P&L)
+        core.recordSettlement(b.collateral, b.amount, b.amount);
         b.payout = b.amount;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
@@ -360,6 +363,20 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     function _rank(uint8 card) internal pure returns (uint8) {
         return card / 4;
+    }
+
+    /// @notice Per-game bet-size gate. `core.effectiveMinBetUsd` / `effectiveMaxBetUsd` overrides
+    /// (set via `CasinoCoreV2.setMinBetPerGameUsd` / `setMaxBetPerGameUsd`) take precedence; when
+    /// unset (zero), `MIN_BET_USD` is the default floor and there is no explicit max ceiling —
+    /// the bet is still capped indirectly by `effectiveMaxProfitUsd` via the `MaxProfitExceeded`
+    /// check in `_placeBet`
+    function _checkBetSize(address collateral, uint256 amount) internal view {
+        uint256 amountUsd = core.getUsdValue(collateral, amount);
+        uint256 minBet = core.effectiveMinBetUsd(address(this));
+        if (minBet == 0) minBet = MIN_BET_USD;
+        if (amountUsd < minBet) revert InvalidAmount();
+        uint256 maxBet = core.effectiveMaxBetUsd(address(this));
+        if (maxBet != 0 && amountUsd > maxBet) revert AboveMaxBet();
     }
 
     /* ========== ADMIN ========== */
@@ -491,10 +508,6 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         if (msg.sender != owner && !manager.isWhitelistedAddress(msg.sender, role)) revert InvalidSender();
     }
 
-    modifier onlyRiskManager() {
-        _requireRole(ISportsAMMV2Manager.Role.RISK_MANAGING);
-        _;
-    }
     modifier onlyResolver() {
         _requireRole(ISportsAMMV2Manager.Role.MARKET_RESOLVING);
         _;

@@ -37,7 +37,7 @@ const HandClass = {
 };
 
 const PAYTABLE = {
-	[HandClass.ROYAL_FLUSH]: 800,
+	[HandClass.ROYAL_FLUSH]: 500,
 	[HandClass.STRAIGHT_FLUSH]: 50,
 	[HandClass.FOUR_OF_A_KIND]: 25,
 	[HandClass.FULL_HOUSE]: 8,
@@ -277,7 +277,7 @@ async function deployFixture() {
 	await core.setMaxNetLossPerGameUsd(vpAddr, ethers.parseEther('1000000'));
 
 	await usdc.mintForUser(owner.address);
-	// Reservation per bet = 801x stake = $2403 at $3 ante. Seed core with enough to cover a
+	// Reservation per bet = 501x stake = $1503 at $3 ante. Seed core with enough to cover a
 	// few sequential reservations plus payouts. Owner starts with 100 + 5000 = 5100 eUSDC
 	await usdc.transfer(coreAddr, 4_500n * USDC_UNIT);
 	await usdc.transfer(player.address, 500n * USDC_UNIT);
@@ -383,8 +383,8 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 			).to.be.revertedWithCustomError(vp, 'InvalidAmount');
 		});
 
-		it('soft-caps reservation when effectiveMaxProfit < 800x stake', async () => {
-			// Tighten profit cap to $100. With $3 ante, worst-case profit = 800×3 = $2400 USD.
+		it('soft-caps reservation when effectiveMaxProfit < 500x stake', async () => {
+			// Tighten profit cap to $100. With $3 ante, worst-case profit = 500×3 = $1500 USD.
 			// Cap truncates reservation to stake + cap-in-collateral = 3 + 100 = 103 USDC. Bet
 			// placement succeeds; payout at resolve is truncated to stake + cap.
 			const { vp, core, usdcAddr, player, vpAddr } = ctx;
@@ -398,14 +398,14 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 	});
 
 	describe('placeBet happy path', () => {
-		it('pulls stake, reserves 801x, dispatches VRF, sets AWAITING_DEAL', async () => {
+		it('pulls stake, reserves 501x, dispatches VRF, sets AWAITING_DEAL', async () => {
 			const { vp, vpAddr, core, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
 			const receipt = await tx.wait();
 			const placed = parseBetPlaced(ctx, receipt);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - MIN_USDC_BET);
-			expect(await core.reservedProfitPerGame(vpAddr, usdcAddr)).to.equal(801n * MIN_USDC_BET);
+			expect(await core.reservedProfitPerGame(vpAddr, usdcAddr)).to.equal(500n * MIN_USDC_BET);
 			const base = await vp.getBetBase(placed.args.betId);
 			expect(base.status).to.equal(BetStatus.AWAITING_DEAL);
 			expect(base.amount).to.equal(MIN_USDC_BET);
@@ -545,7 +545,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 			expect(Number(base.handClass)).to.equal(expectedClass);
 			expect(Number(base.multiplier)).to.equal(expectedMult);
 			if (expectedMult > 0) {
-				const expectedReturn = MIN_USDC_BET * BigInt(1 + expectedMult);
+				const expectedReturn = MIN_USDC_BET * BigInt(expectedMult);
 				expect(base.payout).to.equal(expectedReturn);
 				expect(await usdc.balanceOf(player.address)).to.equal(
 					balBefore - MIN_USDC_BET + expectedReturn
@@ -679,7 +679,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 			);
 		});
 
-		it('Royal Flush pays 800:1', async () => {
+		it('Royal Flush pays 500:1', async () => {
 			// Royal is 1/650k — completely infeasible by brute force. Use the 4-to-Royal
 			// partial-hold strategy: find a deal with 4 of {T,J,Q,K,A} of the same suit in
 			// the first 4 positions, hold them, then brute-force the draw to land the 5th
@@ -699,7 +699,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 				0b01111, // hold first 4
 				(_, ev) => ev.class_ === HandClass.ROYAL_FLUSH,
 				HandClass.ROYAL_FLUSH,
-				800,
+				500,
 				dealPredicate
 			);
 		});
@@ -841,7 +841,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 		});
 	});
 
-	describe('Free bet (via FBH forwarder)', () => {
+	describe('Free bet (direct user call — matches V1 / HiLo / Keno / Plinko / TCP)', () => {
 		async function fundFB(amount) {
 			const { fbh, fbhAddr, usdc, owner, player, usdcAddr } = ctx;
 			await usdc.mintForUser(owner.address);
@@ -850,24 +850,12 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 		}
 
 		async function placeFreeBet(amount) {
-			const { fbh, vpAddr, usdcAddr, player, vp } = ctx;
-			const data = vp.interface.encodeFunctionData('placeBetWithFreeBet', [
-				usdcAddr,
-				amount,
-				ethers.ZeroAddress,
-			]);
-			const tx = await fbh.connect(player).forwardCall(vpAddr, data);
+			const { usdcAddr, player, vp } = ctx;
+			const tx = await vp.connect(player).placeBetWithFreeBet(usdcAddr, amount, ethers.ZeroAddress);
 			const r = await tx.wait();
 			const placed = parseBetPlaced(ctx, r);
 			return { betId: placed.args.betId, requestId: placed.args.requestId };
 		}
-
-		it('placeBetWithFreeBet from non-FBH reverts InvalidSender', async () => {
-			const { vp, usdcAddr, player } = ctx;
-			await expect(
-				vp.connect(player).placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(vp, 'InvalidSender');
-		});
 
 		it('placement debits FBH; user wallet untouched', async () => {
 			const { fbh, usdc, usdcAddr, player } = ctx;
@@ -891,8 +879,8 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 			await vrf.fulfillRandomWords(coreAddr, requestId, [dealWord]);
 			await drawAndResolve(ctx, betId, 31, 0x1n);
 			expect(await fbh.confirmCalls()).to.equal(1n);
-			// Stake + 1× win = 2× stake routed to FBH for resolution
-			expect(await fbh.lastExercised()).to.equal(MIN_USDC_BET * 2n);
+			// JoB pair pushes 1-for-1 under the "for 1" paytable — stake-back only, no profit
+			expect(await fbh.lastExercised()).to.equal(MIN_USDC_BET);
 			expect(await fbh.lastStake()).to.equal(MIN_USDC_BET);
 		});
 
@@ -925,7 +913,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 		it('reservation released on resolve', async () => {
 			const { vp, vpAddr, core, usdcAddr } = ctx;
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0x1n);
-			expect(await core.reservedProfitPerGame(vpAddr, usdcAddr)).to.equal(801n * MIN_USDC_BET);
+			expect(await core.reservedProfitPerGame(vpAddr, usdcAddr)).to.equal(500n * MIN_USDC_BET);
 			await drawAndResolve(ctx, betId, 0, 0x2n);
 			expect(await core.reservedProfitPerGame(vpAddr, usdcAddr)).to.equal(0n);
 		});
@@ -1077,7 +1065,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 		it('getUserBetIds paginates and orders most-recent first', async () => {
 			const { vp, player } = ctx;
 			const ids = [];
-			// Resolve each bet to free the 801× reservation before placing the next
+			// Resolve each bet to free the 501× reservation before placing the next
 			for (let i = 0; i < 3; i++) {
 				const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, BigInt(0x100 + i));
 				await drawAndResolve(ctx, betId, 31, BigInt(0x100 + i));

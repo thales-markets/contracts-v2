@@ -31,6 +31,13 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
     uint8 private constant ROWS = 8;
     uint8 private constant SLOTS = 9; // ROWS + 1
 
+    /// @dev Binomial slot weights for an 8-row Pascal's triangle: C(8, 0..8) = [1, 8, 28, 56, 70,
+    /// 56, 28, 8, 1] summing to 2^8 = 256. Used to validate that any paytable's weighted RTP
+    /// clears the project-wide 2% house edge floor (≤ 0.98 in 1e18). Weights are inlined per
+    /// call site (no constant array support pre-0.8.27) so updates here MUST be mirrored there
+    uint256 private constant SLOT_WEIGHTS_DEN = 256;
+    uint256 private constant MAX_RTP_E18 = 98e16;
+
     /* ========== ERRORS ========== */
 
     error InvalidAddress();
@@ -38,12 +45,14 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
     error InvalidAmount();
     error InvalidCollateral();
     error InvalidRisk();
+    error AboveMaxBet();
     error PaytableLengthMismatch();
     error MaxProfitExceeded();
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
+    error EdgeFloorBreached();
 
     /* ========== STRUCTS ========== */
 
@@ -107,6 +116,26 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
     }
 
     function _setPaytableInternal(uint8 risk, uint256[SLOTS] memory mults) internal {
+        // Edge-floor check: weighted RTP must stay ≤ 0.98 (2% house edge minimum).
+        // Weights are binomial C(8,i); see SLOT_WEIGHTS_DEN above
+        uint256 rtp = (mults[0] +
+            8 *
+            mults[1] +
+            28 *
+            mults[2] +
+            56 *
+            mults[3] +
+            70 *
+            mults[4] +
+            56 *
+            mults[5] +
+            28 *
+            mults[6] +
+            8 *
+            mults[7] +
+            mults[8]) / SLOT_WEIGHTS_DEN;
+        if (rtp > MAX_RTP_E18) revert EdgeFloorBreached();
+
         uint256[] storage row = paytables[risk];
         uint256 maxM;
         for (uint256 i; i < SLOTS; ++i) {
@@ -164,10 +193,24 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
         uint256 maxM = maxMultiplier[uint8(risk)];
         if (maxM == 0) revert InvalidRisk();
+        _checkBetSize(collateral, amount);
         uint256 amountUsd = core.getUsdValue(collateral, amount);
-        if (amountUsd < MIN_BET_USD) revert InvalidAmount();
         if ((amountUsd * (maxM - ONE)) / ONE > core.effectiveMaxProfitUsd(address(this))) revert MaxProfitExceeded();
         reservation = (amount * maxM) / ONE;
+    }
+
+    /// @notice Per-game bet-size gate. `core.effectiveMinBetUsd` / `effectiveMaxBetUsd` overrides
+    /// (set via `CasinoCoreV2.setMinBetPerGameUsd` / `setMaxBetPerGameUsd`) take precedence; when
+    /// unset (zero), `MIN_BET_USD` is the default floor and there is no explicit max ceiling —
+    /// the bet is still capped indirectly by `effectiveMaxProfitUsd` via the `MaxProfitExceeded`
+    /// check below
+    function _checkBetSize(address collateral, uint256 amount) internal view {
+        uint256 amountUsd = core.getUsdValue(collateral, amount);
+        uint256 minBet = core.effectiveMinBetUsd(address(this));
+        if (minBet == 0) minBet = MIN_BET_USD;
+        if (amountUsd < minBet) revert InvalidAmount();
+        uint256 maxBet = core.effectiveMaxBetUsd(address(this));
+        if (maxBet != 0 && amountUsd > maxBet) revert AboveMaxBet();
     }
 
     function _writeBet(
@@ -212,9 +255,12 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
 
     function _cancelBet(uint256 betId, bool adminCancelled) internal {
         Bet storage b = bets[betId];
+        if (b.requestId != 0) delete requestIdToBetId[b.requestId];
         core.releaseReservation(b.collateral, b.reserved);
         b.reserved = 0;
         core.payOut(b.user, b.collateral, b.amount, b.isFreeBet, b.amount);
+        // Decrement core's pending-stake counter (stake == refund → zero P&L impact)
+        core.recordSettlement(b.collateral, b.amount, b.amount);
         b.payout = b.amount;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
@@ -273,9 +319,31 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
 
     /* ========== ADMIN: PAYTABLE MANAGEMENT ========== */
 
-    /// @notice Owner can replace a risk-level paytable. `multipliers` length must equal 9
+    /// @notice Owner can replace a risk-level paytable. `multipliers` length must equal 9.
+    /// @dev Enforces the project-wide 2% edge floor: weighted RTP across binomial slot weights
+    /// must stay ≤ 0.98 (in 1e18). Prevents a fat-finger paytable update from silently breaking
+    /// the edge invariant — owner is trusted but defense-in-depth is cheap here
     function setPaytable(Risk risk, uint256[] calldata multipliers) external onlyOwner {
         if (multipliers.length != SLOTS) revert PaytableLengthMismatch();
+
+        uint256 rtp = (multipliers[0] +
+            8 *
+            multipliers[1] +
+            28 *
+            multipliers[2] +
+            56 *
+            multipliers[3] +
+            70 *
+            multipliers[4] +
+            56 *
+            multipliers[5] +
+            28 *
+            multipliers[6] +
+            8 *
+            multipliers[7] +
+            multipliers[8]) / SLOT_WEIGHTS_DEN;
+        if (rtp > MAX_RTP_E18) revert EdgeFloorBreached();
+
         uint8 r = uint8(risk);
         delete paytables[r];
         uint256 maxM;
@@ -399,10 +467,6 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         if (msg.sender != owner && !manager.isWhitelistedAddress(msg.sender, role)) revert InvalidSender();
     }
 
-    modifier onlyRiskManager() {
-        _requireRole(ISportsAMMV2Manager.Role.RISK_MANAGING);
-        _;
-    }
     modifier onlyResolver() {
         _requireRole(ISportsAMMV2Manager.Role.MARKET_RESOLVING);
         _;
