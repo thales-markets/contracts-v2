@@ -7,12 +7,16 @@ import "./ICasinoHiLo.sol";
 import "./ICasinoKeno.sol";
 import "./ICasinoOvertimeUltimateHoldem.sol";
 import "./ICasinoVideoPoker.sol";
+import "./ICasinoOvertimeBonusHoldem.sol";
 
 /// @title ICasinoDataV2
 /// @author Overtime
 /// @notice Read-only aggregator interface for the V2 casino games + treasury. Covers
-/// ThreeCardPoker, OvertimeUltimateHoldem, Plinko, HiLo, Keno, VideoPoker. Per-game `FullRecord`
-/// struct definitions live on each game's own interface — this aggregator just forwards
+/// ThreeCardPoker, OvertimeUltimateHoldem, Plinko, HiLo, Keno, VideoPoker, OvertimeBonusHoldem.
+/// Per-game `FullRecord`
+/// struct definitions live on each game's own interface. Reads return `bytes` (ABI-encoded
+/// per-game struct/array) so a single dispatcher serves every game — caller does
+/// `abi.decode(result, (ICasinoX.FullRecord))` (or `(ICasinoX.FullRecord[])`) per the GameV2 enum
 interface ICasinoDataV2 {
     /// @notice Canonical game identifier shared with the frontend
     enum GameV2 {
@@ -21,7 +25,8 @@ interface ICasinoDataV2 {
         HiLo,
         Keno,
         OvertimeUltimateHoldem,
-        VideoPoker
+        VideoPoker,
+        OvertimeBonusHoldem
     }
 
     /// @notice Treasury-wide summary view
@@ -73,106 +78,19 @@ interface ICasinoDataV2 {
 
     function getGameStatus(address game, address[] calldata collaterals) external view returns (GameStatus memory);
 
-    /* ========== TCP VIEWS ========== */
+    /* ========== PER-GAME RECORDS (typed bytes; caller abi.decodes per GameV2) ========== */
 
-    function getThreeCardPokerFullRecord(uint256 betId) external view returns (ICasinoThreeCardPoker.FullRecord memory);
+    /// @notice Single record. Decode as `abi.decode(result, (ICasinoX.FullRecord))` per `game`.
+    function getFullRecord(GameV2 game, uint256 betId) external view returns (bytes memory);
 
-    function getThreeCardPokerFullRecords(
-        uint256[] calldata betIds
-    ) external view returns (ICasinoThreeCardPoker.FullRecord[] memory);
+    /// @notice Batch records by ids. Decode as `abi.decode(result, (ICasinoX.FullRecord[]))`.
+    function getFullRecords(GameV2 game, uint256[] calldata betIds) external view returns (bytes memory);
 
-    function getUserThreeCardPokerRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoThreeCardPoker.FullRecord[] memory);
+    /// @notice User-paginated records (most-recent first). Decode as `(ICasinoX.FullRecord[])`.
+    function getUserRecords(GameV2 game, address user, uint256 offset, uint256 limit) external view returns (bytes memory);
 
-    function getRecentThreeCardPokerRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoThreeCardPoker.FullRecord[] memory);
-
-    /* ========== PLINKO VIEWS ========== */
-
-    function getPlinkoFullRecord(uint256 betId) external view returns (ICasinoPlinko.FullRecord memory);
-
-    function getPlinkoFullRecords(uint256[] calldata betIds) external view returns (ICasinoPlinko.FullRecord[] memory);
-
-    function getUserPlinkoRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoPlinko.FullRecord[] memory);
-
-    function getRecentPlinkoRecords(uint256 offset, uint256 limit) external view returns (ICasinoPlinko.FullRecord[] memory);
-
-    /* ========== HI-LO VIEWS ========== */
-
-    function getHiLoFullRecord(uint256 betId) external view returns (ICasinoHiLo.FullRecord memory);
-
-    function getHiLoFullRecords(uint256[] calldata betIds) external view returns (ICasinoHiLo.FullRecord[] memory);
-
-    function getUserHiLoRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoHiLo.FullRecord[] memory);
-
-    function getRecentHiLoRecords(uint256 offset, uint256 limit) external view returns (ICasinoHiLo.FullRecord[] memory);
-
-    /* ========== KENO VIEWS ========== */
-
-    function getKenoFullRecord(uint256 betId) external view returns (ICasinoKeno.FullRecord memory);
-
-    function getKenoFullRecords(uint256[] calldata betIds) external view returns (ICasinoKeno.FullRecord[] memory);
-
-    function getUserKenoRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoKeno.FullRecord[] memory);
-
-    function getRecentKenoRecords(uint256 offset, uint256 limit) external view returns (ICasinoKeno.FullRecord[] memory);
-
-    /* ========== ULTIMATE HOLD'EM VIEWS ========== */
-
-    function getOvertimeUltimateHoldemFullRecord(
-        uint256 betId
-    ) external view returns (ICasinoOvertimeUltimateHoldem.FullRecord memory);
-
-    function getOvertimeUltimateHoldemFullRecords(
-        uint256[] calldata betIds
-    ) external view returns (ICasinoOvertimeUltimateHoldem.FullRecord[] memory);
-
-    function getUserOvertimeUltimateHoldemRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoOvertimeUltimateHoldem.FullRecord[] memory);
-
-    function getRecentOvertimeUltimateHoldemRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoOvertimeUltimateHoldem.FullRecord[] memory);
-
-    /* ========== VIDEO POKER VIEWS ========== */
-
-    function getVideoPokerFullRecord(uint256 betId) external view returns (ICasinoVideoPoker.FullRecord memory);
-
-    function getVideoPokerFullRecords(
-        uint256[] calldata betIds
-    ) external view returns (ICasinoVideoPoker.FullRecord[] memory);
-
-    function getUserVideoPokerRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoVideoPoker.FullRecord[] memory);
-
-    function getRecentVideoPokerRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view returns (ICasinoVideoPoker.FullRecord[] memory);
+    /// @notice Recent-paginated records (descending by bet id). Decode as `(ICasinoX.FullRecord[])`.
+    function getRecentRecords(GameV2 game, uint256 offset, uint256 limit) external view returns (bytes memory);
 
     /* ========== CROSS-GAME (monitoring) ========== */
 

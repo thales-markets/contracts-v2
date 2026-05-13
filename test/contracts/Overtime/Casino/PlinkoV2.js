@@ -93,8 +93,9 @@ async function deployFixture() {
 
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
-	await data.initialize(owner.address, coreAddr, ethers.ZeroAddress);
-	await data.setPlinko(plinkoAddr);
+	await data.initialize(owner.address);
+	await data.setAddress(0, true, coreAddr);
+	await data.setAddress(1, false, plinkoAddr);
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -292,7 +293,10 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			const { data, player } = ctx;
 			const word = 0xaaaan;
 			const betId = await placeAndFulfill(ctx, MIN_USDC_BET, Risk.LOW, word);
-			const r = await data.getPlinkoFullRecord(betId);
+			const r = ctx.plinko.interface.decodeFunctionResult(
+				'getFullRecord',
+				await data.getFullRecord(1 /* GameV2.Plinko */, betId)
+			)[0];
 			expect(r.betId).to.equal(betId);
 			expect(r.user).to.equal(player.address);
 			expect(r.status).to.equal(BetStatus.RESOLVED);

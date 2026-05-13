@@ -12,12 +12,14 @@ import "../../interfaces/ICasinoHiLo.sol";
 import "../../interfaces/ICasinoKeno.sol";
 import "../../interfaces/ICasinoOvertimeUltimateHoldem.sol";
 import "../../interfaces/ICasinoVideoPoker.sol";
+import "../../interfaces/ICasinoOvertimeBonusHoldem.sol";
 import "../../interfaces/ICasinoDataV2.sol";
 
 /// @title CasinoDataV2
 /// @author Overtime
 /// @notice Read-only aggregator over `CasinoCoreV2` and the V2 casino games (ThreeCardPoker,
-/// Plinko, HiLo, Keno, OvertimeUltimateHoldem, VideoPoker). No state writes, no funds.
+/// Plinko, HiLo, Keno, OvertimeUltimateHoldem, VideoPoker, OvertimeBonusHoldem). No state
+/// writes, no funds.
 /// Per-game readers forward to each game's own `getFullRecord` — the game owns its record shape
 contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
     /* ========== CONSTANTS ========== */
@@ -39,53 +41,42 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
     ICasinoKeno public keno;
     ICasinoOvertimeUltimateHoldem public ultimateHoldem;
     ICasinoVideoPoker public videoPoker;
+    ICasinoOvertimeBonusHoldem public bonusHoldem;
 
-    uint256[33] private __gap;
+    uint256[32] private __gap;
 
     /* ========== INITIALIZER ========== */
 
-    function initialize(address _owner, address _core, address _threeCardPoker) external initializer {
+    /// @notice Owner-only init. Core + every game slot is wired post-deploy via `setAddress`.
+    /// Smaller initializer footprint (no per-game param plumbing); admin is trusted to wire
+    /// the addresses before the contract is exposed to FE traffic
+    function initialize(address _owner) external initializer {
         if (_owner == address(0)) revert InvalidAddress();
         setOwner(_owner);
-        if (_core != address(0)) core = ICasinoCoreV2(_core);
-        if (_threeCardPoker != address(0)) threeCardPoker = ICasinoThreeCardPoker(_threeCardPoker);
     }
 
     /* ========== ADMIN ========== */
 
-    function setCore(address _core) external onlyOwner {
-        if (_core == address(0)) revert InvalidAddress();
-        core = ICasinoCoreV2(_core);
-    }
-
-    function setThreeCardPoker(address _threeCardPoker) external onlyOwner {
-        if (_threeCardPoker == address(0)) revert InvalidAddress();
-        threeCardPoker = ICasinoThreeCardPoker(_threeCardPoker);
-    }
-
-    function setPlinko(address _plinko) external onlyOwner {
-        if (_plinko == address(0)) revert InvalidAddress();
-        plinko = ICasinoPlinko(_plinko);
-    }
-
-    function setHiLo(address _hilo) external onlyOwner {
-        if (_hilo == address(0)) revert InvalidAddress();
-        hilo = ICasinoHiLo(_hilo);
-    }
-
-    function setKeno(address _keno) external onlyOwner {
-        if (_keno == address(0)) revert InvalidAddress();
-        keno = ICasinoKeno(_keno);
-    }
-
-    function setUltimateHoldem(address _ultimateHoldem) external onlyOwner {
-        if (_ultimateHoldem == address(0)) revert InvalidAddress();
-        ultimateHoldem = ICasinoOvertimeUltimateHoldem(_ultimateHoldem);
-    }
-
-    function setVideoPoker(address _videoPoker) external onlyOwner {
-        if (_videoPoker == address(0)) revert InvalidAddress();
-        videoPoker = ICasinoVideoPoker(_videoPoker);
+    /// @notice Unified address setter for Core + every wired game. Trusts the caller to pass a
+    /// valid, non-zero address — no per-target zero check (we'd just emit InvalidAddress and the
+    /// owner reattempts; with one consolidated path the savings beat the defensive cost). To
+    /// "unwire" a game so the unwired-branches kick in, deploy a fresh data-contract impl
+    /// @param target  Core if `target == GameV2.ThreeCardPoker` and `isCore == true`; otherwise
+    ///                the GameV2 enum value identifies which game's slot to overwrite
+    /// @param isCore  When true, writes to `core` regardless of `target`
+    /// @param addr    The target address to wire in
+    function setAddress(GameV2 target, bool isCore, address addr) external onlyOwner {
+        if (isCore) {
+            core = ICasinoCoreV2(addr);
+            return;
+        }
+        if (target == GameV2.ThreeCardPoker) threeCardPoker = ICasinoThreeCardPoker(addr);
+        else if (target == GameV2.Plinko) plinko = ICasinoPlinko(addr);
+        else if (target == GameV2.HiLo) hilo = ICasinoHiLo(addr);
+        else if (target == GameV2.Keno) keno = ICasinoKeno(addr);
+        else if (target == GameV2.OvertimeUltimateHoldem) ultimateHoldem = ICasinoOvertimeUltimateHoldem(addr);
+        else if (target == GameV2.VideoPoker) videoPoker = ICasinoVideoPoker(addr);
+        else bonusHoldem = ICasinoOvertimeBonusHoldem(addr);
     }
 
     /* ========== TREASURY VIEWS ========== */
@@ -134,240 +125,97 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
         }
     }
 
-    /* ========== TCP VIEWS ========== */
+    /* ========== PER-GAME RECORD DISPATCHERS ========== */
+    /// @dev Each dispatcher fans the per-game branch into a single public entry. Returns are
+    /// `bytes` wrapping the game's typed `FullRecord` (or `FullRecord[]`); the caller decodes
+    /// per `GameV2` enum on its end. Trades typed Solidity return values for ~one shared entry
+    /// per access shape, which shrinks the runtime dispatch table substantially
 
     /// @inheritdoc ICasinoDataV2
-    function getThreeCardPokerFullRecord(
-        uint256 betId
-    ) external view override returns (ICasinoThreeCardPoker.FullRecord memory) {
-        return threeCardPoker.getFullRecord(betId);
+    function getFullRecord(GameV2 game, uint256 betId) external view override returns (bytes memory) {
+        if (game == GameV2.ThreeCardPoker) return abi.encode(threeCardPoker.getFullRecord(betId));
+        if (game == GameV2.Plinko) return abi.encode(plinko.getFullRecord(betId));
+        if (game == GameV2.HiLo) return abi.encode(hilo.getFullRecord(betId));
+        if (game == GameV2.Keno) return abi.encode(keno.getFullRecord(betId));
+        if (game == GameV2.OvertimeUltimateHoldem) return abi.encode(ultimateHoldem.getFullRecord(betId));
+        if (game == GameV2.VideoPoker) return abi.encode(videoPoker.getFullRecord(betId));
+        return abi.encode(bonusHoldem.getFullRecord(betId));
     }
 
     /// @inheritdoc ICasinoDataV2
-    function getThreeCardPokerFullRecords(
-        uint256[] calldata betIds
-    ) external view override returns (ICasinoThreeCardPoker.FullRecord[] memory) {
+    function getFullRecords(GameV2 game, uint256[] calldata betIds) external view override returns (bytes memory) {
         if (betIds.length > MAX_BATCH_IDS) revert LimitExceeded();
-        return _tcpRecordsByIds(betIds);
+        return _encodeRecordsByIds(game, betIds);
     }
 
     /// @inheritdoc ICasinoDataV2
-    function getUserThreeCardPokerRecords(
+    function getUserRecords(
+        GameV2 game,
         address user,
         uint256 offset,
         uint256 limit
-    ) external view override returns (ICasinoThreeCardPoker.FullRecord[] memory) {
+    ) external view override returns (bytes memory) {
         if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _tcpRecordsByIds(threeCardPoker.getUserBetIds(user, offset, limit));
+        return _encodeRecordsByIds(game, _gameIface(game).getUserBetIds(user, offset, limit));
     }
 
     /// @inheritdoc ICasinoDataV2
-    function getRecentThreeCardPokerRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoThreeCardPoker.FullRecord[] memory) {
+    function getRecentRecords(GameV2 game, uint256 offset, uint256 limit) external view override returns (bytes memory) {
         if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _tcpRecordsByIds(threeCardPoker.getRecentBetIds(offset, limit));
+        return _encodeRecordsByIds(game, _gameIface(game).getRecentBetIds(offset, limit));
     }
 
-    function _tcpRecordsByIds(uint256[] memory ids) internal view returns (ICasinoThreeCardPoker.FullRecord[] memory out) {
-        out = new ICasinoThreeCardPoker.FullRecord[](ids.length);
-        for (uint256 i; i < ids.length; ++i) out[i] = threeCardPoker.getFullRecord(ids[i]);
+    /// @dev Returns the right `ICasinoThreeCardPoker`-shaped interface for the requested game,
+    /// using `ICasinoThreeCardPoker` as a structural stand-in (every V2 game shares the
+    /// `getUserBetIds` / `getRecentBetIds` signatures). Per `casino_v2_fractional_reserve`
+    /// design, all games are upgrade-safely registered on `CasinoCoreV2`; this just selects
+    /// the relevant address
+    function _gameIface(GameV2 game) internal view returns (ICasinoThreeCardPoker) {
+        if (game == GameV2.ThreeCardPoker) return threeCardPoker;
+        if (game == GameV2.Plinko) return ICasinoThreeCardPoker(address(plinko));
+        if (game == GameV2.HiLo) return ICasinoThreeCardPoker(address(hilo));
+        if (game == GameV2.Keno) return ICasinoThreeCardPoker(address(keno));
+        if (game == GameV2.OvertimeUltimateHoldem) return ICasinoThreeCardPoker(address(ultimateHoldem));
+        if (game == GameV2.VideoPoker) return ICasinoThreeCardPoker(address(videoPoker));
+        return ICasinoThreeCardPoker(address(bonusHoldem));
     }
 
-    /* ========== PLINKO VIEWS ========== */
-
-    /// @inheritdoc ICasinoDataV2
-    function getPlinkoFullRecord(uint256 betId) external view override returns (ICasinoPlinko.FullRecord memory) {
-        return plinko.getFullRecord(betId);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getPlinkoFullRecords(
-        uint256[] calldata betIds
-    ) external view override returns (ICasinoPlinko.FullRecord[] memory) {
-        if (betIds.length > MAX_BATCH_IDS) revert LimitExceeded();
-        return _plinkoRecordsByIds(betIds);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getUserPlinkoRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoPlinko.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _plinkoRecordsByIds(plinko.getUserBetIds(user, offset, limit));
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getRecentPlinkoRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoPlinko.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _plinkoRecordsByIds(plinko.getRecentBetIds(offset, limit));
-    }
-
-    function _plinkoRecordsByIds(uint256[] memory ids) internal view returns (ICasinoPlinko.FullRecord[] memory out) {
-        out = new ICasinoPlinko.FullRecord[](ids.length);
-        for (uint256 i; i < ids.length; ++i) out[i] = plinko.getFullRecord(ids[i]);
-    }
-
-    /* ========== HI-LO VIEWS ========== */
-
-    /// @inheritdoc ICasinoDataV2
-    function getHiLoFullRecord(uint256 betId) external view override returns (ICasinoHiLo.FullRecord memory) {
-        return hilo.getFullRecord(betId);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getHiLoFullRecords(uint256[] calldata betIds) external view override returns (ICasinoHiLo.FullRecord[] memory) {
-        if (betIds.length > MAX_BATCH_IDS) revert LimitExceeded();
-        return _hiloRecordsByIds(betIds);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getUserHiLoRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoHiLo.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _hiloRecordsByIds(hilo.getUserBetIds(user, offset, limit));
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getRecentHiLoRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoHiLo.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _hiloRecordsByIds(hilo.getRecentBetIds(offset, limit));
-    }
-
-    function _hiloRecordsByIds(uint256[] memory ids) internal view returns (ICasinoHiLo.FullRecord[] memory out) {
-        out = new ICasinoHiLo.FullRecord[](ids.length);
-        for (uint256 i; i < ids.length; ++i) out[i] = hilo.getFullRecord(ids[i]);
-    }
-
-    /* ========== KENO VIEWS ========== */
-
-    /// @inheritdoc ICasinoDataV2
-    function getKenoFullRecord(uint256 betId) external view override returns (ICasinoKeno.FullRecord memory) {
-        return keno.getFullRecord(betId);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getKenoFullRecords(uint256[] calldata betIds) external view override returns (ICasinoKeno.FullRecord[] memory) {
-        if (betIds.length > MAX_BATCH_IDS) revert LimitExceeded();
-        return _kenoRecordsByIds(betIds);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getUserKenoRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoKeno.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _kenoRecordsByIds(keno.getUserBetIds(user, offset, limit));
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getRecentKenoRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoKeno.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _kenoRecordsByIds(keno.getRecentBetIds(offset, limit));
-    }
-
-    function _kenoRecordsByIds(uint256[] memory ids) internal view returns (ICasinoKeno.FullRecord[] memory out) {
-        out = new ICasinoKeno.FullRecord[](ids.length);
-        for (uint256 i; i < ids.length; ++i) out[i] = keno.getFullRecord(ids[i]);
-    }
-
-    /* ========== ULTIMATE HOLD'EM VIEWS ========== */
-
-    /// @inheritdoc ICasinoDataV2
-    function getOvertimeUltimateHoldemFullRecord(
-        uint256 betId
-    ) external view override returns (ICasinoOvertimeUltimateHoldem.FullRecord memory) {
-        return ultimateHoldem.getFullRecord(betId);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getOvertimeUltimateHoldemFullRecords(
-        uint256[] calldata betIds
-    ) external view override returns (ICasinoOvertimeUltimateHoldem.FullRecord[] memory) {
-        if (betIds.length > MAX_BATCH_IDS) revert LimitExceeded();
-        return _uthRecordsByIds(betIds);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getUserOvertimeUltimateHoldemRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoOvertimeUltimateHoldem.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _uthRecordsByIds(ultimateHoldem.getUserBetIds(user, offset, limit));
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getRecentOvertimeUltimateHoldemRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoOvertimeUltimateHoldem.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _uthRecordsByIds(ultimateHoldem.getRecentBetIds(offset, limit));
-    }
-
-    function _uthRecordsByIds(
-        uint256[] memory ids
-    ) internal view returns (ICasinoOvertimeUltimateHoldem.FullRecord[] memory out) {
-        out = new ICasinoOvertimeUltimateHoldem.FullRecord[](ids.length);
-        for (uint256 i; i < ids.length; ++i) out[i] = ultimateHoldem.getFullRecord(ids[i]);
-    }
-
-    /* ========== VIDEO POKER VIEWS ========== */
-
-    /// @inheritdoc ICasinoDataV2
-    function getVideoPokerFullRecord(uint256 betId) external view override returns (ICasinoVideoPoker.FullRecord memory) {
-        return videoPoker.getFullRecord(betId);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getVideoPokerFullRecords(
-        uint256[] calldata betIds
-    ) external view override returns (ICasinoVideoPoker.FullRecord[] memory) {
-        if (betIds.length > MAX_BATCH_IDS) revert LimitExceeded();
-        return _vpRecordsByIds(betIds);
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getUserVideoPokerRecords(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoVideoPoker.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _vpRecordsByIds(videoPoker.getUserBetIds(user, offset, limit));
-    }
-
-    /// @inheritdoc ICasinoDataV2
-    function getRecentVideoPokerRecords(
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (ICasinoVideoPoker.FullRecord[] memory) {
-        if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        return _vpRecordsByIds(videoPoker.getRecentBetIds(offset, limit));
-    }
-
-    function _vpRecordsByIds(uint256[] memory ids) internal view returns (ICasinoVideoPoker.FullRecord[] memory out) {
-        out = new ICasinoVideoPoker.FullRecord[](ids.length);
-        for (uint256 i; i < ids.length; ++i) out[i] = videoPoker.getFullRecord(ids[i]);
+    function _encodeRecordsByIds(GameV2 game, uint256[] memory ids) internal view returns (bytes memory) {
+        if (game == GameV2.ThreeCardPoker) {
+            ICasinoThreeCardPoker.FullRecord[] memory out = new ICasinoThreeCardPoker.FullRecord[](ids.length);
+            for (uint256 i; i < ids.length; ++i) out[i] = threeCardPoker.getFullRecord(ids[i]);
+            return abi.encode(out);
+        }
+        if (game == GameV2.Plinko) {
+            ICasinoPlinko.FullRecord[] memory out = new ICasinoPlinko.FullRecord[](ids.length);
+            for (uint256 i; i < ids.length; ++i) out[i] = plinko.getFullRecord(ids[i]);
+            return abi.encode(out);
+        }
+        if (game == GameV2.HiLo) {
+            ICasinoHiLo.FullRecord[] memory out = new ICasinoHiLo.FullRecord[](ids.length);
+            for (uint256 i; i < ids.length; ++i) out[i] = hilo.getFullRecord(ids[i]);
+            return abi.encode(out);
+        }
+        if (game == GameV2.Keno) {
+            ICasinoKeno.FullRecord[] memory out = new ICasinoKeno.FullRecord[](ids.length);
+            for (uint256 i; i < ids.length; ++i) out[i] = keno.getFullRecord(ids[i]);
+            return abi.encode(out);
+        }
+        if (game == GameV2.OvertimeUltimateHoldem) {
+            ICasinoOvertimeUltimateHoldem.FullRecord[] memory out = new ICasinoOvertimeUltimateHoldem.FullRecord[](
+                ids.length
+            );
+            for (uint256 i; i < ids.length; ++i) out[i] = ultimateHoldem.getFullRecord(ids[i]);
+            return abi.encode(out);
+        }
+        if (game == GameV2.VideoPoker) {
+            ICasinoVideoPoker.FullRecord[] memory out = new ICasinoVideoPoker.FullRecord[](ids.length);
+            for (uint256 i; i < ids.length; ++i) out[i] = videoPoker.getFullRecord(ids[i]);
+            return abi.encode(out);
+        }
+        ICasinoOvertimeBonusHoldem.FullRecord[] memory out2 = new ICasinoOvertimeBonusHoldem.FullRecord[](ids.length);
+        for (uint256 i; i < ids.length; ++i) out2[i] = bonusHoldem.getFullRecord(ids[i]);
+        return abi.encode(out2);
     }
 
     /* ========== CROSS-GAME ========== */
@@ -408,13 +256,13 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
 
     /// @inheritdoc ICasinoDataV2
     /// @dev One inner array per game in `GameV2` enum order: [TCP, Plinko, HiLo, Keno,
-    /// UltimateHoldem, VideoPoker]
+    /// UltimateHoldem, VideoPoker, OvertimeBonusHoldem]
     function getRecentBetsAllGamesV2(
         uint256 offsetPerGame,
         uint256 limit
     ) external view override returns (BetRecord[][] memory out) {
         if (limit > MAX_PAGE_LIMIT) revert LimitExceeded();
-        out = new BetRecord[][](6);
+        out = new BetRecord[][](7);
         out[uint256(GameV2.ThreeCardPoker)] = _recentBaseRecords(
             address(threeCardPoker),
             offsetPerGame,
@@ -431,6 +279,12 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
             GameV2.OvertimeUltimateHoldem
         );
         out[uint256(GameV2.VideoPoker)] = _recentBaseRecords(address(videoPoker), offsetPerGame, limit, GameV2.VideoPoker);
+        out[uint256(GameV2.OvertimeBonusHoldem)] = _recentBaseRecords(
+            address(bonusHoldem),
+            offsetPerGame,
+            limit,
+            GameV2.OvertimeBonusHoldem
+        );
     }
 
     /// @inheritdoc ICasinoDataV2
@@ -447,20 +301,26 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
         if (game == GameV2.VideoPoker && address(videoPoker) != address(0)) {
             return videoPoker.nextBetId();
         }
+        if (game == GameV2.OvertimeBonusHoldem && address(bonusHoldem) != address(0)) {
+            return bonusHoldem.nextBetId();
+        }
         return 1; // game not wired yet
     }
 
     /* ========== INTERNAL: CROSS-GAME GATHER ========== */
 
     /// @dev Pulls up to `take` bet ids from each game for `user` and packs into a single
-    /// BetRecord array. Split into primary/secondary halves to keep within Solidity's stack budget
+    /// BetRecord array. Split into primary/secondary/tertiary buckets to keep within Solidity's
+    /// stack budget — each bucket holds at most 3-4 games' worth of local arrays
     function _gatherUserBets(address user, uint256 take) internal view returns (BetRecord[] memory all) {
-        BetRecord[] memory pre = _gatherPrimaryUserBets(user, take);
-        BetRecord[] memory post = _gatherSecondaryUserBets(user, take);
-        all = new BetRecord[](pre.length + post.length);
+        BetRecord[] memory a = _gatherPrimaryUserBets(user, take);
+        BetRecord[] memory b = _gatherSecondaryUserBets(user, take);
+        BetRecord[] memory c = _gatherTertiaryUserBets(user, take);
+        all = new BetRecord[](a.length + b.length + c.length);
         uint256 k;
-        for (uint256 i; i < pre.length; ++i) all[k++] = pre[i];
-        for (uint256 i; i < post.length; ++i) all[k++] = post[i];
+        for (uint256 i; i < a.length; ++i) all[k++] = a[i];
+        for (uint256 i; i < b.length; ++i) all[k++] = b[i];
+        for (uint256 i; i < c.length; ++i) all[k++] = c[i];
     }
 
     /// @dev TCP + Plinko + HiLo (always wired post-deploy). Split for stack budget
@@ -491,6 +351,16 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
         for (uint256 i; i < vpIds.length; ++i) out[k++] = _readVpBase(vpIds[i]);
     }
 
+    /// @dev OvertimeBonusHoldem (may be unwired). Separate bucket so future games can slot in
+    /// here without re-balancing primary/secondary stack budgets
+    function _gatherTertiaryUserBets(address user, uint256 take) internal view returns (BetRecord[] memory out) {
+        uint256[] memory bhIds = address(bonusHoldem) != address(0)
+            ? bonusHoldem.getUserBetIds(user, 0, take)
+            : new uint256[](0);
+        out = new BetRecord[](bhIds.length);
+        for (uint256 i; i < bhIds.length; ++i) out[i] = _readBonusHoldemBase(bhIds[i]);
+    }
+
     /* ========== INTERNAL: RECENT BetRecord BUILDERS ========== */
 
     /// @dev Unified per-game recent BetRecord builder. Dispatches the per-game projection on
@@ -517,96 +387,147 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
         if (game == GameV2.HiLo) return _readHiLoBase(betId);
         if (game == GameV2.Keno) return _readKenoBase(betId);
         if (game == GameV2.OvertimeUltimateHoldem) return _readUthBase(betId);
-        return _readVpBase(betId);
+        if (game == GameV2.VideoPoker) return _readVpBase(betId);
+        return _readBonusHoldemBase(betId);
     }
 
     /* ========== INTERNAL: PER-GAME BetRecord PROJECTION ========== */
-    /// @dev Each projects a single `getFullRecord` into the slim `BetRecord` shape for cross-game
-    /// aggregation. Sharing the FullRecord decoder with the per-game public readers is what keeps
-    /// CasinoDataV2 under EIP-170 — switching to `getBetBase` here would add 6 unique tuple
-    /// decoders without reusing the existing FullRecord decoder, busting the size budget
+    /// @dev Each per-game reader fetches its typed `FullRecord` (return types differ per game so
+    /// the fetch can't be shared) and forwards the common scalar fields to `_packBase`. The
+    /// projection (assignments + `won` computation) lives once in `_packBase`
 
-    function _readTcpBase(uint256 betId) internal view returns (BetRecord memory b) {
+    function _packBase(
+        GameV2 game,
+        uint256 betId,
+        address user,
+        address collateral,
+        uint256 amount,
+        uint256 payout,
+        uint256 placedAt,
+        bool resolved,
+        bool cancelled
+    ) internal pure returns (BetRecord memory b) {
+        b.game = game;
+        b.betId = betId;
+        b.user = user;
+        b.collateral = collateral;
+        b.amount = amount;
+        b.payout = payout;
+        b.placedAt = placedAt;
+        b.resolved = resolved;
+        b.cancelled = cancelled;
+        b.won = resolved && payout > amount;
+    }
+
+    function _readTcpBase(uint256 betId) internal view returns (BetRecord memory) {
         ICasinoThreeCardPoker.FullRecord memory r = threeCardPoker.getFullRecord(betId);
-        b.game = GameV2.ThreeCardPoker;
-        b.betId = betId;
-        b.user = r.user;
-        b.collateral = r.collateral;
-        b.amount = r.anteAmount + r.pairPlusAmount;
-        b.payout = r.totalPayout;
-        b.placedAt = r.placedAt;
-        b.resolved = r.status == ICasinoThreeCardPoker.BetStatus.RESOLVED;
-        b.cancelled = r.status == ICasinoThreeCardPoker.BetStatus.CANCELLED;
-        b.won = b.resolved && b.payout > b.amount;
+        return
+            _packBase(
+                GameV2.ThreeCardPoker,
+                betId,
+                r.user,
+                r.collateral,
+                r.anteAmount + r.pairPlusAmount,
+                r.totalPayout,
+                r.placedAt,
+                r.status == ICasinoThreeCardPoker.BetStatus.RESOLVED,
+                r.status == ICasinoThreeCardPoker.BetStatus.CANCELLED
+            );
     }
 
-    function _readPlinkoBase(uint256 betId) internal view returns (BetRecord memory b) {
+    function _readPlinkoBase(uint256 betId) internal view returns (BetRecord memory) {
         ICasinoPlinko.FullRecord memory r = plinko.getFullRecord(betId);
-        b.game = GameV2.Plinko;
-        b.betId = betId;
-        b.user = r.user;
-        b.collateral = r.collateral;
-        b.amount = r.amount;
-        b.payout = r.payout;
-        b.placedAt = r.placedAt;
-        b.resolved = r.status == ICasinoPlinko.BetStatus.RESOLVED;
-        b.cancelled = r.status == ICasinoPlinko.BetStatus.CANCELLED;
-        b.won = b.resolved && b.payout > b.amount;
+        return
+            _packBase(
+                GameV2.Plinko,
+                betId,
+                r.user,
+                r.collateral,
+                r.amount,
+                r.payout,
+                r.placedAt,
+                r.status == ICasinoPlinko.BetStatus.RESOLVED,
+                r.status == ICasinoPlinko.BetStatus.CANCELLED
+            );
     }
 
-    function _readHiLoBase(uint256 betId) internal view returns (BetRecord memory b) {
+    function _readHiLoBase(uint256 betId) internal view returns (BetRecord memory) {
         ICasinoHiLo.FullRecord memory r = hilo.getFullRecord(betId);
-        b.game = GameV2.HiLo;
-        b.betId = betId;
-        b.user = r.user;
-        b.collateral = r.collateral;
-        b.amount = r.amount;
-        b.payout = r.payout;
-        b.placedAt = r.placedAt;
-        b.resolved = r.status == ICasinoHiLo.BetStatus.RESOLVED;
-        b.cancelled = r.status == ICasinoHiLo.BetStatus.CANCELLED;
-        b.won = b.resolved && b.payout > b.amount;
+        return
+            _packBase(
+                GameV2.HiLo,
+                betId,
+                r.user,
+                r.collateral,
+                r.amount,
+                r.payout,
+                r.placedAt,
+                r.status == ICasinoHiLo.BetStatus.RESOLVED,
+                r.status == ICasinoHiLo.BetStatus.CANCELLED
+            );
     }
 
-    function _readKenoBase(uint256 betId) internal view returns (BetRecord memory b) {
+    function _readKenoBase(uint256 betId) internal view returns (BetRecord memory) {
         ICasinoKeno.FullRecord memory r = keno.getFullRecord(betId);
-        b.game = GameV2.Keno;
-        b.betId = betId;
-        b.user = r.user;
-        b.collateral = r.collateral;
-        b.amount = r.amount;
-        b.payout = r.payout;
-        b.placedAt = r.placedAt;
-        b.resolved = r.status == ICasinoKeno.BetStatus.RESOLVED;
-        b.cancelled = r.status == ICasinoKeno.BetStatus.CANCELLED;
-        b.won = b.resolved && b.payout > b.amount;
+        return
+            _packBase(
+                GameV2.Keno,
+                betId,
+                r.user,
+                r.collateral,
+                r.amount,
+                r.payout,
+                r.placedAt,
+                r.status == ICasinoKeno.BetStatus.RESOLVED,
+                r.status == ICasinoKeno.BetStatus.CANCELLED
+            );
     }
 
-    function _readUthBase(uint256 betId) internal view returns (BetRecord memory b) {
+    function _readUthBase(uint256 betId) internal view returns (BetRecord memory) {
         ICasinoOvertimeUltimateHoldem.FullRecord memory r = ultimateHoldem.getFullRecord(betId);
-        b.game = GameV2.OvertimeUltimateHoldem;
-        b.betId = betId;
-        b.user = r.user;
-        b.collateral = r.collateral;
-        b.amount = r.anteAmount * 2 + r.playAmount;
-        b.payout = r.totalPayout;
-        b.placedAt = r.placedAt;
-        b.resolved = r.status == ICasinoOvertimeUltimateHoldem.BetStatus.RESOLVED;
-        b.cancelled = r.status == ICasinoOvertimeUltimateHoldem.BetStatus.CANCELLED;
-        b.won = b.resolved && b.payout > b.amount;
+        return
+            _packBase(
+                GameV2.OvertimeUltimateHoldem,
+                betId,
+                r.user,
+                r.collateral,
+                r.anteAmount * 2 + r.playAmount,
+                r.totalPayout,
+                r.placedAt,
+                r.status == ICasinoOvertimeUltimateHoldem.BetStatus.RESOLVED,
+                r.status == ICasinoOvertimeUltimateHoldem.BetStatus.CANCELLED
+            );
     }
 
-    function _readVpBase(uint256 betId) internal view returns (BetRecord memory b) {
+    function _readVpBase(uint256 betId) internal view returns (BetRecord memory) {
         ICasinoVideoPoker.FullRecord memory r = videoPoker.getFullRecord(betId);
-        b.game = GameV2.VideoPoker;
-        b.betId = betId;
-        b.user = r.user;
-        b.collateral = r.collateral;
-        b.amount = r.amount;
-        b.payout = r.payout;
-        b.placedAt = r.placedAt;
-        b.resolved = r.status == ICasinoVideoPoker.BetStatus.RESOLVED;
-        b.cancelled = r.status == ICasinoVideoPoker.BetStatus.CANCELLED;
-        b.won = b.resolved && b.payout > b.amount;
+        return
+            _packBase(
+                GameV2.VideoPoker,
+                betId,
+                r.user,
+                r.collateral,
+                r.amount,
+                r.payout,
+                r.placedAt,
+                r.status == ICasinoVideoPoker.BetStatus.RESOLVED,
+                r.status == ICasinoVideoPoker.BetStatus.CANCELLED
+            );
+    }
+
+    function _readBonusHoldemBase(uint256 betId) internal view returns (BetRecord memory) {
+        ICasinoOvertimeBonusHoldem.FullRecord memory r = bonusHoldem.getFullRecord(betId);
+        return
+            _packBase(
+                GameV2.OvertimeBonusHoldem,
+                betId,
+                r.user,
+                r.collateral,
+                r.anteAmount, // primary stake; FE can sum legs from FullRecord if needed
+                r.totalPayout,
+                r.placedAt,
+                r.status == ICasinoOvertimeBonusHoldem.BetStatus.RESOLVED,
+                r.status == ICasinoOvertimeBonusHoldem.BetStatus.CANCELLED
+            );
     }
 }

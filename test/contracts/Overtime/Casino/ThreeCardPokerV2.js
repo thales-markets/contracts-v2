@@ -274,7 +274,9 @@ async function deployFixture() {
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
 	const dataAddr = await data.getAddress();
-	await data.initialize(owner.address, coreAddr, tcpAddr);
+	await data.initialize(owner.address);
+	await data.setAddress(0, true, coreAddr);
+	await data.setAddress(0, false, tcpAddr);
 
 	// Register TCP with Core
 	await core.registerGame(tcpAddr);
@@ -999,7 +1001,10 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const dealWord = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0n, dealWord);
 			await tcp.connect(player).fold(betId);
-			const r = await data.getThreeCardPokerFullRecord(betId);
+			const r = tcp.interface.decodeFunctionResult(
+				'getFullRecord',
+				await data.getFullRecord(0 /* GameV2.ThreeCardPoker */, betId)
+			)[0];
 			expect(r.betId).to.equal(betId);
 			expect(r.user).to.equal(player.address);
 			expect(r.status).to.equal(BetStatus.RESOLVED);
@@ -1014,7 +1019,8 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 				const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0n, word);
 				await tcp.connect(player).fold(betId);
 			}
-			const recs = await data.getUserThreeCardPokerRecords(player.address, 0, 10);
+			const { readUserRecords, GameV2 } = require('../../../utils/casinoDataV2Helpers');
+			const recs = await readUserRecords(data, tcp, GameV2.ThreeCardPoker, player.address, 0, 10);
 			expect(recs.length).to.equal(3);
 		});
 	});

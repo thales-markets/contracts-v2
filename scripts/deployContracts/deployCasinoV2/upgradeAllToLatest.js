@@ -80,6 +80,17 @@ async function deployUltimateHoldemIfMissing(network, owner, coreAddr, managerAd
 	);
 }
 
+async function deployBonusHoldemIfMissing(network, owner, coreAddr, managerAddr) {
+	return _deployIfMissing(
+		network,
+		owner,
+		coreAddr,
+		managerAddr,
+		'OvertimeBonusHoldem',
+		'OvertimeBonusHoldem'
+	);
+}
+
 async function _deployIfMissing(network, owner, coreAddr, managerAddr, factoryName, key) {
 	const existing = getTargetAddress(key, network);
 	if (existing) {
@@ -129,9 +140,9 @@ async function ensureDataWiredToKeno(network, dataAddr, kenoAddr) {
 		console.log('CasinoDataV2.keno already wired — skipping');
 		return;
 	}
-	const tx = await data.setKeno(kenoAddr);
+	const tx = await data.setAddress(3, false, kenoAddr);
 	await tx.wait();
-	console.log(`CasinoDataV2.setKeno(${kenoAddr})  tx=${tx.hash}`);
+	console.log(`CasinoDataV2.setAddress(3, false, ${kenoAddr})  tx=${tx.hash}`);
 	await delay(STEP_DELAY);
 }
 
@@ -148,35 +159,47 @@ async function ensureDataWiredToUltimateHoldem(network, dataAddr, uthAddr) {
 		console.log('CasinoDataV2.ultimateHoldem already wired — skipping');
 		return;
 	}
-	const tx = await data.setUltimateHoldem(uthAddr);
+	const tx = await data.setAddress(4, false, uthAddr);
 	await tx.wait();
-	console.log(`CasinoDataV2.setUltimateHoldem(${uthAddr})  tx=${tx.hash}`);
+	console.log(`CasinoDataV2.setAddress(4, false, ${uthAddr})  tx=${tx.hash}`);
 	await delay(STEP_DELAY);
 }
 
 async function ensureDataWiredToVideoPoker(network, dataAddr, vpAddr) {
 	const data = await ethers.getContractAt('CasinoDataV2', dataAddr);
-	// VideoPoker setter may not exist yet on CasinoDataV2 (parallel work in progress).
-	// Best-effort: only call if the setter is present
-	if (typeof data.setVideoPoker !== 'function') {
-		console.log('CasinoDataV2.setVideoPoker not present — skipping');
-		return;
-	}
 	let current = ethers.ZeroAddress;
 	try {
 		current = await data.videoPoker();
 	} catch {
-		// getter doesn't exist either — skip
-		console.log('CasinoDataV2.videoPoker getter missing — skipping');
+		console.log('CasinoDataV2.videoPoker getter missing — skipping (impl not yet upgraded)');
 		return;
 	}
 	if (current.toLowerCase() === vpAddr.toLowerCase()) {
 		console.log('CasinoDataV2.videoPoker already wired — skipping');
 		return;
 	}
-	const tx = await data.setVideoPoker(vpAddr);
+	const tx = await data.setAddress(5, false, vpAddr);
 	await tx.wait();
-	console.log(`CasinoDataV2.setVideoPoker(${vpAddr})  tx=${tx.hash}`);
+	console.log(`CasinoDataV2.setAddress(5, false, ${vpAddr})  tx=${tx.hash}`);
+	await delay(STEP_DELAY);
+}
+
+async function ensureDataWiredToBonusHoldem(network, dataAddr, bhAddr) {
+	const data = await ethers.getContractAt('CasinoDataV2', dataAddr);
+	let current = ethers.ZeroAddress;
+	try {
+		current = await data.bonusHoldem();
+	} catch {
+		console.log('CasinoDataV2.bonusHoldem getter missing — skipping (impl not yet upgraded)');
+		return;
+	}
+	if (current.toLowerCase() === bhAddr.toLowerCase()) {
+		console.log('CasinoDataV2.bonusHoldem already wired — skipping');
+		return;
+	}
+	const tx = await data.setAddress(6, false, bhAddr);
+	await tx.wait();
+	console.log(`CasinoDataV2.setAddress(6, false, ${bhAddr})  tx=${tx.hash}`);
 	await delay(STEP_DELAY);
 }
 
@@ -256,17 +279,20 @@ async function main() {
 	await upgradeOne(network, 'Keno', 'Keno');
 	await upgradeOne(network, 'VideoPoker', 'VideoPoker');
 	await upgradeOne(network, 'OvertimeUltimateHoldem', 'OvertimeUltimateHoldem');
+	await upgradeOne(network, 'OvertimeBonusHoldem', 'OvertimeBonusHoldem');
 	await upgradeOne(network, 'CasinoDataV2', 'CasinoDataV2');
 
 	console.log('\n===== Phase 2: deploy missing games =====');
 	const kenoAddr = await deployKenoIfMissing(network, signer, coreAddr, managerAddr);
 	const videoPokerAddr = await deployVideoPokerIfMissing(network, signer, coreAddr, managerAddr);
 	const uthAddr = await deployUltimateHoldemIfMissing(network, signer, coreAddr, managerAddr);
+	const bonusHoldemAddr = await deployBonusHoldemIfMissing(network, signer, coreAddr, managerAddr);
 
 	console.log('\n===== Phase 3: wire games into CasinoDataV2 =====');
 	await ensureDataWiredToKeno(network, dataAddr, kenoAddr);
 	await ensureDataWiredToVideoPoker(network, dataAddr, videoPokerAddr);
 	await ensureDataWiredToUltimateHoldem(network, dataAddr, uthAddr);
+	await ensureDataWiredToBonusHoldem(network, dataAddr, bonusHoldemAddr);
 
 	// Phase 4 (per-game maxProfit / min-max bet overrides) intentionally disabled here.
 	// Risk-config tuning is operator policy and belongs in dedicated scripts
@@ -293,6 +319,7 @@ async function main() {
 		'Keno',
 		'VideoPoker',
 		'OvertimeUltimateHoldem',
+		'OvertimeBonusHoldem',
 		'CasinoDataV2',
 	]) {
 		console.log(`  ${k.padEnd(22)}: ${getTargetAddress(k, network)}`);

@@ -205,37 +205,47 @@ async function deployData(network, owner, coreAddr, addresses) {
 	setTargetAddress('CasinoDataV2', network, addr);
 	await delay(STEP_DELAY);
 
-	let tx = await deployed.initialize(owner.address, coreAddr, addresses.ThreeCardPoker);
+	let tx = await deployed.initialize(owner.address);
 	await tx.wait();
-	console.log('  CasinoDataV2 initialized (TCP wired)');
+	console.log('  CasinoDataV2 initialized');
 	await delay(STEP_DELAY);
 
-	tx = await deployed.setPlinko(addresses.Plinko);
+	tx = await deployed.setAddress(0, true, coreAddr);
+	await tx.wait();
+	console.log('  setAddress(core)');
+	await delay(STEP_DELAY);
+
+	tx = await deployed.setAddress(0, false, addresses.ThreeCardPoker);
+	await tx.wait();
+	console.log('  setAddress(ThreeCardPoker)');
+	await delay(STEP_DELAY);
+
+	tx = await deployed.setAddress(1, false, addresses.Plinko);
 	await tx.wait();
 	console.log('  setPlinko');
 	await delay(STEP_DELAY);
 
-	tx = await deployed.setHiLo(addresses.HiLo);
+	tx = await deployed.setAddress(2, false, addresses.HiLo);
 	await tx.wait();
 	console.log('  setHiLo');
 	await delay(STEP_DELAY);
 
 	if (addresses.Keno) {
-		tx = await deployed.setKeno(addresses.Keno);
+		tx = await deployed.setAddress(3, false, addresses.Keno);
 		await tx.wait();
 		console.log('  setKeno');
 		await delay(STEP_DELAY);
 	}
 
 	if (addresses.OvertimeUltimateHoldem) {
-		tx = await deployed.setUltimateHoldem(addresses.OvertimeUltimateHoldem);
+		tx = await deployed.setAddress(4, false, addresses.OvertimeUltimateHoldem);
 		await tx.wait();
 		console.log('  setUltimateHoldem');
 		await delay(STEP_DELAY);
 	}
 
 	if (addresses.VideoPoker) {
-		tx = await deployed.setVideoPoker(addresses.VideoPoker);
+		tx = await deployed.setAddress(5, false, addresses.VideoPoker);
 		await tx.wait();
 		console.log('  setVideoPoker');
 		await delay(STEP_DELAY);

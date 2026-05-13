@@ -320,8 +320,9 @@ async function deployFixture() {
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
 	const dataAddr = await data.getAddress();
-	await data.initialize(owner.address, coreAddr, ethers.ZeroAddress);
-	await data.setUltimateHoldem(uthAddr);
+	await data.initialize(owner.address);
+	await data.setAddress(0, true, coreAddr);
+	await data.setAddress(4, false, uthAddr);
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -1336,7 +1337,10 @@ describe('OvertimeUltimateHoldem', () => {
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
 			await uth.connect(player).fold(betId);
-			const rec = await data.getOvertimeUltimateHoldemFullRecord(betId);
+			const rec = uth.interface.decodeFunctionResult(
+				'getFullRecord',
+				await data.getFullRecord(4 /* GameV2.OvertimeUltimateHoldem */, betId)
+			)[0];
 			expect(rec.betId).to.equal(betId);
 			expect(rec.user).to.equal(player.address);
 			expect(rec.outcome).to.equal(Outcome.FOLDED);
@@ -1347,14 +1351,27 @@ describe('OvertimeUltimateHoldem', () => {
 			const { data } = ctx;
 			await placeAndGetIds(ctx, MIN_USDC_BET);
 			await placeAndGetIds(ctx, MIN_USDC_BET);
-			const recs = await data.getRecentOvertimeUltimateHoldemRecords(0, 10);
+			const {
+				readRecentRecords,
+				readUserRecords,
+				GameV2,
+			} = require('../../../utils/casinoDataV2Helpers');
+			const recs = await readRecentRecords(data, ctx.uth, GameV2.OvertimeUltimateHoldem, 0, 10);
 			expect(recs.length).to.equal(2);
 		});
 
-		it('getUserOvertimeUltimateHoldemRecords returns user bets', async () => {
+		it('getUserRecords(UTH) returns user bets', async () => {
 			const { data, player } = ctx;
 			await placeAndGetIds(ctx, MIN_USDC_BET);
-			const recs = await data.getUserOvertimeUltimateHoldemRecords(player.address, 0, 10);
+			const { readUserRecords, GameV2 } = require('../../../utils/casinoDataV2Helpers');
+			const recs = await readUserRecords(
+				data,
+				ctx.uth,
+				GameV2.OvertimeUltimateHoldem,
+				player.address,
+				0,
+				10
+			);
 			expect(recs.length).to.equal(1);
 			expect(recs[0].user).to.equal(player.address);
 		});

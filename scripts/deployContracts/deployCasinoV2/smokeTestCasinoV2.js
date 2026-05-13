@@ -14,9 +14,11 @@ const { getTargetAddress } = require('../../helpers');
 const EXPECTED_OVERRIDES = {
 	HiLo: 0n,
 	Plinko: 0n,
-	ThreeCardPoker: ethers.parseEther('1000'),
+	ThreeCardPoker: ethers.parseEther('2000'),
 	Keno: ethers.parseEther('1000'),
-	VideoPoker: ethers.parseEther('2500'),
+	VideoPoker: ethers.parseEther('2000'),
+	OvertimeUltimateHoldem: ethers.parseEther('2000'),
+	OvertimeBonusHoldem: ethers.parseEther('2000'),
 };
 
 const DATA_GETTERS = {
@@ -25,6 +27,8 @@ const DATA_GETTERS = {
 	HiLo: 'hilo',
 	Keno: 'keno',
 	VideoPoker: 'videoPoker',
+	OvertimeUltimateHoldem: 'ultimateHoldem',
+	OvertimeBonusHoldem: 'bonusHoldem',
 };
 
 async function main() {

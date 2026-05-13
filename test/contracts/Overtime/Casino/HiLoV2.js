@@ -114,8 +114,9 @@ async function deployFixture() {
 
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
-	await data.initialize(owner.address, coreAddr, ethers.ZeroAddress);
-	await data.setHiLo(hiloAddr);
+	await data.initialize(owner.address);
+	await data.setAddress(0, true, coreAddr);
+	await data.setAddress(2, false, hiloAddr);
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -446,7 +447,10 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const { word } = wordForCardRank('hilo-data', 10);
 			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
 			await hilo.connect(player).cashout(betId);
-			const r = await data.getHiLoFullRecord(betId);
+			const r = hilo.interface.decodeFunctionResult(
+				'getFullRecord',
+				await data.getFullRecord(2 /* GameV2.HiLo */, betId)
+			)[0];
 			expect(r.betId).to.equal(betId);
 			expect(r.outcome).to.equal(Outcome.CASHED_OUT);
 		});

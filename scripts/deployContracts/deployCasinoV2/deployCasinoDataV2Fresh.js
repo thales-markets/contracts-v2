@@ -48,37 +48,49 @@ async function main() {
 	setTargetAddress('CasinoDataV2', network, dataAddr);
 	await delay(STEP_DELAY);
 
-	let tx = await deployed.initialize(signer.address, coreAddr, tcpAddr || ethers.ZeroAddress);
+	let tx = await deployed.initialize(signer.address);
 	await tx.wait();
-	console.log('  initialized (TCP wired)');
+	console.log('  initialized');
 	await delay(STEP_DELAY);
 
+	tx = await deployed.setAddress(0, true, coreAddr);
+	await tx.wait();
+	console.log('  setAddress(core)');
+	await delay(STEP_DELAY);
+
+	if (tcpAddr) {
+		tx = await deployed.setAddress(0, false, tcpAddr);
+		await tx.wait();
+		console.log('  setAddress(ThreeCardPoker)');
+		await delay(STEP_DELAY);
+	}
+
 	if (plinkoAddr) {
-		tx = await deployed.setPlinko(plinkoAddr);
+		tx = await deployed.setAddress(1, false, plinkoAddr);
 		await tx.wait();
 		console.log('  setPlinko');
 		await delay(STEP_DELAY);
 	}
 	if (hiloAddr) {
-		tx = await deployed.setHiLo(hiloAddr);
+		tx = await deployed.setAddress(2, false, hiloAddr);
 		await tx.wait();
 		console.log('  setHiLo');
 		await delay(STEP_DELAY);
 	}
 	if (kenoAddr) {
-		tx = await deployed.setKeno(kenoAddr);
+		tx = await deployed.setAddress(3, false, kenoAddr);
 		await tx.wait();
 		console.log('  setKeno');
 		await delay(STEP_DELAY);
 	}
 	if (uthAddr) {
-		tx = await deployed.setUltimateHoldem(uthAddr);
+		tx = await deployed.setAddress(4, false, uthAddr);
 		await tx.wait();
 		console.log('  setUltimateHoldem');
 		await delay(STEP_DELAY);
 	}
 	if (vpAddr) {
-		tx = await deployed.setVideoPoker(vpAddr);
+		tx = await deployed.setAddress(5, false, vpAddr);
 		await tx.wait();
 		console.log('  setVideoPoker');
 		await delay(STEP_DELAY);

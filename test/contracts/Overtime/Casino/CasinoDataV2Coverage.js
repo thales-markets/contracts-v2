@@ -2,6 +2,14 @@ const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helper
 const { expect } = require('chai');
 const { upgrades, ethers } = require('hardhat');
 
+const {
+	GameV2,
+	readFullRecord,
+	readFullRecords,
+	readUserRecords,
+	readRecentRecords,
+} = require('../../../utils/casinoDataV2Helpers');
+
 const WETH_KEY = ethers.encodeBytes32String('WETH');
 const OVER_KEY = ethers.encodeBytes32String('OVER');
 const WETH_PRICE = ethers.parseEther('3000');
@@ -85,11 +93,13 @@ async function deployFullStack() {
 	const uth = await deployGame('OvertimeUltimateHoldem');
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
-	await data.initialize(owner.address, coreAddr, await tcp.getAddress());
-	await data.setPlinko(await plinko.getAddress());
-	await data.setHiLo(await hilo.getAddress());
-	await data.setKeno(await keno.getAddress());
-	await data.setUltimateHoldem(await uth.getAddress());
+	await data.initialize(owner.address);
+	await data.setAddress(0, true, coreAddr);
+	await data.setAddress(0, false, await tcp.getAddress());
+	await data.setAddress(1, false, await plinko.getAddress());
+	await data.setAddress(2, false, await hilo.getAddress());
+	await data.setAddress(3, false, await keno.getAddress());
+	await data.setAddress(4, false, await uth.getAddress());
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -137,25 +147,22 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		it('rejects zero-address owner on init', async () => {
 			const Data = await ethers.getContractFactory('CasinoDataV2');
 			const d = await upgrades.deployProxy(Data, [], { initializer: false });
-			await expect(
-				d.initialize(ethers.ZeroAddress, ctx.coreAddr, ctx.tcpAddr)
-			).to.be.revertedWithCustomError(d, 'InvalidAddress');
+			await expect(d.initialize(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+				d,
+				'InvalidAddress'
+			);
 		});
 
 		it('all setters require owner + reject zero', async () => {
-			const setters = ['setCore', 'setThreeCardPoker', 'setPlinko', 'setHiLo', 'setKeno'];
-			for (const s of setters) {
-				await expect(ctx.data.connect(ctx.player)[s](ctx.tcpAddr)).to.be.reverted;
-				await expect(
-					ctx.data.connect(ctx.owner)[s](ethers.ZeroAddress)
-				).to.be.revertedWithCustomError(ctx.data, 'InvalidAddress');
-			}
-			// owner can set them
-			await ctx.data.connect(ctx.owner).setThreeCardPoker(ctx.tcpAddr);
-			await ctx.data.connect(ctx.owner).setPlinko(ctx.plinkoAddr);
-			await ctx.data.connect(ctx.owner).setHiLo(ctx.hiloAddr);
-			await ctx.data.connect(ctx.owner).setKeno(ctx.kenoAddr);
-			await ctx.data.connect(ctx.owner).setCore(ctx.coreAddr);
+			// Access control: non-owner reverts
+			await expect(ctx.data.connect(ctx.player).setAddress(1, false, ctx.plinkoAddr)).to.be
+				.reverted;
+			// Owner can wire all slots + core (trust-admin: no zero-address check)
+			await ctx.data.connect(ctx.owner).setAddress(0, false, ctx.tcpAddr);
+			await ctx.data.connect(ctx.owner).setAddress(1, false, ctx.plinkoAddr);
+			await ctx.data.connect(ctx.owner).setAddress(2, false, ctx.hiloAddr);
+			await ctx.data.connect(ctx.owner).setAddress(3, false, ctx.kenoAddr);
+			await ctx.data.connect(ctx.owner).setAddress(0, true, ctx.coreAddr);
 		});
 	});
 
@@ -201,51 +208,56 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			return placed.args.betId;
 		}
 
-		it('getThreeCardPokerFullRecord returns all fields', async () => {
+		it('getFullRecord(TCP) returns all fields', async () => {
 			const id = await placeOne();
-			const r = await ctx.data.getThreeCardPokerFullRecord(id);
+			const r = await readFullRecord(ctx.data, ctx.tcp, GameV2.ThreeCardPoker, id);
 			expect(r.betId).to.equal(id);
 			expect(r.user).to.equal(ctx.player.address);
 		});
 
-		it('getThreeCardPokerFullRecords batch reads', async () => {
+		it('getFullRecords(TCP) batch reads', async () => {
 			const ids = [];
 			for (let i = 0; i < 3; i++) ids.push(await placeOne());
-			const recs = await ctx.data.getThreeCardPokerFullRecords(ids);
+			const recs = await readFullRecords(ctx.data, ctx.tcp, GameV2.ThreeCardPoker, ids);
 			expect(recs.length).to.equal(3);
 		});
 
 		it('batch limit exceeded reverts', async () => {
 			const ids = new Array(101).fill(1);
-			await expect(ctx.data.getThreeCardPokerFullRecords(ids)).to.be.revertedWithCustomError(
-				ctx.data,
-				'LimitExceeded'
-			);
-		});
-
-		it('getUserThreeCardPokerRecords paginates', async () => {
-			for (let i = 0; i < 2; i++) await placeOne();
-			const recs = await ctx.data.getUserThreeCardPokerRecords(ctx.player.address, 0, 10);
-			expect(recs.length).to.equal(2);
-		});
-
-		it('getUserThreeCardPokerRecords limit too large reverts', async () => {
 			await expect(
-				ctx.data.getUserThreeCardPokerRecords(ctx.player.address, 0, 201)
+				ctx.data.getFullRecords(GameV2.ThreeCardPoker, ids)
 			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
 		});
 
-		it('getRecentThreeCardPokerRecords paginates', async () => {
+		it('getUserRecords(TCP) paginates', async () => {
 			for (let i = 0; i < 2; i++) await placeOne();
-			const recs = await ctx.data.getRecentThreeCardPokerRecords(0, 10);
+			const recs = await readUserRecords(
+				ctx.data,
+				ctx.tcp,
+				GameV2.ThreeCardPoker,
+				ctx.player.address,
+				0,
+				10
+			);
 			expect(recs.length).to.equal(2);
 		});
 
-		it('getRecentThreeCardPokerRecords limit exceeded reverts', async () => {
-			await expect(ctx.data.getRecentThreeCardPokerRecords(0, 201)).to.be.revertedWithCustomError(
-				ctx.data,
-				'LimitExceeded'
-			);
+		it('getUserRecords(TCP) limit too large reverts', async () => {
+			await expect(
+				ctx.data.getUserRecords(GameV2.ThreeCardPoker, ctx.player.address, 0, 201)
+			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
+		});
+
+		it('getRecentRecords(TCP) paginates', async () => {
+			for (let i = 0; i < 2; i++) await placeOne();
+			const recs = await readRecentRecords(ctx.data, ctx.tcp, GameV2.ThreeCardPoker, 0, 10);
+			expect(recs.length).to.equal(2);
+		});
+
+		it('getRecentRecords(TCP) limit exceeded reverts', async () => {
+			await expect(
+				ctx.data.getRecentRecords(GameV2.ThreeCardPoker, 0, 201)
+			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
 		});
 
 		it('getUserRecentBetsV2 returns TCP records', async () => {
@@ -286,17 +298,24 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 				[ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress],
 				0xdeadbeefn
 			);
-			expect((await ctx.data.getPlinkoFullRecord(id)).user).to.equal(ctx.player.address);
-			expect((await ctx.data.getPlinkoFullRecords([id])).length).to.equal(1);
+			expect((await readFullRecord(ctx.data, ctx.plinko, GameV2.Plinko, id)).user).to.equal(
+				ctx.player.address
+			);
+			expect((await readFullRecords(ctx.data, ctx.plinko, GameV2.Plinko, [id])).length).to.equal(1);
 			await expect(
-				ctx.data.getPlinkoFullRecords(new Array(101).fill(1))
+				ctx.data.getFullRecords(GameV2.Plinko, new Array(101).fill(1))
 			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
-			expect((await ctx.data.getUserPlinkoRecords(ctx.player.address, 0, 10)).length).to.equal(1);
+			expect(
+				(await readUserRecords(ctx.data, ctx.plinko, GameV2.Plinko, ctx.player.address, 0, 10))
+					.length
+			).to.equal(1);
 			await expect(
-				ctx.data.getUserPlinkoRecords(ctx.player.address, 0, 201)
+				ctx.data.getUserRecords(GameV2.Plinko, ctx.player.address, 0, 201)
 			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
-			expect((await ctx.data.getRecentPlinkoRecords(0, 10)).length).to.equal(1);
-			await expect(ctx.data.getRecentPlinkoRecords(0, 201)).to.be.revertedWithCustomError(
+			expect((await readRecentRecords(ctx.data, ctx.plinko, GameV2.Plinko, 0, 10)).length).to.equal(
+				1
+			);
+			await expect(ctx.data.getRecentRecords(GameV2.Plinko, 0, 201)).to.be.revertedWithCustomError(
 				ctx.data,
 				'LimitExceeded'
 			);
@@ -320,17 +339,21 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 				})
 				.find((e) => e?.name === 'BetPlaced');
 			const id = placed.args.betId;
-			expect((await ctx.data.getHiLoFullRecord(id)).user).to.equal(ctx.player.address);
-			expect((await ctx.data.getHiLoFullRecords([id])).length).to.equal(1);
+			expect((await readFullRecord(ctx.data, ctx.hilo, GameV2.HiLo, id)).user).to.equal(
+				ctx.player.address
+			);
+			expect((await readFullRecords(ctx.data, ctx.hilo, GameV2.HiLo, [id])).length).to.equal(1);
 			await expect(
-				ctx.data.getHiLoFullRecords(new Array(101).fill(1))
+				ctx.data.getFullRecords(GameV2.HiLo, new Array(101).fill(1))
 			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
-			expect((await ctx.data.getUserHiLoRecords(ctx.player.address, 0, 10)).length).to.equal(1);
+			expect(
+				(await readUserRecords(ctx.data, ctx.hilo, GameV2.HiLo, ctx.player.address, 0, 10)).length
+			).to.equal(1);
 			await expect(
-				ctx.data.getUserHiLoRecords(ctx.player.address, 0, 201)
+				ctx.data.getUserRecords(GameV2.HiLo, ctx.player.address, 0, 201)
 			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
-			expect((await ctx.data.getRecentHiLoRecords(0, 10)).length).to.equal(1);
-			await expect(ctx.data.getRecentHiLoRecords(0, 201)).to.be.revertedWithCustomError(
+			expect((await readRecentRecords(ctx.data, ctx.hilo, GameV2.HiLo, 0, 10)).length).to.equal(1);
+			await expect(ctx.data.getRecentRecords(GameV2.HiLo, 0, 201)).to.be.revertedWithCustomError(
 				ctx.data,
 				'LimitExceeded'
 			);
@@ -428,51 +451,58 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			return placed.args.betId;
 		}
 
-		it('getKenoFullRecord returns the full record', async () => {
+		it('getFullRecord(Keno) returns the full record', async () => {
 			const betId = await placeOneKeno();
-			const r = await ctx.data.getKenoFullRecord(betId);
+			const r = await readFullRecord(ctx.data, ctx.keno, GameV2.Keno, betId);
 			expect(r.betId).to.equal(betId);
 			expect(r.user).to.equal(ctx.player.address);
 			expect(r.picksCount).to.equal(5);
 			expect(r.picksMask).to.be.gt(0n);
 		});
 
-		it('getKenoFullRecords (batch) returns same shape', async () => {
+		it('getFullRecords(Keno) (batch) returns same shape', async () => {
 			const id1 = await placeOneKeno([10, 20, 30]);
 			const id2 = await placeOneKeno([40, 50, 60]);
-			const recs = await ctx.data.getKenoFullRecords([id1, id2]);
+			const recs = await readFullRecords(ctx.data, ctx.keno, GameV2.Keno, [id1, id2]);
 			expect(recs.length).to.equal(2);
 			expect(recs[0].picksCount).to.equal(3);
 			expect(recs[1].picksCount).to.equal(3);
 		});
 
-		it('getKenoFullRecords reverts above MAX_BATCH_IDS', async () => {
+		it('getFullRecords(Keno) reverts above MAX_BATCH_IDS', async () => {
 			await expect(
-				ctx.data.getKenoFullRecords(new Array(101).fill(1))
+				ctx.data.getFullRecords(GameV2.Keno, new Array(101).fill(1))
 			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
 		});
 
-		it('getUserKenoRecords returns user history', async () => {
+		it('getUserRecords(Keno) returns user history', async () => {
 			await placeOneKeno();
 			await placeOneKeno([15, 25]);
-			const recs = await ctx.data.getUserKenoRecords(ctx.player.address, 0, 10);
+			const recs = await readUserRecords(
+				ctx.data,
+				ctx.keno,
+				GameV2.Keno,
+				ctx.player.address,
+				0,
+				10
+			);
 			expect(recs.length).to.equal(2);
 		});
 
-		it('getUserKenoRecords reverts above MAX_PAGE_LIMIT', async () => {
+		it('getUserRecords(Keno) reverts above MAX_PAGE_LIMIT', async () => {
 			await expect(
-				ctx.data.getUserKenoRecords(ctx.player.address, 0, 201)
+				ctx.data.getUserRecords(GameV2.Keno, ctx.player.address, 0, 201)
 			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
 		});
 
 		it('getRecentKenoRecords returns the latest bets', async () => {
 			await placeOneKeno();
-			const recs = await ctx.data.getRecentKenoRecords(0, 10);
+			const recs = await readRecentRecords(ctx.data, ctx.keno, GameV2.Keno, 0, 10);
 			expect(recs.length).to.be.gte(1);
 		});
 
-		it('getRecentKenoRecords reverts above MAX_PAGE_LIMIT', async () => {
-			await expect(ctx.data.getRecentKenoRecords(0, 201)).to.be.revertedWithCustomError(
+		it('getRecentRecords(Keno) reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getRecentRecords(GameV2.Keno, 0, 201)).to.be.revertedWithCustomError(
 				ctx.data,
 				'LimitExceeded'
 			);
@@ -480,15 +510,6 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 	});
 
 	describe('Cross-game pagination — getRecentBetsAllGamesV2 / getNextBetId', () => {
-		const GameV2 = {
-			ThreeCardPoker: 0,
-			Plinko: 1,
-			HiLo: 2,
-			Keno: 3,
-			OvertimeUltimateHoldem: 4,
-			VideoPoker: 5,
-		};
-
 		it('getRecentBetsAllGamesV2 returns one inner array per wired game', async () => {
 			// Place at least one bet per game so each inner array is non-empty
 			await placeFulfill(
@@ -511,7 +532,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			);
 
 			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
-			expect(all.length).to.equal(6);
+			expect(all.length).to.equal(7);
 			expect(all[GameV2.ThreeCardPoker].length).to.equal(1);
 			expect(all[GameV2.Plinko].length).to.equal(1);
 			expect(all[GameV2.HiLo].length).to.equal(1);
@@ -570,30 +591,20 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 	 * Added coverage: VideoPoker wiring, UTH readers, cross-lib UTH/VP base records,
 	 * library calldata + LimitExceeded branches, and unwired-game fallbacks.
 	 * =================================================================================== */
-	describe('Setter coverage — setVideoPoker', () => {
-		it('rejects non-owner and zero-address; owner can set', async () => {
-			// fixture starts with VP unwired. Deploy a VP and use it as a target.
+	describe('Setter coverage — setAddress', () => {
+		it('VideoPoker slot: rejects non-owner; owner can wire', async () => {
 			const VP = await ethers.getContractFactory('VideoPoker');
 			const vp = await upgrades.deployProxy(VP, [], { initializer: false });
 			await vp.initialize(ctx.owner.address, ctx.coreAddr, await ctx.manager.getAddress());
 			const vpAddr = await vp.getAddress();
-			// non-owner reverts
-			await expect(ctx.data.connect(ctx.player).setVideoPoker(vpAddr)).to.be.reverted;
-			// zero-address reverts InvalidAddress
-			await expect(
-				ctx.data.connect(ctx.owner).setVideoPoker(ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.data, 'InvalidAddress');
-			// owner can set
-			await ctx.data.connect(ctx.owner).setVideoPoker(vpAddr);
+			await expect(ctx.data.connect(ctx.player).setAddress(5, false, vpAddr)).to.be.reverted;
+			await ctx.data.connect(ctx.owner).setAddress(5, false, vpAddr);
 			expect(await ctx.data.videoPoker()).to.equal(vpAddr);
 		});
 
-		it('setUltimateHoldem rejects non-owner and zero-address; owner can set', async () => {
-			await expect(ctx.data.connect(ctx.player).setUltimateHoldem(ctx.uthAddr)).to.be.reverted;
-			await expect(
-				ctx.data.connect(ctx.owner).setUltimateHoldem(ethers.ZeroAddress)
-			).to.be.revertedWithCustomError(ctx.data, 'InvalidAddress');
-			await ctx.data.connect(ctx.owner).setUltimateHoldem(ctx.uthAddr);
+		it('UltimateHoldem slot: rejects non-owner; owner can wire', async () => {
+			await expect(ctx.data.connect(ctx.player).setAddress(4, false, ctx.uthAddr)).to.be.reverted;
+			await ctx.data.connect(ctx.owner).setAddress(4, false, ctx.uthAddr);
 		});
 	});
 
@@ -626,7 +637,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			const vpAddr = await vp.getAddress();
 			await ctx.core.registerGame(vpAddr);
 			await ctx.core.setMaxNetLossPerGameUsd(vpAddr, ethers.parseEther('100000'));
-			await ctx.data.connect(ctx.owner).setVideoPoker(vpAddr);
+			await ctx.data.connect(ctx.owner).setAddress(5, false, vpAddr);
 
 			// Place one VP bet (request stays in AWAITING_DEAL — fine, bet id is allocated)
 			await vp.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
@@ -653,48 +664,58 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			return placed.args.betId;
 		}
 
-		it('getOvertimeUltimateHoldemFullRecord returns the bet shape', async () => {
+		it('getFullRecord(UTH) returns the bet shape', async () => {
 			const betId = await placeUthBet();
-			const r = await ctx.data.getOvertimeUltimateHoldemFullRecord(betId);
+			const r = await readFullRecord(ctx.data, ctx.uth, GameV2.OvertimeUltimateHoldem, betId);
 			expect(r.betId).to.equal(betId);
 			expect(r.user).to.equal(ctx.player.address);
 			expect(r.anteAmount).to.equal(MIN_USDC_BET);
 		});
 
-		it('getOvertimeUltimateHoldemFullRecords (batch via calldata library) returns matching rows', async () => {
+		it('getFullRecords(UTH) (batch) returns matching rows', async () => {
 			const id1 = await placeUthBet();
 			const id2 = await placeUthBet();
-			const recs = await ctx.data.getOvertimeUltimateHoldemFullRecords([id1, id2]);
+			const recs = await readFullRecords(ctx.data, ctx.uth, GameV2.OvertimeUltimateHoldem, [
+				id1,
+				id2,
+			]);
 			expect(recs.length).to.equal(2);
 			expect(recs[0].user).to.equal(ctx.player.address);
 			expect(recs[1].user).to.equal(ctx.player.address);
 		});
 
-		it('getOvertimeUltimateHoldemFullRecords reverts above MAX_BATCH_IDS', async () => {
-			// LimitExceeded comes from the library; ethers v6 reverts surface as panic/revert reason.
-			await expect(ctx.data.getOvertimeUltimateHoldemFullRecords(new Array(101).fill(1))).to.be
-				.reverted;
+		it('getFullRecords(UTH) reverts above MAX_BATCH_IDS', async () => {
+			await expect(ctx.data.getFullRecords(GameV2.OvertimeUltimateHoldem, new Array(101).fill(1)))
+				.to.be.reverted;
 		});
 
-		it('getUserOvertimeUltimateHoldemRecords paginates', async () => {
+		it('getUserRecords(UTH) paginates', async () => {
 			await placeUthBet();
-			const recs = await ctx.data.getUserOvertimeUltimateHoldemRecords(ctx.player.address, 0, 10);
+			const recs = await readUserRecords(
+				ctx.data,
+				ctx.uth,
+				GameV2.OvertimeUltimateHoldem,
+				ctx.player.address,
+				0,
+				10
+			);
 			expect(recs.length).to.equal(1);
 		});
 
-		it('getUserOvertimeUltimateHoldemRecords reverts above MAX_PAGE_LIMIT', async () => {
-			await expect(ctx.data.getUserOvertimeUltimateHoldemRecords(ctx.player.address, 0, 201)).to.be
-				.reverted;
+		it('getUserRecords(UTH) reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(
+				ctx.data.getUserRecords(GameV2.OvertimeUltimateHoldem, ctx.player.address, 0, 201)
+			).to.be.reverted;
 		});
 
-		it('getRecentOvertimeUltimateHoldemRecords paginates', async () => {
+		it('getRecentRecords(UTH) paginates', async () => {
 			await placeUthBet();
-			const recs = await ctx.data.getRecentOvertimeUltimateHoldemRecords(0, 10);
+			const recs = await readRecentRecords(ctx.data, ctx.uth, GameV2.OvertimeUltimateHoldem, 0, 10);
 			expect(recs.length).to.be.gte(1);
 		});
 
-		it('getRecentOvertimeUltimateHoldemRecords reverts above MAX_PAGE_LIMIT', async () => {
-			await expect(ctx.data.getRecentOvertimeUltimateHoldemRecords(0, 201)).to.be.reverted;
+		it('getRecentRecords(UTH) reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getRecentRecords(GameV2.OvertimeUltimateHoldem, 0, 201)).to.be.reverted;
 		});
 	});
 
@@ -713,7 +734,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		const vpAddr = await vp.getAddress();
 		await ctxLocal.core.registerGame(vpAddr);
 		await ctxLocal.core.setMaxNetLossPerGameUsd(vpAddr, ethers.parseEther('100000'));
-		await ctxLocal.data.connect(ctxLocal.owner).setVideoPoker(vpAddr);
+		await ctxLocal.data.connect(ctxLocal.owner).setAddress(5, false, vpAddr);
 		return { vp, vpAddr };
 	}
 
@@ -740,49 +761,58 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			({ vp, vpAddr } = await wireVideoPoker(ctx));
 		});
 
-		it('getVideoPokerFullRecord returns the bet shape', async () => {
+		it('getFullRecord(VP) returns the bet shape', async () => {
 			const id = await placeVpBet(vp);
-			const r = await ctx.data.getVideoPokerFullRecord(id);
+			const r = await readFullRecord(ctx.data, vp, GameV2.VideoPoker, id);
 			expect(r.betId).to.equal(id);
 			expect(r.user).to.equal(ctx.player.address);
 			expect(r.amount).to.equal(MIN_USDC_BET);
 		});
 
-		it('getVideoPokerFullRecords (batch) returns matching rows', async () => {
+		it('getFullRecords(VP) (batch) returns matching rows', async () => {
 			const id = await placeVpBet(vp);
-			const recs = await ctx.data.getVideoPokerFullRecords([id]);
+			const recs = await readFullRecords(ctx.data, vp, GameV2.VideoPoker, [id]);
 			expect(recs.length).to.equal(1);
 			expect(recs[0].user).to.equal(ctx.player.address);
 		});
 
-		it('getVideoPokerFullRecords reverts above MAX_BATCH_IDS', async () => {
-			await expect(ctx.data.getVideoPokerFullRecords(new Array(101).fill(1))).to.be.reverted;
+		it('getFullRecords(VP) reverts above MAX_BATCH_IDS', async () => {
+			await expect(ctx.data.getFullRecords(GameV2.VideoPoker, new Array(101).fill(1))).to.be
+				.reverted;
 		});
 
-		it('getUserVideoPokerRecords paginates', async () => {
+		it('getUserRecords(VP) paginates', async () => {
 			await placeVpBet(vp);
-			const recs = await ctx.data.getUserVideoPokerRecords(ctx.player.address, 0, 10);
+			const recs = await readUserRecords(
+				ctx.data,
+				vp,
+				GameV2.VideoPoker,
+				ctx.player.address,
+				0,
+				10
+			);
 			expect(recs.length).to.equal(1);
 		});
 
-		it('getUserVideoPokerRecords reverts above MAX_PAGE_LIMIT', async () => {
-			await expect(ctx.data.getUserVideoPokerRecords(ctx.player.address, 0, 201)).to.be.reverted;
+		it('getUserRecords(VP) reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getUserRecords(GameV2.VideoPoker, ctx.player.address, 0, 201)).to.be
+				.reverted;
 		});
 
-		it('getRecentVideoPokerRecords paginates', async () => {
+		it('getRecentRecords(VP) paginates', async () => {
 			await placeVpBet(vp);
-			const recs = await ctx.data.getRecentVideoPokerRecords(0, 10);
+			const recs = await readRecentRecords(ctx.data, vp, GameV2.VideoPoker, 0, 10);
 			expect(recs.length).to.equal(1);
 		});
 
-		it('getRecentVideoPokerRecords reverts above MAX_PAGE_LIMIT', async () => {
-			await expect(ctx.data.getRecentVideoPokerRecords(0, 201)).to.be.reverted;
+		it('getRecentRecords(VP) reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(ctx.data.getRecentRecords(GameV2.VideoPoker, 0, 201)).to.be.reverted;
 		});
 
 		it('getRecentBetsAllGamesV2 includes the VP inner array once wired with a bet', async () => {
 			await placeVpBet(vp);
 			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
-			expect(all.length).to.equal(6);
+			expect(all.length).to.equal(7);
 			expect(all[5].length).to.equal(1); // VideoPoker
 			expect(all[5][0].user).to.equal(ctx.player.address);
 			expect(Number(all[5][0].game)).to.equal(5);
@@ -830,10 +860,12 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		beforeEach(async () => {
 			const Data = await ethers.getContractFactory('CasinoDataV2');
 			dataUnwired = await upgrades.deployProxy(Data, [], { initializer: false });
+			await dataUnwired.initialize(ctx.owner.address);
+			await dataUnwired.setAddress(0, true, ctx.coreAddr);
 			// Wire only the "primary" games (TCP/Plinko/HiLo) and leave Keno/UTH/VP unwired.
-			await dataUnwired.initialize(ctx.owner.address, ctx.coreAddr, ctx.tcpAddr);
-			await dataUnwired.setPlinko(ctx.plinkoAddr);
-			await dataUnwired.setHiLo(ctx.hiloAddr);
+			await dataUnwired.setAddress(0, false, ctx.tcpAddr);
+			await dataUnwired.setAddress(1, false, ctx.plinkoAddr);
+			await dataUnwired.setAddress(2, false, ctx.hiloAddr);
 			// Note: setKeno + setUltimateHoldem + setVideoPoker intentionally not called.
 		});
 
@@ -862,7 +894,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 
 		it('getRecentBetsAllGamesV2 returns empty inner arrays for unwired Keno/UTH/VP', async () => {
 			const all = await dataUnwired.getRecentBetsAllGamesV2(0, 10);
-			expect(all.length).to.equal(6);
+			expect(all.length).to.equal(7);
 			expect(all[3].length).to.equal(0); // Keno unwired
 			expect(all[4].length).to.equal(0); // UTH unwired
 			expect(all[5].length).to.equal(0); // VP unwired
