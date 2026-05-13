@@ -30,6 +30,7 @@ const EXCLUDED_EDGE_TESTS = [
 	'test/contracts/Overtime/Casino/CrossValidateThreeCardPoker.js',
 	'test/contracts/Overtime/Casino/CrossValidateVideoPoker.js',
 	'test/contracts/Overtime/Casino/CrossValidateUltimateHoldem.js',
+	'test/contracts/Overtime/Casino/CrossValidateBonusHoldem.js',
 ].map((p) => path.resolve(__dirname, p));
 
 task(TASK_TEST_GET_TEST_FILES).setAction(async (args, _hre, runSuper) => {
