@@ -11,6 +11,7 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoCoreV2.sol";
 import "../../interfaces/ICasinoGameCallback.sol";
 import "../../interfaces/ICasinoOvertimeBonusHoldem.sol";
+import "./CasinoHandsLib.sol";
 
 /// @title OvertimeBonusHoldem
 /// @author Overtime
@@ -47,12 +48,9 @@ contract OvertimeBonusHoldem is
     uint8 private constant HOLE_CARDS = 2;
     uint8 private constant FLOP_CARDS = 3;
 
-    /// @dev 16 bits per Fisher-Yates swap. Worst case (pre-flop play): deal 3 flop here, 1 turn,
-    /// 1 river, 2 dealer hole = 7 swaps × 16 = 112 bits, well within one 256-bit VRF word
-    uint8 private constant SHUFFLE_SHIFT_BITS = 16;
-    uint64 private constant SHUFFLE_SHIFT_MASK = 0xFFFF;
-
-    // Hand classes — same encoding as VideoPoker / UTH
+    // Hand classes — same encoding as VideoPoker / UTH. Mirrored from `CasinoHandsLib.CLASS_*`
+    // for `_antePayoutMult` readability (only CLASS_STRAIGHT is actually referenced locally;
+    // the rest are kept for documentation of the encoding the library returns)
     uint8 private constant CLASS_HIGH_CARD = 0;
     uint8 private constant CLASS_PAIR = 1;
     uint8 private constant CLASS_TWO_PAIR = 2;
@@ -281,12 +279,6 @@ contract OvertimeBonusHoldem is
         emit CheckedFlop(betId, requestId, b.user);
     }
 
-    function foldFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        Bet storage b = bets[betId];
-        _requireOwnedAt(b, BetStatus.FLOP_TURN);
-        return _markFoldAndRequestResolve(betId, b);
-    }
-
     function raiseTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.TURN_TURN);
@@ -301,12 +293,6 @@ contract OvertimeBonusHoldem is
         _requireOwnedAt(b, BetStatus.TURN_TURN);
         requestId = _requestVrf(betId, b, BetStatus.AWAITING_RIVER);
         emit CheckedTurn(betId, requestId, b.user);
-    }
-
-    function foldTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        Bet storage b = bets[betId];
-        _requireOwnedAt(b, BetStatus.TURN_TURN);
-        return _markFoldAndRequestResolve(betId, b);
     }
 
     function raiseRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
@@ -325,13 +311,10 @@ contract OvertimeBonusHoldem is
         emit CheckedRiver(betId, requestId, b.user);
     }
 
-    function foldRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        Bet storage b = bets[betId];
-        _requireOwnedAt(b, BetStatus.RIVER_TURN);
-        return _markFoldAndRequestResolve(betId, b);
-    }
-
-    /// @dev Shared fold path: emit, mark, advance to AWAITING_RESOLVE with dealer-hole-only VRF
+    /// @dev Shared fold path: emit, mark, advance to AWAITING_RESOLVE with dealer-hole-only VRF.
+    /// Only `foldPreFlop` uses this — post-flop folds were removed because `checkFlop`/`checkTurn`/
+    /// `checkRiver` are free, making any fold after the flop strictly dominated in money EV (lose
+    /// ante guaranteed vs free chance to win at showdown)
     function _markFoldAndRequestResolve(uint256 betId, Bet storage b) internal returns (uint256 requestId) {
         BetStatus prior = b.status;
         b.folded = true;
@@ -412,8 +395,8 @@ contract OvertimeBonusHoldem is
     }
 
     function _onHoleDealt(uint256 betId, Bet storage b, uint256 word) internal {
-        uint8[] memory deck = _initDeckMask(DECK_SIZE, 0);
-        _partialFisherYates(deck, HOLE_CARDS, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE, 0);
+        CasinoHandsLib.partialFisherYates(deck, HOLE_CARDS, word);
         b.playerHole[0] = deck[0];
         b.playerHole[1] = deck[1];
         b.status = BetStatus.PRE_FLOP_TURN;
@@ -422,8 +405,8 @@ contract OvertimeBonusHoldem is
 
     function _onFlopDealt(uint256 betId, Bet storage b, uint256 word) internal {
         uint64 mask = _holeMask(b);
-        uint8[] memory deck = _initDeckMask(DECK_SIZE - HOLE_CARDS, mask);
-        _partialFisherYates(deck, FLOP_CARDS, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE - HOLE_CARDS, mask);
+        CasinoHandsLib.partialFisherYates(deck, FLOP_CARDS, word);
         b.community[0] = deck[0];
         b.community[1] = deck[1];
         b.community[2] = deck[2];
@@ -434,8 +417,8 @@ contract OvertimeBonusHoldem is
 
     function _onTurnDealt(uint256 betId, Bet storage b, uint256 word) internal {
         uint64 mask = _holeFlopMask(b);
-        uint8[] memory deck = _initDeckMask(DECK_SIZE - HOLE_CARDS - FLOP_CARDS, mask);
-        _partialFisherYates(deck, 1, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE - HOLE_CARDS - FLOP_CARDS, mask);
+        CasinoHandsLib.partialFisherYates(deck, 1, word);
         b.community[3] = deck[0];
         b.communityCount = 4;
         b.status = BetStatus.TURN_TURN;
@@ -444,8 +427,8 @@ contract OvertimeBonusHoldem is
 
     function _onRiverDealt(uint256 betId, Bet storage b, uint256 word) internal {
         uint64 mask = _holeFlopMask(b) | (uint64(1) << b.community[3]);
-        uint8[] memory deck = _initDeckMask(DECK_SIZE - HOLE_CARDS - FLOP_CARDS - 1, mask);
-        _partialFisherYates(deck, 1, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE - HOLE_CARDS - FLOP_CARDS - 1, mask);
+        CasinoHandsLib.partialFisherYates(deck, 1, word);
         b.community[4] = deck[0];
         b.communityCount = 5;
         b.status = BetStatus.RIVER_TURN;
@@ -462,8 +445,8 @@ contract OvertimeBonusHoldem is
             mask |= uint64(1) << b.community[i];
         }
         uint8 deckSize = DECK_SIZE - HOLE_CARDS - cc;
-        uint8[] memory deck = _initDeckMask(deckSize, mask);
-        _partialFisherYates(deck, 2, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(deckSize, mask);
+        CasinoHandsLib.partialFisherYates(deck, 2, word);
         b.dealerHole[0] = deck[0];
         b.dealerHole[1] = deck[1];
 
@@ -495,8 +478,8 @@ contract OvertimeBonusHoldem is
                 pSeven[i + 2] = b.community[i];
                 dSeven[i + 2] = b.community[i];
             }
-            uint256 pVal = _evaluateCards(_toMemArray7(pSeven));
-            uint256 dVal = _evaluateCards(_toMemArray7(dSeven));
+            uint256 pVal = CasinoHandsLib.evaluateCards7(CasinoHandsLib.toMemArray7(pSeven));
+            uint256 dVal = CasinoHandsLib.evaluateCards7(CasinoHandsLib.toMemArray7(dSeven));
 
             if (pVal > dVal) {
                 outcome = Outcome.PLAYER_WIN;
@@ -669,160 +652,11 @@ contract OvertimeBonusHoldem is
         return 0;
     }
 
-    /* ========== HAND EVALUATION (7-card best-of-5) ========== */
+    /* ========== HELPERS ========== */
 
-    /// @notice Evaluate a 7-card set; returns `(class << 20) | tieBreaker` matching UTH's encoding
-    function _evaluateCards(uint8[] memory cards) internal pure returns (uint256) {
-        uint8[15] memory rankCount;
-        uint8[4] memory suitCount;
-        uint16 rankMask;
-        uint16[4] memory suitRankMask;
-
-        for (uint256 i; i < cards.length; ++i) {
-            uint8 r = (cards[i] % 13) + RANK_TWO;
-            uint8 s = cards[i] / 13;
-            ++rankCount[r];
-            ++suitCount[s];
-            rankMask |= uint16(1) << r;
-            suitRankMask[s] |= uint16(1) << r;
-        }
-
-        // Flush suit (if any)
-        int8 flushSuit = -1;
-        for (uint8 s; s < 4; ++s) {
-            if (suitCount[s] >= 5) {
-                flushSuit = int8(s);
-                break;
-            }
-        }
-        if (flushSuit >= 0) {
-            uint8 sfTop = _findStraightTop(suitRankMask[uint8(flushSuit)]);
-            if (sfTop > 0) {
-                if (sfTop == RANK_ACE) return _pack(CLASS_ROYAL_FLUSH, 14, 0, 0, 0, 0);
-                return _pack(CLASS_STRAIGHT_FLUSH, sfTop, 0, 0, 0, 0);
-            }
-        }
-
-        // Quads / FH / Trips / Pairs
-        uint8 fourRank;
-        uint8 firstThree;
-        uint8 secondThree;
-        uint8 firstPair;
-        uint8 secondPair;
-        for (uint8 r = RANK_ACE; r >= RANK_TWO; --r) {
-            uint8 c = rankCount[r];
-            if (c == 4 && fourRank == 0) {
-                fourRank = r;
-            } else if (c == 3) {
-                if (firstThree == 0) firstThree = r;
-                else if (secondThree == 0) secondThree = r;
-            } else if (c == 2) {
-                if (firstPair == 0) firstPair = r;
-                else if (secondPair == 0) secondPair = r;
-            }
-        }
-
-        if (fourRank > 0) {
-            uint8 k = _topNExcluding(rankMask, 1, fourRank, 0, 0)[0];
-            return _pack(CLASS_FOUR_OF_A_KIND, fourRank, k, 0, 0, 0);
-        }
-        if (firstThree > 0 && (secondThree > 0 || firstPair > 0)) {
-            uint8 pairRank = secondThree > firstPair ? secondThree : firstPair;
-            return _pack(CLASS_FULL_HOUSE, firstThree, pairRank, 0, 0, 0);
-        }
-        if (flushSuit >= 0) {
-            uint8[] memory t5 = _topN(suitRankMask[uint8(flushSuit)], 5);
-            return _pack(CLASS_FLUSH, t5[0], t5[1], t5[2], t5[3], t5[4]);
-        }
-        uint8 straightTop = _findStraightTop(rankMask);
-        if (straightTop > 0) {
-            return _pack(CLASS_STRAIGHT, straightTop, 0, 0, 0, 0);
-        }
-        if (firstThree > 0) {
-            uint8[] memory ks = _topNExcluding(rankMask, 2, firstThree, 0, 0);
-            return _pack(CLASS_THREE_OF_A_KIND, firstThree, ks[0], ks[1], 0, 0);
-        }
-        if (firstPair > 0 && secondPair > 0) {
-            uint8[] memory ks = _topNExcluding(rankMask, 1, firstPair, secondPair, 0);
-            return _pack(CLASS_TWO_PAIR, firstPair, secondPair, ks[0], 0, 0);
-        }
-        if (firstPair > 0) {
-            uint8[] memory ks = _topNExcluding(rankMask, 3, firstPair, 0, 0);
-            return _pack(CLASS_PAIR, firstPair, ks[0], ks[1], ks[2], 0);
-        }
-        uint8[] memory hc = _topN(rankMask, 5);
-        return _pack(CLASS_HIGH_CARD, hc[0], hc[1], hc[2], hc[3], hc[4]);
-    }
-
-    function _findStraightTop(uint16 mask) internal pure returns (uint8) {
-        for (uint8 top = RANK_ACE; top >= 6; --top) {
-            uint16 fiveMask = uint16(0x1F) << (top - 4);
-            if ((mask & fiveMask) == fiveMask) return top;
-        }
-        // Wheel A-2-3-4-5 — top counted as 5
-        if ((mask & uint16(0x4000)) != 0 && (mask & uint16(0x3C)) == uint16(0x3C)) return 5;
-        return 0;
-    }
-
-    function _topN(uint16 mask, uint8 n) internal pure returns (uint8[] memory out) {
-        out = new uint8[](n);
-        uint8 idx;
-        for (uint8 r = RANK_ACE; r >= RANK_TWO && idx < n; --r) {
-            if ((mask & (uint16(1) << r)) != 0) {
-                out[idx] = r;
-                ++idx;
-            }
-        }
-    }
-
-    function _topNExcluding(uint16 mask, uint8 n, uint8 ex0, uint8 ex1, uint8 ex2) internal pure returns (uint8[] memory) {
-        uint16 m = mask;
-        if (ex0 != 0) m &= ~(uint16(1) << ex0);
-        if (ex1 != 0) m &= ~(uint16(1) << ex1);
-        if (ex2 != 0) m &= ~(uint16(1) << ex2);
-        return _topN(m, n);
-    }
-
-    function _pack(uint8 class_, uint8 a, uint8 b, uint8 c, uint8 d, uint8 e) internal pure returns (uint256) {
-        return
-            (uint256(class_) << 20) |
-            (uint256(a) << 16) |
-            (uint256(b) << 12) |
-            (uint256(c) << 8) |
-            (uint256(d) << 4) |
-            uint256(e);
-    }
-
-    function _toMemArray7(uint8[7] memory arr) internal pure returns (uint8[] memory out) {
-        out = new uint8[](7);
-        for (uint8 i; i < 7; ++i) out[i] = arr[i];
-    }
-
-    /* ========== DECK / SHUFFLE ========== */
-
-    function _initDeckMask(uint8 size, uint64 excludeMask) internal pure returns (uint8[] memory deck) {
-        deck = new uint8[](size);
-        uint8 j;
-        for (uint8 c; c < DECK_SIZE; ++c) {
-            if ((excludeMask & (uint64(1) << c)) != 0) continue;
-            deck[j] = c;
-            ++j;
-            if (j == size) break;
-        }
-    }
-
-    function _partialFisherYates(uint8[] memory deck, uint8 n, uint256 word) internal pure {
-        uint256 len = deck.length;
-        uint256 cursor = word;
-        for (uint8 i; i < n; ++i) {
-            uint256 rem = len - i;
-            uint256 j = i + ((cursor & SHUFFLE_SHIFT_MASK) % rem);
-            cursor >>= SHUFFLE_SHIFT_BITS;
-            uint8 tmp = deck[i];
-            deck[i] = deck[uint8(j)];
-            deck[uint8(j)] = tmp;
-        }
-    }
+    /// @notice Deck construction, Fisher-Yates shuffle, 7-card hand evaluator, top-N rank
+    /// helpers, popcount, and value packing all live in `CasinoHandsLib` (internal pure,
+    /// inlined at compile time — no DELEGATECALL, no separate deployment, no storage)
 
     function _holeMask(Bet storage b) internal view returns (uint64) {
         return (uint64(1) << b.playerHole[0]) | (uint64(1) << b.playerHole[1]);
@@ -834,6 +668,10 @@ contract OvertimeBonusHoldem is
 
     /* ========== STAKE / SIZING ========== */
 
+    /// @dev Free-bet raises pull additional stake from FBH (not the user's wallet). If the
+    /// user's FBH balance is exhausted, every raise tx reverts and the user can only
+    /// check/fold from that point (or wait out `cancelTimeout`). FE must gate raise buttons
+    /// on remaining FBH balance for free-bet hands — there is no wallet-funded raise path
     function _pullRaiseStake(Bet storage b, uint256 mult) internal {
         uint256 raiseStake = b.anteAmount * mult;
         if (b.isFreeBet) core.useFreeBet(b.user, b.collateral, raiseStake);
@@ -850,18 +688,21 @@ contract OvertimeBonusHoldem is
         requestIdToBetId[requestId] = betId;
     }
 
+    /// @notice Per-game bet-size gate. `MIN_BET_USD` floor applies to the required Ante AND, when
+    /// present (> 0), the optional Bonus side bet — symmetric floor blocks dust Bonus bets that
+    /// produce negligible payouts but still consume the full per-bet gas/VRF overhead. Bonus = 0
+    /// still bypasses the check entirely (skip the side bet)
     function _checkBetSize(address collateral, uint256 anteAmount, uint256 bonusAmount) internal view {
         uint256 anteUsd = core.getUsdValue(collateral, anteAmount);
         uint256 minBet = core.effectiveMinBetUsd(address(this));
         if (minBet == 0) minBet = MIN_BET_USD;
         if (anteUsd < minBet) revert InvalidAmount();
         uint256 maxBet = core.effectiveMaxBetUsd(address(this));
-        if (maxBet != 0) {
-            if (anteUsd > maxBet) revert AboveMaxBet();
-            if (bonusAmount > 0) {
-                uint256 bonusUsd = core.getUsdValue(collateral, bonusAmount);
-                if (bonusUsd > maxBet) revert AboveMaxBet();
-            }
+        if (maxBet != 0 && anteUsd > maxBet) revert AboveMaxBet();
+        if (bonusAmount > 0) {
+            uint256 bonusUsd = core.getUsdValue(collateral, bonusAmount);
+            if (bonusUsd < minBet) revert InvalidAmount();
+            if (maxBet != 0 && bonusUsd > maxBet) revert AboveMaxBet();
         }
     }
 

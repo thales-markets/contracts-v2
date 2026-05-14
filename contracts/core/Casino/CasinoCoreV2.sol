@@ -302,8 +302,8 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     /// Reservation accounting is still updated and used by `withdrawCollateral` to block admin
     /// drains while in-flight liability exists
     function reserveOrRevert(address collateral, uint256 amount) external override onlyActiveGame {
-        if (amount == 0) return;
         _requireSupported(collateral);
+        if (amount == 0) return;
         reservedProfitPerCollateral[collateral] += amount;
         reservedProfitPerGame[msg.sender][collateral] += amount;
         uint256 balance = IERC20(collateral).balanceOf(address(this));
@@ -726,6 +726,13 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     }
 
     /// @inheritdoc ICasinoCoreV2
+    /// @dev Returns `balance - reserved`, INTENTIONALLY excluding `pendingStakesPerCollateral`.
+    /// Pending stakes are user deposits already sitting in `balance`; subtracting them would
+    /// require the operator to overfund for the unrealistic worst case of every in-flight bet
+    /// cancelling simultaneously. This is the same fractional-reserve philosophy as
+    /// `reserveOrRevert`. Asymmetric vs `withdrawCollateral`, which subtracts both because
+    /// drains MUST be solvent against all owed funds. FE/ops monitors should use this for
+    /// "headroom for new bets" and `withdrawCollateral`'s check for "safe to drain"
     function getAvailableLiquidity(address collateral) external view override returns (uint256) {
         if (!supportedCollateral[collateral]) revert InvalidCollateral();
         uint balance = IERC20(collateral).balanceOf(address(this));

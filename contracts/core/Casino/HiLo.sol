@@ -381,11 +381,19 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /* ========== ADMIN ========== */
 
+    /// @dev IN-FLIGHT BETS SEE THE NEW VALUE on subsequent guesses. There is no per-bet
+    /// snapshot. Operator must pause the game (`setGamePaused` on core) and let pending bets
+    /// settle before retuning. Raising `houseEdgeE18` mid-bet lowers the per-correct-guess
+    /// factor for existing bets; lowering raises it. Either way it's user-unexpected
     function setHouseEdge(uint256 newHouseEdgeE18) external onlyOwner {
         if (newHouseEdgeE18 < MIN_HOUSE_EDGE_E18 || newHouseEdgeE18 > MAX_HOUSE_EDGE_E18) revert InvalidHouseEdge();
         houseEdgeE18 = newHouseEdgeE18;
     }
 
+    /// @dev IN-FLIGHT BETS SEE THE NEW CAP. Reservations are sized at place time against the
+    /// then-current cap; raising the cap mid-bet under-collateralizes existing bets (cashout
+    /// can pay more than reserved). Operator must pause and let pending bets settle before
+    /// raising. Lowering is safe (over-reserved) but still changes the user's max upside
     function setMaxMultiplier(uint256 newMaxE18) external onlyOwner {
         if (newMaxE18 < 2e18) revert InvalidAmount();
         maxMultiplierE18 = newMaxE18;

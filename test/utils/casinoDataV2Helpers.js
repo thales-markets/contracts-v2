@@ -12,6 +12,7 @@ const GameV2 = {
 	Keno: 3,
 	OvertimeUltimateHoldem: 4,
 	VideoPoker: 5,
+	OvertimeBonusHoldem: 6,
 };
 
 async function readFullRecord(data, gameContract, gameId, betId) {

@@ -984,6 +984,43 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 				.be.reverted;
 		});
 
+		it('payReferrer is no-op when getReferrerFee returns 0', async () => {
+			// Exercises line 377: `if (referrerFee == 0) return`. Set up a valid referrer
+			// with referrerFees all zero so getReferrerFee returns 0 → early return without
+			// any transfer attempt.
+			const Mock = await ethers.getContractFactory('MockReferrals');
+			const refContract = await Mock.deploy();
+			const refContractAddr = await refContract.getAddress();
+			const referrer = ethers.Wallet.createRandom().address;
+			await refContract.setReferrer(referrer, ctx.player.address);
+			// Fees default to 0 — no setReferrerFees call needed
+			await ctx.core
+				.connect(ctx.owner)
+				.setAddresses(
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					ethers.ZeroAddress,
+					refContractAddr
+				);
+			const tx = await ctx.plinko
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.plinko.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			const refBalBefore = await ctx.usdc.balanceOf(referrer);
+			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [0x0fn]);
+			expect(await ctx.usdc.balanceOf(referrer)).to.equal(refBalBefore);
+		});
+
 		it('payReferrer skips when referrerAmount rounds to zero', async () => {
 			// 1-wei referrer fee. stake * 1 / 1e18 == 0 for sub-1e18 stake-loss → hits line 346
 			// (`if (referrerAmount == 0) return;`). Plinko stake-loss is in 6-dec USDC units, so
@@ -1052,6 +1089,57 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			// Exercises line 645: `if (collateral == usdc) return ONE;`
 			const price = await ctx.core.getCollateralPrice(ctx.usdcAddr);
 			expect(price).to.equal(ethers.parseEther('1'));
+		});
+
+		it('getCollateralPrice(weth) returns the price-feed value (non-USDC branch)', async () => {
+			// Exercises _getCollateralPrice non-USDC path: 770-777 (key lookup + rateForCurrency)
+			const price = await ctx.core.getCollateralPrice(ctx.wethAddr);
+			expect(price).to.equal(WETH_PRICE);
+		});
+
+		it('getCollateralPrice reverts with InvalidCollateral when WETH key is cleared', async () => {
+			// Exercises line 774: `if (currencyKey == bytes32(0)) revert InvalidCollateral`
+			await ctx.core.setCollateralConfig(ctx.wethAddr, ethers.ZeroHash, true);
+			await expect(ctx.core.getCollateralPrice(ctx.wethAddr)).to.be.revertedWithCustomError(
+				ctx.core,
+				'InvalidCollateral'
+			);
+		});
+
+		it('getCollateralPrice reverts with InvalidPrice when feed reports 0', async () => {
+			// Exercises line 776: `if (price == 0) revert InvalidPrice`
+			await ctx.priceFeed.setPriceFeedForCollateral(WETH_KEY, ctx.wethAddr, 0);
+			await expect(ctx.core.getCollateralPrice(ctx.wethAddr)).to.be.revertedWithCustomError(
+				ctx.core,
+				'InvalidPrice'
+			);
+		});
+
+		it('getUsdValue(weth) returns amount × price / ONE (non-USDC branch)', async () => {
+			// Exercises lines 782-783 (_getUsdValue WETH path)
+			const amount = ethers.parseEther('2'); // 2 WETH
+			const usd = await ctx.core.getUsdValue(ctx.wethAddr, amount);
+			expect(usd).to.equal((amount * WETH_PRICE) / ethers.parseEther('1'));
+		});
+
+		it('collateralFromUsd(usdc, 0) returns 0 (early return)', async () => {
+			// Exercises line 621: `if (usdAmount == 0) return 0`
+			expect(await ctx.core.collateralFromUsd(ctx.usdcAddr, 0)).to.equal(0n);
+		});
+
+		it('collateralFromUsd(weth, X) returns USD × ONE / price (non-USDC branch)', async () => {
+			// Exercises lines 624, 626 (WETH price lookup + division)
+			const usdAmount = ethers.parseEther('3000'); // 3000 USD = 1 WETH
+			const out = await ctx.core.collateralFromUsd(ctx.wethAddr, usdAmount);
+			expect(out).to.equal(ethers.parseEther('1'));
+		});
+
+		it('collateralFromUsd reverts with InvalidPrice when WETH price is 0', async () => {
+			// Exercises line 625: `if (price == 0) revert InvalidPrice`
+			await ctx.priceFeed.setPriceFeedForCollateral(WETH_KEY, ctx.wethAddr, 0);
+			await expect(
+				ctx.core.collateralFromUsd(ctx.wethAddr, ethers.parseEther('1'))
+			).to.be.revertedWithCustomError(ctx.core, 'InvalidPrice');
 		});
 	});
 

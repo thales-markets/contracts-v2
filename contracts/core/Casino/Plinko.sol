@@ -11,6 +11,7 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoCoreV2.sol";
 import "../../interfaces/ICasinoGameCallback.sol";
 import "../../interfaces/ICasinoPlinko.sol";
+import "./CasinoHandsLib.sol";
 
 /// @title Plinko
 /// @author Overtime
@@ -307,14 +308,10 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
     }
 
     /// @notice Derives the slot index from the VRF word: take low 8 bits, count 1-bits.
-    /// Result is in [0, 8] (9 possible slots)
+    /// Result is in [0, 8] (9 possible slots). Popcount implementation in `CasinoHandsLib`
+    /// (Brian Kernighan, inlined at compile time)
     function _slotFromWord(uint256 word) internal pure returns (uint8 slot) {
-        uint256 bits = word & 0xff; // low 8 bits
-        uint8 c;
-        for (uint8 i; i < ROWS; ++i) {
-            if ((bits & (uint256(1) << i)) != 0) ++c;
-        }
-        slot = c;
+        slot = CasinoHandsLib.popcount(word & 0xff);
     }
 
     /* ========== ADMIN: PAYTABLE MANAGEMENT ========== */

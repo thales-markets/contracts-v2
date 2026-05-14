@@ -133,17 +133,17 @@ interface ICasinoOvertimeBonusHoldem {
     function playPreFlop(uint256 betId) external returns (uint256 requestId);
     function foldPreFlop(uint256 betId) external returns (uint256 requestId);
 
+    // No fold post-flop: `checkFlop`/`checkTurn`/`checkRiver` are free, so any fold after the
+    // flop is strictly dominated in money EV (lose ante guaranteed vs free chance to win at
+    // showdown). Use check at every post-flop street; raise to commit additional stake
     function raiseFlop(uint256 betId) external returns (uint256 requestId);
     function checkFlop(uint256 betId) external returns (uint256 requestId);
-    function foldFlop(uint256 betId) external returns (uint256 requestId);
 
     function raiseTurn(uint256 betId) external returns (uint256 requestId);
     function checkTurn(uint256 betId) external returns (uint256 requestId);
-    function foldTurn(uint256 betId) external returns (uint256 requestId);
 
     function raiseRiver(uint256 betId) external returns (uint256 requestId);
     function checkRiver(uint256 betId) external returns (uint256 requestId);
-    function foldRiver(uint256 betId) external returns (uint256 requestId);
 
     function cancelBet(uint256 betId) external;
     function adminCancelBet(uint256 betId) external;

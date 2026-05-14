@@ -11,6 +11,7 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoCoreV2.sol";
 import "../../interfaces/ICasinoGameCallback.sol";
 import "../../interfaces/ICasinoOvertimeUltimateHoldem.sol";
+import "./CasinoHandsLib.sol";
 
 /// @title OvertimeUltimateHoldem
 /// @author Overtime
@@ -50,12 +51,10 @@ contract OvertimeUltimateHoldem is
     uint8 private constant HOLE_CARDS = 2;
     uint8 private constant FLOP_CARDS = 3;
 
-    /// @dev 16 bits per Fisher-Yates swap. Worst case: 7 swaps × 16 = 112 bits in a single VRF
-    /// word (post-pre-flop-raise reveals flop + turn + river + dealer hole). Bias < 0.04%/swap.
-    uint8 private constant SHUFFLE_SHIFT_BITS = 16;
-    uint64 private constant SHUFFLE_SHIFT_MASK = 0xFFFF;
-
-    // Hand classes (higher numerical value beats lower)
+    // Hand classes (higher numerical value beats lower). Mirror of `CasinoHandsLib.CLASS_*` for
+    // local `_blindPaytableMultiplier` / `_dealerQualifies` readability — duplicated rather than
+    // imported because constants aren't usable cross-contract via `using` and the lib values
+    // are private to its evaluator
     uint8 private constant CLASS_HIGH_CARD = 0;
     uint8 private constant CLASS_PAIR = 1;
     uint8 private constant CLASS_TWO_PAIR = 2;
@@ -66,9 +65,6 @@ contract OvertimeUltimateHoldem is
     uint8 private constant CLASS_FOUR_OF_A_KIND = 7;
     uint8 private constant CLASS_STRAIGHT_FLUSH = 8;
     uint8 private constant CLASS_ROYAL_FLUSH = 9;
-
-    uint8 private constant RANK_TWO = 2;
-    uint8 private constant RANK_ACE = 14;
 
     // Blind paytable (paid on top of stake when player wins). Below Straight = push (no bonus,
     // but stake returns — handled in resolution code by paying 1× the blind back as "stake-back").
@@ -379,8 +375,8 @@ contract OvertimeUltimateHoldem is
     }
 
     function _onPlayerHoleDealt(uint256 betId, Bet storage b, uint256 word) internal {
-        uint8[] memory deck = _initDeckMask(DECK_SIZE, 0);
-        _partialFisherYates(deck, HOLE_CARDS, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE, 0);
+        CasinoHandsLib.partialFisherYates(deck, HOLE_CARDS, word);
         b.playerHole[0] = deck[0];
         b.playerHole[1] = deck[1];
         b.status = BetStatus.PRE_FLOP_TURN;
@@ -389,8 +385,8 @@ contract OvertimeUltimateHoldem is
 
     function _onFlopDealt(uint256 betId, Bet storage b, uint256 word) internal {
         uint64 mask = _excludeMaskHole(b);
-        uint8[] memory deck = _initDeckMask(DECK_SIZE - HOLE_CARDS, mask);
-        _partialFisherYates(deck, FLOP_CARDS, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE - HOLE_CARDS, mask);
+        CasinoHandsLib.partialFisherYates(deck, FLOP_CARDS, word);
         b.community[0] = deck[0];
         b.community[1] = deck[1];
         b.community[2] = deck[2];
@@ -404,8 +400,8 @@ contract OvertimeUltimateHoldem is
             (uint64(1) << b.community[0]) |
             (uint64(1) << b.community[1]) |
             (uint64(1) << b.community[2]);
-        uint8[] memory deck = _initDeckMask(DECK_SIZE - 5, mask);
-        _partialFisherYates(deck, 2, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE - 5, mask);
+        CasinoHandsLib.partialFisherYates(deck, 2, word);
         b.community[3] = deck[0];
         b.community[4] = deck[1];
         b.status = BetStatus.POST_RIVER_TURN;
@@ -433,12 +429,17 @@ contract OvertimeUltimateHoldem is
             // Post-flop raise path: flop dealt → 2 community + 2 dealer = 4 cards
             mask |= (uint64(1) << b.community[0]) | (uint64(1) << b.community[1]) | (uint64(1) << b.community[2]);
             _dealRemaining(b, mask, word, 4, 3, 2);
-        } else {
-            // River raise path (playMult == 1): all community dealt → 2 dealer cards only
+        } else if (playMult == RIVER_RAISE_MULT) {
+            // River raise path: all community dealt → 2 dealer cards only
             for (uint8 i; i < 5; ++i) {
                 mask |= uint64(1) << b.community[i];
             }
             _dealRemaining(b, mask, word, 2, 5, 0);
+        } else {
+            // Defensive: only PRE_FLOP / POST_FLOP / RIVER raise paths can reach AWAITING_RESOLVE.
+            // Any other playMult means a future regression introduced a new raise multiplier
+            // without updating this dispatch — revert rather than misroute the deal
+            revert InvalidBetStatus();
         }
 
         // Resolve
@@ -518,9 +519,9 @@ contract OvertimeUltimateHoldem is
         uint8 communityCount
     ) internal {
         // popcount(mask) = DECK_SIZE - deckSize
-        uint8 deckSize = DECK_SIZE - _popcount(mask);
-        uint8[] memory deck = _initDeckMask(deckSize, mask);
-        _partialFisherYates(deck, nCards, word);
+        uint8 deckSize = DECK_SIZE - CasinoHandsLib.popcount(mask);
+        uint8[] memory deck = CasinoHandsLib.initDeck(deckSize, mask);
+        CasinoHandsLib.partialFisherYates(deck, nCards, word);
         for (uint8 i; i < communityCount; ++i) {
             b.community[startCommunityIdx + i] = deck[i];
         }
@@ -558,8 +559,8 @@ contract OvertimeUltimateHoldem is
             b.community[4]
         ];
 
-        uint256 pVal = _evaluateCards(_toMemArray7(pSeven));
-        uint256 dVal = _evaluateCards(_toMemArray7(dSeven));
+        uint256 pVal = CasinoHandsLib.evaluateCards7(CasinoHandsLib.toMemArray7(pSeven));
+        uint256 dVal = CasinoHandsLib.evaluateCards7(CasinoHandsLib.toMemArray7(dSeven));
 
         bool dealerQualifies = _dealerQualifies(dVal);
 
@@ -633,6 +634,10 @@ contract OvertimeUltimateHoldem is
 
     /* ========== INTERNAL: STAKES + VRF ========== */
 
+    /// @dev Free-bet raises pull additional stake from FBH (not the user's wallet). If the
+    /// user's FBH balance is exhausted, every raise tx reverts and the user can only
+    /// check/fold from that point (or wait out `cancelTimeout`). FE must gate raise buttons
+    /// on remaining FBH balance for free-bet hands — there is no wallet-funded raise path
     function _pullPlayStake(Bet storage b, uint256 mult) internal {
         uint256 playStake = b.anteAmount * mult;
         b.playAmount = playStake;
@@ -673,196 +678,14 @@ contract OvertimeUltimateHoldem is
         requestIdToBetId[requestId] = betId;
     }
 
-    /* ========== HAND EVALUATION (5 or 7 cards) ========== */
+    /* ========== INTERNAL HELPERS ========== */
 
-    /// @notice Evaluates a hand of 5–7 cards and returns the packed best-5 hand value.
-    /// Encoding: [class:4][r1:4][r2:4][r3:4][r4:4][r5:4]. Higher = better.
-    /// `class` = 0 (HC) .. 9 (Royal). Padded ranks default to 0
-    function _evaluateCards(uint8[] memory cards) internal pure returns (uint256) {
-        uint8[15] memory rankCount;
-        uint16 rankMask;
-        uint16[4] memory suitRankMask;
-        uint8[4] memory suitCount;
-
-        for (uint256 i; i < cards.length; ++i) {
-            uint8 r = uint8(cards[i] % 13) + RANK_TWO;
-            uint8 s = uint8(cards[i] / 13);
-            ++rankCount[r];
-            ++suitCount[s];
-            rankMask |= uint16(1) << r;
-            suitRankMask[s] |= uint16(1) << r;
-        }
-
-        int8 flushSuit = -1;
-        for (uint8 s; s < 4; ++s) {
-            if (suitCount[s] >= 5) {
-                flushSuit = int8(s);
-                break;
-            }
-        }
-
-        if (flushSuit >= 0) {
-            uint16 fmask = suitRankMask[uint8(flushSuit)];
-            uint8 sfTop = _findStraightTop(fmask);
-            if (sfTop > 0) {
-                if (sfTop == RANK_ACE) {
-                    return _pack(CLASS_ROYAL_FLUSH, RANK_ACE, 0, 0, 0, 0);
-                }
-                return _pack(CLASS_STRAIGHT_FLUSH, sfTop, 0, 0, 0, 0);
-            }
-        }
-
-        uint8 fourRank;
-        uint8 firstThree;
-        uint8 secondThree;
-        uint8 firstPair;
-        uint8 secondPair;
-        for (uint8 step; step < 13; ++step) {
-            uint8 r = RANK_ACE - step;
-            if (rankCount[r] == 4) {
-                if (fourRank == 0) fourRank = r;
-            } else if (rankCount[r] == 3) {
-                if (firstThree == 0) firstThree = r;
-                else if (secondThree == 0) secondThree = r;
-            } else if (rankCount[r] == 2) {
-                if (firstPair == 0) firstPair = r;
-                else if (secondPair == 0) secondPair = r;
-            }
-        }
-
-        if (fourRank > 0) {
-            uint8 kicker = _topNRanksExcluding(rankMask, 1, fourRank, 0, 0)[0];
-            return _pack(CLASS_FOUR_OF_A_KIND, fourRank, kicker, 0, 0, 0);
-        }
-
-        if (firstThree > 0 && (secondThree > 0 || firstPair > 0)) {
-            uint8 pairRank = secondThree > firstPair ? secondThree : firstPair;
-            return _pack(CLASS_FULL_HOUSE, firstThree, pairRank, 0, 0, 0);
-        }
-
-        if (flushSuit >= 0) {
-            uint8[5] memory top5 = _topNRanks(suitRankMask[uint8(flushSuit)], 5);
-            return _pack(CLASS_FLUSH, top5[0], top5[1], top5[2], top5[3], top5[4]);
-        }
-
-        uint8 straightTop = _findStraightTop(rankMask);
-        if (straightTop > 0) {
-            return _pack(CLASS_STRAIGHT, straightTop, 0, 0, 0, 0);
-        }
-
-        if (firstThree > 0) {
-            uint8[5] memory kickers = _topNRanksExcluding(rankMask, 2, firstThree, 0, 0);
-            return _pack(CLASS_THREE_OF_A_KIND, firstThree, kickers[0], kickers[1], 0, 0);
-        }
-
-        if (firstPair > 0 && secondPair > 0) {
-            uint8[5] memory kickers = _topNRanksExcluding(rankMask, 1, firstPair, secondPair, 0);
-            return _pack(CLASS_TWO_PAIR, firstPair, secondPair, kickers[0], 0, 0);
-        }
-
-        if (firstPair > 0) {
-            uint8[5] memory kickers = _topNRanksExcluding(rankMask, 3, firstPair, 0, 0);
-            return _pack(CLASS_PAIR, firstPair, kickers[0], kickers[1], kickers[2], 0);
-        }
-
-        uint8[5] memory hc = _topNRanks(rankMask, 5);
-        return _pack(CLASS_HIGH_CARD, hc[0], hc[1], hc[2], hc[3], hc[4]);
-    }
-
-    function _findStraightTop(uint16 mask) internal pure returns (uint8) {
-        for (uint8 step; step <= 8; ++step) {
-            uint8 top = RANK_ACE - step;
-            uint16 fiveMask = uint16(0x1F) << (top - 4);
-            if ((mask & fiveMask) == fiveMask) {
-                return top;
-            }
-        }
-        // Wheel: A-2-3-4-5 → top = 5
-        if ((mask & 0x4000) != 0 && (mask & 0x3C) == 0x3C) {
-            return 5;
-        }
-        return 0;
-    }
-
-    function _topNRanks(uint16 mask, uint8 n) internal pure returns (uint8[5] memory out) {
-        uint8 idx;
-        for (uint8 step; step < 13; ++step) {
-            uint8 r = RANK_ACE - step;
-            if ((mask & (uint16(1) << r)) != 0) {
-                out[idx] = r;
-                ++idx;
-                if (idx == n) return out;
-            }
-        }
-    }
-
-    function _topNRanksExcluding(
-        uint16 mask,
-        uint8 n,
-        uint8 ex0,
-        uint8 ex1,
-        uint8 ex2
-    ) internal pure returns (uint8[5] memory out) {
-        uint16 cleared = mask;
-        if (ex0 != 0) cleared &= ~(uint16(1) << ex0);
-        if (ex1 != 0) cleared &= ~(uint16(1) << ex1);
-        if (ex2 != 0) cleared &= ~(uint16(1) << ex2);
-        return _topNRanks(cleared, n);
-    }
-
-    function _pack(uint8 class_, uint8 r1, uint8 r2, uint8 r3, uint8 r4, uint8 r5) internal pure returns (uint256) {
-        return
-            (uint256(class_) << 20) |
-            (uint256(r1) << 16) |
-            (uint256(r2) << 12) |
-            (uint256(r3) << 8) |
-            (uint256(r4) << 4) |
-            uint256(r5);
-    }
-
-    /* ========== DECK / SHUFFLE ========== */
-
-    function _initDeckMask(uint8 size, uint64 excludeMask) internal pure returns (uint8[] memory deck) {
-        deck = new uint8[](size);
-        uint8 j;
-        for (uint8 c; c < DECK_SIZE; ++c) {
-            if (excludeMask != 0 && (excludeMask & (uint64(1) << c)) != 0) continue;
-            deck[j] = c;
-            ++j;
-        }
-    }
-
-    function _partialFisherYates(uint8[] memory deck, uint8 n, uint256 word) internal pure {
-        uint256 len = deck.length;
-        uint256 cursor = word;
-        for (uint8 i; i < n; ++i) {
-            uint256 remaining = len - i;
-            uint256 j = i + ((cursor & SHUFFLE_SHIFT_MASK) % remaining);
-            cursor >>= SHUFFLE_SHIFT_BITS;
-            uint8 tmp = deck[i];
-            deck[i] = deck[j];
-            deck[j] = tmp;
-        }
-    }
+    /// @notice Deck construction, Fisher-Yates shuffle, 7-card hand evaluator, top-N rank
+    /// helpers, popcount, and value packing all live in `CasinoHandsLib` (internal pure,
+    /// inlined at compile time — no DELEGATECALL, no separate deployment, no storage)
 
     function _excludeMaskHole(Bet storage b) internal view returns (uint64) {
         return (uint64(1) << b.playerHole[0]) | (uint64(1) << b.playerHole[1]);
-    }
-
-    function _popcount(uint64 x) internal pure returns (uint8 c) {
-        unchecked {
-            while (x != 0) {
-                c += uint8(x & 1);
-                x >>= 1;
-            }
-        }
-    }
-
-    /* ========== INTERNAL HELPERS ========== */
-
-    function _toMemArray7(uint8[7] memory src) internal pure returns (uint8[] memory out) {
-        out = new uint8[](7);
-        for (uint8 i; i < 7; ++i) out[i] = src[i];
     }
 
     function _requireOwnedAt(Bet storage b, BetStatus expected) internal view {

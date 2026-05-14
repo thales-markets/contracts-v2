@@ -37,13 +37,21 @@ const SPOT_RANGE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 function drawNumbers(word) {
 	const deck = [];
 	for (let i = 0; i < POOL; i++) deck.push(i + 1);
-	let cursor = BigInt(word);
+	const w = BigInt(word);
+	let cursor = w;
 	let chunksLeft = 16;
+	let rehashes = 0;
 	const drawn = [];
 	for (let i = 0; i < DRAW; i++) {
 		if (chunksLeft === 0) {
+			rehashes++;
+			// Rehash on (word, salt) — NOT on the consumed cursor, which is provably 0 after
+			// 16 chunks and would make the tail of every shuffle deterministic. Mirrors
+			// Keno.sol `_drawNumbers`
 			cursor = BigInt(
-				ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [cursor]))
+				ethers.keccak256(
+					ethers.AbiCoder.defaultAbiCoder().encode(['uint256', 'uint8'], [w, rehashes])
+				)
 			);
 			chunksLeft = 16;
 		}

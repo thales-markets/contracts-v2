@@ -91,6 +91,7 @@ async function deployFullStack() {
 	const keno = await deployGame('Keno');
 
 	const uth = await deployGame('OvertimeUltimateHoldem');
+	const bh = await deployGame('OvertimeBonusHoldem');
 	const Data = await ethers.getContractFactory('CasinoDataV2');
 	const data = await upgrades.deployProxy(Data, [], { initializer: false });
 	await data.initialize(owner.address);
@@ -100,6 +101,7 @@ async function deployFullStack() {
 	await data.setAddress(2, false, await hilo.getAddress());
 	await data.setAddress(3, false, await keno.getAddress());
 	await data.setAddress(4, false, await uth.getAddress());
+	await data.setAddress(6, false, await bh.getAddress());
 
 	await usdc.mintForUser(owner.address);
 	await usdc.transfer(coreAddr, 4_000n * USDC_UNIT);
@@ -132,6 +134,8 @@ async function deployFullStack() {
 		kenoAddr: await keno.getAddress(),
 		uth,
 		uthAddr: await uth.getAddress(),
+		bh,
+		bhAddr: await bh.getAddress(),
 		data,
 		dataAddr: await data.getAddress(),
 	};
@@ -167,10 +171,10 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 	});
 
 	describe('Treasury views', () => {
-		it('getTreasuryOverview includes all 5 registered games and per-collateral data', async () => {
+		it('getTreasuryOverview includes all registered games and per-collateral data', async () => {
 			const o = await ctx.data.getTreasuryOverview([ctx.usdcAddr, ctx.wethAddr]);
 			expect(o.core).to.equal(ctx.coreAddr);
-			expect(o.registeredGames.length).to.equal(5);
+			expect(o.registeredGames.length).to.equal(6);
 			expect(o.collaterals[0]).to.equal(ctx.usdcAddr);
 			expect(o.balancePerCollateral[0]).to.be.gt(0n);
 			expect(o.reservedPerCollateral[0]).to.equal(0n); // no bets placed yet
@@ -847,6 +851,109 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
 			expect(all[4].length).to.equal(1);
 			expect(all[4][0].user).to.equal(ctx.player.address);
+		});
+	});
+
+	/* ===================================================================================
+	 * BonusHoldem readers — exercise dispatcher branches for the 7th GameV2 enum value.
+	 * These cover lines 142 (getFullRecord), 180 (_gameIface), 216-218 (_encodeRecordsByIds),
+	 * 305 (getNextBetId), 391 (_readBase), 519-520 (_readBonusHoldemBase via recent/gather).
+	 * =================================================================================== */
+	describe('BonusHoldem readers — placed-bet + dispatcher + LimitExceeded paths', () => {
+		const MIN_ANTE = MIN_USDC_BET;
+		async function placeBh() {
+			const tx = await ctx.bh
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_ANTE, 0n, ethers.ZeroAddress);
+			const r = await tx.wait();
+			const placed = r.logs
+				.map((l) => {
+					try {
+						return ctx.bh.interface.parseLog(l);
+					} catch {
+						return null;
+					}
+				})
+				.find((e) => e?.name === 'BetPlaced');
+			return placed.args.betId;
+		}
+
+		it('getFullRecord(BonusHoldem) returns the bet shape', async () => {
+			const id = await placeBh();
+			const r = await readFullRecord(ctx.data, ctx.bh, GameV2.OvertimeBonusHoldem, id);
+			expect(r.betId).to.equal(id);
+			expect(r.user).to.equal(ctx.player.address);
+			expect(r.anteAmount).to.equal(MIN_ANTE);
+		});
+
+		it('getFullRecords(BonusHoldem) (batch) returns matching rows', async () => {
+			const id1 = await placeBh();
+			const id2 = await placeBh();
+			const recs = await readFullRecords(ctx.data, ctx.bh, GameV2.OvertimeBonusHoldem, [id1, id2]);
+			expect(recs.length).to.equal(2);
+			expect(recs[0].user).to.equal(ctx.player.address);
+			expect(recs[1].user).to.equal(ctx.player.address);
+		});
+
+		it('getFullRecords(BonusHoldem) reverts above MAX_BATCH_IDS', async () => {
+			await expect(
+				ctx.data.getFullRecords(GameV2.OvertimeBonusHoldem, new Array(101).fill(1))
+			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
+		});
+
+		it('getUserRecords(BonusHoldem) paginates (covers _gameIface BonusHoldem branch)', async () => {
+			await placeBh();
+			const recs = await readUserRecords(
+				ctx.data,
+				ctx.bh,
+				GameV2.OvertimeBonusHoldem,
+				ctx.player.address,
+				0,
+				10
+			);
+			expect(recs.length).to.equal(1);
+		});
+
+		it('getUserRecords(BonusHoldem) reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(
+				ctx.data.getUserRecords(GameV2.OvertimeBonusHoldem, ctx.player.address, 0, 201)
+			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
+		});
+
+		it('getRecentRecords(BonusHoldem) paginates', async () => {
+			await placeBh();
+			const recs = await readRecentRecords(ctx.data, ctx.bh, GameV2.OvertimeBonusHoldem, 0, 10);
+			expect(recs.length).to.be.gte(1);
+		});
+
+		it('getRecentRecords(BonusHoldem) reverts above MAX_PAGE_LIMIT', async () => {
+			await expect(
+				ctx.data.getRecentRecords(GameV2.OvertimeBonusHoldem, 0, 201)
+			).to.be.revertedWithCustomError(ctx.data, 'LimitExceeded');
+		});
+
+		it('getNextBetId(BonusHoldem) is 1 before any bets, 2 after one bet', async () => {
+			expect(await ctx.data.getNextBetId(GameV2.OvertimeBonusHoldem)).to.equal(1n);
+			await placeBh();
+			expect(await ctx.data.getNextBetId(GameV2.OvertimeBonusHoldem)).to.equal(2n);
+		});
+
+		it('getRecentBetsAllGamesV2 fills the BonusHoldem inner array (covers _readBase + _readBonusHoldemBase)', async () => {
+			await placeBh();
+			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
+			expect(all.length).to.equal(7);
+			expect(all[6].length).to.equal(1); // BonusHoldem index
+			expect(all[6][0].user).to.equal(ctx.player.address);
+			expect(Number(all[6][0].game)).to.equal(6);
+		});
+
+		it('getUserRecentBetsV2 picks up BonusHoldem bets via _gatherTertiary', async () => {
+			await placeBh();
+			const recs = await ctx.data.getUserRecentBetsV2(ctx.player.address, 0, 50);
+			const bhRec = recs.find((r) => Number(r.game) === 6);
+			expect(bhRec).to.not.be.undefined;
+			expect(bhRec.user).to.equal(ctx.player.address);
+			expect(bhRec.amount).to.equal(MIN_ANTE);
 		});
 	});
 

@@ -24,6 +24,7 @@ const EXCLUDED_EDGE_TESTS = [
 	'test/contracts/Overtime/Casino/HiLoEdgeSim.js',
 	'test/contracts/Overtime/Casino/PlinkoEdgeSim.js',
 	'test/contracts/Overtime/Casino/KenoEdgeSim.js',
+	'test/contracts/Overtime/Casino/OvertimeBonusHoldemEdgeSim.js',
 	'test/contracts/Overtime/Casino/CrossValidatePlinko.js',
 	'test/contracts/Overtime/Casino/CrossValidateKeno.js',
 	'test/contracts/Overtime/Casino/CrossValidateHiLo.js',

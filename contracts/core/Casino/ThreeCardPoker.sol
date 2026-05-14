@@ -11,6 +11,7 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoCoreV2.sol";
 import "../../interfaces/ICasinoGameCallback.sol";
 import "../../interfaces/ICasinoThreeCardPoker.sol";
+import "./CasinoHandsLib.sol";
 
 /// @title ThreeCardPoker
 /// @author Overtime
@@ -40,12 +41,6 @@ contract ThreeCardPoker is
 
     uint8 private constant DECK_SIZE = 52;
     uint8 private constant CARDS_PER_HAND = 3;
-
-    /// @dev Bits consumed per Fisher-Yates swap. 16 bits gives 0..65535; modulo 52 leaves a
-    /// residual bias of ~0.018% per swap (12 of 65536 outcomes). Negligible vs the 2% edge floor.
-    /// 3 swaps × 16 bits = 48 bits per shuffle, well within one VRF word
-    uint8 private constant SHUFFLE_SHIFT_BITS = 16;
-    uint64 private constant SHUFFLE_SHIFT_MASK = 0xFFFF;
 
     // Rank index in 2..14 (2 = deuce, 14 = ace)
     uint8 private constant RANK_TWO = 2;
@@ -285,7 +280,12 @@ contract ThreeCardPoker is
     }
 
     /// @notice User-initiated cancel for a bet that's been waiting on VRF longer than the
-    /// `cancelTimeout` configured in core. Refunds whatever stakes have been pulled
+    /// `cancelTimeout` configured in core. Refunds whatever stakes have been pulled.
+    /// @dev PLAYER_TURN is INTENTIONALLY excluded — once the user has seen their 3 hole cards
+    /// (VRF1 fulfilled), allowing self-cancel would let them recover the ante on every
+    /// negative-EV hand instead of folding. Optimal play folds ~67% of hands, so user-cancel
+    /// from PLAYER_TURN would collapse the house edge. Stuck PLAYER_TURN bets (e.g. wallet
+    /// loss) are rescued via `adminCancelBet` (operator-only)
     function cancelBet(uint256 betId) external override nonReentrant {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
@@ -513,14 +513,10 @@ contract ThreeCardPoker is
 
     /* ========== SHUFFLE / DEAL ========== */
 
-    /// @notice Sentinel used to indicate "no exclusion" in `_initDeck`. Must be outside
-    /// the valid card range 0..51 (255 = max uint8 chosen for clarity)
-    uint8 private constant NO_EXCLUSION = 255;
-
     /// @notice Draws 3 unique cards from a 52-card deck via partial Fisher-Yates seeded by `word`
     function _drawThreeCards(uint256 word) internal pure returns (uint8[3] memory out) {
-        uint8[] memory deck = _initDeck(DECK_SIZE, NO_EXCLUSION, NO_EXCLUSION, NO_EXCLUSION, NO_EXCLUSION);
-        _partialFisherYates(deck, CARDS_PER_HAND, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE, 0);
+        CasinoHandsLib.partialFisherYates(deck, CARDS_PER_HAND, word);
         out[0] = deck[0];
         out[1] = deck[1];
         out[2] = deck[2];
@@ -528,41 +524,12 @@ contract ThreeCardPoker is
 
     /// @notice Draws 3 unique dealer cards from a 49-card deck excluding the 3 player cards
     function _drawThreeDealerCards(uint256 word, uint8[3] memory excluded) internal pure returns (uint8[3] memory out) {
-        uint8[] memory deck = _initDeck(DECK_SIZE - CARDS_PER_HAND, excluded[0], excluded[1], excluded[2], NO_EXCLUSION);
-        _partialFisherYates(deck, CARDS_PER_HAND, word);
+        uint64 mask = (uint64(1) << excluded[0]) | (uint64(1) << excluded[1]) | (uint64(1) << excluded[2]);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE - CARDS_PER_HAND, mask);
+        CasinoHandsLib.partialFisherYates(deck, CARDS_PER_HAND, word);
         out[0] = deck[0];
         out[1] = deck[1];
         out[2] = deck[2];
-    }
-
-    /// @notice Builds a deck of size `size`, optionally skipping `ex0..ex3` (sentinel:
-    /// `NO_EXCLUSION` = 255). Used both for the full 52 and for the 49-card
-    /// "exclude player cards" deck. `size` MUST equal `52 - (number of non-sentinel exclusions)`
-    function _initDeck(uint8 size, uint8 ex0, uint8 ex1, uint8 ex2, uint8 ex3) internal pure returns (uint8[] memory deck) {
-        deck = new uint8[](size);
-        uint8 j = 0;
-        for (uint8 c = 0; c < DECK_SIZE; ++c) {
-            if (c == ex0 || c == ex1 || c == ex2 || c == ex3) continue;
-            deck[j] = c;
-            ++j;
-        }
-        // assertion: j == size; skipped to save gas — caller responsibility
-    }
-
-    /// @notice Performs `n` Fisher-Yates swaps on `deck` driven by `word`. The first `n` slots
-    /// of `deck` end up containing `n` unique elements
-    function _partialFisherYates(uint8[] memory deck, uint8 n, uint256 word) internal pure {
-        uint256 len = deck.length;
-        uint256 cursor = word;
-        for (uint8 i = 0; i < n; ++i) {
-            uint256 remaining = len - i;
-            uint256 j = i + ((cursor & SHUFFLE_SHIFT_MASK) % remaining);
-            cursor >>= SHUFFLE_SHIFT_BITS;
-            // swap deck[i] and deck[j]
-            uint8 tmp = deck[i];
-            deck[i] = deck[j];
-            deck[j] = tmp;
-        }
     }
 
     /* ========== HAND EVALUATION ========== */
@@ -704,22 +671,23 @@ contract ThreeCardPoker is
         if (b.status != BetStatus.PLAYER_TURN) revert InvalidBetStatus();
     }
 
-    /// @notice Per-game bet-size gate. `MIN_BET_USD` floor applies only to the required Ante;
-    /// Pair Plus is optional (skipped when zero). The per-game `effectiveMaxBetUsd` ceiling caps
-    /// each leg independently so a user can't sidestep the ante max by loading the optional PP
-    /// side with a huge wager
+    /// @notice Per-game bet-size gate. `MIN_BET_USD` floor applies to the required Ante AND, when
+    /// present (> 0), the optional Pair Plus side bet — symmetric floor blocks dust PP bets that
+    /// produce negligible payouts but still consume the full per-bet gas/VRF overhead. PP = 0
+    /// still bypasses the check entirely (skip the side bet). The per-game `effectiveMaxBetUsd`
+    /// ceiling caps each leg independently so a user can't sidestep the ante max by loading the
+    /// optional PP side with a huge wager
     function _checkBetSize(address collateral, uint256 anteAmount, uint256 pairPlusAmount) internal view {
         uint256 anteUsd = core.getUsdValue(collateral, anteAmount);
         uint256 minBet = core.effectiveMinBetUsd(address(this));
         if (minBet == 0) minBet = MIN_BET_USD;
         if (anteUsd < minBet) revert InvalidAmount();
         uint256 maxBet = core.effectiveMaxBetUsd(address(this));
-        if (maxBet != 0) {
-            if (anteUsd > maxBet) revert AboveMaxBet();
-            if (pairPlusAmount > 0) {
-                uint256 ppUsd = core.getUsdValue(collateral, pairPlusAmount);
-                if (ppUsd > maxBet) revert AboveMaxBet();
-            }
+        if (maxBet != 0 && anteUsd > maxBet) revert AboveMaxBet();
+        if (pairPlusAmount > 0) {
+            uint256 ppUsd = core.getUsdValue(collateral, pairPlusAmount);
+            if (ppUsd < minBet) revert InvalidAmount();
+            if (maxBet != 0 && ppUsd > maxBet) revert AboveMaxBet();
         }
     }
 

@@ -11,6 +11,7 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoCoreV2.sol";
 import "../../interfaces/ICasinoGameCallback.sol";
 import "../../interfaces/ICasinoKeno.sol";
+import "./CasinoHandsLib.sol";
 
 /// @title Keno
 /// @author Overtime
@@ -131,28 +132,87 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     /// per spot count: every additional hit pays strictly more (except the leading 0-bands of
     /// near-zero-probability low-hit outcomes). Top tier of picks 8–10 reaches the 300x cap;
     /// rare-jackpot probability is vanishingly small (Pick 10 hitting 10 = 1.12e-7), so cap
-    /// changes barely move RTP — most RTP comes from the 3–6 hit range
+    /// changes barely move RTP — most RTP comes from the 3–6 hit range.
+    ///
+    /// Implementation note: leading zero bands are left implicit — Solidity zero-initializes
+    /// `new uint256[](n)`, so only the non-zero hit-count multipliers are assigned. Memory
+    /// variable `m` is reassigned per pick (old allocation becomes unreachable but Solidity
+    /// memory persists for the call; total transient cost is bounded and only paid once at init)
     function _setDefaultPaytables() internal {
+        uint256[] memory m;
         // Pick 1:  RTP 98.000% (edge 2.000%)
-        _setDefault(1, _arr2(0, (392 * ONE) / 100));
+        m = new uint256[](2);
+        m[1] = (392 * ONE) / 100;
+        _setDefault(1, m);
         // Pick 2:  RTP 98.101% (edge 1.899%)
-        _setDefault(2, _arr3(0, ONE, 10 * ONE));
+        m = new uint256[](3);
+        m[1] = ONE;
+        m[2] = 10 * ONE;
+        _setDefault(2, m);
         // Pick 3:  RTP 97.128% (edge 2.872%)
-        _setDefault(3, _arr4(0, 0, 2 * ONE, 50 * ONE));
+        m = new uint256[](4);
+        m[2] = 2 * ONE;
+        m[3] = 50 * ONE;
+        _setDefault(3, m);
         // Pick 4:  RTP 97.668% (edge 2.332%)
-        _setDefault(4, _arr5(0, 0, ONE, 12 * ONE, 80 * ONE));
+        m = new uint256[](5);
+        m[2] = ONE;
+        m[3] = 12 * ONE;
+        m[4] = 80 * ONE;
+        _setDefault(4, m);
         // Pick 5:  RTP 97.290% (edge 2.710%)
-        _setDefault(5, _arr6(0, 0, ONE, 3 * ONE, 33 * ONE, 80 * ONE));
+        m = new uint256[](6);
+        m[2] = ONE;
+        m[3] = 3 * ONE;
+        m[4] = 33 * ONE;
+        m[5] = 80 * ONE;
+        _setDefault(5, m);
         // Pick 6:  RTP 97.942% (edge 2.058%)
-        _setDefault(6, _arr7(0, 0, ONE, 2 * ONE, 8 * ONE, 55 * ONE, 100 * ONE));
+        m = new uint256[](7);
+        m[2] = ONE;
+        m[3] = 2 * ONE;
+        m[4] = 8 * ONE;
+        m[5] = 55 * ONE;
+        m[6] = 100 * ONE;
+        _setDefault(6, m);
         // Pick 7:  Top tier 250x (was 100x duplicate). Adds ~0.04% RTP — still ~3% edge
-        _setDefault(7, _arr8(0, 0, 0, 2 * ONE, 6 * ONE, 27 * ONE, 100 * ONE, 250 * ONE));
+        m = new uint256[](8);
+        m[3] = 2 * ONE;
+        m[4] = 6 * ONE;
+        m[5] = 27 * ONE;
+        m[6] = 100 * ONE;
+        m[7] = 250 * ONE;
+        _setDefault(7, m);
         // Pick 8:  Top tier 300x (was 100x duplicate). Adds ~0.10% RTP — still ~2.2% edge
-        _setDefault(8, _arr9(0, 0, 0, ONE, 4 * ONE, 18 * ONE, 38 * ONE, 100 * ONE, 300 * ONE));
+        m = new uint256[](9);
+        m[3] = ONE;
+        m[4] = 4 * ONE;
+        m[5] = 18 * ONE;
+        m[6] = 38 * ONE;
+        m[7] = 100 * ONE;
+        m[8] = 300 * ONE;
+        _setDefault(8, m);
         // Pick 9:  Tail [150, 300] (was [100, 100]). Adds ~0.07% RTP — still ~2.4% edge
-        _setDefault(9, _arr10(0, 0, 0, ONE, 3 * ONE, 7 * ONE, 20 * ONE, 70 * ONE, 150 * ONE, 300 * ONE));
+        m = new uint256[](10);
+        m[3] = ONE;
+        m[4] = 3 * ONE;
+        m[5] = 7 * ONE;
+        m[6] = 20 * ONE;
+        m[7] = 70 * ONE;
+        m[8] = 150 * ONE;
+        m[9] = 300 * ONE;
+        _setDefault(9, m);
         // Pick 10: Tail [100, 200, 300] (was [100, 100, 100]). Adds ~0.15% RTP — still ~2.9% edge
-        _setDefault(10, _arr11(0, 0, 0, ONE, 2 * ONE, 4 * ONE, 11 * ONE, 38 * ONE, 100 * ONE, 200 * ONE, 300 * ONE));
+        m = new uint256[](11);
+        m[3] = ONE;
+        m[4] = 2 * ONE;
+        m[5] = 4 * ONE;
+        m[6] = 11 * ONE;
+        m[7] = 38 * ONE;
+        m[8] = 100 * ONE;
+        m[9] = 200 * ONE;
+        m[10] = 300 * ONE;
+        _setDefault(10, m);
     }
 
     function _setDefault(uint8 picksCount, uint256[] memory mults) internal {
@@ -328,7 +388,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         if (b.status != BetStatus.PENDING) return;
 
         uint128 drawnMask = _drawNumbers(randomWords[0]);
-        uint8 hits = _popcount128(drawnMask & b.picksMask);
+        uint8 hits = CasinoHandsLib.popcount(drawnMask & b.picksMask);
         uint256 mult = paytables[b.picksCount][hits];
         uint256 payout = (b.amount * mult) / ONE;
 
@@ -369,8 +429,13 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /// @notice Partial Fisher-Yates over a notional [1..80] deck. We need 20 swaps, consuming
     /// 20 × 16 = 320 bits. The first 256-bit VRF word gives 16 chunks; once exhausted, we
-    /// re-hash the cursor for the remaining 4 swaps. Max bias per swap on `remaining ∈ [60, 80]`
-    /// is ≤ 16/65536 ≈ 0.024%, well below industry standard
+    /// re-hash to extend. The rehash is keyed on the ORIGINAL `word` plus a salt counter — NOT
+    /// the consumed cursor. After 16 chunks the cursor has been shifted right by exactly 256
+    /// bits and equals zero, so `keccak256(abi.encode(cursor))` would be a compile-time
+    /// constant and the last 4 swaps would sample fixed deck positions, breaking uniformity
+    /// over C(80,20). Binding to `word` keeps every chunk dependent on the VRF output.
+    /// Max bias per swap on `remaining ∈ [60, 80]` is ≤ 16/65536 ≈ 0.024%, well below
+    /// industry standard
     function _drawNumbers(uint256 word) internal pure returns (uint128 mask) {
         uint8[POOL_SIZE] memory deck;
         for (uint8 i; i < POOL_SIZE; ++i) {
@@ -378,9 +443,11 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         }
         uint256 cursor = word;
         uint8 chunksLeft = CHUNKS_PER_WORD;
+        uint8 rehashes;
         for (uint8 i; i < DRAW_COUNT; ++i) {
             if (chunksLeft == 0) {
-                cursor = uint256(keccak256(abi.encode(cursor)));
+                ++rehashes;
+                cursor = uint256(keccak256(abi.encode(word, rehashes)));
                 chunksLeft = CHUNKS_PER_WORD;
             }
             uint256 remaining = uint256(POOL_SIZE - i);
@@ -408,17 +475,13 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         }
     }
 
-    /// @dev Brian Kernighan's bit-counting trick. 20 picks max → at most 20 iterations
-    function _popcount128(uint128 x) internal pure returns (uint8 c) {
-        while (x != 0) {
-            x &= x - 1;
-            ++c;
-        }
-    }
-
     /* ========== ADMIN: PAYTABLE MANAGEMENT ========== */
 
-    /// @notice Owner can replace a paytable. `multipliers` length must equal picksCount + 1
+    /// @notice Owner can replace a paytable. `multipliers` length must equal picksCount + 1.
+    /// @dev IN-FLIGHT BETS SEE THE NEW PAYTABLE. There is no per-bet snapshot. To avoid changing
+    /// outcomes on bets already placed, pause the game (`setGamePaused` on core) and let all
+    /// pending bets settle before calling this. The 2% house-edge floor and monotonicity are
+    /// NOT enforced on-chain — verify off-chain (KenoEdgeSim.js) before submitting
     function setPaytable(uint8 picksCount, uint256[] calldata multipliers) external onlyOwner {
         if (picksCount < MIN_PICKS || picksCount > MAX_PICKS) revert InvalidPicks();
         if (multipliers.length != uint256(picksCount) + 1) revert PaytableLengthMismatch();
@@ -542,170 +605,6 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
             if (_paused) lastPauseTime = block.timestamp;
             emit PauseChanged(_paused);
         }
-    }
-
-    /* ========== INTERNAL: array literal helpers (Solidity quirk) ========== */
-
-    function _arr2(uint256 a, uint256 b) internal pure returns (uint256[] memory r) {
-        r = new uint256[](2);
-        r[0] = a;
-        r[1] = b;
-    }
-
-    function _arr3(uint256 a, uint256 b, uint256 c) internal pure returns (uint256[] memory r) {
-        r = new uint256[](3);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-    }
-
-    function _arr4(uint256 a, uint256 b, uint256 c, uint256 d) internal pure returns (uint256[] memory r) {
-        r = new uint256[](4);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-    }
-
-    function _arr5(uint256 a, uint256 b, uint256 c, uint256 d, uint256 e) internal pure returns (uint256[] memory r) {
-        r = new uint256[](5);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-        r[4] = e;
-    }
-
-    function _arr6(
-        uint256 a,
-        uint256 b,
-        uint256 c,
-        uint256 d,
-        uint256 e,
-        uint256 f
-    ) internal pure returns (uint256[] memory r) {
-        r = new uint256[](6);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-        r[4] = e;
-        r[5] = f;
-    }
-
-    function _arr7(
-        uint256 a,
-        uint256 b,
-        uint256 c,
-        uint256 d,
-        uint256 e,
-        uint256 f,
-        uint256 g
-    ) internal pure returns (uint256[] memory r) {
-        r = new uint256[](7);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-        r[4] = e;
-        r[5] = f;
-        r[6] = g;
-    }
-
-    function _arr8(
-        uint256 a,
-        uint256 b,
-        uint256 c,
-        uint256 d,
-        uint256 e,
-        uint256 f,
-        uint256 g,
-        uint256 h
-    ) internal pure returns (uint256[] memory r) {
-        r = new uint256[](8);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-        r[4] = e;
-        r[5] = f;
-        r[6] = g;
-        r[7] = h;
-    }
-
-    function _arr9(
-        uint256 a,
-        uint256 b,
-        uint256 c,
-        uint256 d,
-        uint256 e,
-        uint256 f,
-        uint256 g,
-        uint256 h,
-        uint256 i
-    ) internal pure returns (uint256[] memory r) {
-        r = new uint256[](9);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-        r[4] = e;
-        r[5] = f;
-        r[6] = g;
-        r[7] = h;
-        r[8] = i;
-    }
-
-    function _arr10(
-        uint256 a,
-        uint256 b,
-        uint256 c,
-        uint256 d,
-        uint256 e,
-        uint256 f,
-        uint256 g,
-        uint256 h,
-        uint256 i,
-        uint256 j
-    ) internal pure returns (uint256[] memory r) {
-        r = new uint256[](10);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-        r[4] = e;
-        r[5] = f;
-        r[6] = g;
-        r[7] = h;
-        r[8] = i;
-        r[9] = j;
-    }
-
-    function _arr11(
-        uint256 a,
-        uint256 b,
-        uint256 c,
-        uint256 d,
-        uint256 e,
-        uint256 f,
-        uint256 g,
-        uint256 h,
-        uint256 i,
-        uint256 j,
-        uint256 k
-    ) internal pure returns (uint256[] memory r) {
-        r = new uint256[](11);
-        r[0] = a;
-        r[1] = b;
-        r[2] = c;
-        r[3] = d;
-        r[4] = e;
-        r[5] = f;
-        r[6] = g;
-        r[7] = h;
-        r[8] = i;
-        r[9] = j;
-        r[10] = k;
     }
 
     /* ========== MODIFIERS ========== */

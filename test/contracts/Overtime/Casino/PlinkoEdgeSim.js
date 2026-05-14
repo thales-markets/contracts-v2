@@ -1,12 +1,15 @@
 /**
- * Plinko — 100k Monte Carlo edge simulation per (rows, risk) combo (9 combos total).
+ * Plinko — 100k Monte Carlo edge simulation per risk level (3 combos total).
+ *
+ * Contract is fixed at 8 rows (`Plinko.sol:31 ROWS = 8`), with 3 risk presets (LOW/MED/HIGH)
+ * each backed by a 9-slot paytable. Slot = popcount(word & 0xFF), so slot ∈ [0,8].
  *
  * Two phases:
- *   (1) Cross-validate JS slot derivation (`popcount(word & ((1<<rows)-1))`) and the default
- *       paytables against the live contract for VALIDATION_ROUNDS rounds.
- *   (2) Run SIM_ROUNDS rounds in pure JS for each (rows, risk) and compare realized RTP to the
- *       analytic RTP = sum_k C(rows,k)/2^rows * paytable[k]. Each combo's paytable is calibrated
- *       to ≥2% theoretical edge — the sim verifies this empirically and surfaces realized edge.
+ *   (1) Cross-validate JS slot derivation (`popcount(word & 0xFF)`) and the default paytables
+ *       against the live contract for VALIDATION_ROUNDS rounds.
+ *   (2) Run SIM_ROUNDS rounds in pure JS for each risk and compare realized RTP to the
+ *       analytic RTP = sum_k C(8,k)/256 * paytable[k]. Each combo is calibrated to ≥2%
+ *       theoretical edge — the sim verifies this empirically and surfaces realized edge.
  *
  * Excluded from the default `npx hardhat test` run via EXCLUDED_EDGE_TESTS in hardhat.config.js.
  */
@@ -28,17 +31,18 @@ const SIM_ROUNDS = 100_000;
 const VALIDATION_ROUNDS = 30;
 const BET_AMOUNT = 3n * USDC_UNIT;
 
+const ROWS = 8;
+const SLOTS = ROWS + 1;
+const SLOT_MASK = (1n << BigInt(ROWS)) - 1n;
 const Risk = { LOW: 0, MED: 1, HIGH: 2 };
 const RISK_NAMES = ['LOW', 'MED', 'HIGH'];
-const ROW_OPTIONS = [8, 12, 16];
 
 function wordFromSeed(seed) {
 	return BigInt('0x' + ethers.id(`plinko-sim-${seed}`).slice(2));
 }
 
-function slotFromWord(word, rows) {
-	const mask = (1n << BigInt(rows)) - 1n;
-	let bits = BigInt(word) & mask;
+function slotFromWord(word) {
+	let bits = BigInt(word) & SLOT_MASK;
 	let c = 0;
 	while (bits > 0n) {
 		if ((bits & 1n) === 1n) c++;
@@ -54,12 +58,12 @@ function choose(n, k) {
 	return r;
 }
 
-// Compute analytic RTP: sum_k C(rows,k)/2^rows * paytable[k] (paytable is bigint 1e18)
-function analyticRTP(rows, paytable) {
-	const denom = 2 ** rows;
+// Compute analytic RTP: sum_k C(8,k)/256 * paytable[k] (paytable is bigint 1e18)
+function analyticRTP(paytable) {
+	const denom = 2 ** ROWS;
 	let rtp = 0;
-	for (let k = 0; k <= rows; k++) {
-		const p = choose(rows, k) / denom;
+	for (let k = 0; k <= ROWS; k++) {
+		const p = choose(ROWS, k) / denom;
 		const m = Number(paytable[k]) / 1e18;
 		rtp += p * m;
 	}
@@ -138,11 +142,9 @@ async function deployFixture() {
 	return { plinko, plinkoAddr, vrf, core, coreAddr, usdc, usdcAddr, player };
 }
 
-async function placeAndResolve(ctx, rows, risk, word) {
+async function placeAndResolve(ctx, risk, word) {
 	const { plinko, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await plinko
-		.connect(player)
-		.placeBet(usdcAddr, BET_AMOUNT, rows, risk, ethers.ZeroAddress);
+	const tx = await plinko.connect(player).placeBet(usdcAddr, BET_AMOUNT, risk, ethers.ZeroAddress);
 	const receipt = await tx.wait();
 	const placed = receipt.logs
 		.map((l) => {
@@ -161,15 +163,17 @@ async function placeAndResolve(ctx, rows, risk, word) {
 describe('Plinko — edge sim & EVM cross-validation', function () {
 	this.timeout(900_000);
 
-	let paytables = {}; // paytables[rows][risk] = bigint[]
+	let paytables = {}; // paytables[risk] = bigint[]
 
 	before(async () => {
 		const ctx = await loadFixture(deployFixture);
-		for (const rows of ROW_OPTIONS) {
-			paytables[rows] = {};
-			for (const r of [Risk.LOW, Risk.MED, Risk.HIGH]) {
-				const pt = await ctx.plinko.getPaytable(rows, r);
-				paytables[rows][r] = pt.map((v) => BigInt(v));
+		for (const r of [Risk.LOW, Risk.MED, Risk.HIGH]) {
+			const pt = await ctx.plinko.getPaytable(r);
+			paytables[r] = pt.map((v) => BigInt(v));
+			if (paytables[r].length !== SLOTS) {
+				throw new Error(
+					`paytable for risk=${RISK_NAMES[r]} has length ${paytables[r].length}, expected ${SLOTS}`
+				);
 			}
 		}
 	});
@@ -180,22 +184,18 @@ describe('Plinko — edge sim & EVM cross-validation', function () {
 
 		// Re-fetch paytables in this fresh fixture
 		const local = {};
-		for (const rows of ROW_OPTIONS) {
-			local[rows] = {};
-			for (const r of [Risk.LOW, Risk.MED, Risk.HIGH]) {
-				const pt = await plinko.getPaytable(rows, r);
-				local[rows][r] = pt.map((v) => BigInt(v));
-			}
+		for (const r of [Risk.LOW, Risk.MED, Risk.HIGH]) {
+			const pt = await plinko.getPaytable(r);
+			local[r] = pt.map((v) => BigInt(v));
 		}
 
 		for (let i = 0; i < VALIDATION_ROUNDS; i++) {
-			const rows = ROW_OPTIONS[i % ROW_OPTIONS.length];
 			const risk = i % 3;
-			const word = wordFromSeed(`v-${i}-${rows}-${risk}`);
-			const expectedSlot = slotFromWord(word, rows);
-			const expectedMult = local[rows][risk][expectedSlot];
+			const word = wordFromSeed(`v-${i}-${risk}`);
+			const expectedSlot = slotFromWord(word);
+			const expectedMult = local[risk][expectedSlot];
 
-			const betId = await placeAndResolve(ctx, rows, risk, word);
+			const betId = await placeAndResolve(ctx, risk, word);
 			const base = await plinko.getBetBase(betId);
 			expect(Number(base.slotIndex)).to.equal(expectedSlot);
 			expect(base.multiplierE18).to.equal(expectedMult);
@@ -203,53 +203,48 @@ describe('Plinko — edge sim & EVM cross-validation', function () {
 		}
 	});
 
-	for (const rows of ROW_OPTIONS) {
-		for (const risk of [Risk.LOW, Risk.MED, Risk.HIGH]) {
-			it(`runs ${SIM_ROUNDS.toLocaleString()} rounds @ rows=${rows}, risk=${
-				RISK_NAMES[risk]
-			}`, () => {
-				const pt = paytables[rows][risk];
-				if (!pt) throw new Error('paytable missing — before() did not run?');
+	for (const risk of [Risk.LOW, Risk.MED, Risk.HIGH]) {
+		it(`runs ${SIM_ROUNDS.toLocaleString()} rounds @ risk=${RISK_NAMES[risk]}`, () => {
+			const pt = paytables[risk];
+			if (!pt) throw new Error('paytable missing — before() did not run?');
 
-				let totalStake = 0n;
-				let totalPayout = 0n;
-				const slotCounts = new Array(rows + 1).fill(0);
-				let biggestWin = 0n;
+			let totalStake = 0n;
+			let totalPayout = 0n;
+			const slotCounts = new Array(SLOTS).fill(0);
+			let biggestWin = 0n;
 
-				for (let i = 0; i < SIM_ROUNDS; i++) {
-					const w = wordFromSeed(`s-${rows}-${risk}-${i}`);
-					const slot = slotFromWord(w, rows);
-					slotCounts[slot]++;
-					const mult = pt[slot];
-					const payout = (BET_AMOUNT * mult) / ONE;
-					if (payout > biggestWin) biggestWin = payout;
-					totalStake += BET_AMOUNT;
-					totalPayout += payout;
-				}
+			for (let i = 0; i < SIM_ROUNDS; i++) {
+				const w = wordFromSeed(`s-${risk}-${i}`);
+				const slot = slotFromWord(w);
+				slotCounts[slot]++;
+				const mult = pt[slot];
+				const payout = (BET_AMOUNT * mult) / ONE;
+				if (payout > biggestWin) biggestWin = payout;
+				totalStake += BET_AMOUNT;
+				totalPayout += payout;
+			}
 
-				const rtp = (Number(totalPayout) / Number(totalStake)) * 100;
-				const edge = 100 - rtp;
-				const analytic = analyticRTP(rows, pt) * 100;
-				const analyticEdge = 100 - analytic;
-				const fmt = (v) => (Number(v) / 1e6).toFixed(2);
+			const rtp = (Number(totalPayout) / Number(totalStake)) * 100;
+			const edge = 100 - rtp;
+			const analytic = analyticRTP(pt) * 100;
+			const analyticEdge = 100 - analytic;
+			const fmt = (v) => (Number(v) / 1e6).toFixed(2);
 
-				console.log('');
-				console.log(`==== Plinko 100k summary @ rows=${rows}, risk=${RISK_NAMES[risk]} ====`);
-				console.log(`Rounds:          ${SIM_ROUNDS.toLocaleString()}`);
-				console.log(`Realized RTP:    ${rtp.toFixed(2)}%   (analytic ${analytic.toFixed(2)}%)`);
-				console.log(
-					`Realized edge:   ${edge.toFixed(2)}%   (analytic ${analyticEdge.toFixed(2)}%)`
-				);
-				console.log(
-					`Biggest win:     ${fmt(biggestWin)} USDC (${(
-						Number(biggestWin) / Number(BET_AMOUNT)
-					).toFixed(2)}x)`
-				);
-				console.log('=================================================================');
+			console.log('');
+			console.log(`==== Plinko 100k summary @ risk=${RISK_NAMES[risk]} ====`);
+			console.log(`Rounds:          ${SIM_ROUNDS.toLocaleString()}`);
+			console.log(`Realized RTP:    ${rtp.toFixed(2)}%   (analytic ${analytic.toFixed(2)}%)`);
+			console.log(`Realized edge:   ${edge.toFixed(2)}%   (analytic ${analyticEdge.toFixed(2)}%)`);
+			console.log(
+				`Biggest win:     ${fmt(biggestWin)} USDC (${(
+					Number(biggestWin) / Number(BET_AMOUNT)
+				).toFixed(2)}x)`
+			);
+			console.log('============================================');
 
-				// Analytic edge is the source of truth. Just verify it's at the design floor.
-				expect(analyticEdge).to.be.gt(1.5); // calibrated to ≥2%, allow tiny rounding slack
-			});
-		}
+			// Analytic edge is the source of truth — calibrated to ≥2% by the contract's
+			// _setPaytableInternal check, so this is a belt-and-suspenders empirical confirm
+			expect(analyticEdge).to.be.gt(1.5);
+		});
 	}
 });

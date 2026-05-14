@@ -16,17 +16,26 @@ const POOL = 80;
 const DRAW = 20;
 const BetStatus = { NONE: 0, PENDING: 1, RESOLVED: 2, CANCELLED: 3 };
 
-// JS mirror of Keno._drawNumbers — partial Fisher-Yates over 80 with cursor re-hash
+// JS mirror of Keno._drawNumbers — partial Fisher-Yates over 80 with cursor re-hash.
+// Rehash is keyed on the ORIGINAL `word` plus a salt counter (`rehashes`), NOT the consumed
+// cursor — after 16 chunks the cursor has been right-shifted by 256 bits and equals zero, so
+// `keccak256(cursor)` would be a compile-time constant and the last 4 swaps would sample
+// fixed deck positions. Must match the on-chain `_drawNumbers` rehash exactly
 function drawNumbers(word) {
 	const deck = [];
 	for (let i = 0; i < POOL; i++) deck.push(i + 1);
-	let cursor = BigInt(word);
+	const baseWord = BigInt(word);
+	let cursor = baseWord;
 	let chunksLeft = 16;
+	let rehashes = 0;
 	const drawn = [];
 	for (let i = 0; i < DRAW; i++) {
 		if (chunksLeft === 0) {
+			rehashes++;
 			cursor = BigInt(
-				ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [cursor]))
+				ethers.keccak256(
+					ethers.AbiCoder.defaultAbiCoder().encode(['uint256', 'uint8'], [baseWord, rehashes])
+				)
 			);
 			chunksLeft = 16;
 		}

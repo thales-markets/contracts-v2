@@ -11,6 +11,7 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoCoreV2.sol";
 import "../../interfaces/ICasinoGameCallback.sol";
 import "../../interfaces/ICasinoVideoPoker.sol";
+import "./CasinoHandsLib.sol";
 
 /// @title VideoPoker
 /// @author Overtime
@@ -39,11 +40,6 @@ contract VideoPoker is
     uint8 private constant DECK_SIZE = 52;
     uint8 private constant HAND_SIZE = 5;
     uint8 private constant HOLD_MASK_MAX = 31; // low 5 bits set
-
-    /// @dev 16-bit Fisher-Yates shift, same as every other V2 game. Worst case is 5 swaps per
-    /// VRF (initial deal or full discard) — 80 bits per word, well below the 256-bit budget
-    uint8 private constant SHUFFLE_SHIFT_BITS = 16;
-    uint64 private constant SHUFFLE_SHIFT_MASK = 0xFFFF;
 
     // Hand classes (numerical match with OvertimeHoldem encoding)
     uint8 private constant CLASS_HIGH_CARD = 0;
@@ -271,8 +267,8 @@ contract VideoPoker is
     }
 
     function _onInitialDealt(uint256 betId, Bet storage b, uint256 word) internal {
-        uint8[] memory deck = _initFullDeck();
-        _partialFisherYates(deck, HAND_SIZE, word);
+        uint8[] memory deck = CasinoHandsLib.initDeck(DECK_SIZE, 0);
+        CasinoHandsLib.partialFisherYates(deck, HAND_SIZE, word);
         for (uint8 i; i < HAND_SIZE; ++i) {
             b.initialCards[i] = deck[i];
         }
@@ -284,7 +280,7 @@ contract VideoPoker is
         // Build the final 5-card hand: held cards stay in place, others come from the remaining
         // 47-card deck via partial Fisher-Yates
         uint8 holdMask = b.holdMask;
-        uint8 needed = HAND_SIZE - _popcount5(holdMask);
+        uint8 needed = HAND_SIZE - CasinoHandsLib.popcount(holdMask);
 
         uint64 excludeMask;
         for (uint8 i; i < HAND_SIZE; ++i) {
@@ -292,9 +288,9 @@ contract VideoPoker is
         }
 
         uint8 deckSize = DECK_SIZE - HAND_SIZE; // 47
-        uint8[] memory deck = _initDeckExcluding(deckSize, excludeMask);
+        uint8[] memory deck = CasinoHandsLib.initDeck(deckSize, excludeMask);
         if (needed > 0) {
-            _partialFisherYates(deck, needed, word);
+            CasinoHandsLib.partialFisherYates(deck, needed, word);
         }
 
         uint8 deckCursor;
@@ -397,7 +393,7 @@ contract VideoPoker is
             if (cards[i] / 13 != suit0) flush = false;
         }
 
-        uint8 straightTop = _findStraightTopFive(rankMask);
+        uint8 straightTop = CasinoHandsLib.findStraightTop(rankMask);
 
         if (flush && straightTop > 0) {
             if (straightTop == RANK_ACE) {
@@ -448,63 +444,12 @@ contract VideoPoker is
         return (CLASS_HIGH_CARD, 0);
     }
 
-    /// @notice 5-card straight detection. Returns the high-card rank of the straight, or 0 if
-    /// none. Handles the wheel A-2-3-4-5 (returns 5)
-    function _findStraightTopFive(uint16 mask) internal pure returns (uint8) {
-        for (uint8 step; step <= 8; ++step) {
-            uint8 top = RANK_ACE - step;
-            uint16 fiveMask = uint16(0x1F) << (top - 4);
-            if ((mask & fiveMask) == fiveMask) {
-                return top;
-            }
-        }
-        // Wheel: A-2-3-4-5 → top = 5. Bits: A=14 (0x4000), 2..5 (0x3C)
-        if ((mask & 0x4000) != 0 && (mask & 0x3C) == 0x3C) {
-            return 5;
-        }
-        return 0;
-    }
+    /* ========== HELPERS ========== */
 
-    /* ========== DECK / SHUFFLE ========== */
-
-    function _initFullDeck() internal pure returns (uint8[] memory deck) {
-        deck = new uint8[](DECK_SIZE);
-        for (uint8 i; i < DECK_SIZE; ++i) {
-            deck[i] = i;
-        }
-    }
-
-    function _initDeckExcluding(uint8 size, uint64 excludeMask) internal pure returns (uint8[] memory deck) {
-        deck = new uint8[](size);
-        uint8 j;
-        for (uint8 c; c < DECK_SIZE; ++c) {
-            if ((excludeMask & (uint64(1) << c)) != 0) continue;
-            deck[j] = c;
-            ++j;
-        }
-    }
-
-    function _partialFisherYates(uint8[] memory deck, uint8 n, uint256 word) internal pure {
-        uint256 len = deck.length;
-        uint256 cursor = word;
-        for (uint8 i; i < n; ++i) {
-            uint256 remaining = len - i;
-            uint256 j = i + ((cursor & SHUFFLE_SHIFT_MASK) % remaining);
-            cursor >>= SHUFFLE_SHIFT_BITS;
-            uint8 tmp = deck[i];
-            deck[i] = deck[j];
-            deck[j] = tmp;
-        }
-    }
-
-    function _popcount5(uint8 x) internal pure returns (uint8 c) {
-        unchecked {
-            while (x != 0) {
-                c += x & 1;
-                x >>= 1;
-            }
-        }
-    }
+    /// @notice Deck construction, Fisher-Yates shuffle, 5-card straight detection, and popcount
+    /// all live in `CasinoHandsLib` (internal pure, inlined at compile time — no DELEGATECALL,
+    /// no separate deployment, no storage). `_evaluateFive` itself stays local because its
+    /// return shape (class + primary pair rank for Jacks-or-Better cutoff) is VP-specific
 
     /* ========== VIEWS ========== */
 

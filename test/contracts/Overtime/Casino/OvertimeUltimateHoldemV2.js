@@ -1660,6 +1660,29 @@ describe('OvertimeUltimateHoldem', () => {
 			expect(base.status).to.equal(BetStatus.RESOLVED);
 		});
 
+		it('player ends with ROYAL_FLUSH (hits Royal branch + blind Royal multiplier)', async () => {
+			const { uth } = ctx;
+			// Royal Flush ≈ 0.0032% of 7-card hands; 80×5000 = 400k attempts → expected ~13 hits
+			const { w1, w2 } = findPreFlopWords(
+				(c) => c === HandClass.ROYAL_FLUSH,
+				'uth-royal',
+				80,
+				5000
+			);
+			const betId = await placeRaiseResolve(w1, w2);
+			const base = await uth.getBetBase(betId);
+			expect(base.status).to.equal(BetStatus.RESOLVED);
+		});
+
+		it('getBetPayouts returns the per-leg + total payouts after resolution', async () => {
+			// Exercises lines 918-919 (getBetPayouts external view)
+			const { uth } = ctx;
+			const { w1, w2 } = findPreFlopWords((c) => c === HandClass.FLUSH, 'uth-payouts');
+			const betId = await placeRaiseResolve(w1, w2);
+			const p = await uth.getBetPayouts(betId);
+			expect(p.totalPayout).to.equal(p.antePayout + p.blindPayout + p.playPayout);
+		});
+
 		it('player has wheel straight A-2-3-4-5 (hits wheel detection branch)', async () => {
 			const { uth } = ctx;
 			// Look for any 5-card subset of player7 (hole+first5community) that hits wheel
