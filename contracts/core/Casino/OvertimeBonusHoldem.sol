@@ -108,6 +108,10 @@ contract OvertimeBonusHoldem is
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
+    /// @notice Reverted when `placeBetWithFreeBet` is called with a non-zero `bonusAmount`.
+    /// The Bonus side bet's free-bet stake would otherwise be refunded via the FBH split on a
+    /// winning main game, paying the user back for a losing-bonus leg as if no loss occurred
+    error BonusNotAllowedForFreeBet();
 
     /* ========== STRUCTS ========== */
 
@@ -208,6 +212,12 @@ contract OvertimeBonusHoldem is
     ) internal returns (uint256 betId, uint256 requestId) {
         if (anteAmount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
+        // Free-bet flow cannot bundle the optional Bonus side bet. The bonus would otherwise be
+        // pulled from FBH along with the ante, and on a winning main game its lost stake would
+        // be returned to the user via the FBH stake-back split — effectively paying the user
+        // back 1:1 for a losing-bonus leg. Disallow rather than add a side-of-totalPay carve-out;
+        // matches how TCP's PairPlus is separately settled (no free-bet refund on a losing PP)
+        if (isFreeBet && bonusAmount > 0) revert BonusNotAllowedForFreeBet();
         _checkBetSize(collateral, anteAmount, bonusAmount);
         uint256 cappedProfit = _cappedProfit(collateral, anteAmount, bonusAmount);
 
@@ -775,6 +785,7 @@ contract OvertimeBonusHoldem is
         r.playerHole = b.playerHole;
         r.community = b.community;
         r.dealerHole = b.dealerHole;
+        r.isFreeBet = b.isFreeBet;
     }
 
     function getUserBetIds(

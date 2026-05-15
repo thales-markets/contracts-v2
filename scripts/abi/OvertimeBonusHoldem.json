@@ -16,6 +16,11 @@
   },
   {
     "inputs": [],
+    "name": "BonusNotAllowedForFreeBet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CancelTimeoutNotReached",
     "type": "error"
   },
@@ -939,6 +944,11 @@
             "internalType": "uint8[2]",
             "name": "dealerHole",
             "type": "uint8[2]"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
           }
         ],
         "internalType": "struct ICasinoOvertimeBonusHoldem.FullRecord",

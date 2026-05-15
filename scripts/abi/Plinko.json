@@ -457,6 +457,11 @@
             "internalType": "uint256",
             "name": "multiplierE18",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
           }
         ],
         "internalType": "struct ICasinoPlinko.FullRecord",

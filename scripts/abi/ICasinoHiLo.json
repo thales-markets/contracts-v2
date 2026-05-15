@@ -450,6 +450,11 @@
             "internalType": "uint8",
             "name": "pushCount",
             "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
           }
         ],
         "internalType": "struct ICasinoHiLo.FullRecord",

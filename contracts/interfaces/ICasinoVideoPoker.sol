@@ -62,6 +62,7 @@ interface ICasinoVideoPoker {
         uint256 multiplier; // paytable multiplier on the resolved hand (0 if lost)
         uint8[5] initialCards; // cards from VRF1 (zeroed until AWAITING_DEAL fulfilled)
         uint8[5] finalCards; // cards after the draw replacements (zeroed until RESOLVED)
+        bool isFreeBet;
     }
 
     /* ========== EVENTS ========== */

@@ -33,6 +33,7 @@ interface ICasinoPlinko {
         Risk risk;
         uint8 slotIndex;
         uint256 multiplierE18;
+        bool isFreeBet;
     }
 
     event BetPlaced(

@@ -481,6 +481,11 @@
             "internalType": "uint8[3]",
             "name": "dealerCards",
             "type": "uint8[3]"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
           }
         ],
         "internalType": "struct ICasinoThreeCardPoker.FullRecord",

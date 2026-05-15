@@ -31,6 +31,7 @@ interface ICasinoKeno {
         uint128 picksMask; // bitmask of player's picks (numbers 1..80 → bits 0..79)
         uint128 drawnMask; // bitmask of the 20 drawn numbers (set when status == RESOLVED)
         uint256 multiplierE18;
+        bool isFreeBet;
     }
 
     event BetPlaced(

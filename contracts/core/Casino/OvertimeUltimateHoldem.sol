@@ -760,6 +760,7 @@ contract OvertimeUltimateHoldem is
         r.playerHole = b.playerHole;
         r.community = b.community;
         r.dealerHole = b.dealerHole;
+        r.isFreeBet = b.isFreeBet;
     }
 
     function getUserBetIds(

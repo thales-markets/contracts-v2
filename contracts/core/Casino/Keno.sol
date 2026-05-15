@@ -550,6 +550,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         r.picksMask = b.picksMask;
         r.drawnMask = b.drawnMask;
         r.multiplierE18 = b.multiplierE18;
+        r.isFreeBet = b.isFreeBet;
     }
 
     function getPaytable(uint8 picksCount) external view override returns (uint256[] memory) {

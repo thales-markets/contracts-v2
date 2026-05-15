@@ -509,6 +509,7 @@ contract VideoPoker is
         r.multiplier = b.multiplier;
         r.initialCards = b.initialCards;
         r.finalCards = b.finalCards;
+        r.isFreeBet = b.isFreeBet;
     }
 
     function getUserBetIds(

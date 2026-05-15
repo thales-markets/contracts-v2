@@ -481,6 +481,7 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         r.guessCount = b.guessCount;
         r.correctCount = b.correctCount;
         r.pushCount = b.pushCount;
+        r.isFreeBet = b.isFreeBet;
     }
 
     function getUserBetIds(

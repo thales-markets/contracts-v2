@@ -401,6 +401,7 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         r.risk = b.risk;
         r.slotIndex = b.slotIndex;
         r.multiplierE18 = b.multiplierE18;
+        r.isFreeBet = b.isFreeBet;
     }
 
     function getPaytable(Risk risk) external view override returns (uint256[] memory) {

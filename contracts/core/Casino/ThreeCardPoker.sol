@@ -95,6 +95,11 @@ contract ThreeCardPoker is
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
+    /// @notice Reverted when `placeBetWithFreeBet` is called with a non-zero `pairPlusAmount`.
+    /// Without this, a winning PP would credit-back the PP stake via the FBH split, paying the
+    /// user as if no free-bet credit had been consumed. Disallow rather than restructure the
+    /// settle path
+    error PairPlusNotAllowedForFreeBet();
 
     /* ========== STRUCTS ========== */
 
@@ -185,6 +190,11 @@ contract ThreeCardPoker is
     ) internal returns (uint256 betId, uint256 requestId) {
         if (anteAmount == 0) revert InvalidAmount();
         if (!core.supportedCollateral(collateral)) revert InvalidCollateral();
+        // Free-bet flow cannot bundle the optional Pair Plus side bet. A winning PP would refund
+        // its stake to the user via the FBH split, paying the user back as if no free-bet credit
+        // had been consumed on the PP leg. Disallow rather than restructure the PP-settlement
+        // path to carve PP out of the originalStake handed to FBH
+        if (isFreeBet && pairPlusAmount > 0) revert PairPlusNotAllowedForFreeBet();
 
         _checkBetSize(collateral, anteAmount, pairPlusAmount);
         uint256 cappedProfit = _cappedProfit(collateral, anteAmount, pairPlusAmount);
@@ -771,6 +781,7 @@ contract ThreeCardPoker is
         r.outcome = b.outcome;
         r.playerCards = b.playerCards;
         r.dealerCards = b.dealerCards;
+        r.isFreeBet = b.isFreeBet;
     }
 
     function getUserBetIds(

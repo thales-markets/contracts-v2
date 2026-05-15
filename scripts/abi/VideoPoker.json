@@ -591,6 +591,11 @@
             "internalType": "uint8[5]",
             "name": "finalCards",
             "type": "uint8[5]"
+          },
+          {
+            "internalType": "bool",
+            "name": "isFreeBet",
+            "type": "bool"
           }
         ],
         "internalType": "struct ICasinoVideoPoker.FullRecord",

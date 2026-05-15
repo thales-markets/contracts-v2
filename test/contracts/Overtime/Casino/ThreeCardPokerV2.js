@@ -1054,20 +1054,29 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 
 		it('reverts on insufficient FBH balance', async () => {
 			const { tcp, usdcAddr, player } = ctx;
+			// Ante-only placement (PP > 0 is disallowed on free-bet — see separate test below).
+			// With FBH balance not funded, ante pull reverts at the FBH boundary
+			await expect(
+				tcp.connect(player).placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+			).to.be.revertedWith('MockFBH: InsufficientBalance');
+		});
+
+		it('placeBetWithFreeBet with non-zero Pair Plus reverts (PP forbidden on free-bet)', async () => {
+			const { tcp, usdcAddr, player } = ctx;
+			// Pre-check that fires before the FBH pull. Funding state is irrelevant — the
+			// disallowed-PP check is the first thing after the basic validity checks
 			await expect(
 				tcp
 					.connect(player)
 					.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress)
-			).to.be.revertedWith('MockFBH: InsufficientBalance');
+			).to.be.revertedWithCustomError(tcp, 'PairPlusNotAllowedForFreeBet');
 		});
 
-		it('place-time: pulls (ante + PP) from FBH, does not touch wallet', async () => {
+		it('place-time: pulls ante from FBH, does not touch wallet (PP = 0)', async () => {
 			const { tcp, fbh, usdc, usdcAddr, player } = ctx;
-			await fundFB(ctx, MIN_USDC_BET * 2n);
+			await fundFB(ctx, MIN_USDC_BET);
 			const balBefore = await usdc.balanceOf(player.address);
-			await tcp
-				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+			await tcp.connect(player).placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
 		});
@@ -1101,11 +1110,12 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 
 		it('cancel from AWAITING_DEAL: refund credits FBH balance (reusable)', async () => {
 			const { tcp, fbh, usdcAddr, usdc, owner, player } = ctx;
-			const stake = MIN_USDC_BET * 2n;
+			// PP > 0 is forbidden on free-bet; refund test covers the ante-only path
+			const stake = MIN_USDC_BET;
 			await fundFB(ctx, stake);
 			const tx = await tcp
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
