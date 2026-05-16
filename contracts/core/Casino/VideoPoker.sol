@@ -155,6 +155,17 @@ contract VideoPoker is
         return _placeBet(msg.sender, collateral, amount, referrer, true);
     }
 
+    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
+    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
+    function placeBet(
+        address collateral,
+        uint256 amount,
+        address referrer,
+        bool isFreeBet
+    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(msg.sender, collateral, amount, referrer, isFreeBet);
+    }
+
     function _placeBet(
         address user,
         address collateral,
@@ -199,7 +210,14 @@ contract VideoPoker is
         emit BetPlaced(betId, requestId, user, collateral, amount);
     }
 
+    /// @notice Gasless-session entry for the only mid-game action VP has. Other V2 games
+    /// expose a `makeAction(uint256, uint8)` dispatcher; VP doesn't need the indirection because
+    /// there's only one action to dispatch — the FE's Biconomy session allowlists `draw` directly
     function draw(uint256 betId, uint8 holdMask) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _draw(betId, holdMask);
+    }
+
+    function _draw(uint256 betId, uint8 holdMask) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();

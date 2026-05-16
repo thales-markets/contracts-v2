@@ -100,6 +100,8 @@ contract ThreeCardPoker is
     /// user as if no free-bet credit had been consumed. Disallow rather than restructure the
     /// settle path
     error PairPlusNotAllowedForFreeBet();
+    /// @notice Reverted by `makeAction` when an unknown action code is supplied
+    error InvalidAction();
 
     /* ========== STRUCTS ========== */
 
@@ -181,6 +183,18 @@ contract ThreeCardPoker is
         return _placeBet(collateral, anteAmount, pairPlusAmount, referrer, true);
     }
 
+    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
+    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
+    function placeBet(
+        address collateral,
+        uint256 anteAmount,
+        uint256 pairPlusAmount,
+        address referrer,
+        bool isFreeBet
+    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, anteAmount, pairPlusAmount, referrer, isFreeBet);
+    }
+
     function _placeBet(
         address collateral,
         uint256 anteAmount,
@@ -240,6 +254,50 @@ contract ThreeCardPoker is
     /// @notice User folds — forfeits Ante, no Play stake taken. Pair Plus has already settled in
     /// VRF1 fulfillment; this call only releases the remaining ante-side reservation
     function fold(uint256 betId) external override nonReentrant notPaused {
+        _fold(betId);
+    }
+
+    /// @notice User commits to Play — pulls additional Ante-sized stake and triggers VRF2
+    /// for dealer cards. Dealer cards are dealt from a fresh 49-card deck (excluding the player's
+    /// 3 cards) so no duplicates can occur
+    function play(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _play(betId);
+    }
+
+    /// @notice Single-selector dispatcher for gasless sessions. Action codes:
+    ///   0 = play
+    ///   1 = fold
+    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+        if (action == 0) return _play(betId);
+        if (action == 1) {
+            _fold(betId);
+            return 0;
+        }
+        revert InvalidAction();
+    }
+
+    function _play(uint256 betId) internal returns (uint256 requestId) {
+        Bet storage b = bets[betId];
+        _requireOwnedPlayerTurn(b);
+
+        // Pull Play stake (= Ante). Free-bet runs draw the play stake from FBH too; if the
+        // remaining FBH balance is insufficient the call reverts and the user must fold instead
+        if (b.isFreeBet) {
+            core.useFreeBet(b.user, b.collateral, b.anteAmount);
+        } else {
+            core.pullFromUser(b.user, b.collateral, b.anteAmount);
+        }
+
+        requestId = core.requestRandomWords(1);
+        b.requestId = requestId;
+        b.lastRequestAt = block.timestamp;
+        b.status = BetStatus.AWAITING_RESOLVE;
+        requestIdToBetId[requestId] = betId;
+
+        emit PlayChosen(betId, requestId, b.user, b.anteAmount);
+    }
+
+    function _fold(uint256 betId) internal {
         Bet storage b = bets[betId];
         _requireOwnedPlayerTurn(b);
         _doFold(betId, b);
@@ -263,30 +321,6 @@ contract ThreeCardPoker is
         b.outcome = Outcome.FOLDED;
         b.resolvedAt = block.timestamp;
         emit Folded(betId, b.user);
-    }
-
-    /// @notice User commits to Play — pulls additional Ante-sized stake and triggers VRF2
-    /// for dealer cards. Dealer cards are dealt from a fresh 49-card deck (excluding the player's
-    /// 3 cards) so no duplicates can occur
-    function play(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        Bet storage b = bets[betId];
-        _requireOwnedPlayerTurn(b);
-
-        // Pull Play stake (= Ante). Free-bet runs draw the play stake from FBH too; if the
-        // remaining FBH balance is insufficient the call reverts and the user must fold instead
-        if (b.isFreeBet) {
-            core.useFreeBet(b.user, b.collateral, b.anteAmount);
-        } else {
-            core.pullFromUser(b.user, b.collateral, b.anteAmount);
-        }
-
-        requestId = core.requestRandomWords(1);
-        b.requestId = requestId;
-        b.lastRequestAt = block.timestamp;
-        b.status = BetStatus.AWAITING_RESOLVE;
-        requestIdToBetId[requestId] = betId;
-
-        emit PlayChosen(betId, requestId, b.user, b.anteAmount);
     }
 
     /// @notice User-initiated cancel for a bet that's been waiting on VRF longer than the

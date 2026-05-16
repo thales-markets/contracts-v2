@@ -244,6 +244,19 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         return _placeBet(collateral, amount, picks, referrer, true);
     }
 
+    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
+    /// `placeBetWithFreeBet` remain callable for wallet-signed flows. No `makeAction` needed —
+    /// Keno is single-shot: VRF callback resolves the bet
+    function placeBet(
+        address collateral,
+        uint256 amount,
+        uint8[] calldata picks,
+        address referrer,
+        bool isFreeBet
+    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, amount, picks, referrer, isFreeBet);
+    }
+
     function _placeBet(
         address collateral,
         uint256 amount,

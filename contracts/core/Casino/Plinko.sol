@@ -168,6 +168,19 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         return _placeBet(collateral, amount, risk, referrer, true);
     }
 
+    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
+    /// `placeBetWithFreeBet` remain callable for wallet-signed flows. No `makeAction` needed —
+    /// Plinko is single-shot: VRF callback resolves the bet
+    function placeBet(
+        address collateral,
+        uint256 amount,
+        Risk risk,
+        address referrer,
+        bool isFreeBet
+    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, amount, risk, referrer, isFreeBet);
+    }
+
     function _placeBet(
         address collateral,
         uint256 amount,

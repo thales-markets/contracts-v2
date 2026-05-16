@@ -99,6 +99,8 @@ contract OvertimeUltimateHoldem is
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
+    /// @notice Reverted by `makeAction` when an unknown action code is supplied
+    error InvalidAction();
 
     /* ========== STRUCTS ========== */
 
@@ -178,6 +180,17 @@ contract OvertimeUltimateHoldem is
         return _placeBet(msg.sender, collateral, anteAmount, referrer, true);
     }
 
+    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
+    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
+    function placeBet(
+        address collateral,
+        uint256 anteAmount,
+        address referrer,
+        bool isFreeBet
+    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(msg.sender, collateral, anteAmount, referrer, isFreeBet);
+    }
+
     function _placeBet(
         address user,
         address collateral,
@@ -230,6 +243,56 @@ contract OvertimeUltimateHoldem is
     /// @notice Pre-flop raise (3× ante). Triggers VRF2 to reveal flop + turn + river + dealer hole
     /// in one shot — game is going to showdown
     function playPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _playPreFlop(betId);
+    }
+
+    /// @notice Pre-flop check. Triggers VRF2 to reveal flop only; defer raise/check to post-flop
+    function checkPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _checkPreFlop(betId);
+    }
+
+    /// @notice Post-flop raise (2× ante). Triggers VRF3 to reveal turn + river + dealer hole
+    function playPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _playPostFlop(betId);
+    }
+
+    /// @notice Post-flop check. Triggers VRF3 to reveal turn + river only; defer to river
+    function checkPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _checkPostFlop(betId);
+    }
+
+    /// @notice Post-river raise (1× ante). Final decision — triggers VRF4 to reveal dealer hole
+    function playRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _playRiver(betId);
+    }
+
+    /// @notice Fold after seeing the river — player forfeits Ante AND Blind. Only available at
+    /// POST_RIVER_TURN; folds earlier in the hand aren't a thing in UTH (player can check for free)
+    function fold(uint256 betId) external override nonReentrant notPaused {
+        _fold(betId);
+    }
+
+    /// @notice Single-selector dispatcher for gasless sessions. Action codes:
+    ///   0 = playPreFlop
+    ///   1 = checkPreFlop
+    ///   2 = playPostFlop
+    ///   3 = checkPostFlop
+    ///   4 = playRiver
+    ///   5 = fold
+    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+        if (action == 0) return _playPreFlop(betId);
+        if (action == 1) return _checkPreFlop(betId);
+        if (action == 2) return _playPostFlop(betId);
+        if (action == 3) return _checkPostFlop(betId);
+        if (action == 4) return _playRiver(betId);
+        if (action == 5) {
+            _fold(betId);
+            return 0;
+        }
+        revert InvalidAction();
+    }
+
+    function _playPreFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         _pullPlayStake(b, PRE_FLOP_RAISE_MULT);
@@ -237,16 +300,14 @@ contract OvertimeUltimateHoldem is
         emit RaisedPreFlop(betId, b.user, b.playAmount);
     }
 
-    /// @notice Pre-flop check. Triggers VRF2 to reveal flop only; defer raise/check to post-flop
-    function checkPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _checkPreFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_FLOP);
         emit CheckedPreFlop(betId, requestId, b.user);
     }
 
-    /// @notice Post-flop raise (2× ante). Triggers VRF3 to reveal turn + river + dealer hole
-    function playPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _playPostFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_FLOP_TURN);
         _pullPlayStake(b, POST_FLOP_RAISE_MULT);
@@ -254,16 +315,14 @@ contract OvertimeUltimateHoldem is
         emit RaisedPostFlop(betId, b.user, b.playAmount);
     }
 
-    /// @notice Post-flop check. Triggers VRF3 to reveal turn + river only; defer to river
-    function checkPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _checkPostFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_FLOP_TURN);
         requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_TURN_RIVER);
         emit CheckedPostFlop(betId, requestId, b.user);
     }
 
-    /// @notice Post-river raise (1× ante). Final decision — triggers VRF4 to reveal dealer hole
-    function playRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _playRiver(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_RIVER_TURN);
         _pullPlayStake(b, RIVER_RAISE_MULT);
@@ -271,9 +330,7 @@ contract OvertimeUltimateHoldem is
         emit RaisedRiver(betId, requestId, b.user, b.playAmount);
     }
 
-    /// @notice Fold after seeing the river — player forfeits Ante AND Blind. Only available at
-    /// POST_RIVER_TURN; folds earlier in the hand aren't a thing in UTH (player can check for free)
-    function fold(uint256 betId) external override nonReentrant notPaused {
+    function _fold(uint256 betId) internal {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_RIVER_TURN);
 

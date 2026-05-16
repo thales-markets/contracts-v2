@@ -58,6 +58,10 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     error BetNotOwner();
     error InvalidBetStatus();
     error CancelTimeoutNotReached();
+    /// @notice Reverted by `makeAction` when an unknown action code is supplied. Defends against
+    /// FE / gasless-session bugs that send a stale or out-of-range code; the call reverts
+    /// instead of silently no-op'ing past the if/else chain
+    error InvalidAction();
 
     /* ========== STRUCTS ========== */
 
@@ -149,6 +153,19 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         return _placeBet(collateral, amount, referrer, firstDirection, true);
     }
 
+    /// @notice Single-selector placeBet for gasless sessions. Same semantics as the legacy pair
+    /// (`placeBet` / `placeBetWithFreeBet`) — switches on the `isFreeBet` bool. Legacy functions
+    /// stay callable for wallet-signed and off-chain integrations
+    function placeBet(
+        address collateral,
+        uint256 amount,
+        address referrer,
+        Direction firstDirection,
+        bool isFreeBet
+    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(collateral, amount, referrer, firstDirection, isFreeBet);
+    }
+
     function _placeBet(
         address collateral,
         uint256 amount,
@@ -201,6 +218,31 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     }
 
     function guess(uint256 betId, Direction direction) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _guess(betId, direction);
+    }
+
+    function cashout(uint256 betId) external override nonReentrant notPaused {
+        _cashout(betId);
+    }
+
+    /// @notice Single-selector dispatcher for gasless sessions. Routes by action code into the
+    /// same internal helpers the legacy public functions use — same auth, same state machine,
+    /// same events. Action codes:
+    ///   0 = guess ABOVE
+    ///   1 = guess BELOW
+    ///   2 = cashout
+    /// Reverts `InvalidAction` for any other code so a misconfigured FE fails loudly
+    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+        if (action == 0) return _guess(betId, Direction.ABOVE);
+        if (action == 1) return _guess(betId, Direction.BELOW);
+        if (action == 2) {
+            _cashout(betId);
+            return 0;
+        }
+        revert InvalidAction();
+    }
+
+    function _guess(uint256 betId, Direction direction) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();
@@ -221,7 +263,7 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         emit GuessChosen(betId, requestId, msg.sender, direction);
     }
 
-    function cashout(uint256 betId) external override nonReentrant notPaused {
+    function _cashout(uint256 betId) internal {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
         if (b.user != msg.sender) revert BetNotOwner();

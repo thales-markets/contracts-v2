@@ -112,6 +112,8 @@ contract OvertimeBonusHoldem is
     /// The Bonus side bet's free-bet stake would otherwise be refunded via the FBH split on a
     /// winning main game, paying the user back for a losing-bonus leg as if no loss occurred
     error BonusNotAllowedForFreeBet();
+    /// @notice Reverted by `makeAction` when an unknown action code is supplied
+    error InvalidAction();
 
     /* ========== STRUCTS ========== */
 
@@ -202,6 +204,18 @@ contract OvertimeBonusHoldem is
         return _placeBet(msg.sender, collateral, anteAmount, bonusAmount, referrer, true);
     }
 
+    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
+    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
+    function placeBet(
+        address collateral,
+        uint256 anteAmount,
+        uint256 bonusAmount,
+        address referrer,
+        bool isFreeBet
+    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+        return _placeBet(msg.sender, collateral, anteAmount, bonusAmount, referrer, isFreeBet);
+    }
+
     function _placeBet(
         address user,
         address collateral,
@@ -259,6 +273,59 @@ contract OvertimeBonusHoldem is
     /* ========== DECISIONS ========== */
 
     function playPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _playPreFlop(betId);
+    }
+
+    function foldPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _foldPreFlop(betId);
+    }
+
+    function raiseFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _raiseFlop(betId);
+    }
+
+    function checkFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _checkFlop(betId);
+    }
+
+    function raiseTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _raiseTurn(betId);
+    }
+
+    function checkTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _checkTurn(betId);
+    }
+
+    function raiseRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _raiseRiver(betId);
+    }
+
+    function checkRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+        return _checkRiver(betId);
+    }
+
+    /// @notice Single-selector dispatcher for gasless sessions. Action codes:
+    ///   0 = playPreFlop
+    ///   1 = foldPreFlop
+    ///   2 = raiseFlop
+    ///   3 = checkFlop
+    ///   4 = raiseTurn
+    ///   5 = checkTurn
+    ///   6 = raiseRiver
+    ///   7 = checkRiver
+    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+        if (action == 0) return _playPreFlop(betId);
+        if (action == 1) return _foldPreFlop(betId);
+        if (action == 2) return _raiseFlop(betId);
+        if (action == 3) return _checkFlop(betId);
+        if (action == 4) return _raiseTurn(betId);
+        if (action == 5) return _checkTurn(betId);
+        if (action == 6) return _raiseRiver(betId);
+        if (action == 7) return _checkRiver(betId);
+        revert InvalidAction();
+    }
+
+    function _playPreFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         _pullRaiseStake(b, PRE_FLOP_PLAY_MULT);
@@ -267,13 +334,13 @@ contract OvertimeBonusHoldem is
         emit PlayedPreFlop(betId, requestId, b.user, b.playAmount);
     }
 
-    function foldPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _foldPreFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         return _markFoldAndRequestResolve(betId, b);
     }
 
-    function raiseFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _raiseFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.FLOP_TURN);
         _pullRaiseStake(b, POST_FLOP_RAISE_MULT);
@@ -282,14 +349,14 @@ contract OvertimeBonusHoldem is
         emit RaisedFlop(betId, requestId, b.user, b.flopRaise);
     }
 
-    function checkFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _checkFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.FLOP_TURN);
         requestId = _requestVrf(betId, b, BetStatus.AWAITING_TURN);
         emit CheckedFlop(betId, requestId, b.user);
     }
 
-    function raiseTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _raiseTurn(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.TURN_TURN);
         _pullRaiseStake(b, POST_FLOP_RAISE_MULT);
@@ -298,14 +365,14 @@ contract OvertimeBonusHoldem is
         emit RaisedTurn(betId, requestId, b.user, b.turnRaise);
     }
 
-    function checkTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _checkTurn(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.TURN_TURN);
         requestId = _requestVrf(betId, b, BetStatus.AWAITING_RIVER);
         emit CheckedTurn(betId, requestId, b.user);
     }
 
-    function raiseRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _raiseRiver(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.RIVER_TURN);
         _pullRaiseStake(b, POST_FLOP_RAISE_MULT);
@@ -314,7 +381,7 @@ contract OvertimeBonusHoldem is
         emit RaisedRiver(betId, requestId, b.user, b.riverRaise);
     }
 
-    function checkRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
+    function _checkRiver(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.RIVER_TURN);
         requestId = _requestVrf(betId, b, BetStatus.AWAITING_RESOLVE);

@@ -21,6 +21,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidAction",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidAddress",
     "type": "error"
   },
@@ -744,6 +749,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "action",
+        "type": "uint8"
+      }
+    ],
+    "name": "makeAction",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "manager",
     "outputs": [
@@ -837,6 +866,50 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "collateral",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "anteAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pairPlusAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isFreeBet",
+        "type": "bool"
+      }
+    ],
+    "name": "placeBet",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
