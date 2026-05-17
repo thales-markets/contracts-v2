@@ -163,35 +163,15 @@ contract ThreeCardPoker is
 
     /// @notice Places a Three Card Poker bet (Ante required, Pair Plus optional). Triggers VRF1
     /// for player cards. Player and dealer hands are dealt from independent shuffles to keep
-    /// dealer cards off-chain until the player commits to Play
-    function placeBet(
-        address collateral,
-        uint256 anteAmount,
-        uint256 pairPlusAmount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, anteAmount, pairPlusAmount, referrer, false);
-    }
-
-    /// @inheritdoc ICasinoThreeCardPoker
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 anteAmount,
-        uint256 pairPlusAmount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, anteAmount, pairPlusAmount, referrer, true);
-    }
-
-    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
-    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
+    /// dealer cards off-chain until the player commits to Play. `isFreeBet=true` pulls from
+    /// FreeBetsHolder (and reverts if pairPlusAmount > 0); `false` from the user's wallet
     function placeBet(
         address collateral,
         uint256 anteAmount,
         uint256 pairPlusAmount,
         address referrer,
         bool isFreeBet
-    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
         return _placeBet(collateral, anteAmount, pairPlusAmount, referrer, isFreeBet);
     }
 
@@ -251,23 +231,10 @@ contract ThreeCardPoker is
         emit BetPlaced(betId, requestId, msg.sender, collateral, anteAmount, pairPlusAmount);
     }
 
-    /// @notice User folds — forfeits Ante, no Play stake taken. Pair Plus has already settled in
-    /// VRF1 fulfillment; this call only releases the remaining ante-side reservation
-    function fold(uint256 betId) external override nonReentrant notPaused {
-        _fold(betId);
-    }
-
-    /// @notice User commits to Play — pulls additional Ante-sized stake and triggers VRF2
-    /// for dealer cards. Dealer cards are dealt from a fresh 49-card deck (excluding the player's
-    /// 3 cards) so no duplicates can occur
-    function play(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _play(betId);
-    }
-
-    /// @notice Single-selector dispatcher for gasless sessions. Action codes:
-    ///   0 = play
-    ///   1 = fold
-    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+    /// @notice Single-selector mid-game dispatcher. Action codes:
+    ///   0 = play  — commit to Play (pulls another Ante-sized stake, triggers VRF2 for dealer)
+    ///   1 = fold  — forfeit Ante (PP already settled at VRF1)
+    function makeAction(uint256 betId, uint8 action) external override nonReentrant notPaused returns (uint256 requestId) {
         if (action == 0) return _play(betId);
         if (action == 1) {
             _fold(betId);

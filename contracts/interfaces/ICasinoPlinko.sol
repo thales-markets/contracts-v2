@@ -58,21 +58,15 @@ interface ICasinoPlinko {
 
     event PaytableUpdated(Risk indexed risk, uint256[] multipliersE18);
 
+    /// @notice Places a Plinko bet. `isFreeBet=true` pulls the stake from FreeBetsHolder and
+    /// flags the bet so payouts route back to FBH on resolve; `false` pulls from the user's
+    /// wallet. Single canonical entry — gasless sessions allowlist this selector
     function placeBet(
         address collateral,
         uint256 amount,
         Risk risk,
-        address referrer
-    ) external returns (uint256 betId, uint256 requestId);
-
-    /// @notice Places a Plinko bet using the user's free-bet balance held in FreeBetsHolder.
-    /// Same flow as `placeBet` but stake is pulled from FBH and the bet is flagged so payouts
-    /// route back to FBH on resolution. Reverts if FBH balance < amount
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        Risk risk,
-        address referrer
+        address referrer,
+        bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
     function cancelBet(uint256 betId) external;

@@ -261,7 +261,7 @@ describe('VideoPoker Cross-Validation: real on-chain', () => {
 			const expectedPayout = BET_AMOUNT * BigInt(expectedMult);
 
 			// On-chain
-			const tx = await vp.connect(player).placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress);
+			const tx = await vp.connect(player).placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress, false);
 			const r1 = await tx.wait();
 			const placed = parseEvent(vp.interface, r1, 'BetPlaced');
 			const betId = placed.args.betId;

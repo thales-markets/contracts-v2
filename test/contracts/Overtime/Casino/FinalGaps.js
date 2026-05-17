@@ -270,7 +270,7 @@ describe('Final coverage gaps', () => {
 			}
 			const tx = await ctx.tcp
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -282,7 +282,7 @@ describe('Final coverage gaps', () => {
 				})
 				.find((e) => e?.name === 'BetPlaced');
 			await ctx.vrf.fulfillRandomWords(ctx.coreAddr, placed.args.requestId, [dealWord]);
-			const tx2 = await ctx.tcp.connect(ctx.player).play(placed.args.betId);
+			const tx2 = await ctx.tcp.connect(ctx.player).makeAction(placed.args.betId, 0);
 			const r2 = await tx2.wait();
 			const played = r2.logs
 				.map((l) => {
@@ -318,7 +318,7 @@ describe('Final coverage gaps', () => {
 			// Place a bet with PP enabled — wheel = STRAIGHT, pays 6:1
 			const tx = await ctx.tcp
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {

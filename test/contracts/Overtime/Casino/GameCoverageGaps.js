@@ -124,7 +124,7 @@ async function deployFullStack() {
 }
 
 async function placeAndDeal(ctx, game, args, word, eventName = 'BetPlaced') {
-	const tx = await game.connect(ctx.player).placeBet(...args);
+	const tx = await game.connect(ctx.player).placeBet(...args, false);
 	const r = await tx.wait();
 	const placed = r.logs
 		.map((l) => {
@@ -183,7 +183,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		it('TCP: adminCancelBet from AWAITING_DEAL', async () => {
 			const tx = await ctx.tcp
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -201,7 +201,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		it('TCP: adminCancelBet rejects non-resolver', async () => {
 			const tx = await ctx.tcp
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -224,7 +224,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		it('Plinko: adminCancelBet works', async () => {
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -242,7 +242,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		it('HiLo: adminCancelBet works', async () => {
 			const tx = await ctx.hilo
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -260,7 +260,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		it('Keno: adminCancelBet works', async () => {
 			const tx = await ctx.keno
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, [1, 2, 3], ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, [1, 2, 3], ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -299,8 +299,9 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			const ref = ctx.freeBetsHolderStub.address; // any non-zero
 			// First a referrals contract must exist for this to do anything visible, but
 			// when referrals==0 the call is silent. Just verify the path
-			await expect(ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ref)).to
-				.not.be.reverted;
+			await expect(
+				ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ref, false)
+			).to.not.be.reverted;
 		});
 
 		it('placeBet rejects if maxProfit exceeded', async () => {
@@ -310,7 +311,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			await expect(
 				ctx.plinko
 					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, 2 /* HIGH */, ethers.ZeroAddress)
+					.placeBet(ctx.usdcAddr, MIN_USDC_BET, 2 /* HIGH */, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(ctx.plinko, 'MaxProfitExceeded');
 		});
 	});
@@ -320,7 +321,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			await expect(
 				ctx.hilo
 					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, USDC_UNIT, ethers.ZeroAddress, 0 /* ABOVE */)
+					.placeBet(ctx.usdcAddr, USDC_UNIT, ethers.ZeroAddress, 0 /* ABOVE */, false)
 			).to.be.revertedWithCustomError(ctx.hilo, 'InvalidAmount');
 		});
 
@@ -328,7 +329,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			await expect(
 				ctx.hilo
 					.connect(ctx.player)
-					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */)
+					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */, false)
 			).to.be.revertedWithCustomError(ctx.hilo, 'InvalidCollateral');
 		});
 
@@ -337,7 +338,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			await expect(
 				ctx.hilo
 					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */)
+					.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */, false)
 			).to.be.revertedWithCustomError(ctx.hilo, 'MaxProfitExceeded');
 		});
 
@@ -355,17 +356,15 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 		});
 
 		it('guess on non-existent bet reverts', async () => {
-			await expect(ctx.hilo.connect(ctx.player).guess(99999n, 0)).to.be.revertedWithCustomError(
-				ctx.hilo,
-				'BetNotFound'
-			);
+			await expect(
+				ctx.hilo.connect(ctx.player).makeAction(99999n, 0)
+			).to.be.revertedWithCustomError(ctx.hilo, 'BetNotFound');
 		});
 
 		it('cashout on non-existent bet reverts', async () => {
-			await expect(ctx.hilo.connect(ctx.player).cashout(99999n)).to.be.revertedWithCustomError(
-				ctx.hilo,
-				'BetNotFound'
-			);
+			await expect(
+				ctx.hilo.connect(ctx.player).makeAction(99999n, 2)
+			).to.be.revertedWithCustomError(ctx.hilo, 'BetNotFound');
 		});
 	});
 
@@ -374,13 +373,13 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			await expect(
 				ctx.tcp
 					.connect(ctx.player)
-					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(ctx.tcp, 'InvalidCollateral');
 		});
 
 		it('placeBet rejects below MIN_BET_USD', async () => {
 			await expect(
-				ctx.tcp.connect(ctx.player).placeBet(ctx.usdcAddr, USDC_UNIT, 0n, ethers.ZeroAddress)
+				ctx.tcp.connect(ctx.player).placeBet(ctx.usdcAddr, USDC_UNIT, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(ctx.tcp, 'InvalidAmount');
 		});
 
@@ -390,19 +389,19 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			await expect(
 				ctx.tcp
 					.connect(ctx.player)
-					.placeBet(ctx.usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress)
+					.placeBet(ctx.usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress, false)
 			).to.not.be.reverted;
 		});
 
 		it('play on non-existent bet reverts', async () => {
-			await expect(ctx.tcp.connect(ctx.player).play(99999n)).to.be.revertedWithCustomError(
+			await expect(ctx.tcp.connect(ctx.player).makeAction(99999n, 0)).to.be.revertedWithCustomError(
 				ctx.tcp,
 				'BetNotFound'
 			);
 		});
 
 		it('fold on non-existent bet reverts', async () => {
-			await expect(ctx.tcp.connect(ctx.player).fold(99999n)).to.be.revertedWithCustomError(
+			await expect(ctx.tcp.connect(ctx.player).makeAction(99999n, 1)).to.be.revertedWithCustomError(
 				ctx.tcp,
 				'BetNotFound'
 			);
@@ -447,7 +446,7 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			// Place with referrer set
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, referrer);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, referrer, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {

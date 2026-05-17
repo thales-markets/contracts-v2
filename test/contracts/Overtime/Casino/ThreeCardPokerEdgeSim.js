@@ -340,7 +340,7 @@ async function placeAndDeal(ctx, dealWord) {
 	const { tcp, vrf, coreAddr, usdcAddr, player } = ctx;
 	const tx = await tcp
 		.connect(player)
-		.placeBet(usdcAddr, ANTE_AMOUNT, PAIR_PLUS_AMOUNT, ethers.ZeroAddress);
+		.placeBet(usdcAddr, ANTE_AMOUNT, PAIR_PLUS_AMOUNT, ethers.ZeroAddress, false);
 	const receipt = await tx.wait();
 	const placed = receipt.logs
 		.map((l) => {
@@ -359,7 +359,7 @@ async function placeAndDeal(ctx, dealWord) {
 
 async function playAndResolveContract(ctx, betId, resolveWord) {
 	const { tcp, vrf, coreAddr, player } = ctx;
-	const tx = await tcp.connect(player).play(betId);
+	const tx = await tcp.connect(player).makeAction(betId, 0);
 	const receipt = await tx.wait();
 	const played = receipt.logs
 		.map((l) => {
@@ -395,7 +395,7 @@ describe('ThreeCardPoker — edge sim & EVM cross-validation', function () {
 			expect(Number(cards.playerCards[2])).to.equal(expected.pCards[2]);
 
 			if (expected.outcome === Outcome.FOLDED) {
-				await tcp.connect(player).fold(betId);
+				await tcp.connect(player).makeAction(betId, 1);
 			} else {
 				await playAndResolveContract(ctx, betId, resolveWord);
 				const cards2 = await tcp.getBetCards(betId);

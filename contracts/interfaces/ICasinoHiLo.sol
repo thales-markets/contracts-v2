@@ -77,29 +77,23 @@ interface ICasinoHiLo {
 
     event BetCancelled(uint256 indexed betId, address indexed user, uint256 refundAmount, bool adminCancelled);
 
-    /// @notice Places a bet and submits the first guess in a single transaction. The bet starts
-    /// in AWAITING_NEXT_CARD with the first VRF request already in flight. Subsequent rounds use
-    /// `guess()` once the bet returns to PLAYER_TURN
+    /// @notice Places a HiLo bet and submits the first guess in a single transaction. The bet
+    /// starts in AWAITING_NEXT_CARD with the first VRF request already in flight. Subsequent
+    /// rounds use `makeAction(betId, action)` once the bet returns to PLAYER_TURN.
+    /// `isFreeBet=true` pulls the stake from FreeBetsHolder, `false` from the user's wallet
     function placeBet(
         address collateral,
         uint256 amount,
         address referrer,
-        Direction firstDirection
+        Direction firstDirection,
+        bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
-    /// @notice Places a bet using the user's free-bet balance held in FreeBetsHolder. Same flow
-    /// as `placeBet` but the stake is pulled from FBH instead of the user's wallet, and the bet
-    /// is flagged so payouts route back to FBH on resolution. Reverts if FBH balance < amount
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        address referrer,
-        Direction firstDirection
-    ) external returns (uint256 betId, uint256 requestId);
-
-    function guess(uint256 betId, Direction direction) external returns (uint256 requestId);
-
-    function cashout(uint256 betId) external;
+    /// @notice Single-selector mid-game dispatcher. Action codes:
+    ///   0 = guess ABOVE
+    ///   1 = guess BELOW
+    ///   2 = cashout
+    function makeAction(uint256 betId, uint8 action) external returns (uint256 requestId);
 
     function cancelBet(uint256 betId) external;
 

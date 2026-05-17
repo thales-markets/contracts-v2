@@ -59,22 +59,14 @@ interface ICasinoKeno {
     event PaytableUpdated(uint8 indexed picksCount, uint256[] multipliersE18);
 
     /// @notice Places a Keno bet. `picks` must be a sorted, deduplicated array of 1..80,
-    /// length 1..10. One VRF word resolves the bet
+    /// length 1..10. One VRF word resolves the bet. `isFreeBet=true` pulls the stake from
+    /// FreeBetsHolder; `false` from the user's wallet. Single canonical entry
     function placeBet(
         address collateral,
         uint256 amount,
         uint8[] calldata picks,
-        address referrer
-    ) external returns (uint256 betId, uint256 requestId);
-
-    /// @notice Places a Keno bet using the user's free-bet balance held in FreeBetsHolder.
-    /// Same flow as `placeBet` but stake is pulled from FBH and the bet is flagged so payouts
-    /// route back to FBH on resolution. Reverts if FBH balance < amount
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        uint8[] calldata picks,
-        address referrer
+        address referrer,
+        bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
     function cancelBet(uint256 betId) external;

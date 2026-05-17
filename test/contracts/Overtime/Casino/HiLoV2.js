@@ -156,7 +156,9 @@ function parseLogs(hilo, logs, name) {
 
 async function placeBet(ctx, amount = MIN_USDC_BET, direction = Direction.ABOVE) {
 	const { hilo, usdcAddr, player } = ctx;
-	const tx = await hilo.connect(player).placeBet(usdcAddr, amount, ethers.ZeroAddress, direction);
+	const tx = await hilo
+		.connect(player)
+		.placeBet(usdcAddr, amount, ethers.ZeroAddress, direction, false);
 	const receipt = await tx.wait();
 	const placed = parseLogs(hilo, receipt.logs, 'BetPlaced');
 	const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
@@ -172,7 +174,7 @@ async function placeBetAndDeal(ctx, direction, dealWord, amount = MIN_USDC_BET) 
 
 async function guessAndDeal(ctx, betId, direction, dealWord) {
 	const { hilo, vrf, coreAddr, player } = ctx;
-	const tx = await hilo.connect(player).guess(betId, direction);
+	const tx = await hilo.connect(player).makeAction(betId, direction);
 	const receipt = await tx.wait();
 	const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
 	await vrf.fulfillRandomWords(coreAddr, guessed.args.requestId, [dealWord]);
@@ -228,7 +230,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const { hilo, usdcAddr, player } = ctx;
 			const tx = await hilo
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, Direction.BELOW);
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, Direction.BELOW, false);
 			const receipt = await tx.wait();
 			const placed = parseLogs(hilo, receipt.logs, 'BetPlaced');
 			const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
@@ -241,7 +243,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 		it('reverts on zero amount', async () => {
 			const { hilo, usdcAddr, player } = ctx;
 			await expect(
-				hilo.connect(player).placeBet(usdcAddr, 0n, ethers.ZeroAddress, Direction.ABOVE)
+				hilo.connect(player).placeBet(usdcAddr, 0n, ethers.ZeroAddress, Direction.ABOVE, false)
 			).to.be.revertedWithCustomError(hilo, 'InvalidAmount');
 		});
 
@@ -249,7 +251,9 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const { hilo, player } = ctx;
 			const fake = ethers.Wallet.createRandom().address;
 			await expect(
-				hilo.connect(player).placeBet(fake, MIN_USDC_BET, ethers.ZeroAddress, Direction.ABOVE)
+				hilo
+					.connect(player)
+					.placeBet(fake, MIN_USDC_BET, ethers.ZeroAddress, Direction.ABOVE, false)
 			).to.be.revertedWithCustomError(hilo, 'InvalidCollateral');
 		});
 
@@ -351,9 +355,10 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const state = await hilo.getBetState(betId);
 			expect(state.currentMultiplierE18).to.equal(MAX_MULT_E18);
 			// Next guess should revert with MaxMultiplierReached (cap reached)
-			await expect(
-				hilo.connect(player).guess(betId, Direction.ABOVE)
-			).to.be.revertedWithCustomError(hilo, 'MaxMultiplierReached');
+			await expect(hilo.connect(player).makeAction(betId, 0)).to.be.revertedWithCustomError(
+				hilo,
+				'MaxMultiplierReached'
+			);
 		});
 	});
 
@@ -364,7 +369,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const { word } = wordForCardRank('hilo-cash-win', 10);
 			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
-			await hilo.connect(player).cashout(betId);
+			await hilo.connect(player).makeAction(betId, 2);
 			const expectedPayout = (MIN_USDC_BET * f) / ONE;
 			expect(await usdc.balanceOf(player.address)).to.equal(
 				balBefore - MIN_USDC_BET + expectedPayout
@@ -376,14 +381,14 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const { word } = wordForCardRank('hilo-cash-push', MIDPOINT_RANK);
 			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
-			await hilo.connect(player).cashout(betId);
+			await hilo.connect(player).makeAction(betId, 2);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
 
 		it('cashout from AWAITING_NEXT_CARD reverts (must wait for VRF)', async () => {
 			const { hilo, player } = ctx;
 			const { betId } = await placeBet(ctx);
-			await expect(hilo.connect(player).cashout(betId)).to.be.revertedWithCustomError(
+			await expect(hilo.connect(player).makeAction(betId, 2)).to.be.revertedWithCustomError(
 				hilo,
 				'InvalidBetStatus'
 			);
@@ -393,8 +398,8 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const { hilo, player } = ctx;
 			const { word } = wordForCardRank('hilo-cash-twice', 10);
 			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
-			await hilo.connect(player).cashout(betId);
-			await expect(hilo.connect(player).cashout(betId)).to.be.revertedWithCustomError(
+			await hilo.connect(player).makeAction(betId, 2);
+			await expect(hilo.connect(player).makeAction(betId, 2)).to.be.revertedWithCustomError(
 				hilo,
 				'InvalidBetStatus'
 			);
@@ -446,7 +451,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const { hilo, data, player } = ctx;
 			const { word } = wordForCardRank('hilo-data', 10);
 			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
-			await hilo.connect(player).cashout(betId);
+			await hilo.connect(player).makeAction(betId, 2);
 			const r = hilo.interface.decodeFunctionResult(
 				'getFullRecord',
 				await data.getFullRecord(2 /* GameV2.HiLo */, betId)
@@ -542,7 +547,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const { word } = wordForCardRank('cash-keep', 10);
 			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
 			const before = await hilo.getBetCards(betId);
-			await hilo.connect(player).cashout(betId);
+			await hilo.connect(player).makeAction(betId, 2);
 			const after = await hilo.getBetCards(betId);
 			expect(after.directions.length).to.equal(before.directions.length);
 			expect(after.cards.length).to.equal(before.cards.length);
@@ -589,7 +594,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const { hilo, usdcAddr, player } = ctx;
 			const tx = await hilo
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, amount, ethers.ZeroAddress, direction);
+				.placeBet(usdcAddr, amount, ethers.ZeroAddress, direction, true);
 			const receipt = await tx.wait();
 			const placed = parseLogs(hilo, receipt.logs, 'BetPlaced');
 			const guessed = parseLogs(hilo, receipt.logs, 'GuessChosen');
@@ -602,7 +607,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			await expect(
 				hilo
 					.connect(player)
-					.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, Direction.ABOVE)
+					.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, Direction.ABOVE, true)
 			).to.be.revertedWith('MockFBH: InsufficientBalance');
 		});
 
@@ -629,7 +634,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const playerBalBefore = await usdc.balanceOf(player.address);
 			const daoBalBefore = await usdc.balanceOf(daoSink.address);
 
-			await hilo.connect(player).cashout(betId);
+			await hilo.connect(player).makeAction(betId, 2);
 
 			const expectedPayout = (MIN_USDC_BET * f) / ONE;
 			const expectedProfit = expectedPayout - MIN_USDC_BET;
@@ -694,7 +699,7 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 					refAddr
 				);
 			const referrer = ethers.Wallet.createRandom().address;
-			await hilo.connect(player).placeBet(usdcAddr, MIN_USDC_BET, referrer, Direction.ABOVE);
+			await hilo.connect(player).placeBet(usdcAddr, MIN_USDC_BET, referrer, Direction.ABOVE, false);
 			expect(await refContract.referrals(player.address)).to.equal(referrer);
 		});
 

@@ -168,7 +168,7 @@ describe('HiLo Cross-Validation: real on-chain', () => {
 			const word0 = wordFromSeed(`b${i}-r0`);
 			const tx = await hilo
 				.connect(player)
-				.placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress, direction);
+				.placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress, direction, false);
 			const receipt = await tx.wait();
 			const placed = parseEvent(hilo.interface, receipt, 'BetPlaced');
 			expect(placed, `BetPlaced not emitted at bet ${i}`).to.not.be.undefined;
@@ -204,7 +204,7 @@ describe('HiLo Cross-Validation: real on-chain', () => {
 				const r2 = applyRoundOffChain(predictedMult, direction, word);
 
 				// Submit guess
-				const gtx = await hilo.connect(player).guess(betId, direction);
+				const gtx = await hilo.connect(player).makeAction(betId, direction);
 				const greceipt = await gtx.wait();
 				const guessed = parseEvent(hilo.interface, greceipt, 'GuessChosen');
 				const reqId = guessed.args.requestId;
@@ -240,7 +240,7 @@ describe('HiLo Cross-Validation: real on-chain', () => {
 				// Cashout
 				cashedOut++;
 				expectedPayout = (BET_AMOUNT * predictedMult) / ONE;
-				await hilo.connect(player).cashout(betId);
+				await hilo.connect(player).makeAction(betId, 2);
 				const base = await hilo.getBetBase(betId);
 				expect(Number(base.status)).to.equal(BetStatus.RESOLVED);
 				expect(Number(base.outcome)).to.equal(Outcome.CASHED_OUT);

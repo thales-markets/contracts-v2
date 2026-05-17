@@ -457,48 +457,14 @@
         "internalType": "address",
         "name": "referrer",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isFreeBet",
+        "type": "bool"
       }
     ],
     "name": "placeBet",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "requestId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint8[]",
-        "name": "picks",
-        "type": "uint8[]"
-      },
-      {
-        "internalType": "address",
-        "name": "referrer",
-        "type": "address"
-      }
-    ],
-    "name": "placeBetWithFreeBet",
     "outputs": [
       {
         "internalType": "uint256",

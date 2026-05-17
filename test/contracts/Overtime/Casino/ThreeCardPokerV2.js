@@ -324,7 +324,7 @@ async function placeAndDeal(ctx, anteAmount, ppAmount, dealWord, options = {}) {
 	const { tcp, tcpAddr, vrf, player, usdcAddr } = ctx;
 	const signer = options.signer ?? player;
 	const referrer = options.referrer ?? ethers.ZeroAddress;
-	const tx = await tcp.connect(signer).placeBet(usdcAddr, anteAmount, ppAmount, referrer);
+	const tx = await tcp.connect(signer).placeBet(usdcAddr, anteAmount, ppAmount, referrer, false);
 	const receipt = await tx.wait();
 	const placed = receipt.logs
 		.map((l) => {
@@ -343,7 +343,7 @@ async function placeAndDeal(ctx, anteAmount, ppAmount, dealWord, options = {}) {
 
 async function playAndResolve(ctx, betId, resolveWord, signer) {
 	const { tcp, vrf, player, coreAddr } = ctx;
-	const tx = await tcp.connect(signer ?? player).play(betId);
+	const tx = await tcp.connect(signer ?? player).makeAction(betId, 0);
 	const receipt = await tx.wait();
 	const played = receipt.logs
 		.map((l) => {
@@ -441,7 +441,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			await tcp2.initialize(ctx.owner.address, ctx.coreAddr, await ctx.manager.getAddress());
 			await ctx.usdc.connect(ctx.player).approve(ctx.coreAddr, ethers.MaxUint256);
 			await expect(
-				tcp2.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+				tcp2.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(ctx.core, 'GameNotRegistered');
 		});
 	});
@@ -454,7 +454,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const ante = MIN_USDC_BET;
 			const pp = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
-			const tx = await tcp.connect(player).placeBet(usdcAddr, ante, pp, ethers.ZeroAddress);
+			const tx = await tcp.connect(player).placeBet(usdcAddr, ante, pp, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -481,21 +481,23 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 		it('reverts on zero ante', async () => {
 			const { tcp, usdcAddr, player } = ctx;
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, 0n, 0n, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, 0n, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(tcp, 'InvalidAmount');
 		});
 
 		it('reverts on unsupported collateral', async () => {
 			const { tcp, player } = ctx;
 			await expect(
-				tcp.connect(player).placeBet(ethers.ZeroAddress, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+				tcp
+					.connect(player)
+					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(tcp, 'InvalidCollateral');
 		});
 
 		it('reverts when ante below MIN_BET_USD', async () => {
 			const { tcp, usdcAddr, player } = ctx;
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, USDC_UNIT, 0n, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, USDC_UNIT, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(tcp, 'InvalidAmount');
 		});
 
@@ -504,7 +506,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			// Cap per-game max bet at $5; ante of $10 must revert
 			await core.setMaxBetPerGameUsd(tcpAddr, ethers.parseEther('5'));
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, 10n * USDC_UNIT, 0n, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, 10n * USDC_UNIT, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(tcp, 'AboveMaxBet');
 		});
 
@@ -514,7 +516,9 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			// same AboveMaxBet — otherwise a user could bet ante=$3, PP=$10M to sidestep the cap
 			await core.setMaxBetPerGameUsd(tcpAddr, ethers.parseEther('5'));
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 10n * USDC_UNIT, ethers.ZeroAddress)
+				tcp
+					.connect(player)
+					.placeBet(usdcAddr, MIN_USDC_BET, 10n * USDC_UNIT, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(tcp, 'AboveMaxBet');
 		});
 
@@ -523,7 +527,9 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			await core.setMaxBetPerGameUsd(tcpAddr, ethers.parseEther('5'));
 			// Ante $3, PP $5 — both at-or-below the cap
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 5n * USDC_UNIT, ethers.ZeroAddress)
+				tcp
+					.connect(player)
+					.placeBet(usdcAddr, MIN_USDC_BET, 5n * USDC_UNIT, ethers.ZeroAddress, false)
 			).to.not.be.reverted;
 		});
 
@@ -534,7 +540,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			// now bet at full size — needs 9*ante + 41*pp reservation > 10 USDC
 			const big = 50n * USDC_UNIT;
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, big, big, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, big, big, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(core, 'InsufficientAvailableLiquidity');
 		});
 	});
@@ -599,7 +605,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const ante = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId } = await placeAndDeal(ctx, ante, 0n, 0xdeadbeefn);
-			await tcp.connect(player).fold(betId);
+			await tcp.connect(player).makeAction(betId, 1);
 			const base = await tcp.getBetBase(betId);
 			expect(base.status).to.equal(BetStatus.RESOLVED);
 			expect(base.outcome).to.equal(Outcome.FOLDED);
@@ -611,7 +617,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 		it('rejects fold if not bet owner', async () => {
 			const { tcp, player2 } = ctx;
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0n, 0xdeadbeefn);
-			await expect(tcp.connect(player2).fold(betId)).to.be.revertedWithCustomError(
+			await expect(tcp.connect(player2).makeAction(betId, 1)).to.be.revertedWithCustomError(
 				tcp,
 				'BetNotOwner'
 			);
@@ -620,9 +626,9 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 		it('rejects fold from wrong status', async () => {
 			const { tcp, player } = ctx;
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0n, 0xdeadbeefn);
-			await tcp.connect(player).fold(betId);
+			await tcp.connect(player).makeAction(betId, 1);
 			// already resolved
-			await expect(tcp.connect(player).fold(betId)).to.be.revertedWithCustomError(
+			await expect(tcp.connect(player).makeAction(betId, 1)).to.be.revertedWithCustomError(
 				tcp,
 				'InvalidBetStatus'
 			);
@@ -633,7 +639,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.PAIR);
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, MIN_USDC_BET, word);
-			await tcp.connect(player).fold(betId);
+			await tcp.connect(player).makeAction(betId, 1);
 			// Net: -ante -pp + pp*2 = pp - ante = 0 (since pp == ante in this test)
 			// Player has neither lost nor gained
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
@@ -648,7 +654,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const ante = MIN_USDC_BET;
 			const { betId } = await placeAndDeal(ctx, ante, 0n, 0xdeadbeefn);
 			const balAfterDeal = await usdc.balanceOf(player.address);
-			await tcp.connect(player).play(betId);
+			await tcp.connect(player).makeAction(betId, 0);
 			// Another `ante` pulled
 			expect(await usdc.balanceOf(player.address)).to.equal(balAfterDeal - ante);
 			const base = await tcp.getBetBase(betId);
@@ -658,7 +664,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 		it('rejects play from non-owner', async () => {
 			const { tcp, player2 } = ctx;
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0n, 0xdeadbeefn);
-			await expect(tcp.connect(player2).play(betId)).to.be.revertedWithCustomError(
+			await expect(tcp.connect(player2).makeAction(betId, 0)).to.be.revertedWithCustomError(
 				tcp,
 				'BetNotOwner'
 			);
@@ -757,7 +763,9 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const ante = MIN_USDC_BET;
 			const pp = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
-			const tx = await tcp.connect(player).placeBet(ctx.usdcAddr, ante, pp, ethers.ZeroAddress);
+			const tx = await tcp
+				.connect(player)
+				.placeBet(ctx.usdcAddr, ante, pp, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -782,7 +790,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { tcp, player } = ctx;
 			const tx = await tcp
 				.connect(player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -804,7 +812,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { tcp, resolver, player } = ctx;
 			const tx = await tcp
 				.connect(player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -826,7 +834,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 			const { betId } = await placeAndDeal(ctx, ante, pp, word);
-			await tcp.connect(player).play(betId); // moves to AWAITING_RESOLVE
+			await tcp.connect(player).makeAction(betId, 0); // moves to AWAITING_RESOLVE
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await tcp.connect(player).cancelBet(betId);
 			// PP was already settled in VRF1 (high-card → lost). Cancel refunds only ante + play
@@ -862,7 +870,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			// AWAITING_DEAL bet → cancel once
 			const tx = await tcp
 				.connect(player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -910,7 +918,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			expect(await core.gameAutoPaused(tcpAddr)).to.be.true;
 			// Subsequent bet rejected
 			await expect(
-				tcp.connect(player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(core, 'GameNotActive');
 		});
 
@@ -938,8 +946,9 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			expect(await core.gameAutoPaused(tcpAddr)).to.be.false;
 			expect(await core.houseNetUsd(tcpAddr)).to.equal(0n);
 			// Next bet works
-			await expect(tcp.connect(player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress))
-				.to.not.be.reverted;
+			await expect(
+				tcp.connect(player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
+			).to.not.be.reverted;
 		});
 	});
 
@@ -950,7 +959,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { core, tcp, pauser, player, usdcAddr } = ctx;
 			await core.connect(pauser).setPausedByRole(true);
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(core, 'GameNotActive');
 		});
 
@@ -958,11 +967,12 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { core, tcp, tcpAddr, pauser, player, usdcAddr } = ctx;
 			await core.connect(pauser).setGamePaused(tcpAddr, true);
 			await expect(
-				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(core, 'GameNotActive');
 			await core.connect(pauser).setGamePaused(tcpAddr, false);
-			await expect(tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress)).to
-				.not.be.reverted;
+			await expect(
+				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
+			).to.not.be.reverted;
 		});
 
 		it('paused state still allows in-flight bet to settle', async () => {
@@ -972,7 +982,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			// pause now
 			await core.connect(pauser).setGamePaused(tcpAddr, true);
 			// fold should still work (settlement path)
-			await expect(tcp.connect(player).fold(betId)).to.not.be.reverted;
+			await expect(tcp.connect(player).makeAction(betId, 1)).to.not.be.reverted;
 		});
 	});
 
@@ -1000,7 +1010,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { tcp, data, player } = ctx;
 			const dealWord = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0n, dealWord);
-			await tcp.connect(player).fold(betId);
+			await tcp.connect(player).makeAction(betId, 1);
 			const r = tcp.interface.decodeFunctionResult(
 				'getFullRecord',
 				await data.getFullRecord(0 /* GameV2.ThreeCardPoker */, betId)
@@ -1017,7 +1027,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			for (let i = 0; i < 3; i++) {
 				const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 				const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0n, word);
-				await tcp.connect(player).fold(betId);
+				await tcp.connect(player).makeAction(betId, 1);
 			}
 			const { readUserRecords, GameV2 } = require('../../../utils/casinoDataV2Helpers');
 			const recs = await readUserRecords(data, tcp, GameV2.ThreeCardPoker, player.address, 0, 10);
@@ -1035,9 +1045,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 
 		async function placeFreeAndDeal(ctx, ante, pp, dealWord) {
 			const { tcp, vrf, coreAddr, usdcAddr, player } = ctx;
-			const tx = await tcp
-				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, ante, pp, ethers.ZeroAddress);
+			const tx = await tcp.connect(player).placeBet(usdcAddr, ante, pp, ethers.ZeroAddress, true);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -1057,7 +1065,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			// Ante-only placement (PP > 0 is disallowed on free-bet — see separate test below).
 			// With FBH balance not funded, ante pull reverts at the FBH boundary
 			await expect(
-				tcp.connect(player).placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, true)
 			).to.be.revertedWith('MockFBH: InsufficientBalance');
 		});
 
@@ -1066,9 +1074,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			// Pre-check that fires before the FBH pull. Funding state is irrelevant — the
 			// disallowed-PP check is the first thing after the basic validity checks
 			await expect(
-				tcp
-					.connect(player)
-					.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress)
+				tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress, true)
 			).to.be.revertedWithCustomError(tcp, 'PairPlusNotAllowedForFreeBet');
 		});
 
@@ -1076,7 +1082,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { tcp, fbh, usdc, usdcAddr, player } = ctx;
 			await fundFB(ctx, MIN_USDC_BET);
 			const balBefore = await usdc.balanceOf(player.address);
-			await tcp.connect(player).placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+			await tcp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, true);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
 		});
@@ -1087,7 +1093,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeFreeAndDeal(ctx, MIN_USDC_BET, 0n, word);
-			await tcp.connect(player).fold(betId);
+			await tcp.connect(player).makeAction(betId, 1);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
 		});
@@ -1099,11 +1105,11 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 			const betId = await placeFreeAndDeal(ctx, MIN_USDC_BET, 0n, word);
 			// Play needs another anteAmount — FBH balance is now 0 → reverts → user must fold
-			await expect(tcp.connect(player).play(betId)).to.be.revertedWith(
+			await expect(tcp.connect(player).makeAction(betId, 0)).to.be.revertedWith(
 				'MockFBH: InsufficientBalance'
 			);
 			// Fold path works
-			await tcp.connect(player).fold(betId);
+			await tcp.connect(player).makeAction(betId, 1);
 			const base = await tcp.getBetBase(betId);
 			expect(base.outcome).to.equal(Outcome.FOLDED);
 		});
@@ -1115,7 +1121,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			await fundFB(ctx, stake);
 			const tx = await tcp
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, true);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -1166,7 +1172,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { tcp, vrf, coreAddr, usdcAddr, player } = ctx;
 			const tx = await tcp
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -1179,7 +1185,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 				.find((e) => e?.name === 'BetPlaced');
 			const w1 = craftWord(player3);
 			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [w1]);
-			const tx2 = await tcp.connect(player).play(placed.args.betId);
+			const tx2 = await tcp.connect(player).makeAction(placed.args.betId, 0);
 			const r2 = await tx2.wait();
 			const played = r2.logs
 				.map((l) => {

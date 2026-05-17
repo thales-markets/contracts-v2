@@ -237,19 +237,6 @@
         "type": "uint256"
       }
     ],
-    "name": "cashout",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      }
-    ],
     "name": "getBetBase",
     "outputs": [
       {
@@ -526,12 +513,12 @@
         "type": "uint256"
       },
       {
-        "internalType": "enum ICasinoHiLo.Direction",
-        "name": "direction",
+        "internalType": "uint8",
+        "name": "action",
         "type": "uint8"
       }
     ],
-    "name": "guess",
+    "name": "makeAction",
     "outputs": [
       {
         "internalType": "uint256",
@@ -589,48 +576,14 @@
         "internalType": "enum ICasinoHiLo.Direction",
         "name": "firstDirection",
         "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "isFreeBet",
+        "type": "bool"
       }
     ],
     "name": "placeBet",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "requestId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "referrer",
-        "type": "address"
-      },
-      {
-        "internalType": "enum ICasinoHiLo.Direction",
-        "name": "firstDirection",
-        "type": "uint8"
-      }
-    ],
-    "name": "placeBetWithFreeBet",
     "outputs": [
       {
         "internalType": "uint256",

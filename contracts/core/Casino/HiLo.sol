@@ -131,38 +131,16 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /* ========== PLACE / GUESS / CASHOUT ========== */
 
-    /// @notice Places a bet and submits the first guess in one transaction. The bet starts in
-    /// AWAITING_NEXT_CARD with the first VRF request already in flight. Subsequent rounds use
-    /// `guess()` once the bet returns to PLAYER_TURN
-    function placeBet(
-        address collateral,
-        uint256 amount,
-        address referrer,
-        Direction firstDirection
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, amount, referrer, firstDirection, false);
-    }
-
-    /// @inheritdoc ICasinoHiLo
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        address referrer,
-        Direction firstDirection
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, amount, referrer, firstDirection, true);
-    }
-
-    /// @notice Single-selector placeBet for gasless sessions. Same semantics as the legacy pair
-    /// (`placeBet` / `placeBetWithFreeBet`) — switches on the `isFreeBet` bool. Legacy functions
-    /// stay callable for wallet-signed and off-chain integrations
+    /// @notice Places a HiLo bet and submits the first guess in one transaction. The bet starts
+    /// in AWAITING_NEXT_CARD with the first VRF request already in flight. Subsequent rounds use
+    /// `makeAction(betId, action)` once the bet returns to PLAYER_TURN
     function placeBet(
         address collateral,
         uint256 amount,
         address referrer,
         Direction firstDirection,
         bool isFreeBet
-    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
         return _placeBet(collateral, amount, referrer, firstDirection, isFreeBet);
     }
 
@@ -217,22 +195,14 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         emit GuessChosen(betId, requestId, msg.sender, firstDirection);
     }
 
-    function guess(uint256 betId, Direction direction) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _guess(betId, direction);
-    }
-
-    function cashout(uint256 betId) external override nonReentrant notPaused {
-        _cashout(betId);
-    }
-
-    /// @notice Single-selector dispatcher for gasless sessions. Routes by action code into the
-    /// same internal helpers the legacy public functions use — same auth, same state machine,
-    /// same events. Action codes:
+    /// @notice Single-selector mid-game dispatcher. Routes by action code into the internal
+    /// helpers — same auth, state machine, and events as the previously-public guess / cashout
+    /// functions. Action codes:
     ///   0 = guess ABOVE
     ///   1 = guess BELOW
     ///   2 = cashout
     /// Reverts `InvalidAction` for any other code so a misconfigured FE fails loudly
-    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+    function makeAction(uint256 betId, uint8 action) external override nonReentrant notPaused returns (uint256 requestId) {
         if (action == 0) return _guess(betId, Direction.ABOVE);
         if (action == 1) return _guess(betId, Direction.BELOW);
         if (action == 2) {

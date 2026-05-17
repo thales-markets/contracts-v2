@@ -159,35 +159,16 @@ contract OvertimeUltimateHoldem is
 
     /* ========== PLACE BET ========== */
 
-    /// @notice Places a UTH bet. Pulls Ante + Blind (equal amounts) upfront, triggers VRF1 for
-    /// the player's two hole cards
-    function placeBet(
-        address collateral,
-        uint256 anteAmount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, anteAmount, referrer, false);
-    }
-
-    /// @notice Places a UTH bet using free-bet balance held in FreeBetsHolder. All subsequent
-    /// raises also pull from FBH. If FBH runs short the user must fold (or check past the
-    /// raise opportunity).
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 anteAmount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, anteAmount, referrer, true);
-    }
-
-    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
-    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
+    /// @notice Places a UTH bet. Pulls Ante + Blind (equal amounts) upfront from FBH (`isFreeBet`)
+    /// or the user's wallet, triggers VRF1 for the player's two hole cards. Subsequent raises
+    /// pull from the same source — if FBH runs short on a free-bet flow, the next raise reverts
+    /// and the user must check (or fold at river)
     function placeBet(
         address collateral,
         uint256 anteAmount,
         address referrer,
         bool isFreeBet
-    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
         return _placeBet(msg.sender, collateral, anteAmount, referrer, isFreeBet);
     }
 
@@ -240,46 +221,14 @@ contract OvertimeUltimateHoldem is
 
     /* ========== DECISION POINTS ========== */
 
-    /// @notice Pre-flop raise (3× ante). Triggers VRF2 to reveal flop + turn + river + dealer hole
-    /// in one shot — game is going to showdown
-    function playPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _playPreFlop(betId);
-    }
-
-    /// @notice Pre-flop check. Triggers VRF2 to reveal flop only; defer raise/check to post-flop
-    function checkPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _checkPreFlop(betId);
-    }
-
-    /// @notice Post-flop raise (2× ante). Triggers VRF3 to reveal turn + river + dealer hole
-    function playPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _playPostFlop(betId);
-    }
-
-    /// @notice Post-flop check. Triggers VRF3 to reveal turn + river only; defer to river
-    function checkPostFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _checkPostFlop(betId);
-    }
-
-    /// @notice Post-river raise (1× ante). Final decision — triggers VRF4 to reveal dealer hole
-    function playRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _playRiver(betId);
-    }
-
-    /// @notice Fold after seeing the river — player forfeits Ante AND Blind. Only available at
-    /// POST_RIVER_TURN; folds earlier in the hand aren't a thing in UTH (player can check for free)
-    function fold(uint256 betId) external override nonReentrant notPaused {
-        _fold(betId);
-    }
-
-    /// @notice Single-selector dispatcher for gasless sessions. Action codes:
-    ///   0 = playPreFlop
-    ///   1 = checkPreFlop
-    ///   2 = playPostFlop
-    ///   3 = checkPostFlop
-    ///   4 = playRiver
-    ///   5 = fold
-    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+    /// @notice Single-selector mid-game dispatcher. Action codes:
+    ///   0 = playPreFlop   — pre-flop raise (3× ante); reveals all community + dealer hole at VRF2
+    ///   1 = checkPreFlop  — defer; reveals flop only
+    ///   2 = playPostFlop  — post-flop raise (2× ante); reveals turn + river + dealer at VRF3
+    ///   3 = checkPostFlop — defer to river
+    ///   4 = playRiver     — river raise (1× ante); reveals dealer at VRF4
+    ///   5 = fold          — post-river only; forfeits Ante + Blind
+    function makeAction(uint256 betId, uint8 action) external override nonReentrant notPaused returns (uint256 requestId) {
         if (action == 0) return _playPreFlop(betId);
         if (action == 1) return _checkPreFlop(betId);
         if (action == 2) return _playPostFlop(betId);

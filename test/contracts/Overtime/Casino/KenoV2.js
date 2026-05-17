@@ -155,7 +155,9 @@ async function deployFixture() {
 
 async function placeAndFulfill(ctx, picks, amount, word) {
 	const { keno, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await keno.connect(player).placeBet(usdcAddr, amount, picks, ethers.ZeroAddress);
+	const tx = await keno
+		.connect(player)
+		.placeBet(usdcAddr, amount, picks, ethers.ZeroAddress, false);
 	const receipt = await tx.wait();
 	const placed = receipt.logs
 		.map((l) => {
@@ -218,42 +220,44 @@ describe('CasinoCoreV2 + Keno', () => {
 		it('rejects picks length outside [1, 10]', async () => {
 			const { keno, usdcAddr, player } = ctx;
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidPicks');
 			const eleven = Array.from({ length: 11 }, (_, i) => i + 1);
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, eleven, ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, eleven, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidPicks');
 		});
 
 		it('rejects unsorted picks', async () => {
 			const { keno, usdcAddr, player } = ctx;
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [3, 1, 5], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [3, 1, 5], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidPicks');
 		});
 
 		it('rejects duplicate picks', async () => {
 			const { keno, usdcAddr, player } = ctx;
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [1, 1, 5], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [1, 1, 5], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidPicks');
 		});
 
 		it('rejects picks out of [1, 80]', async () => {
 			const { keno, usdcAddr, player } = ctx;
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [0, 5, 10], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [0, 5, 10], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidPicks');
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [5, 10, 81], ethers.ZeroAddress)
+				keno
+					.connect(player)
+					.placeBet(usdcAddr, MIN_USDC_BET, [5, 10, 81], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidPicks');
 		});
 
 		it('rejects bet below MIN_BET_USD', async () => {
 			const { keno, usdcAddr, player } = ctx;
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, USDC_UNIT, [1], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, USDC_UNIT, [1], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidAmount');
 		});
 
@@ -263,14 +267,16 @@ describe('CasinoCoreV2 + Keno', () => {
 			// (only the implicit profit-cap-driven ceiling)
 			await core.setMaxBetPerGameUsd(await keno.getAddress(), ethers.parseEther('10'));
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, 11n * USDC_UNIT, [1], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, 11n * USDC_UNIT, [1], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'AboveMaxBet');
 		});
 
 		it('rejects unsupported collateral', async () => {
 			const { keno, player } = ctx;
 			await expect(
-				keno.connect(player).placeBet(ethers.ZeroAddress, MIN_USDC_BET, [1], ethers.ZeroAddress)
+				keno
+					.connect(player)
+					.placeBet(ethers.ZeroAddress, MIN_USDC_BET, [1], ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(keno, 'InvalidCollateral');
 		});
 
@@ -282,7 +288,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			// truncation applies at resolve
 			await core.setMaxProfitUsdOverride(kenoAddr, ethers.parseEther('1000'));
 			await expect(
-				keno.connect(player).placeBet(usdcAddr, 20n * USDC_UNIT, [1], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, 20n * USDC_UNIT, [1], ethers.ZeroAddress, false)
 			).to.not.be.reverted;
 		});
 	});
@@ -300,7 +306,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			const balBefore = await ctx.usdc.balanceOf(player.address);
 			const tx = await keno
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress, false);
 			const placed = (await tx.wait()).logs
 				.map((l) => {
 					try {
@@ -331,7 +337,9 @@ describe('CasinoCoreV2 + Keno', () => {
 			await core.setMaxProfitUsdOverride(kenoAddr, ethers.parseEther('1000'));
 			// $20 bet: reservation = stake + min($5980, $1000) = $20 + $1000 = $1020
 			// Pre-port reservation would have been amount × 300 = $6000
-			await keno.connect(player).placeBet(usdcAddr, 20n * USDC_UNIT, [1], ethers.ZeroAddress);
+			await keno
+				.connect(player)
+				.placeBet(usdcAddr, 20n * USDC_UNIT, [1], ethers.ZeroAddress, false);
 			const reserved = await core.reservedProfitPerGame(kenoAddr, usdcAddr);
 			expect(reserved).to.equal(1020n * USDC_UNIT);
 		});
@@ -346,7 +354,7 @@ describe('CasinoCoreV2 + Keno', () => {
 
 			const tx = await keno
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress, false);
 			const placed = (await tx.wait()).logs
 				.map((l) => {
 					try {
@@ -417,7 +425,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			const { keno, usdcAddr, player } = ctx;
 			const tx = await keno
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -439,7 +447,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await keno
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -460,7 +468,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			const { keno, usdcAddr, player, resolver } = ctx;
 			const tx = await keno
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -528,7 +536,7 @@ describe('CasinoCoreV2 + Keno', () => {
 		it('reverts when FBH balance < stake', async () => {
 			const { keno, usdcAddr, player } = ctx;
 			await expect(
-				keno.connect(player).placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, [5], ethers.ZeroAddress)
+				keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [5], ethers.ZeroAddress, true)
 			).to.be.revertedWith('MockFBH: InsufficientBalance');
 		});
 
@@ -538,7 +546,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			await keno
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, [1, 2, 3], ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, [1, 2, 3], ethers.ZeroAddress, true);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
 		});
@@ -557,7 +565,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			}
 			const tx = await keno
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress, true);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -582,7 +590,7 @@ describe('CasinoCoreV2 + Keno', () => {
 			await fundFB(ctx, MIN_USDC_BET);
 			const tx = await keno
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, [5, 10], ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, [5, 10], ethers.ZeroAddress, true);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -617,7 +625,7 @@ describe('CasinoCoreV2 + Keno', () => {
 					refAddr
 				);
 			const referrer = ethers.Wallet.createRandom().address;
-			await keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [5, 10, 15], referrer);
+			await keno.connect(player).placeBet(usdcAddr, MIN_USDC_BET, [5, 10, 15], referrer, false);
 			expect(await refContract.referrals(player.address)).to.equal(referrer);
 		});
 

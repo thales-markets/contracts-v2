@@ -92,26 +92,22 @@ interface ICasinoThreeCardPoker {
 
     /* ========== EXTERNAL ========== */
 
+    /// @notice Places a TCP bet. `isFreeBet=true` pulls Ante (and PairPlus, if non-zero) from
+    /// FreeBetsHolder; `false` from the user's wallet. PairPlus must be zero when `isFreeBet`
+    /// is true (reverts `PairPlusNotAllowedForFreeBet`). A subsequent makeAction(PLAY) will pull
+    /// the Play stake from the same source as the original bet (FBH for free bet, wallet otherwise)
     function placeBet(
         address collateral,
         uint256 anteAmount,
         uint256 pairPlusAmount,
-        address referrer
+        address referrer,
+        bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
-    /// @notice Places a TCP bet using the user's free-bet balance held in FreeBetsHolder. Both
-    /// Ante and Pair Plus are pulled from FBH. A subsequent `play()` will also draw from FBH —
-    /// if balance is insufficient at play time, the call reverts and the user must fold instead
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 anteAmount,
-        uint256 pairPlusAmount,
-        address referrer
-    ) external returns (uint256 betId, uint256 requestId);
-
-    function fold(uint256 betId) external;
-
-    function play(uint256 betId) external returns (uint256 requestId);
+    /// @notice Single-selector mid-game dispatcher. Action codes:
+    ///   0 = play
+    ///   1 = fold
+    function makeAction(uint256 betId, uint8 action) external returns (uint256 requestId);
 
     function cancelBet(uint256 betId) external;
 

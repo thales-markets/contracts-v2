@@ -189,30 +189,9 @@ contract OvertimeBonusHoldem is
         address collateral,
         uint256 anteAmount,
         uint256 bonusAmount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, anteAmount, bonusAmount, referrer, false);
-    }
-
-    /// @inheritdoc ICasinoOvertimeBonusHoldem
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 anteAmount,
-        uint256 bonusAmount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, anteAmount, bonusAmount, referrer, true);
-    }
-
-    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
-    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
-    function placeBet(
-        address collateral,
-        uint256 anteAmount,
-        uint256 bonusAmount,
         address referrer,
         bool isFreeBet
-    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
         return _placeBet(msg.sender, collateral, anteAmount, bonusAmount, referrer, isFreeBet);
     }
 
@@ -272,48 +251,12 @@ contract OvertimeBonusHoldem is
 
     /* ========== DECISIONS ========== */
 
-    function playPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _playPreFlop(betId);
-    }
-
-    function foldPreFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _foldPreFlop(betId);
-    }
-
-    function raiseFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _raiseFlop(betId);
-    }
-
-    function checkFlop(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _checkFlop(betId);
-    }
-
-    function raiseTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _raiseTurn(betId);
-    }
-
-    function checkTurn(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _checkTurn(betId);
-    }
-
-    function raiseRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _raiseRiver(betId);
-    }
-
-    function checkRiver(uint256 betId) external override nonReentrant notPaused returns (uint256 requestId) {
-        return _checkRiver(betId);
-    }
-
-    /// @notice Single-selector dispatcher for gasless sessions. Action codes:
-    ///   0 = playPreFlop
-    ///   1 = foldPreFlop
-    ///   2 = raiseFlop
-    ///   3 = checkFlop
-    ///   4 = raiseTurn
-    ///   5 = checkTurn
-    ///   6 = raiseRiver
-    ///   7 = checkRiver
-    function makeAction(uint256 betId, uint8 action) external nonReentrant notPaused returns (uint256 requestId) {
+    /// @notice Single-selector mid-game dispatcher. Action codes:
+    ///   0 = playPreFlop   1 = foldPreFlop
+    ///   2 = raiseFlop     3 = checkFlop
+    ///   4 = raiseTurn     5 = checkTurn
+    ///   6 = raiseRiver    7 = checkRiver
+    function makeAction(uint256 betId, uint8 action) external override nonReentrant notPaused returns (uint256 requestId) {
         if (action == 0) return _playPreFlop(betId);
         if (action == 1) return _foldPreFlop(betId);
         if (action == 2) return _raiseFlop(betId);

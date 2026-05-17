@@ -139,30 +139,16 @@ contract VideoPoker is
 
     /* ========== PLACE / DRAW / CANCEL ========== */
 
-    function placeBet(
-        address collateral,
-        uint256 amount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, amount, referrer, false);
-    }
-
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, amount, referrer, true);
-    }
-
-    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
-    /// `placeBetWithFreeBet` remain callable for wallet-signed flows
+    /// @notice Single canonical placeBet. `isFreeBet=true` pulls the stake from FreeBetsHolder,
+    /// `false` from the user's wallet. Triggers VRF1 to deal the initial 5 cards. The
+    /// `draw(betId, holdMask)` selector is the only mid-game action (VP has no `makeAction`
+    /// because there's only one decision to dispatch)
     function placeBet(
         address collateral,
         uint256 amount,
         address referrer,
         bool isFreeBet
-    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
         return _placeBet(msg.sender, collateral, amount, referrer, isFreeBet);
     }
 

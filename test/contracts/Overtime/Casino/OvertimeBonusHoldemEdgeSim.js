@@ -531,7 +531,7 @@ describe('OvertimeBonusHoldem — edge sim & EVM cross-validation', function () 
 			// Drive contract through the full state machine
 			const tx = await bh
 				.connect(player)
-				.placeBet(usdcAddr, BET_AMOUNT, BONUS_AMOUNT, ethers.ZeroAddress);
+				.placeBet(usdcAddr, BET_AMOUNT, BONUS_AMOUNT, ethers.ZeroAddress, false);
 			const r1 = await tx.wait();
 			const betId = parseEvent(bh.interface, r1, 'BetPlaced').args.betId;
 			await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wHole]);
@@ -546,31 +546,31 @@ describe('OvertimeBonusHoldem — edge sim & EVM cross-validation', function () 
 			let community = [];
 
 			if (!playPreFlop) {
-				await (await bh.connect(player).foldPreFlop(betId)).wait();
+				await (await bh.connect(player).makeAction(betId, 1)).wait();
 				await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wDealer]);
 				dealerHole = partialFisherYates(deckExcluding(hole), 2, wDealer);
 				expectedOutcome = Outcome.FOLDED;
 			} else {
-				await (await bh.connect(player).playPreFlop(betId)).wait();
+				await (await bh.connect(player).makeAction(betId, 0)).wait();
 				await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wFlop]);
 
 				const flop = partialFisherYates(deckExcluding(hole), FLOP_CARDS, wFlop);
 				const raiseFlop = shouldRaiseFlop(hole, flop);
-				if (raiseFlop) await (await bh.connect(player).raiseFlop(betId)).wait();
-				else await (await bh.connect(player).checkFlop(betId)).wait();
+				if (raiseFlop) await (await bh.connect(player).makeAction(betId, 2)).wait();
+				else await (await bh.connect(player).makeAction(betId, 3)).wait();
 				await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wTurn]);
 
 				const turn = partialFisherYates(deckExcluding([...hole, ...flop]), 1, wTurn)[0];
 				const raiseTurn = shouldRaiseTurn(hole, [...flop, turn]);
-				if (raiseTurn) await (await bh.connect(player).raiseTurn(betId)).wait();
-				else await (await bh.connect(player).checkTurn(betId)).wait();
+				if (raiseTurn) await (await bh.connect(player).makeAction(betId, 4)).wait();
+				else await (await bh.connect(player).makeAction(betId, 5)).wait();
 				await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wRiver]);
 
 				const river = partialFisherYates(deckExcluding([...hole, ...flop, turn]), 1, wRiver)[0];
 				community = [...flop, turn, river];
 				const raiseRiver = shouldRaiseRiver(hole, community);
-				if (raiseRiver) await (await bh.connect(player).raiseRiver(betId)).wait();
-				else await (await bh.connect(player).checkRiver(betId)).wait();
+				if (raiseRiver) await (await bh.connect(player).makeAction(betId, 6)).wait();
+				else await (await bh.connect(player).makeAction(betId, 7)).wait();
 				await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wDealer]);
 
 				dealerHole = partialFisherYates(deckExcluding([...hole, ...community]), 2, wDealer);

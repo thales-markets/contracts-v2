@@ -143,7 +143,7 @@ async function deployStack() {
 }
 
 async function placeAndDeal(ctx, game, args, word) {
-	const tx = await game.connect(ctx.player).placeBet(...args);
+	const tx = await game.connect(ctx.player).placeBet(...args, false);
 	const r = await tx.wait();
 	const placed = r.logs
 		.map((l) => {
@@ -234,7 +234,7 @@ describe('Rare hand classes — coverage push', () => {
 				[ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress],
 				w
 			);
-			await ctx.tcp.connect(ctx.player).play(id);
+			await ctx.tcp.connect(ctx.player).makeAction(id, 0);
 			const { time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await expect(ctx.tcp.connect(ctx.player).cancelBet(id)).to.not.be.reverted;

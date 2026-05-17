@@ -371,7 +371,7 @@ describe('UTH Cross-Validation: real on-chain', () => {
 			const hole = partialFisherYates(FULL_DECK, 2, word1);
 
 			// Place
-			const tx = await uth.connect(player).placeBet(usdcAddr, ante, ethers.ZeroAddress);
+			const tx = await uth.connect(player).placeBet(usdcAddr, ante, ethers.ZeroAddress, false);
 			const r1 = await tx.wait();
 			const placed = parseEvent(uth.interface, r1, 'BetPlaced');
 			const betId = placed.args.betId;
@@ -399,14 +399,14 @@ describe('UTH Cross-Validation: real on-chain', () => {
 				playerSeven = [...hole, ...community];
 				dealerSeven = [...dealerHole, ...community];
 
-				await (await uth.connect(player).playPreFlop(betId)).wait();
+				await (await uth.connect(player).makeAction(betId, 0)).wait();
 				const reqId2r = await vrf.lastRequestId();
 				await vrf.fulfillRandomWords(coreAddr, reqId2r, [word2]);
 			} else {
 				// Check pre-flop → VRF2 deals flop only
 				const flop = partialFisherYates(deckExcluding(hole), 3, word2);
 
-				const tx2 = await uth.connect(player).checkPreFlop(betId);
+				const tx2 = await uth.connect(player).makeAction(betId, 1);
 				const r2 = await tx2.wait();
 				const checked = parseEvent(uth.interface, r2, 'CheckedPreFlop');
 				const reqId2 = checked.args.requestId;
@@ -427,13 +427,13 @@ describe('UTH Cross-Validation: real on-chain', () => {
 					playerSeven = [...hole, ...community];
 					dealerSeven = [...dealerHole, ...community];
 
-					await (await uth.connect(player).playPostFlop(betId)).wait();
+					await (await uth.connect(player).makeAction(betId, 2)).wait();
 					const reqId3r = await vrf.lastRequestId();
 					await vrf.fulfillRandomWords(coreAddr, reqId3r, [word3]);
 				} else {
 					// Check post-flop → VRF3 deals turn + river
 					const tr = partialFisherYates(deckExcluding([...hole, ...flop]), 2, word3);
-					const tx3 = await uth.connect(player).checkPostFlop(betId);
+					const tx3 = await uth.connect(player).makeAction(betId, 3);
 					const r3 = await tx3.wait();
 					const checked3 = parseEvent(uth.interface, r3, 'CheckedPostFlop');
 					const reqId3 = checked3.args.requestId;
@@ -451,12 +451,12 @@ describe('UTH Cross-Validation: real on-chain', () => {
 						playerSeven = [...hole, ...community];
 						dealerSeven = [...dealerHole, ...community];
 
-						await (await uth.connect(player).playRiver(betId)).wait();
+						await (await uth.connect(player).makeAction(betId, 4)).wait();
 						const reqId4r = await vrf.lastRequestId();
 						await vrf.fulfillRandomWords(coreAddr, reqId4r, [word4]);
 					} else {
 						// Fold
-						await uth.connect(player).fold(betId);
+						await uth.connect(player).makeAction(betId, 5);
 						const base = await uth.getBetBase(betId);
 						expect(Number(base.outcome), `fold outcome bet ${i}`).to.equal(Outcome.FOLDED);
 						outcomes.folded++;

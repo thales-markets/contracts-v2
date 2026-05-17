@@ -356,7 +356,7 @@ async function deployFixture() {
 async function placeAndGetIds(ctx, ante, options = {}) {
 	const signer = options.signer ?? ctx.player;
 	const referrer = options.referrer ?? ethers.ZeroAddress;
-	const tx = await ctx.uth.connect(signer).placeBet(ctx.usdcAddr, ante, referrer);
+	const tx = await ctx.uth.connect(signer).placeBet(ctx.usdcAddr, ante, referrer, false);
 	const r = await tx.wait();
 	const placed = r.logs
 		.map((l) => {
@@ -457,14 +457,14 @@ describe('OvertimeUltimateHoldem', () => {
 		it('reverts on zero ante', async () => {
 			const { uth, usdcAddr, player } = ctx;
 			await expect(
-				uth.connect(player).placeBet(usdcAddr, 0n, ethers.ZeroAddress)
+				uth.connect(player).placeBet(usdcAddr, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(uth, 'InvalidAmount');
 		});
 
 		it('reverts on unsupported collateral', async () => {
 			const { uth, player } = ctx;
 			await expect(
-				uth.connect(player).placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress)
+				uth.connect(player).placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(uth, 'InvalidCollateral');
 		});
 
@@ -472,7 +472,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, usdcAddr, player } = ctx;
 			// 1 USDC < 3 USD minimum
 			await expect(
-				uth.connect(player).placeBet(usdcAddr, USDC_UNIT, ethers.ZeroAddress)
+				uth.connect(player).placeBet(usdcAddr, USDC_UNIT, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(uth, 'InvalidAmount');
 		});
 
@@ -483,8 +483,8 @@ describe('OvertimeUltimateHoldem', () => {
 			// New reservation = 2*ante + min(504*ante, capCollateral) = 6 + 100 = 106 USDC.
 			const { uth, core, owner, uthAddr, usdcAddr, player } = ctx;
 			await core.connect(owner).setMaxProfitUsdOverride(uthAddr, ethers.parseEther('100'));
-			await expect(uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)).to.not
-				.be.reverted;
+			await expect(uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false))
+				.to.not.be.reverted;
 			expect(await core.reservedProfitPerGame(uthAddr, usdcAddr)).to.equal(
 				MIN_USDC_BET * 2n + 100n * USDC_UNIT
 			);
@@ -520,7 +520,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// checkPreFlop → AWAITING_FLOP
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -533,7 +533,7 @@ describe('OvertimeUltimateHoldem', () => {
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
 			// checkPostFlop → AWAITING_TURN_RIVER
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -546,7 +546,7 @@ describe('OvertimeUltimateHoldem', () => {
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
 			// Fold
-			await uth.connect(player).fold(betId);
+			await uth.connect(player).makeAction(betId, 5);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - ante * 2n);
 			expect(await core.reservedProfitPerGame(uthAddr, usdcAddr)).to.equal(0n);
 			const base = await uth.getBetBase(betId);
@@ -558,7 +558,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await expect(uth.connect(player).fold(betId)).to.be.revertedWithCustomError(
+			await expect(uth.connect(player).makeAction(betId, 5)).to.be.revertedWithCustomError(
 				uth,
 				'InvalidBetStatus'
 			);
@@ -569,7 +569,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// advance to POST_RIVER_TURN
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -581,7 +581,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -593,7 +593,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
-			await expect(uth.connect(player2).fold(betId)).to.be.revertedWithCustomError(
+			await expect(uth.connect(player2).makeAction(betId, 5)).to.be.revertedWithCustomError(
 				uth,
 				'BetNotOwner'
 			);
@@ -610,7 +610,7 @@ describe('OvertimeUltimateHoldem', () => {
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 
 			const balBeforeRaise = await usdc.balanceOf(player.address);
-			const raiseTx = await uth.connect(player).playPreFlop(betId);
+			const raiseTx = await uth.connect(player).makeAction(betId, 0);
 			await raiseTx.wait();
 			expect(await usdc.balanceOf(player.address)).to.equal(balBeforeRaise - ante * 3n);
 			let base = await uth.getBetBase(betId);
@@ -641,7 +641,7 @@ describe('OvertimeUltimateHoldem', () => {
 			for (let i = 0; i < 25 && seenOutcomes.size < 2; i++) {
 				const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 				await vrf.fulfillRandomWords(coreAddr, requestId, [holeWord]);
-				await uth.connect(player).playPreFlop(betId);
+				await uth.connect(player).makeAction(betId, 0);
 				const nextReqId = BigInt(requestId) + 1n;
 				const resolveWord = BigInt('0x' + ethers.id('uth-resolve-' + i).slice(2));
 				await vrf.fulfillRandomWords(coreAddr, nextReqId, [resolveWord]);
@@ -661,7 +661,7 @@ describe('OvertimeUltimateHoldem', () => {
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 
 			// check pre-flop
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -678,7 +678,7 @@ describe('OvertimeUltimateHoldem', () => {
 
 			// raise 2x
 			const balBefore = await usdc.balanceOf(player.address);
-			tx = await uth.connect(player).playPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 2);
 			r = await tx.wait();
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - ante * 2n);
 			expect((await uth.getBetBase(betId)).playAmount).to.equal(ante * 2n);
@@ -702,7 +702,7 @@ describe('OvertimeUltimateHoldem', () => {
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 
 			// checkPreFlop
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -715,7 +715,7 @@ describe('OvertimeUltimateHoldem', () => {
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
 			// checkPostFlop
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -731,7 +731,7 @@ describe('OvertimeUltimateHoldem', () => {
 
 			// playRiver (1x)
 			const balBefore = await usdc.balanceOf(player.address);
-			tx = await uth.connect(player).playRiver(betId);
+			tx = await uth.connect(player).makeAction(betId, 4);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -762,7 +762,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -789,7 +789,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -801,7 +801,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -831,7 +831,7 @@ describe('OvertimeUltimateHoldem', () => {
 			expect(cards.dealerHole[1]).to.equal(0);
 
 			// Raise pre-flop (final resolve will reveal dealer)
-			await uth.connect(player).playPreFlop(betId);
+			await uth.connect(player).makeAction(betId, 0);
 			cards = await uth.getBetCards(betId);
 			// Still hidden during AWAITING_RESOLVE
 			expect(cards.dealerHole[0]).to.equal(0);
@@ -861,7 +861,7 @@ describe('OvertimeUltimateHoldem', () => {
 				PLACEBET_RESERVATION_MULT * ante
 			);
 			// Advance to POST_RIVER_TURN to fold
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -877,7 +877,7 @@ describe('OvertimeUltimateHoldem', () => {
 				PLACEBET_RESERVATION_MULT * ante
 			);
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -890,7 +890,7 @@ describe('OvertimeUltimateHoldem', () => {
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
 			// Fold
-			await uth.connect(player).fold(betId);
+			await uth.connect(player).makeAction(betId, 5);
 			expect(await core.reservedProfitPerGame(uthAddr, usdcAddr)).to.equal(0n);
 		});
 	});
@@ -918,7 +918,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// move to AWAITING_FLOP via checkPreFlop, then DO NOT fulfill
-			await uth.connect(player).checkPreFlop(betId);
+			await uth.connect(player).makeAction(betId, 1);
 			expect((await uth.getBetBase(betId)).status).to.equal(BetStatus.AWAITING_FLOP);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await uth.connect(player).cancelBet(betId);
@@ -931,7 +931,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -943,7 +943,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			await uth.connect(player).checkPostFlop(betId);
+			await uth.connect(player).makeAction(betId, 3);
 			expect((await uth.getBetBase(betId)).status).to.equal(BetStatus.AWAITING_TURN_RIVER);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await uth.connect(player).cancelBet(betId);
@@ -956,7 +956,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await uth.connect(player).playPreFlop(betId);
+			await uth.connect(player).makeAction(betId, 0);
 			expect((await uth.getBetBase(betId)).status).to.equal(BetStatus.AWAITING_RESOLVE);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await uth.connect(player).cancelBet(betId);
@@ -987,7 +987,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -1050,7 +1050,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await uth.connect(player).playPreFlop(betId);
+			await uth.connect(player).makeAction(betId, 0);
 			await uth.connect(resolver).adminCancelBet(betId);
 			// Refund = 2*ante + 3*ante = 5*ante back
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
@@ -1070,7 +1070,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// Advance to POST_RIVER_TURN, fold to resolve
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -1082,7 +1082,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -1094,7 +1094,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
-			await uth.connect(player).fold(betId);
+			await uth.connect(player).makeAction(betId, 5);
 			await expect(uth.connect(resolver).adminCancelBet(betId)).to.be.revertedWithCustomError(
 				uth,
 				'InvalidBetStatus'
@@ -1125,7 +1125,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player2 } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await expect(uth.connect(player2).playPreFlop(betId)).to.be.revertedWithCustomError(
+			await expect(uth.connect(player2).makeAction(betId, 0)).to.be.revertedWithCustomError(
 				uth,
 				'BetNotOwner'
 			);
@@ -1135,7 +1135,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player2 } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await expect(uth.connect(player2).checkPreFlop(betId)).to.be.revertedWithCustomError(
+			await expect(uth.connect(player2).makeAction(betId, 1)).to.be.revertedWithCustomError(
 				uth,
 				'BetNotOwner'
 			);
@@ -1146,7 +1146,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// Still in PRE_FLOP_TURN — wrong state for playPostFlop
-			await expect(uth.connect(player).playPostFlop(betId)).to.be.revertedWithCustomError(
+			await expect(uth.connect(player).makeAction(betId, 2)).to.be.revertedWithCustomError(
 				uth,
 				'InvalidBetStatus'
 			);
@@ -1156,7 +1156,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await expect(uth.connect(player).playRiver(betId)).to.be.revertedWithCustomError(
+			await expect(uth.connect(player).makeAction(betId, 4)).to.be.revertedWithCustomError(
 				uth,
 				'InvalidBetStatus'
 			);
@@ -1164,7 +1164,7 @@ describe('OvertimeUltimateHoldem', () => {
 
 		it('playPreFlop on non-existent bet reverts BetNotFound', async () => {
 			const { uth, player } = ctx;
-			await expect(uth.connect(player).playPreFlop(99999n)).to.be.revertedWithCustomError(
+			await expect(uth.connect(player).makeAction(99999n, 0)).to.be.revertedWithCustomError(
 				uth,
 				'BetNotFound'
 			);
@@ -1183,7 +1183,7 @@ describe('OvertimeUltimateHoldem', () => {
 
 		async function placeFreeBet(ante) {
 			const { usdcAddr, player, uth } = ctx;
-			const tx = await uth.connect(player).placeBetWithFreeBet(usdcAddr, ante, ethers.ZeroAddress);
+			const tx = await uth.connect(player).placeBet(usdcAddr, ante, ethers.ZeroAddress, true);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -1234,11 +1234,11 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeFreeBet(ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// No FBH balance left → playPreFlop reverts with MockFBH error
-			await expect(uth.connect(player).playPreFlop(betId)).to.be.revertedWith(
+			await expect(uth.connect(player).makeAction(betId, 0)).to.be.revertedWith(
 				'MockFBH: InsufficientBalance'
 			);
 			// But fold from POST_RIVER_TURN works without extra balance
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -1250,7 +1250,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -1262,7 +1262,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
-			await uth.connect(player).fold(betId);
+			await uth.connect(player).makeAction(betId, 5);
 			const base = await uth.getBetBase(betId);
 			expect(base.outcome).to.equal(Outcome.FOLDED);
 		});
@@ -1275,7 +1275,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeFreeBet(ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// Walk to POST_RIVER_TURN
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -1287,7 +1287,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -1299,7 +1299,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
-			await uth.connect(player).fold(betId);
+			await uth.connect(player).makeAction(betId, 5);
 			expect(await usdc.balanceOf(player.address)).to.equal(walletBefore);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
 		});
@@ -1312,7 +1312,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, data, vrf, coreAddr, player } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -1324,7 +1324,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -1336,7 +1336,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPostFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x3n]);
-			await uth.connect(player).fold(betId);
+			await uth.connect(player).makeAction(betId, 5);
 			const rec = uth.interface.decodeFunctionResult(
 				'getFullRecord',
 				await data.getFullRecord(4 /* GameV2.OvertimeUltimateHoldem */, betId)
@@ -1482,7 +1482,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, owner, usdcAddr, player } = ctx;
 			await uth.connect(owner).setPausedByRole(true);
 			await expect(
-				uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)
+				uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false)
 			).to.be.revertedWith('This action cannot be performed while the contract is paused');
 		});
 	});
@@ -1505,7 +1505,7 @@ describe('OvertimeUltimateHoldem', () => {
 					refAddr
 				);
 			const referrer = ethers.Wallet.createRandom().address;
-			await uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, referrer);
+			await uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, referrer, false);
 			expect(await refContract.referrals(player.address)).to.equal(referrer);
 		});
 	});
@@ -1527,7 +1527,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 			// Advance to POST_RIVER_TURN and fold so the bet ends in RESOLVED
-			let tx = await uth.connect(player).checkPreFlop(betId);
+			let tx = await uth.connect(player).makeAction(betId, 1);
 			let r = await tx.wait();
 			let evt = r.logs
 				.map((l) => {
@@ -1539,7 +1539,7 @@ describe('OvertimeUltimateHoldem', () => {
 				})
 				.find((e) => e?.name === 'CheckedPreFlop');
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			tx = await uth.connect(player).checkPostFlop(betId);
+			tx = await uth.connect(player).makeAction(betId, 3);
 			r = await tx.wait();
 			evt = r.logs
 				.map((l) => {
@@ -1552,7 +1552,7 @@ describe('OvertimeUltimateHoldem', () => {
 				.find((e) => e?.name === 'CheckedPostFlop');
 			const checkPostFlopReq = evt.args.requestId;
 			await vrf.fulfillRandomWords(coreAddr, checkPostFlopReq, [0x3n]);
-			await uth.connect(player).fold(betId);
+			await uth.connect(player).makeAction(betId, 5);
 			// The bet is now RESOLVED. Stale callback for an older requestId we still hold the
 			// mapping for would have been deleted on use, so re-firing it goes through the
 			// betId == 0 short-circuit. We simulate the other side: a phantom requestId.
@@ -1594,7 +1594,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, vrf, coreAddr, player } = ctx;
 			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [w1]);
-			await uth.connect(player).playPreFlop(betId);
+			await uth.connect(player).makeAction(betId, 0);
 			const resolveReq = BigInt(requestId) + 1n;
 			await vrf.fulfillRandomWords(coreAddr, resolveReq, [w2]);
 			return betId;
@@ -1706,10 +1706,11 @@ describe('OvertimeUltimateHoldem', () => {
 			await core.connect(owner).setMinBetPerGameUsd(uthAddr, ethers.parseEther('5'));
 			await core.connect(owner).setMaxProfitUsdOverride(uthAddr, ethers.parseEther('100'));
 			await expect(
-				uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)
+				uth.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(uth, 'InvalidAmount');
-			await expect(uth.connect(player).placeBet(usdcAddr, 5n * USDC_UNIT, ethers.ZeroAddress)).to
-				.not.be.reverted;
+			await expect(
+				uth.connect(player).placeBet(usdcAddr, 5n * USDC_UNIT, ethers.ZeroAddress, false)
+			).to.not.be.reverted;
 		});
 
 		it('rejects bet above per-game max-bet override', async () => {
@@ -1717,10 +1718,11 @@ describe('OvertimeUltimateHoldem', () => {
 			await core.connect(owner).setMaxBetPerGameUsd(uthAddr, ethers.parseEther('5'));
 			await core.connect(owner).setMaxProfitUsdOverride(uthAddr, ethers.parseEther('100'));
 			await expect(
-				uth.connect(player).placeBet(usdcAddr, 10n * USDC_UNIT, ethers.ZeroAddress)
+				uth.connect(player).placeBet(usdcAddr, 10n * USDC_UNIT, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(uth, 'AboveMaxBet');
-			await expect(uth.connect(player).placeBet(usdcAddr, 5n * USDC_UNIT, ethers.ZeroAddress)).to
-				.not.be.reverted;
+			await expect(
+				uth.connect(player).placeBet(usdcAddr, 5n * USDC_UNIT, ethers.ZeroAddress, false)
+			).to.not.be.reverted;
 		});
 
 		it('reservation grows with cap (uncapped) — extends on raise', async () => {
@@ -1731,7 +1733,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
 			expect(await core.reservedProfitPerGame(uthAddr, usdcAddr)).to.equal(506n * ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await uth.connect(player).playPreFlop(betId);
+			await uth.connect(player).makeAction(betId, 0);
 			expect(await core.reservedProfitPerGame(uthAddr, usdcAddr)).to.equal(509n * ante);
 		});
 
@@ -1741,7 +1743,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const { uth, uthAddr, core, owner, usdcAddr, player } = ctx;
 			await core.connect(owner).setMaxProfitUsdOverride(uthAddr, ethers.parseEther('50'));
 			const ante = 10n * USDC_UNIT;
-			await uth.connect(player).placeBet(usdcAddr, ante, ethers.ZeroAddress);
+			await uth.connect(player).placeBet(usdcAddr, ante, ethers.ZeroAddress, false);
 			expect(await core.reservedProfitPerGame(uthAddr, usdcAddr)).to.equal(
 				2n * ante + 50n * USDC_UNIT
 			);
@@ -1758,7 +1760,7 @@ describe('OvertimeUltimateHoldem', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			const raiseTx = await uth.connect(player).playPreFlop(betId);
+			const raiseTx = await uth.connect(player).makeAction(betId, 0);
 			const raiseR = await raiseTx.wait();
 			const raised = raiseR.logs
 				.map((l) => {

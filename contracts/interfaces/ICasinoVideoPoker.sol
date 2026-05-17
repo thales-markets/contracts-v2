@@ -107,20 +107,14 @@ interface ICasinoVideoPoker {
     /* ========== EXTERNAL ========== */
 
     /// @notice Places a Video Poker bet. Pulls `amount` upfront and triggers VRF1 to deal the
-    /// initial 5 cards. Returns `betId` and the VRF `requestId`
+    /// initial 5 cards. `isFreeBet=true` pulls the stake from FreeBetsHolder and routes the
+    /// payout back to FBH on resolve / cancel; `false` pulls from the user's wallet. Single
+    /// canonical entry
     function placeBet(
         address collateral,
         uint256 amount,
-        address referrer
-    ) external returns (uint256 betId, uint256 requestId);
-
-    /// @notice Places a bet using the caller's free-bet balance held in FreeBetsHolder.
-    /// User is `msg.sender`; FBH debits their per-user balance. Stake routes back to FBH on
-    /// resolve / cancel (matches V1 Slots / Dice / Roulette / Blackjack / Baccarat pattern)
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        address referrer
+        address referrer,
+        bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
     /// @notice Commits the player's hold decision (low 5 bits of `holdMask` — bit i = keep card i)

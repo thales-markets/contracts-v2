@@ -224,36 +224,16 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /* ========== PLACE / CANCEL ========== */
 
-    /// @notice Place a Keno bet. `picks` must be sorted ascending, deduplicated, all in [1, 80]
-    function placeBet(
-        address collateral,
-        uint256 amount,
-        uint8[] calldata picks,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, amount, picks, referrer, false);
-    }
-
-    /// @inheritdoc ICasinoKeno
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        uint8[] calldata picks,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, amount, picks, referrer, true);
-    }
-
-    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
-    /// `placeBetWithFreeBet` remain callable for wallet-signed flows. No `makeAction` needed —
-    /// Keno is single-shot: VRF callback resolves the bet
+    /// @notice Place a Keno bet. `picks` must be sorted ascending, deduplicated, all in [1, 80].
+    /// `isFreeBet=true` pulls the stake from FreeBetsHolder, `false` from the user's wallet.
+    /// One VRF word resolves the bet — no `makeAction` because there are no mid-game actions
     function placeBet(
         address collateral,
         uint256 amount,
         uint8[] calldata picks,
         address referrer,
         bool isFreeBet
-    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
         return _placeBet(collateral, amount, picks, referrer, isFreeBet);
     }
 

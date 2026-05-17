@@ -144,7 +144,9 @@ async function deployFixture() {
 
 async function placeAndResolve(ctx, risk, word) {
 	const { plinko, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await plinko.connect(player).placeBet(usdcAddr, BET_AMOUNT, risk, ethers.ZeroAddress);
+	const tx = await plinko
+		.connect(player)
+		.placeBet(usdcAddr, BET_AMOUNT, risk, ethers.ZeroAddress, false);
 	const receipt = await tx.wait();
 	const placed = receipt.logs
 		.map((l) => {

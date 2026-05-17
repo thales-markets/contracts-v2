@@ -179,7 +179,7 @@ async function placeAndDrawFirst(ctx, firstWord, firstDirection = Direction.ABOV
 	const { hilo, vrf, coreAddr, usdcAddr, player } = ctx;
 	const tx = await hilo
 		.connect(player)
-		.placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress, firstDirection);
+		.placeBet(usdcAddr, BET_AMOUNT, ethers.ZeroAddress, firstDirection, false);
 	const receipt = await tx.wait();
 	const guessed = receipt.logs
 		.map((l) => {
@@ -197,7 +197,7 @@ async function placeAndDrawFirst(ctx, firstWord, firstDirection = Direction.ABOV
 
 async function guessAndDeal(ctx, betId, dir, nextWord) {
 	const { hilo, vrf, coreAddr, player } = ctx;
-	const tx = await hilo.connect(player).guess(betId, dir);
+	const tx = await hilo.connect(player).makeAction(betId, dir);
 	const receipt = await tx.wait();
 	const ev = receipt.logs
 		.map((l) => {
@@ -281,7 +281,7 @@ describe('HiLo — edge sim & EVM cross-validation', function () {
 			}
 
 			if (alive) {
-				await hilo.connect(player).cashout(betId);
+				await hilo.connect(player).makeAction(betId, 2);
 				const base = await hilo.getBetBase(betId);
 				expect(Number(base.outcome)).to.equal(Outcome.CASHED_OUT);
 				expect(base.payout).to.equal((BET_AMOUNT * mult) / ONE);

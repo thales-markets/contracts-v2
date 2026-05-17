@@ -188,7 +188,9 @@ async function deployFixture() {
 
 async function placeAndFulfill(ctx, picks, word) {
 	const { keno, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await keno.connect(player).placeBet(usdcAddr, BET_AMOUNT, picks, ethers.ZeroAddress);
+	const tx = await keno
+		.connect(player)
+		.placeBet(usdcAddr, BET_AMOUNT, picks, ethers.ZeroAddress, false);
 	const receipt = await tx.wait();
 	const placed = receipt.logs
 		.map((l) => {

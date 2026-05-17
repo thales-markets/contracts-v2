@@ -171,7 +171,7 @@ async function deployFixture() {
 async function placeAndDealHole(ctx, ante, bonus, holeWord) {
 	const tx = await ctx.bh
 		.connect(ctx.player)
-		.placeBet(await ctx.usdc.getAddress(), ante, bonus, ethers.ZeroAddress);
+		.placeBet(await ctx.usdc.getAddress(), ante, bonus, ethers.ZeroAddress, false);
 	const r = await tx.wait();
 	const betId = parseEvent(ctx.bh.interface, r, 'BetPlaced').args.betId;
 	await ctx.vrf.fulfillRandomWords(ctx.coreAddr, await ctx.vrf.lastRequestId(), [holeWord]);
@@ -191,9 +191,9 @@ describe('OvertimeBonusHoldem — coverage', () => {
 	describe('decisions: raise / check / fold at each post-flop street', () => {
 		it('raiseFlop pulls 1× ante, advances to AWAITING_TURN', async () => {
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await ctx.bh.connect(ctx.player).playPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 0);
 			await fulfillNext(ctx, 0x2222n);
-			await ctx.bh.connect(ctx.player).raiseFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 2);
 			const r = await ctx.bh.getFullRecord(betId);
 			expect(r.status).to.equal(BetStatus.AWAITING_TURN);
 			expect(r.flopRaise).to.equal(MIN_USDC_BET);
@@ -201,13 +201,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 
 		it('raiseTurn / raiseRiver flow + resolve', async () => {
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await ctx.bh.connect(ctx.player).playPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 0);
 			await fulfillNext(ctx, 0x2222n);
-			await ctx.bh.connect(ctx.player).checkFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 3);
 			await fulfillNext(ctx, 0x3333n);
-			await ctx.bh.connect(ctx.player).raiseTurn(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 4);
 			await fulfillNext(ctx, 0x4444n);
-			await ctx.bh.connect(ctx.player).raiseRiver(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 6);
 			await fulfillNext(ctx, 0x5555n);
 			const r = await ctx.bh.getFullRecord(betId);
 			expect(r.status).to.equal(BetStatus.RESOLVED);
@@ -220,13 +220,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 		// in the bonus-paytable suite below
 		it('check-through to showdown resolves cleanly (no fold path)', async () => {
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await ctx.bh.connect(ctx.player).playPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 0);
 			await fulfillNext(ctx, 0x2222n);
-			await ctx.bh.connect(ctx.player).checkFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 3);
 			await fulfillNext(ctx, 0x3333n);
-			await ctx.bh.connect(ctx.player).checkTurn(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 5);
 			await fulfillNext(ctx, 0x4444n);
-			await ctx.bh.connect(ctx.player).checkRiver(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 7);
 			await fulfillNext(ctx, 0x5555n);
 			const r = await ctx.bh.getFullRecord(betId);
 			expect(r.status).to.equal(BetStatus.RESOLVED);
@@ -239,7 +239,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 		async function runWithCraftedHoleAndDealer(holeCards, dealerCards) {
 			const holeWord = craftWord(holeCards);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, MIN_USDC_BET, holeWord);
-			await ctx.bh.connect(ctx.player).foldPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 1);
 			// Dealer-hole VRF: deck excludes the 2 hole cards
 			const dealerWord = craftWord(dealerCards, holeCards);
 			await fulfillNext(ctx, dealerWord);
@@ -320,7 +320,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 		it('no bonus stake → 0 payout regardless of hole match', async () => {
 			const holeWord = craftWord([C2(12), D2(12)]);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, holeWord); // bonus=0
-			await ctx.bh.connect(ctx.player).foldPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 1);
 			await fulfillNext(ctx, craftWord([H2(0), S2(1)], [C2(12), D2(12)]));
 			const r = await ctx.bh.getFullRecord(betId);
 			expect(r.bonusPayout).to.equal(0n);
@@ -333,7 +333,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await bh
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
@@ -345,7 +345,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const { bh, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, MIN_USDC_BET, 0x1111n);
-			await bh.connect(player).playPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 0);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await bh.connect(player).cancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
@@ -355,13 +355,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const { bh, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await bh.connect(player).playPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 0);
 			await fulfillNext(ctx, 0x2222n);
-			await bh.connect(player).checkFlop(betId);
+			await bh.connect(player).makeAction(betId, 3);
 			await fulfillNext(ctx, 0x3333n);
-			await bh.connect(player).checkTurn(betId);
+			await bh.connect(player).makeAction(betId, 5);
 			await fulfillNext(ctx, 0x4444n);
-			await bh.connect(player).raiseRiver(betId);
+			await bh.connect(player).makeAction(betId, 6);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
 			await bh.connect(player).cancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
@@ -369,7 +369,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 
 		it('cancel before timeout reverts', async () => {
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await ctx.bh.connect(ctx.player).playPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 0);
 			await expect(ctx.bh.connect(ctx.player).cancelBet(betId)).to.be.revertedWithCustomError(
 				ctx.bh,
 				'CancelTimeoutNotReached'
@@ -378,7 +378,9 @@ describe('OvertimeBonusHoldem — coverage', () => {
 
 		it('cancel by non-owner reverts', async () => {
 			const { bh, owner, usdcAddr, player } = ctx;
-			const tx = await bh.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+			const tx = await bh
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
@@ -418,7 +420,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const { bh, usdc, player, resolver } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await bh.connect(player).playPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 0);
 			await fulfillNext(ctx, 0x2222n);
 			await bh.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
@@ -427,13 +429,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 		it('admin cancel of already-RESOLVED bet reverts', async () => {
 			const { bh, resolver } = ctx;
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await ctx.bh.connect(ctx.player).playPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 0);
 			await fulfillNext(ctx, 0x2222n);
-			await ctx.bh.connect(ctx.player).checkFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 3);
 			await fulfillNext(ctx, 0x3333n);
-			await ctx.bh.connect(ctx.player).checkTurn(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 5);
 			await fulfillNext(ctx, 0x4444n);
-			await ctx.bh.connect(ctx.player).checkRiver(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 7);
 			await fulfillNext(ctx, 0x5555n);
 			await expect(bh.connect(resolver).adminCancelBet(betId)).to.be.revertedWithCustomError(
 				bh,
@@ -459,11 +461,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 	describe('decision-call guards (status / ownership / not-found)', () => {
 		it('playPreFlop on wrong state reverts InvalidBetStatus', async () => {
 			const { bh, usdcAddr, player } = ctx;
-			const tx = await bh.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+			const tx = await bh
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
 			// status is AWAITING_HOLE, not PRE_FLOP_TURN
-			await expect(bh.connect(player).playPreFlop(betId)).to.be.revertedWithCustomError(
+			await expect(bh.connect(player).makeAction(betId, 0)).to.be.revertedWithCustomError(
 				bh,
 				'InvalidBetStatus'
 			);
@@ -471,14 +475,14 @@ describe('OvertimeBonusHoldem — coverage', () => {
 
 		it('playPreFlop by non-owner reverts BetNotOwner', async () => {
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await expect(ctx.bh.connect(ctx.owner).playPreFlop(betId)).to.be.revertedWithCustomError(
+			await expect(ctx.bh.connect(ctx.owner).makeAction(betId, 0)).to.be.revertedWithCustomError(
 				ctx.bh,
 				'BetNotOwner'
 			);
 		});
 
 		it('playPreFlop on non-existent bet reverts BetNotFound', async () => {
-			await expect(ctx.bh.connect(ctx.player).playPreFlop(9999n)).to.be.revertedWithCustomError(
+			await expect(ctx.bh.connect(ctx.player).makeAction(9999n, 0)).to.be.revertedWithCustomError(
 				ctx.bh,
 				'BetNotFound'
 			);
@@ -490,7 +494,9 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const { bh, usdcAddr, player, fbhActor } = ctx;
 			// Just confirm the call doesn't revert with non-zero referrer (core has no Referrals
 			// wired so setReferrer is a no-op in try/catch — this exercises the branch)
-			const tx = await bh.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, fbhActor.address);
+			const tx = await bh
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, 0n, fbhActor.address, false);
 			await tx.wait();
 		});
 	});
@@ -498,7 +504,9 @@ describe('OvertimeBonusHoldem — coverage', () => {
 	describe('placeBet bet-size + collateral guards', () => {
 		it('reverts on zero ante', async () => {
 			await expect(
-				ctx.bh.connect(ctx.player).placeBet(await ctx.usdc.getAddress(), 0n, 0n, ethers.ZeroAddress)
+				ctx.bh
+					.connect(ctx.player)
+					.placeBet(await ctx.usdc.getAddress(), 0n, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(ctx.bh, 'InvalidAmount');
 		});
 
@@ -510,7 +518,8 @@ describe('OvertimeBonusHoldem — coverage', () => {
 						'0x000000000000000000000000000000000000dEaD',
 						MIN_USDC_BET,
 						0n,
-						ethers.ZeroAddress
+						ethers.ZeroAddress,
+						false
 					)
 			).to.be.revertedWithCustomError(ctx.bh, 'InvalidCollateral');
 		});
@@ -520,7 +529,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			await expect(
 				ctx.bh
 					.connect(ctx.player)
-					.placeBet(await ctx.usdc.getAddress(), tinyAmount, 0n, ethers.ZeroAddress)
+					.placeBet(await ctx.usdc.getAddress(), tinyAmount, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(ctx.bh, 'InvalidAmount');
 		});
 
@@ -530,7 +539,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			await expect(
 				ctx.bh
 					.connect(ctx.player)
-					.placeBet(await ctx.usdc.getAddress(), 10n * USDC_UNIT, 0n, ethers.ZeroAddress)
+					.placeBet(await ctx.usdc.getAddress(), 10n * USDC_UNIT, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(ctx.bh, 'AboveMaxBet');
 		});
 
@@ -540,7 +549,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			await expect(
 				ctx.bh
 					.connect(ctx.player)
-					.placeBet(await ctx.usdc.getAddress(), MIN_USDC_BET, 10n * USDC_UNIT, ethers.ZeroAddress)
+					.placeBet(
+						await ctx.usdc.getAddress(),
+						MIN_USDC_BET,
+						10n * USDC_UNIT,
+						ethers.ZeroAddress,
+						false
+					)
 			).to.be.revertedWithCustomError(ctx.bh, 'AboveMaxBet');
 		});
 	});
@@ -586,7 +601,9 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const { bh, pauser, player, usdc } = ctx;
 			await bh.connect(pauser).setPausedByRole(true);
 			await expect(
-				bh.connect(player).placeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress)
+				bh
+					.connect(player)
+					.placeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress, false)
 			).to.be.reverted;
 		});
 	});
@@ -649,7 +666,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await bh
 				.connect(player)
-				.placeBetWithFreeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress, true);
 			const r = await tx.wait();
 			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
 			// User wallet balance unchanged (stake pulled from FBH)
@@ -670,13 +687,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const riverWord = craftWord([river], [...hole, ...flop, turn]);
 			const dealerWord = craftWord(dealerHole, [...hole, ...flop, turn, river]);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, bonus, holeWord);
-			await ctx.bh.connect(ctx.player).playPreFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 0);
 			await fulfillNext(ctx, flopWord);
-			await ctx.bh.connect(ctx.player).checkFlop(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 3);
 			await fulfillNext(ctx, turnWord);
-			await ctx.bh.connect(ctx.player).checkTurn(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 5);
 			await fulfillNext(ctx, riverWord);
-			await ctx.bh.connect(ctx.player).checkRiver(betId);
+			await ctx.bh.connect(ctx.player).makeAction(betId, 7);
 			await fulfillNext(ctx, dealerWord);
 			return ctx.bh.getFullRecord(betId);
 		}
@@ -813,7 +830,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const holeWord = craftWord([C2(12), D2(12)]);
 			const dealerWord = craftWord([H2(12), S2(12)], [C2(12), D2(12)]);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, MIN_USDC_BET, holeWord);
-			await bh.connect(player).foldPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 1);
 			await fulfillNext(ctx, dealerWord);
 			const r = await bh.getFullRecord(betId);
 			// Bonus payout truncated below the nominal 500× stake
@@ -833,13 +850,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 				[H2(12), H2(11), H2(10), H2(9), H2(8), C2(0), D2(1)]
 			);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, holeWord);
-			await bh.connect(player).playPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 0);
 			await fulfillNext(ctx, flopWord);
-			await bh.connect(player).checkFlop(betId);
+			await bh.connect(player).makeAction(betId, 3);
 			await fulfillNext(ctx, turnWord);
-			await bh.connect(player).checkTurn(betId);
+			await bh.connect(player).makeAction(betId, 5);
 			await fulfillNext(ctx, riverWord);
-			await bh.connect(player).checkRiver(betId);
+			await bh.connect(player).makeAction(betId, 7);
 			await fulfillNext(ctx, dealerWord);
 			const r = await bh.getFullRecord(betId);
 			expect(r.outcome).to.equal(Outcome.PLAYER_WIN);
@@ -859,13 +876,13 @@ describe('OvertimeBonusHoldem — coverage', () => {
 
 			const tx = await bh
 				.connect(player)
-				.placeBetWithFreeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress, true);
 			const r = await tx.wait();
 			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
 			await fulfillNext(ctx, 0x1234n);
 
 			// playPreFlop should pull additional stake from FBH (not user wallet)
-			await bh.connect(player).playPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 0);
 			// User wallet unchanged for both the initial stake and the play raise
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
@@ -883,7 +900,9 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			// Place a bet, capture the pre-fulfill requestId, cancel before VRF fires (deletes the
 			// mapping inside bh), then have VRF fire for that requestId — bh.onVrfFulfilled sees
 			// betId == 0 and silently returns
-			const tx = await bh.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+			const tx = await bh
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseEvent(bh.interface, r, 'BetPlaced');
 			const betId = placed.args.betId;

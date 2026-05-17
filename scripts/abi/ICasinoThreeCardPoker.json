@@ -273,19 +273,6 @@
         "type": "uint256"
       }
     ],
-    "name": "fold",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      }
-    ],
     "name": "getBetBase",
     "outputs": [
       {
@@ -550,6 +537,30 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "action",
+        "type": "uint8"
+      }
+    ],
+    "name": "makeAction",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "nextBetId",
     "outputs": [
@@ -583,6 +594,11 @@
         "internalType": "address",
         "name": "referrer",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isFreeBet",
+        "type": "bool"
       }
     ],
     "name": "placeBet",
@@ -592,64 +608,6 @@
         "name": "betId",
         "type": "uint256"
       },
-      {
-        "internalType": "uint256",
-        "name": "requestId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "collateral",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "anteAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "pairPlusAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "referrer",
-        "type": "address"
-      }
-    ],
-    "name": "placeBetWithFreeBet",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "requestId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      }
-    ],
-    "name": "play",
-    "outputs": [
       {
         "internalType": "uint256",
         "name": "requestId",

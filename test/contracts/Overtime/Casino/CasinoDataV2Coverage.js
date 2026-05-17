@@ -197,7 +197,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		async function placeOne() {
 			const tx = await ctx.tcp
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -280,7 +280,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 
 	// Helper to place + fulfill on an arbitrary game with a given placeBet args
 	async function placeFulfill(game, placeArgs, word, eventNameOverride = 'BetPlaced') {
-		const tx = await game.connect(ctx.player).placeBet(...placeArgs);
+		const tx = await game.connect(ctx.player).placeBet(...placeArgs, false);
 		const receipt = await tx.wait();
 		const placed = receipt.logs
 			.map((l) => {
@@ -331,7 +331,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			// HiLo's placeBet now requests the first VRF; the bet is left in AWAITING_NEXT_CARD here
 			const tx = await ctx.hilo
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -385,7 +385,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			// HiLo (placeBet requests first VRF; we leave it in AWAITING_NEXT_CARD)
 			await ctx.hilo
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */, false);
 			// Keno
 			await placeFulfill(
 				ctx.keno,
@@ -422,7 +422,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			);
 			await ctx.hilo
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0 /* ABOVE */, false);
 
 			const page = await ctx.data.getUserRecentBetsV2(ctx.player.address, 1, 1);
 			expect(page.length).to.equal(1);
@@ -440,7 +440,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		async function placeOneKeno(picks = [1, 2, 3, 4, 5]) {
 			const tx = await ctx.keno
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, picks, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -528,7 +528,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			);
 			await ctx.hilo
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0, false);
 			await placeFulfill(
 				ctx.keno,
 				[ctx.usdcAddr, MIN_USDC_BET, [5, 10], ethers.ZeroAddress],
@@ -577,7 +577,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			);
 			await ctx.hilo
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, 0, false);
 			await placeFulfill(
 				ctx.keno,
 				[ctx.usdcAddr, MIN_USDC_BET, [5, 10], ethers.ZeroAddress],
@@ -629,7 +629,9 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 
 		it('returns nextBetId for OvertimeUltimateHoldem when wired (covers UTH branch body)', async () => {
 			expect(await ctx.data.getNextBetId(GameV2.OvertimeUltimateHoldem)).to.equal(1n);
-			await ctx.uth.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			await ctx.uth
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			expect(await ctx.data.getNextBetId(GameV2.OvertimeUltimateHoldem)).to.equal(2n);
 		});
 
@@ -644,7 +646,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			await ctx.data.connect(ctx.owner).setAddress(5, false, vpAddr);
 
 			// Place one VP bet (request stays in AWAITING_DEAL — fine, bet id is allocated)
-			await vp.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			await vp.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 
 			expect(await ctx.data.getNextBetId(GameV2.VideoPoker)).to.equal(2n);
 		});
@@ -654,7 +656,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		async function placeUthBet() {
 			const tx = await ctx.uth
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -745,7 +747,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 	async function placeVpBet(vp) {
 		const tx = await vp
 			.connect(ctx.player)
-			.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 		const r = await tx.wait();
 		const placed = r.logs
 			.map((l) => {
@@ -837,7 +839,9 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 	describe('CrossLib UTH base-record paths', () => {
 		it('getUserRecentBetsV2 picks up UTH bets via _gatherSecondary (covers readUthBase)', async () => {
 			// Place UTH bet
-			await ctx.uth.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			await ctx.uth
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const recs = await ctx.data.getUserRecentBetsV2(ctx.player.address, 0, 50);
 			expect(recs.some((r) => Number(r.game) === 4)).to.equal(true);
 			const uthRec = recs.find((r) => Number(r.game) === 4);
@@ -847,7 +851,9 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		});
 
 		it('getRecentBetsAllGamesV2 fills the UTH inner array (covers readRecentUthBaseRecords body)', async () => {
-			await ctx.uth.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			await ctx.uth
+				.connect(ctx.player)
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const all = await ctx.data.getRecentBetsAllGamesV2(0, 10);
 			expect(all[4].length).to.equal(1);
 			expect(all[4][0].user).to.equal(ctx.player.address);
@@ -864,7 +870,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 		async function placeBh() {
 			const tx = await ctx.bh
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_ANTE, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_ANTE, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -980,7 +986,7 @@ describe('CasinoDataV2 — comprehensive reader coverage', () => {
 			// Place a TCP bet so something exists
 			const tx = await ctx.tcp
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {

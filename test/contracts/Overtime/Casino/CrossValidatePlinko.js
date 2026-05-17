@@ -187,7 +187,7 @@ describe('Plinko Cross-Validation: real on-chain', () => {
 
 			const tx = await plinko
 				.connect(player)
-				.placeBet(usdcAddr, BET_AMOUNT, risk, ethers.ZeroAddress);
+				.placeBet(usdcAddr, BET_AMOUNT, risk, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {

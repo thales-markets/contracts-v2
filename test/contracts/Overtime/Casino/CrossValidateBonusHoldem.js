@@ -422,25 +422,27 @@ describe('OvertimeBonusHoldem Cross-Validation: real on-chain', () => {
 			const bonusPayout = computeBonus(hole, dealerHole, bonus);
 
 			// Drive the contract
-			const tx = await bh.connect(player).placeBet(usdcAddr, ante, bonus, ethers.ZeroAddress);
+			const tx = await bh
+				.connect(player)
+				.placeBet(usdcAddr, ante, bonus, ethers.ZeroAddress, false);
 			const r1 = await tx.wait();
 			const placed = parseEvent(bh.interface, r1, 'BetPlaced');
 			const betId = placed.args.betId;
 			await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [wordHole]);
 
-			await (await bh.connect(player).playPreFlop(betId)).wait();
+			await (await bh.connect(player).makeAction(betId, 0)).wait();
 			await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wordFlop]);
 
-			if (flopRaise > 0n) await (await bh.connect(player).raiseFlop(betId)).wait();
-			else await (await bh.connect(player).checkFlop(betId)).wait();
+			if (flopRaise > 0n) await (await bh.connect(player).makeAction(betId, 2)).wait();
+			else await (await bh.connect(player).makeAction(betId, 3)).wait();
 			await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wordTurn]);
 
-			if (turnRaise > 0n) await (await bh.connect(player).raiseTurn(betId)).wait();
-			else await (await bh.connect(player).checkTurn(betId)).wait();
+			if (turnRaise > 0n) await (await bh.connect(player).makeAction(betId, 4)).wait();
+			else await (await bh.connect(player).makeAction(betId, 5)).wait();
 			await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wordRiver]);
 
-			if (riverRaise > 0n) await (await bh.connect(player).raiseRiver(betId)).wait();
-			else await (await bh.connect(player).checkRiver(betId)).wait();
+			if (riverRaise > 0n) await (await bh.connect(player).makeAction(betId, 6)).wait();
+			else await (await bh.connect(player).makeAction(betId, 7)).wait();
 			await vrf.fulfillRandomWords(coreAddr, await vrf.lastRequestId(), [wordDealer]);
 
 			const full = await bh.getFullRecord(betId);

@@ -104,26 +104,20 @@ interface ICasinoOvertimeUltimateHoldem {
 
     /* ========== EXTERNAL ========== */
 
+    /// @notice Places a UTH bet. Pulls Ante + Blind (= 2 × anteAmount) upfront from the user's
+    /// wallet (or FBH if `isFreeBet=true`). Subsequent raises pull from the same source.
     function placeBet(
         address collateral,
         uint256 anteAmount,
-        address referrer
+        address referrer,
+        bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 anteAmount,
-        address referrer
-    ) external returns (uint256 betId, uint256 requestId);
-
-    function playPreFlop(uint256 betId) external returns (uint256 requestId);
-    function checkPreFlop(uint256 betId) external returns (uint256 requestId);
-
-    function playPostFlop(uint256 betId) external returns (uint256 requestId);
-    function checkPostFlop(uint256 betId) external returns (uint256 requestId);
-
-    function playRiver(uint256 betId) external returns (uint256 requestId);
-    function fold(uint256 betId) external;
+    /// @notice Single-selector mid-game dispatcher. Action codes:
+    ///   0 = playPreFlop    1 = checkPreFlop
+    ///   2 = playPostFlop   3 = checkPostFlop
+    ///   4 = playRiver      5 = fold
+    function makeAction(uint256 betId, uint8 action) external returns (uint256 requestId);
 
     function cancelBet(uint256 betId) external;
     function adminCancelBet(uint256 betId) external;

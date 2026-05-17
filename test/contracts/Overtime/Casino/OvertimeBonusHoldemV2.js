@@ -160,7 +160,7 @@ function parseEvent(iface, receipt, name) {
 
 async function placeAndDealHole(ctx, ante, bonus, holeWord) {
 	const { bh, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await bh.connect(player).placeBet(usdcAddr, ante, bonus, ethers.ZeroAddress);
+	const tx = await bh.connect(player).placeBet(usdcAddr, ante, bonus, ethers.ZeroAddress, false);
 	const r = await tx.wait();
 	const placed = parseEvent(bh.interface, r, 'BetPlaced');
 	const betId = placed.args.betId;
@@ -187,7 +187,9 @@ describe('OvertimeBonusHoldem', () => {
 			const ante = MIN_USDC_BET;
 			const bonus = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
-			const tx = await bh.connect(player).placeBet(usdcAddr, ante, bonus, ethers.ZeroAddress);
+			const tx = await bh
+				.connect(player)
+				.placeBet(usdcAddr, ante, bonus, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseEvent(bh.interface, r, 'BetPlaced');
 			expect(placed).to.not.be.undefined;
@@ -203,7 +205,7 @@ describe('OvertimeBonusHoldem', () => {
 		it('reverts on zero ante', async () => {
 			const { bh, usdcAddr, player } = ctx;
 			await expect(
-				bh.connect(player).placeBet(usdcAddr, 0n, 0n, ethers.ZeroAddress)
+				bh.connect(player).placeBet(usdcAddr, 0n, 0n, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(bh, 'InvalidAmount');
 		});
 
@@ -216,7 +218,8 @@ describe('OvertimeBonusHoldem', () => {
 						'0x000000000000000000000000000000000000dEaD',
 						MIN_USDC_BET,
 						0n,
-						ethers.ZeroAddress
+						ethers.ZeroAddress,
+						false
 					)
 			).to.be.revertedWithCustomError(bh, 'InvalidCollateral');
 		});
@@ -241,7 +244,7 @@ describe('OvertimeBonusHoldem', () => {
 			const { bh, usdc, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0xab1234n);
-			await bh.connect(player).playPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 0);
 			const r = await ctx.bh.getFullRecord(betId);
 			expect(r.status).to.equal(BetStatus.AWAITING_FLOP);
 			expect(r.playAmount).to.equal(MIN_USDC_BET * 2n);
@@ -254,7 +257,7 @@ describe('OvertimeBonusHoldem', () => {
 			const { bh, vrf, coreAddr, player, usdc } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, MIN_USDC_BET, 0xfa11n);
-			await bh.connect(player).foldPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 1);
 			// VRF for dealer hole
 			await fulfillLatestVrf(ctx, 0xb1d2e3n);
 			const base = await bh.getBetBase(betId);
@@ -314,13 +317,13 @@ describe('OvertimeBonusHoldem', () => {
 
 			// Run the hand
 			const betId = await placeAndDealHole(ctx, ante, 0n, holeWord);
-			await bh.connect(player).playPreFlop(betId);
+			await bh.connect(player).makeAction(betId, 0);
 			await fulfillLatestVrf(ctx, flopWord);
-			await bh.connect(player).checkFlop(betId);
+			await bh.connect(player).makeAction(betId, 3);
 			await fulfillLatestVrf(ctx, turnWord);
-			await bh.connect(player).checkTurn(betId);
+			await bh.connect(player).makeAction(betId, 5);
 			await fulfillLatestVrf(ctx, riverWord);
-			await bh.connect(player).checkRiver(betId);
+			await bh.connect(player).makeAction(betId, 7);
 			await fulfillLatestVrf(ctx, dealerWord);
 
 			const base = await bh.getBetBase(betId);
@@ -342,7 +345,7 @@ describe('OvertimeBonusHoldem', () => {
 			// Place but don't fulfill VRF
 			const tx = await bh
 				.connect(player)
-				.placeBet(await usdc.getAddress(), MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress);
+				.placeBet(await usdc.getAddress(), MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseEvent(bh.interface, r, 'BetPlaced');
 			const betId = placed.args.betId;
@@ -361,7 +364,7 @@ describe('OvertimeBonusHoldem', () => {
 			const { bh, usdc, player, resolver } = ctx;
 			const tx = await bh
 				.connect(player)
-				.placeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress);
+				.placeBet(await usdc.getAddress(), MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
 			await bh.connect(resolver).adminCancelBet(betId);

@@ -193,7 +193,7 @@ describe('Keno Cross-Validation: real on-chain', () => {
 
 			const tx = await keno
 				.connect(player)
-				.placeBet(usdcAddr, BET_AMOUNT, picks, ethers.ZeroAddress);
+				.placeBet(usdcAddr, BET_AMOUNT, picks, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {

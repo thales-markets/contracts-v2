@@ -124,7 +124,9 @@ async function deployFixture() {
 
 async function placeAndFulfill(ctx, amount, risk, word) {
 	const { plinko, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await plinko.connect(player).placeBet(usdcAddr, amount, risk, ethers.ZeroAddress);
+	const tx = await plinko
+		.connect(player)
+		.placeBet(usdcAddr, amount, risk, ethers.ZeroAddress, false);
 	const receipt = await tx.wait();
 	const placed = receipt.logs
 		.map((l) => {
@@ -179,7 +181,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 		it('reverts on zero amount', async () => {
 			const { plinko, usdcAddr, player } = ctx;
 			await expect(
-				plinko.connect(player).placeBet(usdcAddr, 0n, Risk.LOW, ethers.ZeroAddress)
+				plinko.connect(player).placeBet(usdcAddr, 0n, Risk.LOW, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(plinko, 'InvalidAmount');
 		});
 
@@ -187,7 +189,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			const { plinko, player } = ctx;
 			const fake = ethers.Wallet.createRandom().address;
 			await expect(
-				plinko.connect(player).placeBet(fake, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress)
+				plinko.connect(player).placeBet(fake, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(plinko, 'InvalidCollateral');
 		});
 
@@ -195,7 +197,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			const { plinko, plinkoAddr, core, usdc, usdcAddr, player } = ctx;
 			const amount = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
-			await plinko.connect(player).placeBet(usdcAddr, amount, Risk.HIGH, ethers.ZeroAddress);
+			await plinko.connect(player).placeBet(usdcAddr, amount, Risk.HIGH, ethers.ZeroAddress, false);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - amount);
 			const maxMult = await plinko.getMaxMultiplierE18(Risk.HIGH);
 			const expectedReservation = (amount * maxMult) / ONE;
@@ -310,7 +312,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await plinko
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -328,7 +330,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 		});
 	});
 
-	describe('free bet (placeBetWithFreeBet)', () => {
+	describe('free bet (placeBet isFreeBet=true)', () => {
 		async function fundFB(ctx, amount) {
 			const { fbh, fbhAddr, usdc, owner, player, usdcAddr } = ctx;
 			await usdc.mintForUser(owner.address);
@@ -340,7 +342,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			const { plinko, vrf, coreAddr, usdcAddr, player } = ctx;
 			const tx = await plinko
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, amount, risk, ethers.ZeroAddress);
+				.placeBet(usdcAddr, amount, risk, ethers.ZeroAddress, true);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -358,9 +360,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 		it('reverts when FBH balance < stake', async () => {
 			const { plinko, usdcAddr, player } = ctx;
 			await expect(
-				plinko
-					.connect(player)
-					.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress)
+				plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress, true)
 			).to.be.revertedWith('MockFBH: InsufficientBalance');
 		});
 
@@ -370,7 +370,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			const balBefore = await usdc.balanceOf(player.address);
 			await plinko
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress, true);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(0n);
 		});
@@ -408,7 +408,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			await fundFB(ctx, MIN_USDC_BET);
 			const tx = await plinko
 				.connect(player)
-				.placeBetWithFreeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, Risk.LOW, ethers.ZeroAddress, true);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {

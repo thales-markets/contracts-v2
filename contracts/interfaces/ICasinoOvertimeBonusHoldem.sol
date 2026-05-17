@@ -117,34 +117,26 @@ interface ICasinoOvertimeBonusHoldem {
 
     /* ========== STATE-CHANGING ========== */
 
+    /// @notice Places a BH bet. `isFreeBet=true` pulls Ante + Bonus from FBH; `false` from the
+    /// user's wallet. Bonus must be zero when `isFreeBet` is true
+    /// (reverts `BonusNotAllowedForFreeBet`)
     function placeBet(
         address collateral,
         uint256 anteAmount,
         uint256 bonusAmount,
-        address referrer
+        address referrer,
+        bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 anteAmount,
-        uint256 bonusAmount,
-        address referrer
-    ) external returns (uint256 betId, uint256 requestId);
-
-    function playPreFlop(uint256 betId) external returns (uint256 requestId);
-    function foldPreFlop(uint256 betId) external returns (uint256 requestId);
-
-    // No fold post-flop: `checkFlop`/`checkTurn`/`checkRiver` are free, so any fold after the
-    // flop is strictly dominated in money EV (lose ante guaranteed vs free chance to win at
-    // showdown). Use check at every post-flop street; raise to commit additional stake
-    function raiseFlop(uint256 betId) external returns (uint256 requestId);
-    function checkFlop(uint256 betId) external returns (uint256 requestId);
-
-    function raiseTurn(uint256 betId) external returns (uint256 requestId);
-    function checkTurn(uint256 betId) external returns (uint256 requestId);
-
-    function raiseRiver(uint256 betId) external returns (uint256 requestId);
-    function checkRiver(uint256 betId) external returns (uint256 requestId);
+    /// @notice Single-selector mid-game dispatcher. Action codes:
+    ///   0 = playPreFlop    1 = foldPreFlop
+    ///   2 = raiseFlop      3 = checkFlop
+    ///   4 = raiseTurn      5 = checkTurn
+    ///   6 = raiseRiver     7 = checkRiver
+    /// No fold post-flop: `check*` is free, so any post-flop fold is strictly dominated in money
+    /// EV (lose ante guaranteed vs free chance to win at showdown). Use check at every post-flop
+    /// street; raise to commit additional stake
+    function makeAction(uint256 betId, uint8 action) external returns (uint256 requestId);
 
     function cancelBet(uint256 betId) external;
     function adminCancelBet(uint256 betId) external;

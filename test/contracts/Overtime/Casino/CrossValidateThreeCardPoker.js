@@ -252,7 +252,7 @@ describe('ThreeCardPoker Cross-Validation: real on-chain', () => {
 			const expectedPP = expectedPPPayout(pp, pEv.class_);
 
 			// Place
-			const tx = await tcp.connect(player).placeBet(usdcAddr, ante, pp, ethers.ZeroAddress);
+			const tx = await tcp.connect(player).placeBet(usdcAddr, ante, pp, ethers.ZeroAddress, false);
 			const r1 = await tx.wait();
 			const placed = parseEvent(tcp.interface, r1, 'BetPlaced');
 			const betId = placed.args.betId;
@@ -276,13 +276,13 @@ describe('ThreeCardPoker Cross-Validation: real on-chain', () => {
 
 			if (!play) {
 				outcomes.fold++;
-				await tcp.connect(player).fold(betId);
+				await tcp.connect(player).makeAction(betId, 1);
 				const base = await tcp.getBetBase(betId);
 				expect(Number(base.outcome)).to.equal(Outcome.FOLDED);
 				// No additional payout on fold (PP already paid in VRF1)
 			} else {
 				stake += ante; // play stake = ante
-				const tx2 = await tcp.connect(player).play(betId);
+				const tx2 = await tcp.connect(player).makeAction(betId, 0);
 				const r2 = await tx2.wait();
 				const played = parseEvent(tcp.interface, r2, 'PlayChosen');
 				const reqId2 = played.args.requestId;

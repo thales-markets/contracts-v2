@@ -286,7 +286,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 
 		it('deregisterGame reverts when reservations exist', async () => {
 			const { core, plinko, plinkoAddr, player, usdcAddr } = ctx;
-			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			await expect(core.deregisterGame(plinkoAddr)).to.be.revertedWithCustomError(
 				core,
 				'GameHasReservations'
@@ -497,11 +497,11 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			await core.setRiskParams(300n * ONE, 0);
 			const amount = 20n * USDC_UNIT;
 			await expect(
-				plinko.connect(player).placeBet(usdcAddr, amount, 2, ethers.ZeroAddress)
+				plinko.connect(player).placeBet(usdcAddr, amount, 2, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(plinko, 'MaxProfitExceeded');
 			await core.setMaxProfitUsdOverride(plinkoAddr, 5000n * ONE);
-			await expect(plinko.connect(player).placeBet(usdcAddr, amount, 2, ethers.ZeroAddress)).to.not
-				.be.reverted;
+			await expect(plinko.connect(player).placeBet(usdcAddr, amount, 2, ethers.ZeroAddress, false))
+				.to.not.be.reverted;
 		});
 
 		it('setCollateralConfig adds/removes collateral', async () => {
@@ -614,7 +614,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 		it('reverts when amount exceeds available (reserved blocks)', async () => {
 			const { core, owner, usdc, usdcAddr, plinko, player } = ctx;
 			// Reserve some bankroll via a placeBet
-			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 2, ethers.ZeroAddress); // HIGH risk (29x reservation)
+			await plinko.connect(player).placeBet(usdcAddr, MIN_USDC_BET, 2, ethers.ZeroAddress, false); // HIGH risk (29x reservation)
 			const balance = await usdc.balanceOf(await core.getAddress());
 			const reserved = await core.reservedProfitPerCollateral(usdcAddr);
 			const available = balance - reserved;
@@ -852,7 +852,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			const fakeReferrer = ethers.Wallet.createRandom().address;
 			// placeBet should NOT revert despite broken referrals
 			await expect(
-				ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, fakeReferrer)
+				ctx.plinko.connect(ctx.player).placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, fakeReferrer, false)
 			).to.not.be.reverted;
 		});
 
@@ -860,7 +860,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			await pointAtBrokenReferrals();
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -895,7 +895,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 				);
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -933,7 +933,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			// Plinko losing bet — payReferrer fires on (payout < amount)
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -969,7 +969,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 				);
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -1005,7 +1005,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 				);
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -1042,7 +1042,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 				);
 			const tx = await ctx.plinko
 				.connect(ctx.player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = r.logs
 				.map((l) => {
@@ -1068,7 +1068,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			// Place a bet and resolve at the highest slot (1000x edge slot 0)
 			const tx = await plinko
 				.connect(player)
-				.placeBet(usdcAddr, 10n * USDC_UNIT, 0, ethers.ZeroAddress);
+				.placeBet(usdcAddr, 10n * USDC_UNIT, 0, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -1150,7 +1150,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 
 			const tx = await plinko
 				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress);
+				.placeBet(usdcAddr, MIN_USDC_BET, 0, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = receipt.logs
 				.map((l) => {
@@ -1177,7 +1177,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			const { plinko, plinkoAddr, player, usdcAddr, vrf, coreAddr, core } = ctx;
 			const tx = await plinko
 				.connect(player)
-				.placeBet(usdcAddr, 10n * USDC_UNIT, 2, ethers.ZeroAddress);
+				.placeBet(usdcAddr, 10n * USDC_UNIT, 2, ethers.ZeroAddress, false);
 			const placed = (await tx.wait()).logs
 				.map((l) => {
 					try {
@@ -1249,7 +1249,7 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			const { plinko, plinkoAddr, player, usdcAddr, vrf, coreAddr, core } = ctx;
 			const tx = await plinko
 				.connect(player)
-				.placeBet(usdcAddr, 10n * USDC_UNIT, 2, ethers.ZeroAddress);
+				.placeBet(usdcAddr, 10n * USDC_UNIT, 2, ethers.ZeroAddress, false);
 			const placed = (await tx.wait()).logs
 				.map((l) => {
 					try {

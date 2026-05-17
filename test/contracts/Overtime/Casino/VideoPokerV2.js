@@ -330,7 +330,7 @@ function parseDrawRequested(ctx, receipt) {
 
 async function placeAndDeal(ctx, amount, dealWord) {
 	const { vp, vrf, coreAddr, usdcAddr, player } = ctx;
-	const tx = await vp.connect(player).placeBet(usdcAddr, amount, ethers.ZeroAddress);
+	const tx = await vp.connect(player).placeBet(usdcAddr, amount, ethers.ZeroAddress, false);
 	const receipt = await tx.wait();
 	const placed = parseBetPlaced(ctx, receipt);
 	await vrf.fulfillRandomWords(coreAddr, placed.args.requestId, [dealWord]);
@@ -365,21 +365,21 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 		it('rejects zero amount', async () => {
 			const { vp, usdcAddr, player } = ctx;
 			await expect(
-				vp.connect(player).placeBet(usdcAddr, 0, ethers.ZeroAddress)
+				vp.connect(player).placeBet(usdcAddr, 0, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(vp, 'InvalidAmount');
 		});
 
 		it('rejects unsupported collateral', async () => {
 			const { vp, player } = ctx;
 			await expect(
-				vp.connect(player).placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress)
+				vp.connect(player).placeBet(ethers.ZeroAddress, MIN_USDC_BET, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(vp, 'InvalidCollateral');
 		});
 
 		it('rejects bet below MIN_BET_USD', async () => {
 			const { vp, usdcAddr, player } = ctx;
 			await expect(
-				vp.connect(player).placeBet(usdcAddr, USDC_UNIT, ethers.ZeroAddress)
+				vp.connect(player).placeBet(usdcAddr, USDC_UNIT, ethers.ZeroAddress, false)
 			).to.be.revertedWithCustomError(vp, 'InvalidAmount');
 		});
 
@@ -389,8 +389,8 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 			// placement succeeds; payout at resolve is truncated to stake + cap.
 			const { vp, core, usdcAddr, player, vpAddr } = ctx;
 			await core.setRiskParams(ethers.parseEther('100'), 0);
-			await expect(vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)).to.not
-				.be.reverted;
+			await expect(vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false))
+				.to.not.be.reverted;
 			expect(await core.reservedProfitPerGame(vpAddr, usdcAddr)).to.equal(
 				MIN_USDC_BET + 100n * USDC_UNIT
 			);
@@ -401,7 +401,9 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 		it('pulls stake, reserves 501x, dispatches VRF, sets AWAITING_DEAL', async () => {
 			const { vp, vpAddr, core, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
-			const tx = await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const tx = await vp
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = parseBetPlaced(ctx, receipt);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore - MIN_USDC_BET);
@@ -435,7 +437,9 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 	describe('draw validation', () => {
 		it('rejects from non-PLAYER_TURN (still AWAITING_DEAL)', async () => {
 			const { vp, vpAddr, usdcAddr, player } = ctx;
-			const tx = await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const tx = await vp
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const receipt = await tx.wait();
 			const placed = parseBetPlaced(ctx, receipt);
 			await expect(vp.connect(player).draw(placed.args.betId, 0)).to.be.revertedWithCustomError(
@@ -757,7 +761,9 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 	describe('Cancel paths', () => {
 		it('user cancelBet rejected before timeout (AWAITING_DEAL)', async () => {
 			const { vp, usdcAddr, player } = ctx;
-			const tx = await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const tx = await vp
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseBetPlaced(ctx, r);
 			await expect(vp.connect(player).cancelBet(placed.args.betId)).to.be.revertedWithCustomError(
@@ -769,7 +775,9 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 		it('user cancelBet from AWAITING_DEAL after timeout refunds full stake', async () => {
 			const { vp, vpAddr, core, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
-			const tx = await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const tx = await vp
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseBetPlaced(ctx, r);
 			await time.increase(Number(CANCEL_TIMEOUT) + 1);
@@ -804,7 +812,9 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 
 		it('adminCancelBet works from AWAITING_DEAL (no timeout)', async () => {
 			const { vp, usdcAddr, player, resolver } = ctx;
-			const tx = await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const tx = await vp
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseBetPlaced(ctx, r);
 			await expect(vp.connect(resolver).adminCancelBet(placed.args.betId)).to.not.be.reverted;
@@ -822,7 +832,9 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 
 		it('adminCancelBet by non-resolver is rejected', async () => {
 			const { vp, usdcAddr, player } = ctx;
-			const tx = await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress);
+			const tx = await vp
+				.connect(player)
+				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseBetPlaced(ctx, r);
 			await expect(
@@ -851,7 +863,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 
 		async function placeFreeBet(amount) {
 			const { usdcAddr, player, vp } = ctx;
-			const tx = await vp.connect(player).placeBetWithFreeBet(usdcAddr, amount, ethers.ZeroAddress);
+			const tx = await vp.connect(player).placeBet(usdcAddr, amount, ethers.ZeroAddress, true);
 			const r = await tx.wait();
 			const placed = parseBetPlaced(ctx, r);
 			return { betId: placed.args.betId, requestId: placed.args.requestId };
@@ -942,7 +954,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 					refAddr
 				);
 			const referrer = ethers.Wallet.createRandom().address;
-			await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, referrer);
+			await vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, referrer, false);
 			expect(await refContract.referrals(player.address)).to.equal(referrer);
 		});
 
@@ -950,7 +962,7 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 			const { vp, usdcAddr, pauser, player } = ctx;
 			await vp.connect(pauser).setPausedByRole(true);
 			await expect(
-				vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress)
+				vp.connect(player).placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false)
 			).to.be.revertedWith('This action cannot be performed while the contract is paused');
 		});
 

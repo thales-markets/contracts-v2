@@ -148,36 +148,17 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
 
     /* ========== PLACE / CANCEL ========== */
 
-    /// @notice Places a Plinko bet. One VRF word resolves it
-    function placeBet(
-        address collateral,
-        uint256 amount,
-        Risk risk,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, amount, risk, referrer, false);
-    }
-
-    /// @inheritdoc ICasinoPlinko
-    function placeBetWithFreeBet(
-        address collateral,
-        uint256 amount,
-        Risk risk,
-        address referrer
-    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(collateral, amount, risk, referrer, true);
-    }
-
-    /// @notice Single-selector placeBet for gasless sessions. Legacy `placeBet` /
-    /// `placeBetWithFreeBet` remain callable for wallet-signed flows. No `makeAction` needed —
-    /// Plinko is single-shot: VRF callback resolves the bet
+    /// @notice Places a Plinko bet. `isFreeBet=true` pulls the stake from FreeBetsHolder, `false`
+    /// from the user's wallet. One VRF word resolves it — no mid-game actions, so `cancelBet`
+    /// is the only other user-facing entry. Plinko has no `makeAction` because there's nothing
+    /// to dispatch
     function placeBet(
         address collateral,
         uint256 amount,
         Risk risk,
         address referrer,
         bool isFreeBet
-    ) external nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
+    ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
         return _placeBet(collateral, amount, risk, referrer, isFreeBet);
     }
 
