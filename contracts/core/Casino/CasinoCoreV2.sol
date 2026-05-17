@@ -96,24 +96,24 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     IReferrals public referrals;
 
     // --- canonical collateral addresses (kept for parity with v1 games) ---
-    address public usdc;
-    address public weth;
-    address public over;
+    address public override usdc;
+    address public override weth;
+    address public override over;
 
     // --- shared risk params ---
     uint public override maxProfitUsd;
     uint public override cancelTimeout;
 
     // --- VRF v2.5 subscription ---
-    uint256 public subscriptionId;
-    bytes32 public keyHash;
-    uint32 public callbackGasLimit;
-    uint16 public requestConfirmations;
-    bool public nativePayment;
+    uint256 public override subscriptionId;
+    bytes32 public override keyHash;
+    uint32 public override callbackGasLimit;
+    uint16 public override requestConfirmations;
+    bool public override nativePayment;
 
     // --- collateral whitelist + price-feed keys ---
     mapping(address => bool) public override supportedCollateral;
-    mapping(address => bytes32) public priceFeedKeyPerCollateral;
+    mapping(address => bytes32) public override priceFeedKeyPerCollateral;
 
     // --- per-collateral aggregate reservation across all games ---
     mapping(address => uint) public override reservedProfitPerCollateral;
@@ -135,10 +135,10 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     /// @notice Override of the default circuit-breaker threshold. Mutate via
     /// `setMaxNetLossPerGameUsd` and `setDefaultMaxNetLossPerGameUsd`. Reads should go through
     /// the `_maxNetLossUsd(game)` helper which falls back to the default
-    uint256 public defaultMaxNetLossPerGameUsd;
+    uint256 public override defaultMaxNetLossPerGameUsd;
 
     // --- VRF dispatch ---
-    mapping(uint256 => address) public requestIdToGame;
+    mapping(uint256 => address) public override requestIdToGame;
 
     // --- enumerable collateral list (so deregisterGame can check reservations across all
     // configured collaterals, not just the canonical 3). Maintained by setCollateralConfig.
@@ -166,7 +166,7 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     /// briefly over-reserve under concurrent placement. Incremented in `pullFromUser` /
     /// `useFreeBet`; decremented in `recordSettlement` (the single terminal hook every game
     /// invokes — resolve, fold, and cancel paths all funnel through it post-audit fix)
-    mapping(address => uint256) public pendingStakesPerCollateral;
+    mapping(address => uint256) public override pendingStakesPerCollateral;
 
     // --- forward-compat storage gap. Reduced 37 → 35 when `minBetPerGameUsd` and
     // `maxBetPerGameUsd` were appended. Reduced 35 → 34 when `pendingStakesPerCollateral` was
@@ -506,8 +506,11 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     }
 
     /// @notice Clears the auto-pause flag and zeroes the running net-loss gauge for a game.
-    /// Owner / risk-manager only — typically called after manual review
-    function resetGameCircuitBreaker(address game) external onlyRiskManager {
+    /// Owner-only — typically called after manual review. Promoted from RISK_MANAGING to OWNER
+    /// because reset is the only function that *erases* the loss gauge rather than adjusting
+    /// thresholds, so a compromised risk-manager key could otherwise suppress the breaker
+    /// indefinitely by resetting after every trip
+    function resetGameCircuitBreaker(address game) external onlyOwner {
         gameAutoPaused[game] = false;
         houseNetUsd[game] = 0;
         emit GameCircuitBreakerReset(game);

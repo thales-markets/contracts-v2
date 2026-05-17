@@ -109,7 +109,7 @@
 		"CasinoDataImplementation": "0xb590810e8dA71947361D8Ab8BF0b859293992Af0",
 		"CasinoDataProxyAdmin": "0x44bC366207c8046f8DED43de39487E0eD2E5c93e",
 		"CasinoCoreV2": "0xFEedB2B2206983b177592dbd9E55955B19eA2290",
-		"CasinoCoreV2Implementation": "0x617Cf0C00Bdf7A6cA0dc08cbFFDbDE309D02D19f",
+		"CasinoCoreV2Implementation": "0xeaea347a3a44167C7D0185D4c21450162424c961",
 		"CasinoCoreV2ProxyAdmin": "0xC4bE44C404Aab1BB17b52584E4e9F1155F6181Ae",
 		"ThreeCardPoker": "0x628a2555dEb4e12493EF9669C550f67808706558",
 		"ThreeCardPokerImplementation": "0x8BE8A63eBd2713a6b9447090bBc470137dC911bd",
@@ -135,7 +135,7 @@
 		"CasinoDataV2Implementation": "0x1699Eee7B9CafB878B42E16a7B79b1385F235a54",
 		"CasinoDataV2ProxyAdmin": "0x1adB08C9B8bc7b4333A4f6f1fD7Cb56A98547106",
 		"OvertimeBonusHoldem": "0xA528F5102a4824D7b8643C7730Bc926864913175",
-		"OvertimeBonusHoldemImplementation": "0xcA1F5Bcc56BB2396ABBfde1355691874a29aB99E",
+		"OvertimeBonusHoldemImplementation": "0xb91B6271eab0773e496ecfdA2a6073770C3418d4",
 		"OvertimeBonusHoldemProxyAdmin": "0xa913DAE5CD6BB413aD023796B10f20251586eB41"
 	},
 	"optimisticEthereum": {

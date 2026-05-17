@@ -19,13 +19,17 @@
 
 const { ethers, upgrades } = require('hardhat');
 const { getImplementationAddress, getAdminAddress } = require('@openzeppelin/upgrades-core');
-const { setTargetAddress, getTargetAddress, delay } = require('../../helpers');
+const { setTargetAddress, getTargetAddress, isTestNetwork, delay } = require('../../helpers');
 
 // ---------------------------------------------------------------------------
 // Risk / config defaults applied at init. Tune via setters post-deploy
 // ---------------------------------------------------------------------------
 const INITIAL_MAX_PROFIT_USD = ethers.parseEther('300'); // global per-bet profit cap
-const INITIAL_CANCEL_TIMEOUT = 60; // seconds before a stuck VRF can be user-cancelled
+// User-cancel window: 10 min on prod (matches V1 prod setting across OP/ARB/Base) — gives
+// VRF a generous window before users can race a cancel against a slow callback. 60s on
+// testnet for fast iteration. Selected at deploy via isTestNetwork(chainId)
+const CANCEL_TIMEOUT_TESTNET = 60;
+const CANCEL_TIMEOUT_PROD = 600;
 const VRF_CALLBACK_GAS_LIMIT = 1_000_000;
 const VRF_REQUEST_CONFIRMATIONS = 1;
 const VRF_NATIVE_PAYMENT = true; // V1+V2 casino convention — pay VRF in native ETH
@@ -72,6 +76,11 @@ async function deployCore(network, owner) {
 		console.log('CasinoCoreV2 already at:', existing, '— skipping deploy');
 		return existing;
 	}
+
+	const chainId = (await ethers.provider.getNetwork()).chainId;
+	const cancelTimeout = isTestNetwork(Number(chainId))
+		? CANCEL_TIMEOUT_TESTNET
+		: CANCEL_TIMEOUT_PROD;
 
 	const protocolDAOAddress = getTargetAddress('ProtocolDAO', network);
 	const sportsAMMV2ManagerAddress = getTargetAddress('SportsAMMV2Manager', network);
@@ -121,7 +130,7 @@ async function deployCore(network, owner) {
 			overPriceFeedKey: OVER_KEY,
 		},
 		INITIAL_MAX_PROFIT_USD,
-		INITIAL_CANCEL_TIMEOUT,
+		cancelTimeout,
 		{
 			subscriptionId: BigInt(getTargetAddress('VRFSubscriptionId', network)),
 			keyHash: getTargetAddress('VRFKeyHash', network),
@@ -131,7 +140,13 @@ async function deployCore(network, owner) {
 		}
 	);
 	await tx.wait();
-	console.log('  Initialized with maxProfit=$' + ethers.formatEther(INITIAL_MAX_PROFIT_USD));
+	console.log(
+		'  Initialized with maxProfit=$' +
+			ethers.formatEther(INITIAL_MAX_PROFIT_USD) +
+			', cancelTimeout=' +
+			cancelTimeout +
+			's'
+	);
 
 	setTargetAddress(
 		'CasinoCoreV2Implementation',

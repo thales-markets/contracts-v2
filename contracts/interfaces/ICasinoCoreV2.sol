@@ -177,4 +177,28 @@ interface ICasinoCoreV2 {
     function cancelTimeout() external view returns (uint256);
 
     function supportedCollateral(address collateral) external view returns (bool);
+
+    function usdc() external view returns (address);
+
+    function weth() external view returns (address);
+
+    function over() external view returns (address);
+
+    function subscriptionId() external view returns (uint256);
+
+    function keyHash() external view returns (bytes32);
+
+    function callbackGasLimit() external view returns (uint32);
+
+    function requestConfirmations() external view returns (uint16);
+
+    function nativePayment() external view returns (bool);
+
+    function priceFeedKeyPerCollateral(address collateral) external view returns (bytes32);
+
+    function defaultMaxNetLossPerGameUsd() external view returns (uint256);
+
+    function requestIdToGame(uint256 requestId) external view returns (address);
+
+    function pendingStakesPerCollateral(address collateral) external view returns (uint256);
 }

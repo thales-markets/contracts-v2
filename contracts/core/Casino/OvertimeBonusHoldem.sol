@@ -31,6 +31,9 @@ import "./CasinoHandsLib.sol";
 /// - Bonus: AA-vs-AA 499:1 (capped from CoinPoker's 1000:1 to match VP/UTH 500× ceiling) /
 ///   AA 30:1 / AKs 25:1 / AQs|AJs 20:1 / AK 15:1 / JJ|QQ|KK 10:1 /
 ///   AQ|AJ 5:1 / 22-TT 3:1
+///   Note: header reads as net-odds (":1") because that's how players see paytables. Storage
+///   constants are "for 1" — `mult` is total return per unit stake on win, so net win = mult − 1.
+///   E.g., header "AA 30:1" ⇔ `BONUS_MULT_AA = 31`, header "AA-vs-AA 499:1" ⇔ `..._AA_VS_AA = 500`
 contract OvertimeBonusHoldem is
     ICasinoOvertimeBonusHoldem,
     ICasinoGameCallback,
@@ -558,11 +561,15 @@ contract OvertimeBonusHoldem is
                                 else {
                                     cut -= b.turnPayout;
                                     b.turnPayout = 0;
-                                    // Invariant: profitCapRemaining ≤ sum_of_leg_profits, so
-                                    // `cut` must be fully absorbable by this point. If a future
-                                    // refactor breaks the invariant, this subtraction reverts
-                                    // (underflow) instead of silently dropping the remainder
-                                    b.riverPayout -= cut;
+                                    // Final leg in the cascade. Invariant is
+                                    // `profitCapRemaining ≤ sum_of_leg_profits`, so `cut` should
+                                    // always be ≤ b.riverPayout by this point. Guard defensively
+                                    // anyway — a future paytable change that breaks the invariant
+                                    // would otherwise underflow here and strand the bet in
+                                    // AWAITING_RESOLVE until adminCancelBet. Zeroing is the
+                                    // mathematically-correct fallback (leg can't go negative)
+                                    if (b.riverPayout >= cut) b.riverPayout -= cut;
+                                    else b.riverPayout = 0;
                                 }
                             }
                         }

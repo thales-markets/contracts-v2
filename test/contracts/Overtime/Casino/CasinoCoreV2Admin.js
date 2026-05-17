@@ -411,8 +411,10 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			);
 		});
 
-		it('resetGameCircuitBreaker requires risk-manager', async () => {
+		it('resetGameCircuitBreaker requires owner (promoted from RISK_MANAGING)', async () => {
 			await expect(ctx.core.connect(ctx.player).resetGameCircuitBreaker(ctx.plinkoAddr)).to.be
+				.reverted;
+			await expect(ctx.core.connect(ctx.riskManager).resetGameCircuitBreaker(ctx.plinkoAddr)).to.be
 				.reverted;
 		});
 

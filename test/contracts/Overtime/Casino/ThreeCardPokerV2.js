@@ -922,8 +922,8 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			).to.be.revertedWithCustomError(core, 'GameNotActive');
 		});
 
-		it('risk-manager can reset circuit breaker', async () => {
-			const { tcp, tcpAddr, core, riskManager, player } = ctx;
+		it('owner can reset circuit breaker (RISK_MANAGING was promoted to OWNER)', async () => {
+			const { tcp, tcpAddr, core, owner, player } = ctx;
 			await core.setMaxNetLossPerGameUsd(tcpAddr, ethers.parseEther('1'));
 			// Trigger via a single big win
 			const dealWord = findWord(
@@ -942,7 +942,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			const { betId } = await placeAndDeal(ctx, 10n * USDC_UNIT, 0n, dealWord);
 			await playAndResolve(ctx, betId, resolveWord);
 			expect(await core.gameAutoPaused(tcpAddr)).to.be.true;
-			await core.connect(riskManager).resetGameCircuitBreaker(tcpAddr);
+			await core.connect(owner).resetGameCircuitBreaker(tcpAddr);
 			expect(await core.gameAutoPaused(tcpAddr)).to.be.false;
 			expect(await core.houseNetUsd(tcpAddr)).to.equal(0n);
 			// Next bet works
