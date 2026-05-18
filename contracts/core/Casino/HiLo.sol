@@ -30,7 +30,6 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     uint256 public constant MIN_BET_USD = 3e18;
 
     uint8 private constant DECK_SIZE = 52;
-    uint8 private constant RANKS_PER_DECK = 13;
 
     /// @notice Reference rank for the above/below decision. Rank 6 is card "8" (rank 0 = "2",
     /// rank 12 = "Ace"). Splits the deck symmetrically: 6 ranks below (2-7), 6 above (9-A), 1

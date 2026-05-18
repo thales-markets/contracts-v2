@@ -267,6 +267,15 @@ contract OvertimeBonusHoldem is
     function _foldPreFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
+        // When bonus = 0 the dealer hole is irrelevant (bonus pays nothing, fold means
+        // main = 0). Skip the VRF round-trip and settle in this tx. `requestId == 0` is the
+        // FE-visible signal that no VRF callback is coming
+        if (b.bonusAmount == 0) {
+            b.folded = true;
+            emit Folded(betId, b.user, BetStatus.PRE_FLOP_TURN);
+            _settle(betId, b);
+            return 0;
+        }
         return _markFoldAndRequestResolve(betId, b);
     }
 

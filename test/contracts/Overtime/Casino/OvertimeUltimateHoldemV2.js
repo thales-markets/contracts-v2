@@ -1697,6 +1697,65 @@ describe('OvertimeUltimateHoldem', () => {
 			const base = await uth.getBetBase(betId);
 			expect(base.status).to.equal(BetStatus.RESOLVED);
 		});
+
+		// The next two tests pin the cap-cascade invariant: after profit-cap reduction, the
+		// per-leg breakdown stored in `b.*Payout` must sum exactly to `b.totalPayout`. UTH's
+		// cap cascade subtracts from blind first, then spills into ante and play; the contract
+		// recomputes `totalPayout` from the reduced legs so the emit / storage are consistent.
+		// Regression guard for the OvertimeBonusHoldem-parity refactor — if anyone ever
+		// reverts to the old "totalPayout = stakeOut + profit" overwrite, these tests catch a
+		// divergence the moment a defensive-zeroing branch fires
+		it('cap-cascade: cut absorbed entirely within Blind leg → leg sum == totalPayout', async () => {
+			// Force a Royal Flush so the cap engages. Royal Blind payout is 501× ante (500:1
+			// + stake), which dwarfs the cap. Both PLAYER_WIN (ante 1:1+stake) and
+			// DEALER_NOT_QUALIFIED (ante push) outcomes leave total payout above $1500 pre-cap
+			// — well above $100 cap, so cut > 0 always. The cut < blindPayout so the cascade
+			// stops inside the blind leg, leaving ante/play untouched. We assert the load-bearing
+			// invariant: legSum == totalPayout == stakeOut + cap
+			const { uth, uthAddr, core, owner } = ctx;
+			await core.connect(owner).setMaxProfitUsdOverride(uthAddr, ethers.parseEther('100'));
+			const { w1, w2 } = findPreFlopWords(
+				(c) => c === HandClass.ROYAL_FLUSH,
+				'uth-cap-blind-only',
+				80,
+				5000
+			);
+			const betId = await placeRaiseResolve(w1, w2);
+			const base = await uth.getBetBase(betId);
+			expect(base.status).to.equal(BetStatus.RESOLVED);
+			const p = await uth.getBetPayouts(betId);
+			expect(p.totalPayout).to.equal(p.antePayout + p.blindPayout + p.playPayout);
+			// stakeOut = 5*ante = $15; cap = $100 → totalPayout = $115
+			const ante = MIN_USDC_BET;
+			expect(p.totalPayout).to.equal(5n * ante + 100n * USDC_UNIT);
+		});
+
+		it('cap-cascade: cut spills Blind → Ante → Play → leg sum == totalPayout', async () => {
+			// Royal Flush with cap=$1. Profit dwarfs the cap, so cut nearly equals total payout.
+			// Cascade: blind ($1503) fully zeroed, ante (≤$6) fully zeroed, play ($18) trimmed.
+			// Both PLAYER_WIN and DEALER_NOT_QUALIFIED outcomes hit this spill path because the
+			// post-blind-zero residual cut ($6 or $8) exceeds the max possible ante ($6).
+			// Final totalPayout = stakeOut + cap = $16, all of which lives in playPayout
+			const { uth, uthAddr, core, owner } = ctx;
+			await core.connect(owner).setMaxProfitUsdOverride(uthAddr, ethers.parseEther('1'));
+			const { w1, w2 } = findPreFlopWords(
+				(c) => c === HandClass.ROYAL_FLUSH,
+				'uth-cap-spill-all',
+				80,
+				5000
+			);
+			const betId = await placeRaiseResolve(w1, w2);
+			const base = await uth.getBetBase(betId);
+			expect(base.status).to.equal(BetStatus.RESOLVED);
+			const p = await uth.getBetPayouts(betId);
+			expect(p.totalPayout).to.equal(p.antePayout + p.blindPayout + p.playPayout);
+			const ante = MIN_USDC_BET;
+			expect(p.totalPayout).to.equal(5n * ante + 1n * USDC_UNIT);
+			// Blind and Ante fully zeroed; remaining payout lives entirely in Play leg
+			expect(p.blindPayout).to.equal(0n);
+			expect(p.antePayout).to.equal(0n);
+			expect(p.playPayout).to.equal(p.totalPayout);
+		});
 	});
 
 	describe('Soft payout cap (per-bet net-profit ceiling)', () => {

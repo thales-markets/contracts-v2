@@ -320,8 +320,10 @@ describe('OvertimeBonusHoldem — coverage', () => {
 		it('no bonus stake → 0 payout regardless of hole match', async () => {
 			const holeWord = craftWord([C2(12), D2(12)]);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, holeWord); // bonus=0
+			// Fold-pre-flop short-circuits to immediate settle when bonusAmount=0 (dealer hole
+			// is irrelevant since bonus pays 0 and main is FOLDED). No dealer-reveal VRF is
+			// expected; the settle happens in the same tx as makeAction
 			await ctx.bh.connect(ctx.player).makeAction(betId, 1);
-			await fulfillNext(ctx, craftWord([H2(0), S2(1)], [C2(12), D2(12)]));
 			const r = await ctx.bh.getFullRecord(betId);
 			expect(r.bonusPayout).to.equal(0n);
 		});

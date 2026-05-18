@@ -464,10 +464,15 @@ contract OvertimeUltimateHoldem is
                         else r.playPayout = 0;
                     }
                 }
-                profit = b.profitCapRemaining;
             }
-            totalPayout = stakeOut + profit;
-            b.profitCapRemaining -= profit;
+            // Recompute `totalPayout` from the (now-reduced) legs so the emitted/stored breakdown
+            // always matches the user-visible total. Matches `OvertimeBonusHoldem._settle` —
+            // bulletproofs the `legSum == totalPayout` invariant against a future paytable change
+            // that breaks the implicit `cut ≤ sum_of_legs` math (the defensive zeroing branches
+            // above would otherwise silently leave legs smaller than totalPayout)
+            totalPayout = r.antePayout + r.blindPayout + r.playPayout;
+            uint256 paidProfit = totalPayout > stakeOut ? totalPayout - stakeOut : 0;
+            b.profitCapRemaining -= paidProfit;
         }
 
         core.releaseReservation(b.collateral, b.reservation);

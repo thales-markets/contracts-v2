@@ -342,7 +342,10 @@ async function drawAndResolve(ctx, betId, holdMask, drawWord) {
 	const tx = await vp.connect(player).draw(betId, holdMask);
 	const receipt = await tx.wait();
 	const drawEv = parseDrawRequested(ctx, receipt);
-	await vrf.fulfillRandomWords(coreAddr, drawEv.args.requestId, [drawWord]);
+	// requestId=0 sentinel: all-hold path resolved inline, no VRF2 to fulfill
+	if (drawEv.args.requestId !== 0n) {
+		await vrf.fulfillRandomWords(coreAddr, drawEv.args.requestId, [drawWord]);
+	}
 	return drawEv;
 }
 
@@ -704,6 +707,56 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 				(_, ev) => ev.class_ === HandClass.ROYAL_FLUSH,
 				HandClass.ROYAL_FLUSH,
 				500,
+				dealPredicate
+			);
+		});
+
+		// The next two tests pin the wheel-vs-broadway boundary at the SF/Royal classification
+		// step. `_evaluateFive` distinguishes the two by checking `straightTop == RANK_ACE`,
+		// which relies on `CasinoHandsLib.findStraightTop` returning 5 (not 14) for the wheel
+		// A-2-3-4-5. Regression guard: if anyone ever swaps the lib helper or refactors VP's
+		// SF/Royal branches, these two tests catch a misclassification immediately
+		it('Broadway T-J-Q-K-A same suit → ROYAL_FLUSH (primaryRank=14, 500x)', async () => {
+			// Use the 4-to-royal partial-hold strategy (Royal is 1/650k — infeasible to brute).
+			// Predicate requires the first 4 cards to be 4 of {T, J, Q, K, A} of the same suit;
+			// the draw brute-forces the 5th rank in the same suit
+			const dealPredicate = (initial) => {
+				const first4 = initial.slice(0, 4);
+				if (new Set(first4.map(suitOf)).size !== 1) return false;
+				const ranks = first4.map(rankOf).sort((a, b) => a - b);
+				for (const r of ranks) if (r < 10) return false;
+				return new Set(ranks).size === 4;
+			};
+			await assertHandPays(
+				'broadway-royal',
+				0b01111,
+				(_, ev) => ev.class_ === HandClass.ROYAL_FLUSH && ev.primaryRank === 14,
+				HandClass.ROYAL_FLUSH,
+				500,
+				dealPredicate
+			);
+		});
+
+		it('Wheel A-2-3-4-5 same suit → STRAIGHT_FLUSH (primaryRank=5, 50x — NOT royal)', async () => {
+			// Same partial-hold strategy as the SF test but constrained to the wheel ranks
+			// {A, 2, 3, 4, 5}. The crucial assertion is `primaryRank === 5`: if the wheel were
+			// misclassified as Royal, the on-chain class would be ROYAL_FLUSH (9) and the
+			// predicate would never find a matching hand. The strict `primaryRank === 5` check
+			// also catches a hypothetical regression where SF correctly fires but uses 14 as
+			// the top rank
+			const dealPredicate = (initial) => {
+				const first4 = initial.slice(0, 4);
+				if (new Set(first4.map(suitOf)).size !== 1) return false;
+				const ranks = first4.map(rankOf).sort((a, b) => a - b);
+				for (const r of ranks) if (r !== 14 && (r < 2 || r > 5)) return false;
+				return new Set(ranks).size === 4;
+			};
+			await assertHandPays(
+				'wheel-sf',
+				0b01111,
+				(_, ev) => ev.class_ === HandClass.STRAIGHT_FLUSH && ev.primaryRank === 5,
+				HandClass.STRAIGHT_FLUSH,
+				50,
 				dealPredicate
 			);
 		});

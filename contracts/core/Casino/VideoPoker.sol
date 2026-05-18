@@ -201,6 +201,19 @@ contract VideoPoker is
         if (holdMask > HOLD_MASK_MAX) revert InvalidHoldMask();
 
         b.holdMask = holdMask;
+
+        // All-hold short-circuit: final hand == initial deal, VRF2 word would go unused.
+        // Resolve inline to save the Chainlink request fee + callback latency. `requestId=0`
+        // in the emitted event is the sentinel for "no VRF2; bet resolves in this tx"
+        if (holdMask == HOLD_MASK_MAX) {
+            for (uint8 i; i < HAND_SIZE; ++i) {
+                b.finalCards[i] = b.initialCards[i];
+            }
+            emit DrawRequested(betId, 0, b.user, holdMask);
+            _resolve(betId, b);
+            return 0;
+        }
+
         requestId = core.requestRandomWords(1);
         b.requestId = requestId;
         b.lastRequestAt = block.timestamp;

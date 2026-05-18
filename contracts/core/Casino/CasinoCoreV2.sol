@@ -117,9 +117,12 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     mapping(address => bytes32) public override priceFeedKeyPerCollateral;
 
     // --- per-collateral aggregate reservation across all games ---
+    // NOTE: despite the name, stores reserved PAYOUT (stake + worst-case profit), not just
+    // profit. Every game feeds `reserveOrRevert` the full max-outflow figure. Name is historical
     mapping(address => uint) public override reservedProfitPerCollateral;
 
     // --- per-game per-collateral reservation (for deregister safety + analytics) ---
+    // Same semantics: reserved PAYOUT, not just profit
     mapping(address => mapping(address => uint)) public override reservedProfitPerGame;
 
     // --- registered games ---
