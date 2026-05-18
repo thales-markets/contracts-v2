@@ -116,9 +116,8 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         _setPaytableInternal(uint8(Risk.HIGH), [uint256(29e18), 4e18, 14e17, 3e17, 2e17, 3e17, 14e17, 4e18, 29e18]);
     }
 
-    function _setPaytableInternal(uint8 risk, uint256[SLOTS] memory mults) internal {
-        // Edge-floor check: weighted RTP must stay ≤ 0.98 (2% house edge minimum).
-        // Weights are binomial C(8,i); see SLOT_WEIGHTS_DEN above
+    /// @dev Weighted RTP over binomial slot weights C(8, i); reverts if > 0.98 (2% edge floor)
+    function _checkRtp(uint256[SLOTS] memory mults) internal pure {
         uint256 rtp = (mults[0] +
             8 *
             mults[1] +
@@ -136,6 +135,10 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
             mults[7] +
             mults[8]) / SLOT_WEIGHTS_DEN;
         if (rtp > MAX_RTP_E18) revert EdgeFloorBreached();
+    }
+
+    function _setPaytableInternal(uint8 risk, uint256[SLOTS] memory mults) internal {
+        _checkRtp(mults);
 
         uint256[] storage row = paytables[risk];
         uint256 maxM;
@@ -317,23 +320,9 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
     function setPaytable(Risk risk, uint256[] calldata multipliers) external onlyOwner {
         if (multipliers.length != SLOTS) revert PaytableLengthMismatch();
 
-        uint256 rtp = (multipliers[0] +
-            8 *
-            multipliers[1] +
-            28 *
-            multipliers[2] +
-            56 *
-            multipliers[3] +
-            70 *
-            multipliers[4] +
-            56 *
-            multipliers[5] +
-            28 *
-            multipliers[6] +
-            8 *
-            multipliers[7] +
-            multipliers[8]) / SLOT_WEIGHTS_DEN;
-        if (rtp > MAX_RTP_E18) revert EdgeFloorBreached();
+        uint256[SLOTS] memory mults;
+        for (uint256 i; i < SLOTS; ++i) mults[i] = multipliers[i];
+        _checkRtp(mults);
 
         uint8 r = uint8(risk);
         delete paytables[r];
@@ -396,6 +385,7 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         r.slotIndex = b.slotIndex;
         r.multiplierE18 = b.multiplierE18;
         r.isFreeBet = b.isFreeBet;
+        r.lastRequestAt = b.lastRequestAt;
     }
 
     function getPaytable(Risk risk) external view override returns (uint256[] memory) {
@@ -406,31 +396,12 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         return maxMultiplier[uint8(risk)];
     }
 
-    function getUserBetIds(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory ids) {
-        uint256[] storage all = userBetIds[user];
-        uint256 len = all.length;
-        if (offset >= len) return new uint256[](0);
-        uint256 remaining = len - offset;
-        uint256 count = remaining < limit ? remaining : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = all[len - 1 - offset - i];
-        }
+    function getUserBetIds(address user, uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getUserBetIds(userBetIds[user], offset, limit);
     }
 
-    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory ids) {
-        uint256 latest = nextBetId - 1;
-        if (offset >= latest) return new uint256[](0);
-        uint256 start = latest - offset;
-        uint256 count = start < limit ? start : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = start - i;
-        }
+    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getRecentBetIds(nextBetId, offset, limit);
     }
 
     /* ========== ADMIN: WIRING + PAUSE ========== */

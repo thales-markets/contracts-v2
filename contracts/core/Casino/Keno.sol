@@ -47,12 +47,11 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     /// `CasinoCoreV2.setMaxBetPerGameUsd(keno, 10e18)`
     uint256 public constant MAX_MULTIPLIER_E18 = 300e18;
 
-    /// @dev Bits per Fisher-Yates swap from the VRF word. 16 bits gives <0.04% bias on any
+    /// @dev `SHUFFLE_SHIFT_BITS` (16) and `SHUFFLE_SHIFT_MASK` (0xFFFF) live on `CasinoHandsLib`
+    /// and are referenced inline. 16 bits per Fisher-Yates swap gives <0.04% bias on any
     /// remaining size in [60, 80]. Need 20 swaps total → 20 × 16 = 320 bits, so we re-hash
     /// the cursor once after consuming all 16 chunks of the first 256-bit word
-    uint8 private constant SHUFFLE_SHIFT_BITS = 16;
-    uint64 private constant SHUFFLE_SHIFT_MASK = 0xFFFF;
-    uint8 private constant CHUNKS_PER_WORD = 16; // 256 / 16
+    uint8 private constant CHUNKS_PER_WORD = 16; // 256 / SHUFFLE_SHIFT_BITS
 
     /* ========== ERRORS ========== */
 
@@ -444,8 +443,8 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
                 chunksLeft = CHUNKS_PER_WORD;
             }
             uint256 remaining = uint256(POOL_SIZE - i);
-            uint256 j = uint256(i) + ((cursor & SHUFFLE_SHIFT_MASK) % remaining);
-            cursor >>= SHUFFLE_SHIFT_BITS;
+            uint256 j = uint256(i) + ((cursor & CasinoHandsLib.SHUFFLE_SHIFT_MASK) % remaining);
+            cursor >>= CasinoHandsLib.SHUFFLE_SHIFT_BITS;
             --chunksLeft;
             uint8 tmp = deck[i];
             deck[i] = deck[uint8(j)];
@@ -544,6 +543,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         r.drawnMask = b.drawnMask;
         r.multiplierE18 = b.multiplierE18;
         r.isFreeBet = b.isFreeBet;
+        r.lastRequestAt = b.lastRequestAt;
     }
 
     function getPaytable(uint8 picksCount) external view override returns (uint256[] memory) {
@@ -554,31 +554,12 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         return MAX_MULTIPLIER_E18;
     }
 
-    function getUserBetIds(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory ids) {
-        uint256[] storage all = userBetIds[user];
-        uint256 len = all.length;
-        if (offset >= len) return new uint256[](0);
-        uint256 remaining = len - offset;
-        uint256 count = remaining < limit ? remaining : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = all[len - 1 - offset - i];
-        }
+    function getUserBetIds(address user, uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getUserBetIds(userBetIds[user], offset, limit);
     }
 
-    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory ids) {
-        uint256 latest = nextBetId - 1;
-        if (offset >= latest) return new uint256[](0);
-        uint256 start = latest - offset;
-        uint256 count = start < limit ? start : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = start - i;
-        }
+    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getRecentBetIds(nextBetId, offset, limit);
     }
 
     /* ========== ADMIN: WIRING + PAUSE ========== */

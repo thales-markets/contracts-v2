@@ -63,6 +63,7 @@ interface ICasinoVideoPoker {
         uint8[5] initialCards; // cards from VRF1 (zeroed until AWAITING_DEAL fulfilled)
         uint8[5] finalCards; // cards after the draw replacements (zeroed until RESOLVED)
         bool isFreeBet;
+        uint256 lastRequestAt;
     }
 
     /* ========== EVENTS ========== */

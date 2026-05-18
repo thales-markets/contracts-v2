@@ -11,6 +11,7 @@ import "../../interfaces/ISportsAMMV2Manager.sol";
 import "../../interfaces/ICasinoCoreV2.sol";
 import "../../interfaces/ICasinoGameCallback.sol";
 import "../../interfaces/ICasinoHiLo.sol";
+import "./CasinoHandsLib.sol";
 
 /// @title HiLo
 /// @author Overtime
@@ -494,33 +495,15 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         r.correctCount = b.correctCount;
         r.pushCount = b.pushCount;
         r.isFreeBet = b.isFreeBet;
+        r.lastRequestAt = b.lastRequestAt;
     }
 
-    function getUserBetIds(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory ids) {
-        uint256[] storage all = userBetIds[user];
-        uint256 len = all.length;
-        if (offset >= len) return new uint256[](0);
-        uint256 remaining = len - offset;
-        uint256 count = remaining < limit ? remaining : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = all[len - 1 - offset - i];
-        }
+    function getUserBetIds(address user, uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getUserBetIds(userBetIds[user], offset, limit);
     }
 
-    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory ids) {
-        uint256 latest = nextBetId - 1;
-        if (offset >= latest) return new uint256[](0);
-        uint256 start = latest - offset;
-        uint256 count = start < limit ? start : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = start - i;
-        }
+    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getRecentBetIds(nextBetId, offset, limit);
     }
 
     /* ========== MODIFIERS ========== */

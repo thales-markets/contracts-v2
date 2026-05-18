@@ -51,6 +51,7 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     error InvalidCollateral();
     error InvalidPrice();
     error InvalidAmount();
+    error InvalidConfig();
     error InsufficientAvailableLiquidity();
     error GameNotRegistered();
     error GameAlreadyRegistered();
@@ -669,9 +670,9 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         uint16 _requestConfirmations,
         bool _nativePayment
     ) external onlyOwner {
-        if (_subscriptionId == 0) revert InvalidAmount();
-        if (_keyHash == bytes32(0)) revert InvalidAmount();
-        if (_callbackGasLimit == 0) revert InvalidAmount();
+        if (_subscriptionId == 0) revert InvalidConfig();
+        if (_keyHash == bytes32(0)) revert InvalidConfig();
+        if (_callbackGasLimit == 0) revert InvalidConfig();
         subscriptionId = _subscriptionId;
         keyHash = _keyHash;
         callbackGasLimit = _callbackGasLimit;

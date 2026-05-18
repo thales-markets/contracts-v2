@@ -53,6 +53,7 @@ interface ICasinoThreeCardPoker {
         uint8[3] playerCards;
         uint8[3] dealerCards;
         bool isFreeBet;
+        uint256 lastRequestAt;
     }
 
     /* ========== EVENTS ========== */

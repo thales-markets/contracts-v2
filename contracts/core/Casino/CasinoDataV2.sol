@@ -291,9 +291,9 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
     /// @dev Returns the game's `nextBetId` — total resolved+pending+cancelled bets is `nextBetId - 1`.
     /// Each game stores `nextBetId` starting at 1, so `nextBetId == 1` means no bets placed yet
     function getNextBetId(GameV2 game) external view override returns (uint256) {
-        if (game == GameV2.ThreeCardPoker) return threeCardPoker.nextBetId();
-        if (game == GameV2.Plinko) return plinko.nextBetId();
-        if (game == GameV2.HiLo) return hilo.nextBetId();
+        if (game == GameV2.ThreeCardPoker && address(threeCardPoker) != address(0)) return threeCardPoker.nextBetId();
+        if (game == GameV2.Plinko && address(plinko) != address(0)) return plinko.nextBetId();
+        if (game == GameV2.HiLo && address(hilo) != address(0)) return hilo.nextBetId();
         if (game == GameV2.Keno && address(keno) != address(0)) return keno.nextBetId();
         if (game == GameV2.OvertimeUltimateHoldem && address(ultimateHoldem) != address(0)) {
             return ultimateHoldem.nextBetId();

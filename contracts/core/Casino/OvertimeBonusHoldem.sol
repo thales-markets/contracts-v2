@@ -51,20 +51,6 @@ contract OvertimeBonusHoldem is
     uint8 private constant HOLE_CARDS = 2;
     uint8 private constant FLOP_CARDS = 3;
 
-    // Hand classes — same encoding as VideoPoker / UTH. Mirrored from `CasinoHandsLib.CLASS_*`
-    // for `_antePayoutMult` readability (only CLASS_STRAIGHT is actually referenced locally;
-    // the rest are kept for documentation of the encoding the library returns)
-    uint8 private constant CLASS_HIGH_CARD = 0;
-    uint8 private constant CLASS_PAIR = 1;
-    uint8 private constant CLASS_TWO_PAIR = 2;
-    uint8 private constant CLASS_THREE_OF_A_KIND = 3;
-    uint8 private constant CLASS_STRAIGHT = 4;
-    uint8 private constant CLASS_FLUSH = 5;
-    uint8 private constant CLASS_FULL_HOUSE = 6;
-    uint8 private constant CLASS_FOUR_OF_A_KIND = 7;
-    uint8 private constant CLASS_STRAIGHT_FLUSH = 8;
-    uint8 private constant CLASS_ROYAL_FLUSH = 9;
-
     uint8 private constant RANK_TWO = 2;
     uint8 private constant RANK_TEN = 10;
     uint8 private constant RANK_JACK = 11;
@@ -195,11 +181,10 @@ contract OvertimeBonusHoldem is
         address referrer,
         bool isFreeBet
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, anteAmount, bonusAmount, referrer, isFreeBet);
+        return _placeBet(collateral, anteAmount, bonusAmount, referrer, isFreeBet);
     }
 
     function _placeBet(
-        address user,
         address collateral,
         uint256 anteAmount,
         uint256 bonusAmount,
@@ -220,11 +205,11 @@ contract OvertimeBonusHoldem is
         // Pull ANTE + BONUS upfront. Raises pull additional stake on demand at each street
         uint256 stakeIn = anteAmount + bonusAmount;
         if (isFreeBet) {
-            core.useFreeBet(user, collateral, stakeIn);
+            core.useFreeBet(msg.sender, collateral, stakeIn);
         } else {
-            core.pullFromUser(user, collateral, stakeIn);
+            core.pullFromUser(msg.sender, collateral, stakeIn);
         }
-        if (referrer != address(0)) core.setReferrer(referrer, user);
+        if (referrer != address(0)) core.setReferrer(referrer, msg.sender);
 
         // Reservation = stakes_pulled_so_far + capped net-profit budget. Raises top up later
         uint256 reservation = stakeIn + cappedProfit;
@@ -234,7 +219,7 @@ contract OvertimeBonusHoldem is
         betId = nextBetId++;
 
         Bet storage b = bets[betId];
-        b.user = user;
+        b.user = msg.sender;
         b.collateral = collateral;
         b.anteAmount = anteAmount;
         b.bonusAmount = bonusAmount;
@@ -247,9 +232,9 @@ contract OvertimeBonusHoldem is
         b.profitCapRemaining = cappedProfit;
 
         requestIdToBetId[requestId] = betId;
-        userBetIds[user].push(betId);
+        userBetIds[msg.sender].push(betId);
 
-        emit BetPlaced(betId, requestId, user, collateral, anteAmount, bonusAmount);
+        emit BetPlaced(betId, requestId, msg.sender, collateral, anteAmount, bonusAmount);
     }
 
     /* ========== DECISIONS ========== */
@@ -625,7 +610,7 @@ contract OvertimeBonusHoldem is
     /// lower wins (mult = 1 = stake-back only)
     function _antePayoutMult(uint256 handValue) internal pure returns (uint256) {
         uint8 class_ = uint8(handValue >> 20);
-        if (class_ >= CLASS_STRAIGHT) return 2;
+        if (class_ >= CasinoHandsLib.CLASS_STRAIGHT) return 2;
         return 1;
     }
 
@@ -803,33 +788,15 @@ contract OvertimeBonusHoldem is
         r.community = b.community;
         r.dealerHole = b.dealerHole;
         r.isFreeBet = b.isFreeBet;
+        r.lastRequestAt = b.lastRequestAt;
     }
 
-    function getUserBetIds(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory ids) {
-        uint256[] storage all = userBetIds[user];
-        uint256 len = all.length;
-        if (offset >= len) return new uint256[](0);
-        uint256 remaining = len - offset;
-        uint256 count = remaining < limit ? remaining : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = all[len - 1 - offset - i];
-        }
+    function getUserBetIds(address user, uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getUserBetIds(userBetIds[user], offset, limit);
     }
 
-    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory ids) {
-        uint256 latest = nextBetId - 1;
-        if (offset >= latest) return new uint256[](0);
-        uint256 start = latest - offset;
-        uint256 count = start < limit ? start : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = start - i;
-        }
+    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getRecentBetIds(nextBetId, offset, limit);
     }
 
     /* ========== ADMIN ========== */

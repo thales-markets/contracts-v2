@@ -24,7 +24,7 @@ import "./CasinoHandsLib.sol";
 /// 96.5% / house edge ≈ 3.5%, between standard 1-coin (Royal=250, 96.15%) and 5-coin
 /// (Royal=800, 97.30%) variants. See `_paytableMultiplier` for the locked paytable. Pair-of-
 /// Jacks rule is enforced in the multiplier lookup, NOT in the evaluator — the evaluator
-/// returns CLASS_PAIR for any pair and the multiplier discriminates by rank
+/// returns CasinoHandsLib.CLASS_PAIR for any pair and the multiplier discriminates by rank
 contract VideoPoker is
     ICasinoVideoPoker,
     ICasinoGameCallback,
@@ -41,18 +41,9 @@ contract VideoPoker is
     uint8 private constant HAND_SIZE = 5;
     uint8 private constant HOLD_MASK_MAX = 31; // low 5 bits set
 
-    // Hand classes (numerical match with OvertimeHoldem encoding)
-    uint8 private constant CLASS_HIGH_CARD = 0;
-    uint8 private constant CLASS_PAIR = 1;
-    uint8 private constant CLASS_TWO_PAIR = 2;
-    uint8 private constant CLASS_THREE_OF_A_KIND = 3;
-    uint8 private constant CLASS_STRAIGHT = 4;
-    uint8 private constant CLASS_FLUSH = 5;
-    uint8 private constant CLASS_FULL_HOUSE = 6;
-    uint8 private constant CLASS_FOUR_OF_A_KIND = 7;
-    uint8 private constant CLASS_STRAIGHT_FLUSH = 8;
-    uint8 private constant CLASS_ROYAL_FLUSH = 9;
-
+    // Hand-class constants and the 5-card evaluator below use the same numerical encoding as
+    // `CasinoHandsLib.CLASS_*` so values can flow through the resolved-hand emit / paytable
+    // without translation. Reference the lib's `internal constant`s directly (inlined at compile)
     uint8 private constant RANK_TWO = 2;
     uint8 private constant RANK_JACK = 11;
     uint8 private constant RANK_ACE = 14;
@@ -149,11 +140,10 @@ contract VideoPoker is
         address referrer,
         bool isFreeBet
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, amount, referrer, isFreeBet);
+        return _placeBet(collateral, amount, referrer, isFreeBet);
     }
 
     function _placeBet(
-        address user,
         address collateral,
         uint256 amount,
         address referrer,
@@ -165,11 +155,11 @@ contract VideoPoker is
         uint256 cappedProfit = _cappedProfit(collateral, amount);
 
         if (isFreeBet) {
-            core.useFreeBet(user, collateral, amount);
+            core.useFreeBet(msg.sender, collateral, amount);
         } else {
-            core.pullFromUser(user, collateral, amount);
+            core.pullFromUser(msg.sender, collateral, amount);
         }
-        if (referrer != address(0)) core.setReferrer(referrer, user);
+        if (referrer != address(0)) core.setReferrer(referrer, msg.sender);
 
         // Reservation = stake + cappedProfit (worst-case capped payout)
         uint256 reservation = amount + cappedProfit;
@@ -179,7 +169,7 @@ contract VideoPoker is
         betId = nextBetId++;
 
         Bet storage b = bets[betId];
-        b.user = user;
+        b.user = msg.sender;
         b.collateral = collateral;
         b.amount = amount;
         b.placedAt = block.timestamp;
@@ -191,9 +181,9 @@ contract VideoPoker is
         b.profitCapRemaining = cappedProfit;
 
         requestIdToBetId[requestId] = betId;
-        userBetIds[user].push(betId);
+        userBetIds[msg.sender].push(betId);
 
-        emit BetPlaced(betId, requestId, user, collateral, amount);
+        emit BetPlaced(betId, requestId, msg.sender, collateral, amount);
     }
 
     /// @notice Gasless-session entry for the only mid-game action VP has. Other V2 games
@@ -364,18 +354,18 @@ contract VideoPoker is
         );
     }
 
-    /// @notice Paytable lookup. `primaryRank` is the rank of the pair (for CLASS_PAIR only) —
+    /// @notice Paytable lookup. `primaryRank` is the rank of the pair (for CasinoHandsLib.CLASS_PAIR only) —
     /// used to apply the Jacks-or-Better cut-off. For other classes it's ignored
     function _paytableMultiplier(uint8 class_, uint8 primaryRank) internal pure returns (uint256) {
-        if (class_ == CLASS_ROYAL_FLUSH) return MULT_ROYAL_FLUSH;
-        if (class_ == CLASS_STRAIGHT_FLUSH) return MULT_STRAIGHT_FLUSH;
-        if (class_ == CLASS_FOUR_OF_A_KIND) return MULT_FOUR_OF_A_KIND;
-        if (class_ == CLASS_FULL_HOUSE) return MULT_FULL_HOUSE;
-        if (class_ == CLASS_FLUSH) return MULT_FLUSH;
-        if (class_ == CLASS_STRAIGHT) return MULT_STRAIGHT;
-        if (class_ == CLASS_THREE_OF_A_KIND) return MULT_THREE_OF_A_KIND;
-        if (class_ == CLASS_TWO_PAIR) return MULT_TWO_PAIR;
-        if (class_ == CLASS_PAIR && primaryRank >= RANK_JACK) return MULT_JACKS_OR_BETTER;
+        if (class_ == CasinoHandsLib.CLASS_ROYAL_FLUSH) return MULT_ROYAL_FLUSH;
+        if (class_ == CasinoHandsLib.CLASS_STRAIGHT_FLUSH) return MULT_STRAIGHT_FLUSH;
+        if (class_ == CasinoHandsLib.CLASS_FOUR_OF_A_KIND) return MULT_FOUR_OF_A_KIND;
+        if (class_ == CasinoHandsLib.CLASS_FULL_HOUSE) return MULT_FULL_HOUSE;
+        if (class_ == CasinoHandsLib.CLASS_FLUSH) return MULT_FLUSH;
+        if (class_ == CasinoHandsLib.CLASS_STRAIGHT) return MULT_STRAIGHT;
+        if (class_ == CasinoHandsLib.CLASS_THREE_OF_A_KIND) return MULT_THREE_OF_A_KIND;
+        if (class_ == CasinoHandsLib.CLASS_TWO_PAIR) return MULT_TWO_PAIR;
+        if (class_ == CasinoHandsLib.CLASS_PAIR && primaryRank >= RANK_JACK) return MULT_JACKS_OR_BETTER;
         return 0;
     }
 
@@ -401,9 +391,9 @@ contract VideoPoker is
 
         if (flush && straightTop > 0) {
             if (straightTop == RANK_ACE) {
-                return (CLASS_ROYAL_FLUSH, RANK_ACE);
+                return (CasinoHandsLib.CLASS_ROYAL_FLUSH, RANK_ACE);
             }
-            return (CLASS_STRAIGHT_FLUSH, straightTop);
+            return (CasinoHandsLib.CLASS_STRAIGHT_FLUSH, straightTop);
         }
 
         // Scan ranks high → low for pairs / trips / quads
@@ -425,27 +415,27 @@ contract VideoPoker is
         }
 
         if (fourRank > 0) {
-            return (CLASS_FOUR_OF_A_KIND, fourRank);
+            return (CasinoHandsLib.CLASS_FOUR_OF_A_KIND, fourRank);
         }
         if (threeRank > 0 && firstPair > 0) {
-            return (CLASS_FULL_HOUSE, threeRank);
+            return (CasinoHandsLib.CLASS_FULL_HOUSE, threeRank);
         }
         if (flush) {
-            return (CLASS_FLUSH, RANK_ACE);
+            return (CasinoHandsLib.CLASS_FLUSH, RANK_ACE);
         }
         if (straightTop > 0) {
-            return (CLASS_STRAIGHT, straightTop);
+            return (CasinoHandsLib.CLASS_STRAIGHT, straightTop);
         }
         if (threeRank > 0) {
-            return (CLASS_THREE_OF_A_KIND, threeRank);
+            return (CasinoHandsLib.CLASS_THREE_OF_A_KIND, threeRank);
         }
         if (firstPair > 0 && secondPair > 0) {
-            return (CLASS_TWO_PAIR, firstPair);
+            return (CasinoHandsLib.CLASS_TWO_PAIR, firstPair);
         }
         if (firstPair > 0) {
-            return (CLASS_PAIR, firstPair);
+            return (CasinoHandsLib.CLASS_PAIR, firstPair);
         }
-        return (CLASS_HIGH_CARD, 0);
+        return (CasinoHandsLib.CLASS_HIGH_CARD, 0);
     }
 
     /* ========== HELPERS ========== */
@@ -514,33 +504,15 @@ contract VideoPoker is
         r.initialCards = b.initialCards;
         r.finalCards = b.finalCards;
         r.isFreeBet = b.isFreeBet;
+        r.lastRequestAt = b.lastRequestAt;
     }
 
-    function getUserBetIds(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory ids) {
-        uint256[] storage all = userBetIds[user];
-        uint256 len = all.length;
-        if (offset >= len) return new uint256[](0);
-        uint256 remaining = len - offset;
-        uint256 count = remaining < limit ? remaining : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = all[len - 1 - offset - i];
-        }
+    function getUserBetIds(address user, uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getUserBetIds(userBetIds[user], offset, limit);
     }
 
-    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory ids) {
-        uint256 latest = nextBetId - 1;
-        if (offset >= latest) return new uint256[](0);
-        uint256 start = latest - offset;
-        uint256 count = start < limit ? start : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = start - i;
-        }
+    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getRecentBetIds(nextBetId, offset, limit);
     }
 
     /* ========== ADMIN ========== */

@@ -55,6 +55,7 @@ interface ICasinoHiLo {
         uint8 correctCount;
         uint8 pushCount;
         bool isFreeBet;
+        uint256 lastRequestAt;
     }
 
     event BetPlaced(uint256 indexed betId, address indexed user, address collateral, uint256 amount);

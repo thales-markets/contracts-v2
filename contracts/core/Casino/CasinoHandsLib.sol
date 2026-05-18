@@ -40,6 +40,41 @@ library CasinoHandsLib {
     uint8 internal constant CLASS_STRAIGHT_FLUSH = 8;
     uint8 internal constant CLASS_ROYAL_FLUSH = 9;
 
+    /* ========== PAGINATION ========== */
+
+    /// @notice Newest-first paginated read over a per-user bet-ids array. Returns up to `limit`
+    /// ids starting `offset` from the back of the array (offset 0 = most recent). Used by every
+    /// V2 game's `getUserBetIds` view to avoid duplicating identical boilerplate
+    function getUserBetIds(
+        uint256[] storage all,
+        uint256 offset,
+        uint256 limit
+    ) internal view returns (uint256[] memory ids) {
+        uint256 len = all.length;
+        if (offset >= len) return new uint256[](0);
+        uint256 remaining = len - offset;
+        uint256 count = remaining < limit ? remaining : limit;
+        ids = new uint256[](count);
+        for (uint256 i; i < count; ++i) {
+            ids[i] = all[len - 1 - offset - i];
+        }
+    }
+
+    /// @notice Newest-first paginated read over a contiguous `[1, nextBetId)` id range. Returns
+    /// up to `limit` ids starting `offset` from the latest (offset 0 = newest bet). Caller MUST
+    /// ensure `nextBetId` is the per-game counter that starts at 1 and increments per bet — if a
+    /// future game starts at 0, `latest = nextBetId - 1` underflows
+    function getRecentBetIds(uint256 nextBetId, uint256 offset, uint256 limit) internal pure returns (uint256[] memory ids) {
+        uint256 latest = nextBetId - 1;
+        if (offset >= latest) return new uint256[](0);
+        uint256 start = latest - offset;
+        uint256 count = start < limit ? start : limit;
+        ids = new uint256[](count);
+        for (uint256 i; i < count; ++i) {
+            ids[i] = start - i;
+        }
+    }
+
     /* ========== DECK / SHUFFLE ========== */
 
     /// @notice Build a `size`-element deck over [0, 52) skipping any card whose bit is set in
@@ -163,6 +198,10 @@ library CasinoHandsLib {
     /// (`pack(class, r1..r5)`). Encoding: `[class:4][r1:4][r2:4][r3:4][r4:4][r5:4]`.
     /// `class` = 0 (HC) .. 9 (Royal). Padded ranks default to 0. Output orders within the same
     /// class via tie-breaker ranks, so two values can be `<` / `==` / `>` compared directly
+    /// @dev Caller MUST pass distinct card indices in [0, 51]. Duplicates silently misclassify
+    /// (rankCount/suitCount overcount, flush detection misfires). All current callers feed
+    /// `partialFisherYates` output which is duplicate-free by construction; if a future consumer
+    /// builds card sets from a different source, the caller is responsible for the precondition
     function evaluateCards7(uint8[] memory cards) internal pure returns (uint256) {
         uint8[15] memory rankCount;
         uint16 rankMask;

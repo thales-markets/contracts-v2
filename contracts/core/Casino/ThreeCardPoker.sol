@@ -35,7 +35,6 @@ contract ThreeCardPoker is
     /* ========== CONSTANTS ========== */
 
     uint256 private constant ONE = 1e18;
-    uint256 private constant USDC_UNIT = 1e6;
 
     uint256 public constant MIN_BET_USD = 3e18;
 
@@ -114,7 +113,7 @@ contract ThreeCardPoker is
         uint256 placedAt;
         uint256 lastRequestAt;
         uint256 resolvedAt;
-        uint256 reservedAnteSide; // ante-side reservation still held in core; freed at resolve/fold
+        uint256 reservedAnteSide; // total remaining reservation for this bet (ante + PP); name is legacy from when PP had its own reservation slot
         uint256 requestId;
         uint8[3] playerCards;
         uint8[3] dealerCards;
@@ -502,7 +501,7 @@ contract ThreeCardPoker is
         // Ante Bonus: pure bonus on top of Ante side, regardless of dealer outcome
         r.anteBonusPayout = _anteBonusMultiplier(pClass) * anteAmount;
 
-        if (!_dealerQualifies(dClass, dCards)) {
+        if (!_dealerQualifies(dClass, dTie)) {
             // Ante 1:1, Play push: 2x ante (stake + win) + ante (Play stake-back) = 3x ante
             r.outcome = Outcome.DEALER_NOT_QUALIFIED;
             r.anteAndPlayPayout = anteAmount * 3;
@@ -643,17 +642,11 @@ contract ThreeCardPoker is
     }
 
     /// @notice Dealer qualifies on Q-high or better. Q-high = HIGH_CARD with top rank >= Q,
-    /// or any hand class above HIGH_CARD
-    function _dealerQualifies(uint8 dClass, uint8[3] memory dCards) internal pure returns (bool) {
+    /// or any hand class above HIGH_CARD. For HIGH_CARD, `_evaluate3Card` already encodes the
+    /// top rank in bits [16:24] of `tieBreaker` — read it directly instead of recomputing
+    function _dealerQualifies(uint8 dClass, uint32 dTie) internal pure returns (bool) {
         if (dClass > CLASS_HIGH_CARD) return true;
-        // HIGH_CARD: check top rank
-        uint8 r0 = uint8(dCards[0] % 13) + RANK_TWO;
-        uint8 r1 = uint8(dCards[1] % 13) + RANK_TWO;
-        uint8 r2 = uint8(dCards[2] % 13) + RANK_TWO;
-        uint8 top = r0;
-        if (r1 > top) top = r1;
-        if (r2 > top) top = r2;
-        return top >= QUALIFIER_RANK;
+        return uint8(dTie >> 16) >= QUALIFIER_RANK;
     }
 
     /* ========== PAYTABLE LOOKUPS ========== */
@@ -783,33 +776,15 @@ contract ThreeCardPoker is
         r.playerCards = b.playerCards;
         r.dealerCards = b.dealerCards;
         r.isFreeBet = b.isFreeBet;
+        r.lastRequestAt = b.lastRequestAt;
     }
 
-    function getUserBetIds(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory ids) {
-        uint256[] storage all = userBetIds[user];
-        uint256 len = all.length;
-        if (offset >= len) return new uint256[](0);
-        uint256 remaining = len - offset;
-        uint256 count = remaining < limit ? remaining : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = all[len - 1 - offset - i];
-        }
+    function getUserBetIds(address user, uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getUserBetIds(userBetIds[user], offset, limit);
     }
 
-    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory ids) {
-        uint256 latest = nextBetId - 1;
-        if (offset >= latest) return new uint256[](0);
-        uint256 start = latest - offset;
-        uint256 count = start < limit ? start : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = start - i;
-        }
+    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getRecentBetIds(nextBetId, offset, limit);
     }
 
     /* ========== ADMIN ========== */

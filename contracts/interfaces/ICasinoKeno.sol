@@ -32,6 +32,7 @@ interface ICasinoKeno {
         uint128 drawnMask; // bitmask of the 20 drawn numbers (set when status == RESOLVED)
         uint256 multiplierE18;
         bool isFreeBet;
+        uint256 lastRequestAt;
     }
 
     event BetPlaced(

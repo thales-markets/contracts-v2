@@ -629,6 +629,11 @@
             "internalType": "bool",
             "name": "isFreeBet",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastRequestAt",
+            "type": "uint256"
           }
         ],
         "internalType": "struct ICasinoThreeCardPoker.FullRecord",
@@ -656,7 +661,7 @@
     "outputs": [
       {
         "internalType": "uint256[]",
-        "name": "ids",
+        "name": "",
         "type": "uint256[]"
       }
     ],
@@ -685,7 +690,7 @@
     "outputs": [
       {
         "internalType": "uint256[]",
-        "name": "ids",
+        "name": "",
         "type": "uint256[]"
       }
     ],

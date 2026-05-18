@@ -563,13 +563,13 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			const newKey = ethers.encodeBytes32String('VRF');
 			await expect(
 				core.connect(owner).setVrfConfig(0, newKey, 500_000, 1, true)
-			).to.be.revertedWithCustomError(core, 'InvalidAmount');
+			).to.be.revertedWithCustomError(core, 'InvalidConfig');
 			await expect(
 				core.connect(owner).setVrfConfig(2, ethers.ZeroHash, 500_000, 1, true)
-			).to.be.revertedWithCustomError(core, 'InvalidAmount');
+			).to.be.revertedWithCustomError(core, 'InvalidConfig');
 			await expect(
 				core.connect(owner).setVrfConfig(2, newKey, 0, 1, true)
-			).to.be.revertedWithCustomError(core, 'InvalidAmount');
+			).to.be.revertedWithCustomError(core, 'InvalidConfig');
 			await expect(core.connect(owner).setVrfConfig(2, newKey, 500_000, 1, true)).to.emit(
 				core,
 				'VrfConfigChanged'

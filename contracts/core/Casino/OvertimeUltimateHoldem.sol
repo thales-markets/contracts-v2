@@ -51,21 +51,6 @@ contract OvertimeUltimateHoldem is
     uint8 private constant HOLE_CARDS = 2;
     uint8 private constant FLOP_CARDS = 3;
 
-    // Hand classes (higher numerical value beats lower). Mirror of `CasinoHandsLib.CLASS_*` for
-    // local `_blindPaytableMultiplier` / `_dealerQualifies` readability — duplicated rather than
-    // imported because constants aren't usable cross-contract via `using` and the lib values
-    // are private to its evaluator
-    uint8 private constant CLASS_HIGH_CARD = 0;
-    uint8 private constant CLASS_PAIR = 1;
-    uint8 private constant CLASS_TWO_PAIR = 2;
-    uint8 private constant CLASS_THREE_OF_A_KIND = 3;
-    uint8 private constant CLASS_STRAIGHT = 4;
-    uint8 private constant CLASS_FLUSH = 5;
-    uint8 private constant CLASS_FULL_HOUSE = 6;
-    uint8 private constant CLASS_FOUR_OF_A_KIND = 7;
-    uint8 private constant CLASS_STRAIGHT_FLUSH = 8;
-    uint8 private constant CLASS_ROYAL_FLUSH = 9;
-
     // Blind paytable (paid on top of stake when player wins). Below Straight = push (no bonus,
     // but stake returns — handled in resolution code by paying 1× the blind back as "stake-back").
     uint256 private constant BLIND_MULT_ROYAL = 500;
@@ -169,11 +154,10 @@ contract OvertimeUltimateHoldem is
         address referrer,
         bool isFreeBet
     ) external override nonReentrant notPaused returns (uint256 betId, uint256 requestId) {
-        return _placeBet(msg.sender, collateral, anteAmount, referrer, isFreeBet);
+        return _placeBet(collateral, anteAmount, referrer, isFreeBet);
     }
 
     function _placeBet(
-        address user,
         address collateral,
         uint256 anteAmount,
         address referrer,
@@ -187,11 +171,11 @@ contract OvertimeUltimateHoldem is
         // Pull Ante + Blind from user / FBH
         uint256 stakeIn = anteAmount * 2;
         if (isFreeBet) {
-            core.useFreeBet(user, collateral, stakeIn);
+            core.useFreeBet(msg.sender, collateral, stakeIn);
         } else {
-            core.pullFromUser(user, collateral, stakeIn);
+            core.pullFromUser(msg.sender, collateral, stakeIn);
         }
-        if (referrer != address(0)) core.setReferrer(referrer, user);
+        if (referrer != address(0)) core.setReferrer(referrer, msg.sender);
 
         // Reservation = stakes_pulled_so_far + capped net-profit budget. Raise paths top this
         // up with the raise amount (covers larger stake-back potential)
@@ -202,7 +186,7 @@ contract OvertimeUltimateHoldem is
         betId = nextBetId++;
 
         Bet storage b = bets[betId];
-        b.user = user;
+        b.user = msg.sender;
         b.collateral = collateral;
         b.anteAmount = anteAmount;
         b.placedAt = block.timestamp;
@@ -214,9 +198,9 @@ contract OvertimeUltimateHoldem is
         b.profitCapRemaining = cappedProfit;
 
         requestIdToBetId[requestId] = betId;
-        userBetIds[user].push(betId);
+        userBetIds[msg.sender].push(betId);
 
-        emit BetPlaced(betId, requestId, user, collateral, anteAmount);
+        emit BetPlaced(betId, requestId, msg.sender, collateral, anteAmount);
     }
 
     /* ========== DECISION POINTS ========== */
@@ -245,14 +229,14 @@ contract OvertimeUltimateHoldem is
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         _pullPlayStake(b, PRE_FLOP_RAISE_MULT);
-        requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_RESOLVE);
+        requestId = _requestVrf(betId, b, BetStatus.AWAITING_RESOLVE);
         emit RaisedPreFlop(betId, b.user, b.playAmount);
     }
 
     function _checkPreFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
-        requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_FLOP);
+        requestId = _requestVrf(betId, b, BetStatus.AWAITING_FLOP);
         emit CheckedPreFlop(betId, requestId, b.user);
     }
 
@@ -260,14 +244,14 @@ contract OvertimeUltimateHoldem is
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_FLOP_TURN);
         _pullPlayStake(b, POST_FLOP_RAISE_MULT);
-        requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_RESOLVE);
+        requestId = _requestVrf(betId, b, BetStatus.AWAITING_RESOLVE);
         emit RaisedPostFlop(betId, b.user, b.playAmount);
     }
 
     function _checkPostFlop(uint256 betId) internal returns (uint256 requestId) {
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_FLOP_TURN);
-        requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_TURN_RIVER);
+        requestId = _requestVrf(betId, b, BetStatus.AWAITING_TURN_RIVER);
         emit CheckedPostFlop(betId, requestId, b.user);
     }
 
@@ -275,7 +259,7 @@ contract OvertimeUltimateHoldem is
         Bet storage b = bets[betId];
         _requireOwnedAt(b, BetStatus.POST_RIVER_TURN);
         _pullPlayStake(b, RIVER_RAISE_MULT);
-        requestId = _requestVrfAndAdvance(betId, b, BetStatus.AWAITING_RESOLVE);
+        requestId = _requestVrf(betId, b, BetStatus.AWAITING_RESOLVE);
         emit RaisedRiver(betId, requestId, b.user, b.playAmount);
     }
 
@@ -623,19 +607,19 @@ contract OvertimeUltimateHoldem is
 
     function _blindPaytableMultiplier(uint256 handValue) internal pure returns (uint256) {
         uint8 class_ = uint8(handValue >> 20);
-        if (class_ == CLASS_ROYAL_FLUSH) return BLIND_MULT_ROYAL;
-        if (class_ == CLASS_STRAIGHT_FLUSH) return BLIND_MULT_STRAIGHT_FLUSH;
-        if (class_ == CLASS_FOUR_OF_A_KIND) return BLIND_MULT_FOUR_OF_A_KIND;
-        if (class_ == CLASS_FULL_HOUSE) return BLIND_MULT_FULL_HOUSE;
-        if (class_ == CLASS_FLUSH) return BLIND_MULT_FLUSH;
-        if (class_ == CLASS_STRAIGHT) return BLIND_MULT_STRAIGHT;
+        if (class_ == CasinoHandsLib.CLASS_ROYAL_FLUSH) return BLIND_MULT_ROYAL;
+        if (class_ == CasinoHandsLib.CLASS_STRAIGHT_FLUSH) return BLIND_MULT_STRAIGHT_FLUSH;
+        if (class_ == CasinoHandsLib.CLASS_FOUR_OF_A_KIND) return BLIND_MULT_FOUR_OF_A_KIND;
+        if (class_ == CasinoHandsLib.CLASS_FULL_HOUSE) return BLIND_MULT_FULL_HOUSE;
+        if (class_ == CasinoHandsLib.CLASS_FLUSH) return BLIND_MULT_FLUSH;
+        if (class_ == CasinoHandsLib.CLASS_STRAIGHT) return BLIND_MULT_STRAIGHT;
         return 0; // below Straight → push
     }
 
     function _dealerQualifies(uint256 handValue) internal pure returns (bool) {
         // UTH dealer needs Pair or better
         uint8 class_ = uint8(handValue >> 20);
-        return class_ >= CLASS_PAIR;
+        return class_ >= CasinoHandsLib.CLASS_PAIR;
     }
 
     /* ========== INTERNAL: STAKES + VRF ========== */
@@ -676,7 +660,7 @@ contract OvertimeUltimateHoldem is
         return worst > capCollateral ? capCollateral : worst;
     }
 
-    function _requestVrfAndAdvance(uint256 betId, Bet storage b, BetStatus newStatus) internal returns (uint256 requestId) {
+    function _requestVrf(uint256 betId, Bet storage b, BetStatus newStatus) internal returns (uint256 requestId) {
         requestId = core.requestRandomWords(1);
         b.requestId = requestId;
         b.lastRequestAt = block.timestamp;
@@ -767,33 +751,15 @@ contract OvertimeUltimateHoldem is
         r.community = b.community;
         r.dealerHole = b.dealerHole;
         r.isFreeBet = b.isFreeBet;
+        r.lastRequestAt = b.lastRequestAt;
     }
 
-    function getUserBetIds(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view override returns (uint256[] memory ids) {
-        uint256[] storage all = userBetIds[user];
-        uint256 len = all.length;
-        if (offset >= len) return new uint256[](0);
-        uint256 remaining = len - offset;
-        uint256 count = remaining < limit ? remaining : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = all[len - 1 - offset - i];
-        }
+    function getUserBetIds(address user, uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getUserBetIds(userBetIds[user], offset, limit);
     }
 
-    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory ids) {
-        uint256 latest = nextBetId - 1;
-        if (offset >= latest) return new uint256[](0);
-        uint256 start = latest - offset;
-        uint256 count = start < limit ? start : limit;
-        ids = new uint256[](count);
-        for (uint256 i; i < count; ++i) {
-            ids[i] = start - i;
-        }
+    function getRecentBetIds(uint256 offset, uint256 limit) external view override returns (uint256[] memory) {
+        return CasinoHandsLib.getRecentBetIds(nextBetId, offset, limit);
     }
 
     /* ========== ADMIN ========== */

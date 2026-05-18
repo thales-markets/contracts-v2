@@ -61,6 +61,7 @@ interface ICasinoOvertimeBonusHoldem {
         uint8[5] community; // [flop0, flop1, flop2, turn, river]
         uint8[2] dealerHole;
         bool isFreeBet;
+        uint256 lastRequestAt;
     }
 
     /* ========== EVENTS ========== */

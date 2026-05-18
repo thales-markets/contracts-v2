@@ -34,6 +34,7 @@ interface ICasinoPlinko {
         uint8 slotIndex;
         uint256 multiplierE18;
         bool isFreeBet;
+        uint256 lastRequestAt;
     }
 
     event BetPlaced(
