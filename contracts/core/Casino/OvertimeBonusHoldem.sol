@@ -158,8 +158,6 @@ contract OvertimeBonusHoldem is
     mapping(uint256 => uint256) public requestIdToBetId;
     mapping(address => uint256[]) private userBetIds;
 
-    uint256[40] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     function initialize(address _owner, address _core, address _manager) external initializer {
@@ -244,6 +242,7 @@ contract OvertimeBonusHoldem is
     ///   2 = raiseFlop     3 = checkFlop
     ///   4 = raiseTurn     5 = checkTurn
     ///   6 = raiseRiver    7 = checkRiver
+    /// @dev AUDIT NOTE: mid-game pause traps in-flight winners; see HiLo.makeAction rationale
     function makeAction(uint256 betId, uint8 action) external override nonReentrant notPaused returns (uint256 requestId) {
         if (action == 0) return _playPreFlop(betId);
         if (action == 1) return _foldPreFlop(betId);
@@ -801,6 +800,8 @@ contract OvertimeBonusHoldem is
 
     /* ========== ADMIN ========== */
 
+    /// @dev AUDIT NOTE: unguarded against repointing to a malicious core. Trusted-owner model;
+    /// see HiLo.setCore for rationale
     function setCore(address _core) external onlyOwner {
         if (_core == address(0)) revert InvalidAddress();
         core = ICasinoCoreV2(_core);

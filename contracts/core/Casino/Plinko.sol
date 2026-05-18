@@ -93,8 +93,6 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
     /// @notice Max multiplier per risk, cached for fast reservation calc
     mapping(uint8 => uint256) internal maxMultiplier;
 
-    uint256[40] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     function initialize(address _owner, address _core, address _manager) external initializer {
@@ -327,9 +325,9 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
         uint8 r = uint8(risk);
         delete paytables[r];
         uint256 maxM;
-        for (uint256 i; i < multipliers.length; ++i) {
-            paytables[r].push(multipliers[i]);
-            if (multipliers[i] > maxM) maxM = multipliers[i];
+        for (uint256 i; i < SLOTS; ++i) {
+            paytables[r].push(mults[i]);
+            if (mults[i] > maxM) maxM = mults[i];
         }
         maxMultiplier[r] = maxM;
         emit PaytableUpdated(risk, multipliers);
@@ -406,6 +404,8 @@ contract Plinko is ICasinoPlinko, ICasinoGameCallback, Initializable, ProxyOwned
 
     /* ========== ADMIN: WIRING + PAUSE ========== */
 
+    /// @dev AUDIT NOTE: unguarded against repointing to a malicious core. Trusted-owner model;
+    /// see HiLo.setCore for rationale
     function setCore(address _core) external onlyOwner {
         if (_core == address(0)) revert InvalidAddress();
         core = ICasinoCoreV2(_core);

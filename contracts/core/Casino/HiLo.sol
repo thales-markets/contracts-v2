@@ -115,8 +115,6 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     mapping(uint256 => uint256) public requestIdToBetId;
     mapping(address => uint256[]) private userBetIds;
 
-    uint256[40] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     function initialize(address _owner, address _core, address _manager) external initializer {
@@ -203,6 +201,10 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     ///   1 = guess BELOW
     ///   2 = cashout
     /// Reverts `InvalidAction` for any other code so a misconfigured FE fails loudly
+    /// @dev AUDIT NOTE: `notPaused` here means a mid-game pause traps in-flight winners (e.g.
+    /// a user at 15× multiplier can't cashout). Considered exempting settlement actions or adding
+    /// a separate `settlementsPaused` flag; declined because `adminCancelBet` is the operator's
+    /// escape hatch for stuck bets (full-stake refund, NOT accrued winnings — known trade-off)
     function makeAction(uint256 betId, uint8 action) external override nonReentrant notPaused returns (uint256 requestId) {
         if (action == 0) return _guess(betId, Direction.ABOVE);
         if (action == 1) return _guess(betId, Direction.BELOW);
@@ -412,6 +414,10 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         maxMultiplierE18 = newMaxE18;
     }
 
+    /// @dev AUDIT NOTE: unguarded against repointing to a malicious core (a compromised owner
+    /// could swap to an EvilCore returning attacker-chosen randomness). Considered adding a
+    /// registration check (`core.isGameRegistered(address(this))`) or a timelock; declined under
+    /// trusted-owner model (multisig protects the key). Re-evaluate if the owner key surface widens
     function setCore(address _core) external onlyOwner {
         if (_core == address(0)) revert InvalidAddress();
         core = ICasinoCoreV2(_core);

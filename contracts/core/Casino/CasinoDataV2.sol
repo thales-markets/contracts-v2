@@ -43,8 +43,6 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
     ICasinoVideoPoker public videoPoker;
     ICasinoOvertimeBonusHoldem public bonusHoldem;
 
-    uint256[32] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     /// @notice Owner-only init. Core + every game slot is wired post-deploy via `setAddress`.
@@ -290,6 +288,12 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
     /// @inheritdoc ICasinoDataV2
     /// @dev Returns the game's `nextBetId` — total resolved+pending+cancelled bets is `nextBetId - 1`.
     /// Each game stores `nextBetId` starting at 1, so `nextBetId == 1` means no bets placed yet
+    /// @dev REMEMBER: when adding a new `GameV2` enum value, also add a branch here. Currently
+    /// unknown enum values silently fall through to `return 1` (the "no bets placed" sentinel).
+    /// AUDIT NOTE: considered restructuring to `revert UnknownGame()` on the fallthrough so a
+    /// future enum extension fails loudly instead of silently misreporting; declined because the
+    /// restructure pushed contract bytecode past the 24KB limit. Comment-only warning is the
+    /// chosen defense — verify this branch is updated whenever `GameV2` grows
     function getNextBetId(GameV2 game) external view override returns (uint256) {
         if (game == GameV2.ThreeCardPoker && address(threeCardPoker) != address(0)) return threeCardPoker.nextBetId();
         if (game == GameV2.Plinko && address(plinko) != address(0)) return plinko.nextBetId();
@@ -323,7 +327,12 @@ contract CasinoDataV2 is ICasinoDataV2, Initializable, ProxyOwned {
         for (uint256 i; i < c.length; ++i) all[k++] = c[i];
     }
 
-    /// @dev TCP + Plinko + HiLo (always wired post-deploy). Split for stack budget
+    /// @dev TCP + Plinko + HiLo (always wired post-deploy). Split for stack budget.
+    /// AUDIT NOTE: secondary/tertiary buckets guard `address(X) != address(0)` per-game;
+    /// the primary bucket intentionally does NOT. Considered adding parity guards here;
+    /// declined because it pushed `CasinoDataV2` bytecode past the 24KB limit (the three
+    /// primary games are deliberately wired at first deploy and never expected to be
+    /// un-wired via `setAddress`). If that invariant ever changes, add the guards then
     function _gatherPrimaryUserBets(address user, uint256 take) internal view returns (BetRecord[] memory out) {
         uint256[] memory tcpIds = threeCardPoker.getUserBetIds(user, 0, take);
         uint256[] memory plinkoIds = plinko.getUserBetIds(user, 0, take);

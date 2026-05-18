@@ -129,8 +129,6 @@ contract OvertimeUltimateHoldem is
     mapping(uint256 => uint256) public requestIdToBetId;
     mapping(address => uint256[]) private userBetIds;
 
-    uint256[40] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     function initialize(address _owner, address _core, address _manager) external initializer {
@@ -212,6 +210,7 @@ contract OvertimeUltimateHoldem is
     ///   3 = checkPostFlop — defer to river
     ///   4 = playRiver     — river raise (1× ante); reveals dealer at VRF4
     ///   5 = fold          — post-river only; forfeits Ante + Blind
+    /// @dev AUDIT NOTE: mid-game pause traps in-flight winners; see HiLo.makeAction rationale
     function makeAction(uint256 betId, uint8 action) external override nonReentrant notPaused returns (uint256 requestId) {
         if (action == 0) return _playPreFlop(betId);
         if (action == 1) return _checkPreFlop(betId);
@@ -410,6 +409,13 @@ contract OvertimeUltimateHoldem is
 
         // playAmount is 3×, 2×, or 1× ante depending on which raise put us in AWAITING_RESOLVE.
         // It uniquely identifies how many cards still need dealing.
+        // AUDIT NOTE: integer-division dispatch relies on `playAmount` being exactly
+        // `anteAmount × {1, 2, 3}`. INVARIANT: any future code path that sets `b.playAmount`
+        // MUST preserve this multiple-of-ante shape, or this branch silently misroutes (the
+        // `playAmount == 0` guard above catches the zero-only regression, not wrong-multiplier).
+        // Considered storing a dedicated `uint8 raisePath` on Bet; declined because current
+        // invariant is enforced by single-author `_pullPlayStake` and a future break is
+        // recoverable via `adminCancelBet` (bet stays in AWAITING_RESOLVE, no funds at risk)
         uint256 playMult = b.playAmount / b.anteAmount;
         uint64 mask = _excludeMaskHole(b);
         if (playMult == PRE_FLOP_RAISE_MULT) {
@@ -764,6 +770,8 @@ contract OvertimeUltimateHoldem is
 
     /* ========== ADMIN ========== */
 
+    /// @dev AUDIT NOTE: unguarded against repointing to a malicious core. Trusted-owner model;
+    /// see HiLo.setCore for rationale
     function setCore(address _core) external onlyOwner {
         if (_core == address(0)) revert InvalidAddress();
         core = ICasinoCoreV2(_core);

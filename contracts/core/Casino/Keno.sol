@@ -112,8 +112,6 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     /// @notice paytables[picksCount] = multipliers indexed by hit count, length = picksCount + 1
     mapping(uint8 => uint256[]) internal paytables;
 
-    uint256[40] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     function initialize(address _owner, address _core, address _manager) external initializer {
@@ -354,6 +352,7 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     function _cancelBet(uint256 betId, bool adminCancelled) internal {
         Bet storage b = bets[betId];
+        if (b.requestId != 0) delete requestIdToBetId[b.requestId];
         core.releaseReservation(b.collateral, b.reserved);
         b.reserved = 0;
         core.payOut(b.user, b.collateral, b.amount, b.isFreeBet, b.amount);
@@ -362,7 +361,6 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         b.payout = b.amount;
         b.status = BetStatus.CANCELLED;
         b.resolvedAt = block.timestamp;
-        if (b.requestId != 0) delete requestIdToBetId[b.requestId];
         emit BetCancelled(betId, b.user, b.amount, adminCancelled);
     }
 
@@ -474,6 +472,11 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     /// outcomes on bets already placed, pause the game (`setGamePaused` on core) and let all
     /// pending bets settle before calling this. The 2% house-edge floor and monotonicity are
     /// NOT enforced on-chain — verify off-chain (KenoEdgeSim.js) before submitting
+    /// @dev AUDIT NOTE: Plinko enforces an on-chain RTP floor in `_checkRtp` (binomial weights);
+    /// Keno's per-pick RTP is hypergeometric (`C(20,k) × C(60,n-k) / C(80,n)`) so an equivalent
+    /// guard would require precomputed P(k|n) tables across 10 spot counts × 11 hit counts.
+    /// Considered adding it; declined as expensive code-complexity for a setter that fires
+    /// rarely. KenoEdgeSim.js plus trusted-owner discipline is the chosen defense
     function setPaytable(uint8 picksCount, uint256[] calldata multipliers) external onlyOwner {
         if (picksCount < MIN_PICKS || picksCount > MAX_PICKS) revert InvalidPicks();
         if (multipliers.length != uint256(picksCount) + 1) revert PaytableLengthMismatch();
@@ -564,6 +567,8 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /* ========== ADMIN: WIRING + PAUSE ========== */
 
+    /// @dev AUDIT NOTE: unguarded against repointing to a malicious core. Trusted-owner model;
+    /// see HiLo.setCore for rationale
     function setCore(address _core) external onlyOwner {
         if (_core == address(0)) revert InvalidAddress();
         core = ICasinoCoreV2(_core);

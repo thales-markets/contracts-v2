@@ -169,11 +169,6 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     /// invokes — resolve, fold, and cancel paths all funnel through it post-audit fix)
     mapping(address => uint256) public override pendingStakesPerCollateral;
 
-    // --- forward-compat storage gap. Reduced 37 → 35 when `minBetPerGameUsd` and
-    // `maxBetPerGameUsd` were appended. Reduced 35 → 34 when `pendingStakesPerCollateral` was
-    // appended (audit fix: tighten `reserveOrRevert` solvency check)
-    uint256[34] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     /// @notice Initializes the treasury. Run once behind a TransparentUpgradeableProxy
@@ -475,6 +470,15 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     /// @notice Removes a game from the registry. Requires zero reservations across EVERY
     /// currently-supported collateral (iterated from `_supportedCollateralsList`). Pause first,
     /// let pending bets settle, then deregister
+    /// @dev AUDIT NOTE: this check does NOT cover `pendingStakesPerCollateral` (which is global,
+    /// not per-game). Operator MUST also confirm no in-flight VRF requests target this game
+    /// before deregistering — otherwise the in-flight callbacks will try to call back into core
+    /// (`releaseReservation` / `payOut` / `recordSettlement`), all gated by `onlyRegisteredGame`,
+    /// and will revert, stranding the bet AND permanently inflating `pendingStakesPerCollateral`
+    /// (which blocks `withdrawCollateral`). Operational workflow: pause the game via
+    /// `setGamePaused`, wait for all callbacks to fire (or `adminCancelBet` any stuck ones), THEN
+    /// deregister. Considered tracking in-flight VRF per game on-chain; declined as upgrade-unsafe
+    /// (would need new storage slots in currently-deployed proxies)
     function deregisterGame(address game) external onlyOwner {
         if (!isGameRegistered[game]) revert GameNotRegistered();
         uint256 nCols = _supportedCollateralsList.length;
@@ -647,6 +651,11 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     }
 
     /// @notice Updates protocol addresses. Pass `address(0)` for any slot you want to skip
+    /// @dev AUDIT NOTE: the skip-if-zero pattern means `referrals` cannot be disabled by passing
+    /// `address(0)` here. Considered adding a dedicated `setReferrals(address)` that accepts zero;
+    /// declined because the existing replace-path (deploy a no-op Referrals stub and repoint) is
+    /// sufficient for the rare emergency-disable scenario, and the on-chain `payReferrer` is
+    /// already try/catch-wrapped against a misbehaving Referrals contract
     function setAddresses(
         address _manager,
         address _priceFeed,
@@ -683,6 +692,12 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
 
     /// @notice Treasury-wide pause. Blocks new bets across every registered game while leaving
     /// in-flight settlement intact
+    /// @dev AUDIT NOTE: `ProxyPausable.setPaused(bool)` (owner-only) also writes the same `paused`
+    /// slot and emits the same `PauseChanged` event. Considered overriding it to revert OR
+    /// restricting unpause to owner-only here (pauser-pause-only / owner-unpause-only "guardian"
+    /// pattern); declined because both paths are functionally equivalent in our trust model
+    /// (PAUSER role is granted by the manager admin, i.e. owner-controlled) and the asymmetric
+    /// trust shape isn't a documented requirement
     function setPausedByRole(bool _paused) external onlyPauser {
         if (paused != _paused) {
             paused = _paused;

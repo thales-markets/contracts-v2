@@ -115,8 +115,6 @@ contract VideoPoker is
     mapping(uint256 => uint256) public requestIdToBetId;
     mapping(address => uint256[]) private userBetIds;
 
-    uint256[40] private __gap;
-
     /* ========== INITIALIZER ========== */
 
     function initialize(address _owner, address _core, address _manager) external initializer {
@@ -189,6 +187,8 @@ contract VideoPoker is
     /// @notice Gasless-session entry for the only mid-game action VP has. Other V2 games
     /// expose a `makeAction(uint256, uint8)` dispatcher; VP doesn't need the indirection because
     /// there's only one action to dispatch — the FE's Biconomy session allowlists `draw` directly
+    /// @dev AUDIT NOTE: mid-game pause traps in-flight winners (e.g. a user with quads dealt
+    /// can't claim until unpause); see HiLo.makeAction rationale
     function draw(uint256 betId, uint8 holdMask) external override nonReentrant notPaused returns (uint256 requestId) {
         return _draw(betId, holdMask);
     }
@@ -517,6 +517,8 @@ contract VideoPoker is
 
     /* ========== ADMIN ========== */
 
+    /// @dev AUDIT NOTE: unguarded against repointing to a malicious core. Trusted-owner model;
+    /// see HiLo.setCore for rationale
     function setCore(address _core) external onlyOwner {
         if (_core == address(0)) revert InvalidAddress();
         core = ICasinoCoreV2(_core);
