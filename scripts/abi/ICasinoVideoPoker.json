@@ -245,19 +245,6 @@
         "internalType": "uint256",
         "name": "betId",
         "type": "uint256"
-      }
-    ],
-    "name": "cancelBet",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
       },
       {
         "internalType": "uint8",

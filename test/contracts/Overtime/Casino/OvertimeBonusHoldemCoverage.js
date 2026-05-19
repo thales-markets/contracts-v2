@@ -329,32 +329,30 @@ describe('OvertimeBonusHoldem — coverage', () => {
 		});
 	});
 
-	describe('cancel from each AWAITING_* state (after timeout)', () => {
-		it('cancel from AWAITING_HOLE refunds ante + bonus', async () => {
-			const { bh, usdc, usdcAddr, player } = ctx;
+	describe('admin cancel from each AWAITING_* state', () => {
+		it('admin cancel from AWAITING_HOLE refunds ante + bonus', async () => {
+			const { bh, resolver, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await bh
 				.connect(player)
 				.placeBet(usdcAddr, MIN_USDC_BET, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await bh.connect(player).cancelBet(betId);
+			await bh.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
 
-		it('cancel from AWAITING_FLOP refunds ante + bonus + playAmount', async () => {
-			const { bh, usdc, usdcAddr, player } = ctx;
+		it('admin cancel from AWAITING_FLOP refunds ante + bonus + playAmount', async () => {
+			const { bh, resolver, usdc, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, MIN_USDC_BET, 0x1111n);
 			await bh.connect(player).makeAction(betId, 0);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await bh.connect(player).cancelBet(betId);
+			await bh.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
 
-		it('cancel from AWAITING_RESOLVE (after raiseRiver) refunds everything', async () => {
-			const { bh, usdc, usdcAddr, player } = ctx;
+		it('admin cancel from AWAITING_RESOLVE (after raiseRiver) refunds everything', async () => {
+			const { bh, resolver, usdc, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
 			await bh.connect(player).makeAction(betId, 0);
@@ -364,48 +362,14 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			await bh.connect(player).makeAction(betId, 5);
 			await fulfillNext(ctx, 0x4444n);
 			await bh.connect(player).makeAction(betId, 6);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await bh.connect(player).cancelBet(betId);
+			await bh.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
 
-		it('cancel before timeout reverts', async () => {
-			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await ctx.bh.connect(ctx.player).makeAction(betId, 0);
-			await expect(ctx.bh.connect(ctx.player).cancelBet(betId)).to.be.revertedWithCustomError(
-				ctx.bh,
-				'CancelTimeoutNotReached'
-			);
-		});
-
-		it('cancel by non-owner reverts', async () => {
-			const { bh, owner, usdcAddr, player } = ctx;
-			const tx = await bh
-				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
-			const r = await tx.wait();
-			const betId = parseEvent(bh.interface, r, 'BetPlaced').args.betId;
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await expect(bh.connect(owner).cancelBet(betId)).to.be.revertedWithCustomError(
-				bh,
-				'BetNotOwner'
-			);
-		});
-
-		it('cancel of non-existent bet reverts BetNotFound', async () => {
-			await expect(ctx.bh.connect(ctx.player).cancelBet(9999n)).to.be.revertedWithCustomError(
-				ctx.bh,
-				'BetNotFound'
-			);
-		});
-
-		it('cancel from PRE_FLOP_TURN (player decision state) reverts InvalidBetStatus', async () => {
-			const betId = await placeAndDealHole(ctx, MIN_USDC_BET, 0n, 0x1111n);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await expect(ctx.bh.connect(ctx.player).cancelBet(betId)).to.be.revertedWithCustomError(
-				ctx.bh,
-				'InvalidBetStatus'
-			);
+		it('admin cancel of non-existent bet reverts BetNotFound', async () => {
+			await expect(
+				ctx.bh.connect(ctx.resolver).adminCancelBet(9999n)
+			).to.be.revertedWithCustomError(ctx.bh, 'BetNotFound');
 		});
 	});
 
@@ -898,9 +862,9 @@ describe('OvertimeBonusHoldem — coverage', () => {
 		});
 
 		it('silently no-ops when VRF fires for cancelled bet (betId == 0 branch via stale mapping)', async () => {
-			const { bh, vrf, coreAddr, usdcAddr, player } = ctx;
-			// Place a bet, capture the pre-fulfill requestId, cancel before VRF fires (deletes the
-			// mapping inside bh), then have VRF fire for that requestId — bh.onVrfFulfilled sees
+			const { bh, resolver, vrf, coreAddr, usdcAddr, player } = ctx;
+			// Place a bet, capture the pre-fulfill requestId, admin-cancel before VRF fires (deletes
+			// the mapping inside bh), then have VRF fire for that requestId — bh.onVrfFulfilled sees
 			// betId == 0 and silently returns
 			const tx = await bh
 				.connect(player)
@@ -909,8 +873,7 @@ describe('OvertimeBonusHoldem — coverage', () => {
 			const placed = parseEvent(bh.interface, r, 'BetPlaced');
 			const betId = placed.args.betId;
 			const requestId = placed.args.requestId;
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await bh.connect(player).cancelBet(betId);
+			await bh.connect(resolver).adminCancelBet(betId);
 			// Stale VRF callback — should be a no-op (no revert)
 			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
 		});

@@ -116,6 +116,12 @@ interface ICasinoOvertimeBonusHoldem {
 
     event BetCancelled(uint256 indexed betId, address indexed user, uint256 refund, bool adminCancelled);
 
+    /// @notice Emitted when the cap-spill cascade can't absorb the full `cut` from the leg
+    /// payouts and the final leg is zero-clamped, losing `residual` from the cut. Structurally
+    /// unreachable today (`cut ≤ totalPay` always); firing indicates a future regression in
+    /// the `profitCapRemaining` accounting that off-chain monitoring should alert on
+    event CapSpillResidual(uint256 indexed betId, uint256 residual);
+
     /* ========== STATE-CHANGING ========== */
 
     /// @notice Places a BH bet. `isFreeBet=true` pulls Ante + Bonus from FBH; `false` from the
@@ -139,7 +145,6 @@ interface ICasinoOvertimeBonusHoldem {
     /// street; raise to commit additional stake
     function makeAction(uint256 betId, uint8 action) external returns (uint256 requestId);
 
-    function cancelBet(uint256 betId) external;
     function adminCancelBet(uint256 betId) external;
 
     /* ========== VIEWS ========== */

@@ -307,8 +307,8 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 	});
 
 	describe('Cancel', () => {
-		it('user cancel after timeout refunds amount', async () => {
-			const { plinko, usdc, usdcAddr, player } = ctx;
+		it('admin cancel refunds amount', async () => {
+			const { plinko, resolver, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await plinko
 				.connect(player)
@@ -324,8 +324,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 				})
 				.find((e) => e?.name === 'BetPlaced');
 			const betId = placed.args.betId;
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await plinko.connect(player).cancelBet(betId);
+			await plinko.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
 	});
@@ -403,8 +402,8 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 			expect(await fbh.confirmCalls()).to.equal(1n);
 		});
 
-		it('cancel: stake refunded back to FBH balance (reusable)', async () => {
-			const { plinko, fbh, usdc, usdcAddr, player } = ctx;
+		it('admin cancel: stake refunded back to FBH balance (reusable)', async () => {
+			const { plinko, resolver, fbh, usdcAddr, player } = ctx;
 			await fundFB(ctx, MIN_USDC_BET);
 			const tx = await plinko
 				.connect(player)
@@ -419,8 +418,7 @@ describe('CasinoCoreV2 + Plinko (8-row, single mode)', () => {
 					}
 				})
 				.find((e) => e?.name === 'BetPlaced');
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await plinko.connect(player).cancelBet(placed.args.betId);
+			await plinko.connect(resolver).adminCancelBet(placed.args.betId);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(
 				MIN_USDC_BET
 			);

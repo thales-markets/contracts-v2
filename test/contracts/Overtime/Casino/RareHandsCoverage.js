@@ -226,7 +226,7 @@ describe('Rare hand classes — coverage push', () => {
 	});
 
 	describe('TCP cancel from various states', () => {
-		it('cancel after timeout from AWAITING_RESOLVE', async () => {
+		it('admin cancel from AWAITING_RESOLVE', async () => {
 			const w = findWord((wd) => evalTcp(partialFisherYates(fullDeck(), 3, wd)) === 'HC', 'hc');
 			const id = await placeAndDeal(
 				ctx,
@@ -235,9 +235,7 @@ describe('Rare hand classes — coverage push', () => {
 				w
 			);
 			await ctx.tcp.connect(ctx.player).makeAction(id, 0);
-			const { time } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await expect(ctx.tcp.connect(ctx.player).cancelBet(id)).to.not.be.reverted;
+			await expect(ctx.tcp.connect(ctx.resolver).adminCancelBet(id)).to.not.be.reverted;
 		});
 	});
 });

@@ -93,7 +93,6 @@ contract ThreeCardPoker is
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
-    error CancelTimeoutNotReached();
     /// @notice Reverted when `placeBetWithFreeBet` is called with a non-zero `pairPlusAmount`.
     /// Without this, a winning PP would credit-back the PP stake via the FBH split, paying the
     /// user as if no free-bet credit had been consumed. Disallow rather than restructure the
@@ -277,9 +276,15 @@ contract ThreeCardPoker is
         // Pair Plus has its own settlement already recorded in VRF1 fulfill
         core.recordSettlement(b.collateral, b.anteAmount, 0);
 
-        // Best-effort referrer payout (skipped on free bets — user lost no real funds)
+        // Best-effort referrer payout — only when the user lost money on the bet as a whole
+        // (ante forfeit minus any PP winnings already paid in _onDealFulfilled). Skipped on
+        // free bets — user lost no real funds
         if (!b.isFreeBet) {
-            core.payReferrer(b.user, b.collateral, b.anteAmount);
+            uint256 totalStake = b.anteAmount + b.pairPlusAmount;
+            uint256 totalPayout = b.pairPlusPayout;
+            if (totalPayout < totalStake) {
+                core.payReferrer(b.user, b.collateral, totalStake - totalPayout);
+            }
         }
 
         b.status = BetStatus.RESOLVED;
@@ -288,25 +293,12 @@ contract ThreeCardPoker is
         emit Folded(betId, b.user);
     }
 
-    /// @notice User-initiated cancel for a bet that's been waiting on VRF longer than the
-    /// `cancelTimeout` configured in core. Refunds whatever stakes have been pulled.
-    /// @dev PLAYER_TURN is INTENTIONALLY excluded — once the user has seen their 3 hole cards
-    /// (VRF1 fulfilled), allowing self-cancel would let them recover the ante on every
-    /// negative-EV hand instead of folding. Optimal play folds ~67% of hands, so user-cancel
-    /// from PLAYER_TURN would collapse the house edge. Stuck PLAYER_TURN bets (e.g. wallet
-    /// loss) are rescued via `adminCancelBet` (operator-only)
-    function cancelBet(uint256 betId) external override nonReentrant {
-        Bet storage b = bets[betId];
-        if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.user != msg.sender) revert BetNotOwner();
-        if (b.status != BetStatus.AWAITING_DEAL && b.status != BetStatus.AWAITING_RESOLVE) revert InvalidBetStatus();
-        if (block.timestamp < b.lastRequestAt + core.cancelTimeout()) revert CancelTimeoutNotReached();
-        _cancelBet(betId, false);
-    }
-
-    /// @notice Operator emergency cancel — bypasses timeout. Also accepts PLAYER_TURN so the
-    /// resolver can rescue a bet whose user walked away mid-decision (matches V1 Blackjack
-    /// `adminCancelHand`). Refunds the user; admin must avoid abuse
+    /// @notice Operator-only cancel. Refunds whatever stakes have been pulled. User cancel was
+    /// removed to close a VRF-callback front-run surface where a user could observe the mempool
+    /// VRF2 fulfillment, compute the resolved hand off-chain, and front-run a losing draw with
+    /// a cheaper cancel. Stuck bets (stalled VRF or user walked away mid-decision) are now
+    /// resolved exclusively via `adminCancelBet` (operator-only). All states except RESOLVED /
+    /// CANCELLED are admin-cancellable
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
@@ -361,8 +353,8 @@ contract ThreeCardPoker is
 
     /// @inheritdoc ICasinoGameCallback
     /// @dev `nonReentrant` blocks re-entry into THIS contract's own user-facing functions
-    /// (placeBet/fold/play/cancelBet) during fulfillment, defending against malicious-token
-    /// transfer hooks that could otherwise call cancelBet mid-payout for a double-spend
+    /// (placeBet / makeAction / adminCancelBet) during fulfillment, defending against
+    /// malicious-token transfer hooks that could otherwise re-enter mid-payout for a double-spend
     function onVrfFulfilled(uint256 requestId, uint256[] calldata randomWords) external override nonReentrant {
         if (msg.sender != address(core)) revert InvalidSender();
         uint256 betId = requestIdToBetId[requestId];
@@ -463,9 +455,16 @@ contract ThreeCardPoker is
         }
         core.recordSettlement(b.collateral, stakeOut, totalSideAPayout);
 
-        // Skip referrer payment on free bets — user lost no real funds, so no referral fee
-        if (totalSideAPayout < stakeOut && !b.isFreeBet) {
-            core.payReferrer(b.user, b.collateral, stakeOut - totalSideAPayout);
+        // Pay referrer only when the user lost money on the bet as a whole — include PP
+        // (settled at VRF1) in both stake and payout sums. Play stake equals ante (matched),
+        // and we only reach _onResolveFulfilled when the player played, so total stake-out =
+        // 2*ante + PP. Skipped on free bets — user lost no real funds
+        if (!b.isFreeBet) {
+            uint256 totalStake = b.anteAmount * 2 + b.pairPlusAmount;
+            uint256 totalPayout = b.pairPlusPayout + totalSideAPayout;
+            if (totalPayout < totalStake) {
+                core.payReferrer(b.user, b.collateral, totalStake - totalPayout);
+            }
         }
 
         b.outcome = r.outcome;
@@ -643,6 +642,9 @@ contract ThreeCardPoker is
     /// @notice Dealer qualifies on Q-high or better. Q-high = HIGH_CARD with top rank >= Q,
     /// or any hand class above HIGH_CARD. For HIGH_CARD, `_evaluate3Card` already encodes the
     /// top rank in bits [16:24] of `tieBreaker` — read it directly instead of recomputing
+    /// @dev Relies on `_evaluate3Card` packing the HIGH_CARD tieBreaker as
+    /// `(topRank << 16) | (midRank << 8) | loRank`. Bits [16:24] = top rank. If that encoding
+    /// is ever changed, update this extraction in lockstep
     function _dealerQualifies(uint8 dClass, uint32 dTie) internal pure returns (bool) {
         if (dClass > CLASS_HIGH_CARD) return true;
         return uint8(dTie >> 16) >= QUALIFIER_RANK;

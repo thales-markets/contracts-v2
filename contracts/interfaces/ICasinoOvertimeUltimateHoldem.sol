@@ -68,7 +68,7 @@ interface ICasinoOvertimeUltimateHoldem {
 
     event PlayerHoleDealt(uint256 indexed betId, uint256 indexed requestId, address indexed user, uint8 hole0, uint8 hole1);
 
-    event RaisedPreFlop(uint256 indexed betId, address indexed user, uint256 playAmount);
+    event RaisedPreFlop(uint256 indexed betId, uint256 indexed requestId, address indexed user, uint256 playAmount);
     event CheckedPreFlop(uint256 indexed betId, uint256 indexed requestId, address indexed user);
 
     event FlopDealt(
@@ -80,7 +80,7 @@ interface ICasinoOvertimeUltimateHoldem {
         uint8 flop2
     );
 
-    event RaisedPostFlop(uint256 indexed betId, address indexed user, uint256 playAmount);
+    event RaisedPostFlop(uint256 indexed betId, uint256 indexed requestId, address indexed user, uint256 playAmount);
     event CheckedPostFlop(uint256 indexed betId, uint256 indexed requestId, address indexed user);
 
     event TurnRiverDealt(uint256 indexed betId, uint256 indexed requestId, address indexed user, uint8 turn, uint8 river);
@@ -103,6 +103,12 @@ interface ICasinoOvertimeUltimateHoldem {
 
     event BetCancelled(uint256 indexed betId, address indexed user, uint256 refundAmount, bool adminCancelled);
 
+    /// @notice Emitted when the cap-spill cascade can't absorb the full `cut` from the leg
+    /// payouts and the final leg is zero-clamped, losing `residual` from the cut. Structurally
+    /// unreachable today (`cut ≤ totalPayout` always); firing indicates a future regression in
+    /// the `profitCapRemaining` accounting that off-chain monitoring should alert on
+    event CapSpillResidual(uint256 indexed betId, uint256 residual);
+
     /* ========== EXTERNAL ========== */
 
     /// @notice Places a UTH bet. Pulls Ante + Blind (= 2 × anteAmount) upfront from the user's
@@ -120,7 +126,6 @@ interface ICasinoOvertimeUltimateHoldem {
     ///   4 = playRiver      5 = fold
     function makeAction(uint256 betId, uint8 action) external returns (uint256 requestId);
 
-    function cancelBet(uint256 betId) external;
     function adminCancelBet(uint256 betId) external;
 
     /* ========== VIEWS ========== */

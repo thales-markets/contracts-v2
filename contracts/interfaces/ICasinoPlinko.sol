@@ -70,8 +70,6 @@ interface ICasinoPlinko {
         bool isFreeBet
     ) external returns (uint256 betId, uint256 requestId);
 
-    function cancelBet(uint256 betId) external;
-
     function adminCancelBet(uint256 betId) external;
 
     function getBetBase(

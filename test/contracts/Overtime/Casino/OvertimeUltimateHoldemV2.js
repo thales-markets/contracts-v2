@@ -897,22 +897,9 @@ describe('OvertimeUltimateHoldem', () => {
 
 	/* ========== Cancel paths ========== */
 
-	describe('user cancelBet', () => {
-		it('refunds 2× ante after timeout from AWAITING_DEAL', async () => {
-			const { uth, uthAddr, core, usdc, usdcAddr, player } = ctx;
-			const ante = MIN_USDC_BET;
-			const balBefore = await usdc.balanceOf(player.address);
-			const { betId } = await placeAndGetIds(ctx, ante);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await uth.connect(player).cancelBet(betId);
-			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
-			expect(await core.reservedProfitPerGame(uthAddr, usdcAddr)).to.equal(0n);
-			const base = await uth.getBetBase(betId);
-			expect(base.status).to.equal(BetStatus.CANCELLED);
-		});
-
-		it('refunds 2× ante after timeout from AWAITING_FLOP', async () => {
-			const { uth, vrf, coreAddr, usdc, player } = ctx;
+	describe('admin cancel — state-specific refunds', () => {
+		it('admin cancel refunds 2× ante from AWAITING_FLOP', async () => {
+			const { uth, resolver, vrf, coreAddr, usdc, player } = ctx;
 			const ante = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
@@ -920,13 +907,12 @@ describe('OvertimeUltimateHoldem', () => {
 			// move to AWAITING_FLOP via checkPreFlop, then DO NOT fulfill
 			await uth.connect(player).makeAction(betId, 1);
 			expect((await uth.getBetBase(betId)).status).to.equal(BetStatus.AWAITING_FLOP);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await uth.connect(player).cancelBet(betId);
+			await uth.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
 
-		it('refunds 2× ante after timeout from AWAITING_TURN_RIVER', async () => {
-			const { uth, vrf, coreAddr, usdc, player } = ctx;
+		it('admin cancel refunds 2× ante from AWAITING_TURN_RIVER', async () => {
+			const { uth, resolver, vrf, coreAddr, usdc, player } = ctx;
 			const ante = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId, requestId } = await placeAndGetIds(ctx, ante);
@@ -945,80 +931,13 @@ describe('OvertimeUltimateHoldem', () => {
 			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
 			await uth.connect(player).makeAction(betId, 3);
 			expect((await uth.getBetBase(betId)).status).to.equal(BetStatus.AWAITING_TURN_RIVER);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await uth.connect(player).cancelBet(betId);
+			await uth.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 		});
 
-		it('refunds 2× ante + playAmount after timeout from AWAITING_RESOLVE (pre-flop raise)', async () => {
-			const { uth, vrf, coreAddr, usdc, player } = ctx;
-			const ante = MIN_USDC_BET;
-			const balBefore = await usdc.balanceOf(player.address);
-			const { betId, requestId } = await placeAndGetIds(ctx, ante);
-			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await uth.connect(player).makeAction(betId, 0);
-			expect((await uth.getBetBase(betId)).status).to.equal(BetStatus.AWAITING_RESOLVE);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await uth.connect(player).cancelBet(betId);
-			// Refund = 2*ante (placeBet) + 3*ante (playPreFlop) = 5*ante back
-			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
-		});
-
-		it('rejects cancel before timeout from AWAITING_DEAL', async () => {
-			const { uth, player } = ctx;
-			const { betId } = await placeAndGetIds(ctx, MIN_USDC_BET);
-			await expect(uth.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				uth,
-				'CancelTimeoutNotReached'
-			);
-		});
-
-		it('rejects user cancel from PRE_FLOP_TURN (must play/check)', async () => {
-			const { uth, vrf, coreAddr, player } = ctx;
-			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
-			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			await expect(uth.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				uth,
-				'InvalidBetStatus'
-			);
-		});
-
-		it('rejects user cancel from POST_FLOP_TURN', async () => {
-			const { uth, vrf, coreAddr, player } = ctx;
-			const { betId, requestId } = await placeAndGetIds(ctx, MIN_USDC_BET);
-			await vrf.fulfillRandomWords(coreAddr, requestId, [0x1n]);
-			let tx = await uth.connect(player).makeAction(betId, 1);
-			let r = await tx.wait();
-			let evt = r.logs
-				.map((l) => {
-					try {
-						return uth.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'CheckedPreFlop');
-			await vrf.fulfillRandomWords(coreAddr, evt.args.requestId, [0x2n]);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await expect(uth.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				uth,
-				'InvalidBetStatus'
-			);
-		});
-
-		it('rejects non-owner cancel', async () => {
-			const { uth, player2 } = ctx;
-			const { betId } = await placeAndGetIds(ctx, MIN_USDC_BET);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await expect(uth.connect(player2).cancelBet(betId)).to.be.revertedWithCustomError(
-				uth,
-				'BetNotOwner'
-			);
-		});
-
-		it('rejects cancel for non-existent bet', async () => {
-			const { uth, player } = ctx;
-			await expect(uth.connect(player).cancelBet(999999n)).to.be.revertedWithCustomError(
+		it('admin cancel rejects non-existent bet', async () => {
+			const { uth, resolver } = ctx;
+			await expect(uth.connect(resolver).adminCancelBet(999999n)).to.be.revertedWithCustomError(
 				uth,
 				'BetNotFound'
 			);
@@ -1212,14 +1131,13 @@ describe('OvertimeUltimateHoldem', () => {
 			expect(base.user).to.equal(player.address); // bet credited to tx.origin
 		});
 
-		it('cancel from AWAITING_DEAL credits 2× ante back to FBH balance', async () => {
-			const { fbh, usdcAddr, player, uth } = ctx;
+		it('admin cancel from AWAITING_DEAL credits 2× ante back to FBH balance', async () => {
+			const { fbh, resolver, usdcAddr, player, uth } = ctx;
 			const ante = MIN_USDC_BET;
 			await fundFB(ante * 4n);
 			const { betId } = await placeFreeBet(ante);
 			const fbhAfterPlace = await fbh.balancePerUserAndCollateral(player.address, usdcAddr);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await uth.connect(player).cancelBet(betId);
+			await uth.connect(resolver).adminCancelBet(betId);
 			// Refund = 2× ante back to FBH balance
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(
 				fbhAfterPlace + ante * 2n

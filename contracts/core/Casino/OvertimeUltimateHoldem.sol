@@ -65,6 +65,11 @@ contract OvertimeUltimateHoldem is
     uint256 private constant POST_FLOP_RAISE_MULT = 2;
     uint256 private constant RIVER_RAISE_MULT = 1;
 
+    // Worst-case total stake-out in ante multiples = ante (1) + blind (1) + max play raise
+    // (PRE_FLOP_RAISE_MULT = 3) = 5. Used by `_cappedProfit` to derive worst-case profit as
+    // (MAX_PAYOUT_ANTE_MULT - WORST_CASE_STAKE_ANTE_MULT) × ante
+    uint256 private constant WORST_CASE_STAKE_ANTE_MULT = 2 + PRE_FLOP_RAISE_MULT;
+
     // Reservation: worst-case payout at placeBet time.
     //   Player raises 3× pre-flop and hits a Royal AND wins everything:
     //   - Ante side: ante stake-back + 1× win = 2 × ante
@@ -83,7 +88,6 @@ contract OvertimeUltimateHoldem is
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
-    error CancelTimeoutNotReached();
     /// @notice Reverted by `makeAction` when an unknown action code is supplied
     error InvalidAction();
 
@@ -229,7 +233,7 @@ contract OvertimeUltimateHoldem is
         _requireOwnedAt(b, BetStatus.PRE_FLOP_TURN);
         _pullPlayStake(b, PRE_FLOP_RAISE_MULT);
         requestId = _requestVrf(betId, b, BetStatus.AWAITING_RESOLVE);
-        emit RaisedPreFlop(betId, b.user, b.playAmount);
+        emit RaisedPreFlop(betId, requestId, b.user, b.playAmount);
     }
 
     function _checkPreFlop(uint256 betId) internal returns (uint256 requestId) {
@@ -244,7 +248,7 @@ contract OvertimeUltimateHoldem is
         _requireOwnedAt(b, BetStatus.POST_FLOP_TURN);
         _pullPlayStake(b, POST_FLOP_RAISE_MULT);
         requestId = _requestVrf(betId, b, BetStatus.AWAITING_RESOLVE);
-        emit RaisedPostFlop(betId, b.user, b.playAmount);
+        emit RaisedPostFlop(betId, requestId, b.user, b.playAmount);
     }
 
     function _checkPostFlop(uint256 betId) internal returns (uint256 requestId) {
@@ -270,8 +274,10 @@ contract OvertimeUltimateHoldem is
         core.releaseReservation(b.collateral, b.reservation);
         b.reservation = 0;
 
-        // Record loss: stake = ante + blind, payout = 0
-        uint256 lostStake = b.anteAmount * 2;
+        // Record loss: stake = ante + blind (+ playAmount for forward-compat — POST_RIVER_TURN
+        // is unreachable after a raise today, so playAmount is always 0 here. Including it
+        // defensively guards against a future state-machine change that allowed fold-after-raise
+        uint256 lostStake = b.anteAmount * 2 + b.playAmount;
         core.recordSettlement(b.collateral, lostStake, 0);
         if (!b.isFreeBet) {
             core.payReferrer(b.user, b.collateral, lostStake);
@@ -285,26 +291,11 @@ contract OvertimeUltimateHoldem is
 
     /* ========== CANCEL ========== */
 
-    /// @notice User-initiated cancel for a bet whose VRF callback has stalled longer than the
-    /// `cancelTimeout`. Allowed only from AWAITING_* states (not PLAYER_TURN — those require an
-    /// explicit fold/play/check)
-    function cancelBet(uint256 betId) external override nonReentrant {
-        Bet storage b = bets[betId];
-        if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.user != msg.sender) revert BetNotOwner();
-        if (
-            b.status != BetStatus.AWAITING_DEAL &&
-            b.status != BetStatus.AWAITING_FLOP &&
-            b.status != BetStatus.AWAITING_TURN_RIVER &&
-            b.status != BetStatus.AWAITING_RESOLVE
-        ) revert InvalidBetStatus();
-        if (block.timestamp < b.lastRequestAt + core.cancelTimeout()) revert CancelTimeoutNotReached();
-        _cancelBet(betId, false);
-    }
-
-    /// @notice Operator emergency cancel — bypasses timeout. Also accepts PLAYER_TURN states so
-    /// the resolver can rescue a bet whose user has walked away mid-decision (matches blackjack
-    /// `adminCancelHand`). Refunds the user; admin must avoid abuse
+    /// @notice Operator-only cancel. Refunds all stakes pulled (ante + blind + any raises).
+    /// User cancel was removed to close a VRF-callback front-run surface where a user with
+    /// mempool access could observe the imminent VRF fulfillment, compute the resolved hand
+    /// off-chain, and front-run a losing draw with a cheaper cancel. Stuck bets (stalled VRF
+    /// or user walked away mid-decision) are now resolved exclusively via `adminCancelBet`
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
@@ -341,8 +332,9 @@ contract OvertimeUltimateHoldem is
     /* ========== VRF CALLBACK ========== */
 
     /// @inheritdoc ICasinoGameCallback
-    /// @dev `nonReentrant` defends against malicious-token transfer hooks calling cancelBet
-    /// mid-payout for a double-spend
+    /// @dev `nonReentrant` defends against malicious-token transfer hooks re-entering any of
+    /// this contract's mutating entries (placeBet / makeAction / adminCancelBet) mid-payout
+    /// for a double-spend
     function onVrfFulfilled(uint256 requestId, uint256[] calldata randomWords) external override nonReentrant {
         if (msg.sender != address(core)) revert InvalidSender();
         uint256 betId = requestIdToBetId[requestId];
@@ -461,7 +453,12 @@ contract OvertimeUltimateHoldem is
                         cut -= r.antePayout;
                         r.antePayout = 0;
                         if (r.playPayout >= cut) r.playPayout -= cut;
-                        else r.playPayout = 0;
+                        else {
+                            // Silent-zero fallback — structurally unreachable today. Emit residual
+                            // so off-chain monitoring catches the regression if it ever fires
+                            emit CapSpillResidual(betId, cut - r.playPayout);
+                            r.playPayout = 0;
+                        }
                     }
                 }
             }
@@ -641,7 +638,10 @@ contract OvertimeUltimateHoldem is
     /// on remaining FBH balance for free-bet hands — there is no wallet-funded raise path
     function _pullPlayStake(Bet storage b, uint256 mult) internal {
         uint256 playStake = b.anteAmount * mult;
-        b.playAmount = playStake;
+        // += rather than = to defend against a future state-machine change that lets a bet
+        // re-enter a *_TURN state after raising — otherwise the first pull would be silently
+        // dropped and stuck. Semantically identical today (single raise per bet)
+        b.playAmount += playStake;
         if (b.isFreeBet) {
             core.useFreeBet(b.user, b.collateral, playStake);
         } else {
@@ -663,10 +663,10 @@ contract OvertimeUltimateHoldem is
     }
 
     /// @notice Worst-case net profit for this bet truncated by the per-game USD profit cap,
-    /// returned in collateral units. Uncapped worst = (MAX_PAYOUT_ANTE_MULT - 5) × ante = 504×.
+    /// returned in collateral units. Uncapped worst = (MAX_PAYOUT_ANTE_MULT - WORST_CASE_STAKE_ANTE_MULT) × ante = 504×.
     /// Resolve truncates final payout to stakeOut + `b.profitCapRemaining`
     function _cappedProfit(address collateral, uint256 anteAmount) internal view returns (uint256) {
-        uint256 worst = anteAmount * (MAX_PAYOUT_ANTE_MULT - 5);
+        uint256 worst = anteAmount * (MAX_PAYOUT_ANTE_MULT - WORST_CASE_STAKE_ANTE_MULT);
         uint256 capCollateral = core.collateralFromUsd(collateral, core.effectiveMaxProfitUsd(address(this)));
         return worst > capCollateral ? capCollateral : worst;
     }

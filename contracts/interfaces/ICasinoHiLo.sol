@@ -96,8 +96,6 @@ interface ICasinoHiLo {
     ///   2 = cashout
     function makeAction(uint256 betId, uint8 action) external returns (uint256 requestId);
 
-    function cancelBet(uint256 betId) external;
-
     function adminCancelBet(uint256 betId) external;
 
     function getBetBase(

@@ -123,11 +123,8 @@ interface ICasinoVideoPoker {
     /// keeps all five (VRF2 still fires but produces no swaps and resolves on the original hand)
     function draw(uint256 betId, uint8 holdMask) external returns (uint256 requestId);
 
-    /// @notice User-initiated cancel from an AWAITING_* state after the cancel timeout has
-    /// elapsed since the last VRF request. Refunds the full stake
-    function cancelBet(uint256 betId) external;
-
-    /// @notice Operator emergency cancel — works in any non-resolved state without timeout
+    /// @notice Operator-only cancel — only path to resolve stuck or stalled bets. User-callable
+    /// cancel was removed to close a VRF mempool front-run surface
     function adminCancelBet(uint256 betId) external;
 
     /* ========== VIEWS ========== */

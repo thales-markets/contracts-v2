@@ -57,7 +57,6 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
-    error CancelTimeoutNotReached();
     /// @notice Reverted by `makeAction` when an unknown action code is supplied. Defends against
     /// FE / gasless-session bugs that send a stale or out-of-range code; the call reverts
     /// instead of silently no-op'ing past the if/else chain
@@ -260,15 +259,6 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         emit BetResolved(betId, msg.sender, Outcome.CASHED_OUT, payout);
     }
 
-    function cancelBet(uint256 betId) external override nonReentrant {
-        Bet storage b = bets[betId];
-        if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.user != msg.sender) revert BetNotOwner();
-        if (b.status != BetStatus.AWAITING_NEXT_CARD) revert InvalidBetStatus();
-        if (block.timestamp < b.lastRequestAt + core.cancelTimeout()) revert CancelTimeoutNotReached();
-        _cancelBet(betId, false);
-    }
-
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
@@ -347,15 +337,18 @@ contract HiLo is ICasinoHiLo, ICasinoGameCallback, Initializable, ProxyOwned, Pr
             uint256 frozenMult = b.currentMultiplierE18;
             b.outcomes.push(uint8(CardOutcome.BUST));
             b.multipliersE18.push(frozenMult);
-            core.releaseReservation(b.collateral, b.reserved);
+            // CEI: write all terminal-state fields before any external call (defense beyond
+            // `nonReentrant` — re-entry would see status=RESOLVED and bounce off the early-return)
+            uint256 reserved = b.reserved;
             b.reserved = 0;
+            b.outcome = Outcome.WRONG_GUESS;
+            b.status = BetStatus.RESOLVED;
+            b.resolvedAt = block.timestamp;
+            core.releaseReservation(b.collateral, reserved);
             core.recordSettlement(b.collateral, b.amount, 0);
             if (!b.isFreeBet) {
                 core.payReferrer(b.user, b.collateral, b.amount);
             }
-            b.outcome = Outcome.WRONG_GUESS;
-            b.status = BetStatus.RESOLVED;
-            b.resolvedAt = block.timestamp;
             emit NextCardDealt(betId, b.requestId, b.user, newCard, false, false, 0);
             emit BetResolved(betId, b.user, Outcome.WRONG_GUESS, 0);
         }

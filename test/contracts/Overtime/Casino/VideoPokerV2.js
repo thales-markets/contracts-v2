@@ -812,52 +812,27 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 	});
 
 	describe('Cancel paths', () => {
-		it('user cancelBet rejected before timeout (AWAITING_DEAL)', async () => {
-			const { vp, usdcAddr, player } = ctx;
-			const tx = await vp
-				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
-			const r = await tx.wait();
-			const placed = parseBetPlaced(ctx, r);
-			await expect(vp.connect(player).cancelBet(placed.args.betId)).to.be.revertedWithCustomError(
-				vp,
-				'CancelTimeoutNotReached'
-			);
-		});
-
-		it('user cancelBet from AWAITING_DEAL after timeout refunds full stake', async () => {
-			const { vp, vpAddr, core, usdc, usdcAddr, player } = ctx;
+		it('admin cancel from AWAITING_DEAL refunds full stake', async () => {
+			const { vp, vpAddr, core, resolver, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await vp
 				.connect(player)
 				.placeBet(usdcAddr, MIN_USDC_BET, ethers.ZeroAddress, false);
 			const r = await tx.wait();
 			const placed = parseBetPlaced(ctx, r);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await vp.connect(player).cancelBet(placed.args.betId);
+			await vp.connect(resolver).adminCancelBet(placed.args.betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			expect(await core.reservedProfitPerGame(vpAddr, usdcAddr)).to.equal(0n);
 			const base = await vp.getBetBase(placed.args.betId);
 			expect(base.status).to.equal(BetStatus.CANCELLED);
 		});
 
-		it('user cancelBet rejected from PLAYER_TURN (must call draw)', async () => {
-			const { vp, player } = ctx;
-			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0x1n);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await expect(vp.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				vp,
-				'InvalidBetStatus'
-			);
-		});
-
-		it('user cancelBet from AWAITING_DRAW after timeout refunds full stake', async () => {
-			const { vp, usdc, usdcAddr, player } = ctx;
+		it('admin cancel from AWAITING_DRAW refunds full stake', async () => {
+			const { vp, resolver, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId } = await placeAndDeal(ctx, MIN_USDC_BET, 0x1n);
 			await vp.connect(player).draw(betId, 0);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await vp.connect(player).cancelBet(betId);
+			await vp.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			const base = await vp.getBetBase(betId);
 			expect(base.status).to.equal(BetStatus.CANCELLED);
@@ -962,12 +937,11 @@ describe('VideoPoker (Jacks or Better, 8/5)', () => {
 			expect(await fbh.confirmCalls()).to.equal(0n);
 		});
 
-		it('free-bet cancel: stake refunded back to FBH balance', async () => {
-			const { vp, fbh, usdcAddr, player } = ctx;
+		it('free-bet admin cancel: stake refunded back to FBH balance', async () => {
+			const { vp, resolver, fbh, usdcAddr, player } = ctx;
 			await fundFB(MIN_USDC_BET);
 			const { betId } = await placeFreeBet(MIN_USDC_BET);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await vp.connect(player).cancelBet(betId);
+			await vp.connect(resolver).adminCancelBet(betId);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(
 				MIN_USDC_BET
 			);

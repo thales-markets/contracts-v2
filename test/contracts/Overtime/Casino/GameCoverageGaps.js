@@ -407,11 +407,10 @@ describe('Game coverage gaps — admin / cancel / edge branches', () => {
 			);
 		});
 
-		it('cancel non-pending reverts', async () => {
-			await expect(ctx.tcp.connect(ctx.player).cancelBet(99999n)).to.be.revertedWithCustomError(
-				ctx.tcp,
-				'BetNotFound'
-			);
+		it('admin cancel non-existent reverts', async () => {
+			await expect(
+				ctx.tcp.connect(ctx.resolver).adminCancelBet(99999n)
+			).to.be.revertedWithCustomError(ctx.tcp, 'BetNotFound');
 		});
 	});
 

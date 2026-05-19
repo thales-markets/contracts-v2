@@ -75,7 +75,6 @@ contract VideoPoker is
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
-    error CancelTimeoutNotReached();
 
     /* ========== STRUCTS ========== */
 
@@ -209,6 +208,10 @@ contract VideoPoker is
             for (uint8 i; i < HAND_SIZE; ++i) {
                 b.finalCards[i] = b.initialCards[i];
             }
+            // Clear b.requestId so the BetResolved emit inside _resolve carries 0, matching
+            // the DrawRequested(0) sentinel above. Otherwise indexers correlating
+            // DrawRequested.requestId → BetResolved.requestId would mismatch on all-hold
+            b.requestId = 0;
             emit DrawRequested(betId, 0, b.user, holdMask);
             _resolve(betId, b);
             return 0;
@@ -221,15 +224,6 @@ contract VideoPoker is
         requestIdToBetId[requestId] = betId;
 
         emit DrawRequested(betId, requestId, b.user, holdMask);
-    }
-
-    function cancelBet(uint256 betId) external override nonReentrant {
-        Bet storage b = bets[betId];
-        if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.user != msg.sender) revert BetNotOwner();
-        if (b.status != BetStatus.AWAITING_DEAL && b.status != BetStatus.AWAITING_DRAW) revert InvalidBetStatus();
-        if (block.timestamp < b.lastRequestAt + core.cancelTimeout()) revert CancelTimeoutNotReached();
-        _cancelBet(betId, false);
     }
 
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
@@ -255,8 +249,9 @@ contract VideoPoker is
 
     /* ========== VRF CALLBACK ========== */
 
-    /// @dev `nonReentrant` defends against malicious-token transfer hooks calling cancelBet
-    /// mid-payout for a double-spend
+    /// @dev `nonReentrant` defends against malicious-token transfer hooks re-entering any of
+    /// this contract's mutating entries (placeBet / draw / adminCancelBet) mid-payout for a
+    /// double-spend
     function onVrfFulfilled(uint256 requestId, uint256[] calldata randomWords) external override nonReentrant {
         if (msg.sender != address(core)) revert InvalidSender();
         uint256 betId = requestIdToBetId[requestId];
@@ -316,7 +311,8 @@ contract VideoPoker is
     /* ========== RESOLUTION ========== */
 
     function _resolve(uint256 betId, Bet storage b) internal {
-        (uint8 class_, uint8 primaryRank) = _evaluateFive(b.finalCards);
+        uint8[5] memory finalCards = b.finalCards;
+        (uint8 class_, uint8 primaryRank) = _evaluateFive(finalCards);
         uint256 mult = _paytableMultiplier(class_, primaryRank);
         // "For 1" semantics: mult is the total-return multiplier on stake.
         //   JoB pair (mult=1) → totalReturn = stake (push, no profit)
@@ -387,7 +383,7 @@ contract VideoPoker is
     /// @notice Evaluates a 5-card hand. Returns `(class_, primaryRank)` where `primaryRank` is
     /// the rank of the pair when class_ == PAIR (used for the Jacks-or-Better cut-off). For
     /// other classes the returned `primaryRank` is the highest meaningful rank in the hand
-    function _evaluateFive(uint8[5] storage cards) internal view returns (uint8 class_, uint8 primaryRank) {
+    function _evaluateFive(uint8[5] memory cards) internal pure returns (uint8 class_, uint8 primaryRank) {
         uint8[15] memory rankCount;
         uint16 rankMask;
         bool flush = true;

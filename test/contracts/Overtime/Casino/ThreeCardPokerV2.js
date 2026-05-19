@@ -758,8 +758,8 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 	/* ========== CANCEL ========== */
 
 	describe('cancel', () => {
-		it('user cancel after timeout from AWAITING_DEAL refunds ante + pair plus', async () => {
-			const { tcp, usdc, player } = ctx;
+		it('admin cancel from AWAITING_DEAL refunds ante + pair plus', async () => {
+			const { tcp, resolver, usdc, player } = ctx;
 			const ante = MIN_USDC_BET;
 			const pp = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
@@ -778,34 +778,11 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 				.find((e) => e?.name === 'BetPlaced');
 			const betId = placed.args.betId;
 			// don't fulfill VRF — simulate stuck request
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await tcp.connect(player).cancelBet(betId);
+			await tcp.connect(resolver).adminCancelBet(betId);
 			// full refund
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
 			const base = await tcp.getBetBase(betId);
 			expect(base.status).to.equal(BetStatus.CANCELLED);
-		});
-
-		it('rejects cancel before timeout', async () => {
-			const { tcp, player } = ctx;
-			const tx = await tcp
-				.connect(player)
-				.placeBet(ctx.usdcAddr, MIN_USDC_BET, 0n, ethers.ZeroAddress, false);
-			const receipt = await tx.wait();
-			const placed = receipt.logs
-				.map((l) => {
-					try {
-						return tcp.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			const betId = placed.args.betId;
-			await expect(tcp.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				tcp,
-				'CancelTimeoutNotReached'
-			);
 		});
 
 		it('admin can cancel bypassing timeout', async () => {
@@ -827,16 +804,15 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			await expect(tcp.connect(resolver).adminCancelBet(betId)).to.not.be.reverted;
 		});
 
-		it('cancel from AWAITING_RESOLVE refunds ante + play stake (PP already settled in VRF1)', async () => {
-			const { tcp, usdc, player } = ctx;
+		it('admin cancel from AWAITING_RESOLVE refunds ante + play stake (PP already settled in VRF1)', async () => {
+			const { tcp, resolver, usdc, player } = ctx;
 			const ante = MIN_USDC_BET;
 			const pp = MIN_USDC_BET;
 			const balBefore = await usdc.balanceOf(player.address);
 			const word = findWord((w) => evaluate3Card(dealPlayer(w)).class_ === HandClass.HIGH_CARD);
 			const { betId } = await placeAndDeal(ctx, ante, pp, word);
 			await tcp.connect(player).makeAction(betId, 0); // moves to AWAITING_RESOLVE
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await tcp.connect(player).cancelBet(betId);
+			await tcp.connect(resolver).adminCancelBet(betId);
 			// PP was already settled in VRF1 (high-card → lost). Cancel refunds only ante + play
 			// stake. The PP stake stays with the bankroll (do NOT double-refund a settled side bet).
 			// Net: user loses pp.
@@ -1114,8 +1090,8 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 			expect(base.outcome).to.equal(Outcome.FOLDED);
 		});
 
-		it('cancel from AWAITING_DEAL: refund credits FBH balance (reusable)', async () => {
-			const { tcp, fbh, usdcAddr, usdc, owner, player } = ctx;
+		it('admin cancel from AWAITING_DEAL: refund credits FBH balance (reusable)', async () => {
+			const { tcp, resolver, fbh, usdcAddr, player } = ctx;
 			// PP > 0 is forbidden on free-bet; refund test covers the ante-only path
 			const stake = MIN_USDC_BET;
 			await fundFB(ctx, stake);
@@ -1132,8 +1108,7 @@ describe('CasinoCoreV2 + ThreeCardPoker (Phase 1)', () => {
 					}
 				})
 				.find((e) => e?.name === 'BetPlaced');
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await tcp.connect(player).cancelBet(placed.args.betId);
+			await tcp.connect(resolver).adminCancelBet(placed.args.betId);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(stake);
 		});
 	});

@@ -339,8 +339,8 @@ describe('OvertimeBonusHoldem', () => {
 	});
 
 	describe('cancel after timeout', () => {
-		it('player can cancel after VRF stall and recover stakes', async () => {
-			const { bh, usdc, player, core } = ctx;
+		it('admin cancel after VRF stall recovers stakes', async () => {
+			const { bh, resolver, usdc, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			// Place but don't fulfill VRF
 			const tx = await bh
@@ -349,12 +349,7 @@ describe('OvertimeBonusHoldem', () => {
 			const r = await tx.wait();
 			const placed = parseEvent(bh.interface, r, 'BetPlaced');
 			const betId = placed.args.betId;
-			await expect(bh.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				bh,
-				'CancelTimeoutNotReached'
-			);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await bh.connect(player).cancelBet(betId);
+			await bh.connect(resolver).adminCancelBet(betId);
 			const base = await bh.getBetBase(betId);
 			expect(base.status).to.equal(BetStatus.CANCELLED);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);

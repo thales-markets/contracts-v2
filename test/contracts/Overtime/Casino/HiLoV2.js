@@ -407,24 +407,12 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 	});
 
 	describe('Cancel', () => {
-		it('user cancel from AWAITING_NEXT_CARD after timeout refunds the stake', async () => {
-			const { hilo, usdc, player } = ctx;
+		it('admin cancel from AWAITING_NEXT_CARD refunds the stake', async () => {
+			const { hilo, resolver, usdc, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const { betId } = await placeBet(ctx);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await hilo.connect(player).cancelBet(betId);
+			await hilo.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
-		});
-
-		it('user cancel from PLAYER_TURN reverts (no VRF in flight)', async () => {
-			const { hilo, player } = ctx;
-			// Reach PLAYER_TURN via a push (multiplier unchanged, status returns to PLAYER_TURN)
-			const { word } = wordForCardRank('hilo-cancel-pt', MIDPOINT_RANK);
-			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
-			await expect(hilo.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				hilo,
-				'InvalidBetStatus'
-			);
 		});
 
 		it('admin cancel works from PLAYER_TURN as well (rescue path)', async () => {
@@ -434,15 +422,6 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			const betId = await placeBetAndDeal(ctx, Direction.ABOVE, word);
 			await hilo.connect(resolver).adminCancelBet(betId);
 			expect(await usdc.balanceOf(player.address)).to.equal(balBefore);
-		});
-
-		it('user cancel before timeout reverts', async () => {
-			const { hilo, player } = ctx;
-			const { betId } = await placeBet(ctx);
-			await expect(hilo.connect(player).cancelBet(betId)).to.be.revertedWithCustomError(
-				hilo,
-				'CancelTimeoutNotReached'
-			);
 		});
 	});
 
@@ -555,12 +534,11 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			expect(after.multipliersE18.length).to.equal(before.multipliersE18.length);
 		});
 
-		it('cancel does not modify the history arrays', async () => {
-			const { hilo, player } = ctx;
+		it('admin cancel does not modify the history arrays', async () => {
+			const { hilo, resolver } = ctx;
 			const { betId } = await placeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
 			const before = await hilo.getBetCards(betId);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await hilo.connect(player).cancelBet(betId);
+			await hilo.connect(resolver).adminCancelBet(betId);
 			const after = await hilo.getBetCards(betId);
 			expect(after.directions.length).to.equal(before.directions.length);
 			expect(after.cards.length).to.equal(0);
@@ -661,12 +639,11 @@ describe('CasinoCoreV2 + HiLo (above/below 8)', () => {
 			expect(await fbh.confirmCalls()).to.equal(0n);
 		});
 
-		it('cancel: stake refunded back to FBH balance (reusable)', async () => {
-			const { hilo, fbh, usdcAddr, player } = ctx;
+		it('admin cancel: stake refunded back to FBH balance (reusable)', async () => {
+			const { hilo, resolver, fbh, usdcAddr, player } = ctx;
 			await fundFreeBetBalance(ctx, MIN_USDC_BET);
 			const { betId } = await placeFreeBet(ctx, MIN_USDC_BET, Direction.ABOVE);
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await hilo.connect(player).cancelBet(betId);
+			await hilo.connect(resolver).adminCancelBet(betId);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(
 				MIN_USDC_BET
 			);

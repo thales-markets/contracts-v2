@@ -96,7 +96,6 @@ contract OvertimeBonusHoldem is
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
-    error CancelTimeoutNotReached();
     /// @notice Reverted when `placeBetWithFreeBet` is called with a non-zero `bonusAmount`.
     /// The Bonus side bet's free-bet stake would otherwise be refunded via the FBH split on a
     /// winning main game, paying the user back for a losing-bonus leg as if no loss occurred
@@ -340,21 +339,9 @@ contract OvertimeBonusHoldem is
 
     /* ========== CANCEL ========== */
 
-    function cancelBet(uint256 betId) external override nonReentrant {
-        Bet storage b = bets[betId];
-        if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.user != msg.sender) revert BetNotOwner();
-        if (
-            b.status != BetStatus.AWAITING_HOLE &&
-            b.status != BetStatus.AWAITING_FLOP &&
-            b.status != BetStatus.AWAITING_TURN &&
-            b.status != BetStatus.AWAITING_RIVER &&
-            b.status != BetStatus.AWAITING_RESOLVE
-        ) revert InvalidBetStatus();
-        if (block.timestamp < b.lastRequestAt + core.cancelTimeout()) revert CancelTimeoutNotReached();
-        _cancelBet(betId, false);
-    }
-
+    /// @notice Operator-only cancel. Refunds all stakes pulled (ante + bonus + play + any
+    /// raises). User cancel was removed to close a VRF-callback front-run surface; stuck bets
+    /// are now resolved exclusively via `adminCancelBet`
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
@@ -384,8 +371,9 @@ contract OvertimeBonusHoldem is
 
     /* ========== VRF CALLBACK ========== */
 
-    /// @dev `nonReentrant` defends against malicious-token transfer hooks calling cancelBet
-    /// mid-payout for a double-spend
+    /// @dev `nonReentrant` defends against malicious-token transfer hooks re-entering any of
+    /// this contract's mutating entries (placeBet / makeAction / adminCancelBet) mid-payout
+    /// for a double-spend
     function onVrfFulfilled(uint256 requestId, uint256[] calldata randomWords) external override nonReentrant {
         if (msg.sender != address(core)) revert InvalidSender();
         uint256 betId = requestIdToBetId[requestId];
@@ -562,20 +550,30 @@ contract OvertimeBonusHoldem is
                                     // AWAITING_RESOLVE until adminCancelBet. Zeroing is the
                                     // mathematically-correct fallback (leg can't go negative)
                                     if (b.riverPayout >= cut) b.riverPayout -= cut;
-                                    else b.riverPayout = 0;
+                                    else {
+                                        // Silent-zero fallback — structurally unreachable today.
+                                        // Emit residual so off-chain monitoring catches the
+                                        // regression if it ever fires
+                                        emit CapSpillResidual(betId, cut - b.riverPayout);
+                                        b.riverPayout = 0;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                profit = b.profitCapRemaining;
             }
-            totalPay = stakeOut + profit;
-            b.profitCapRemaining -= profit;
-            // Recompute from stored leg fields so the emitted `mainPay` always equals the
-            // visible per-leg sum after cap reductions
+            // Recompute `totalPay` from the (possibly-reduced) legs so the emitted/stored
+            // breakdown always matches the user-visible total. Mirrors
+            // `OvertimeUltimateHoldem._onResolveFulfilled` — using legs as the source of truth
+            // bulletproofs the `legSum == totalPay` invariant against a future cascade refactor
+            // that could break cut-conservation (legs-as-truth → under-pays defensively;
+            // cap-as-truth → over-pays — the worse failure mode)
+            totalPay = b.antePayout + b.playPayout + b.flopPayout + b.turnPayout + b.riverPayout + b.bonusPayout;
+            uint256 paidProfit = totalPay > stakeOut ? totalPay - stakeOut : 0;
+            b.profitCapRemaining -= paidProfit;
+            mainPay = totalPay - b.bonusPayout;
             bonusPay = b.bonusPayout;
-            mainPay = b.antePayout + b.playPayout + b.flopPayout + b.turnPayout + b.riverPayout;
         }
 
         // Release reservation & pay

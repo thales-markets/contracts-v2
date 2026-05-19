@@ -751,6 +751,57 @@ describe('CasinoCoreV2 — admin + edge cases', () => {
 			).to.be.revertedWithCustomError(core, 'InsufficientAvailableLiquidity');
 		});
 
+		// The two tests below directly disprove an external audit claim that
+		// `withdrawCollateral` underflows (panic 0x11) when `reserved + pending > balance`.
+		// The `||` short-circuit guarantees `balance - _amount` only runs when `_amount <=
+		// balance`, so the subtraction is safe. The comparison just returns true and reverts
+		// with the custom `InsufficientAvailableLiquidity` — never a Panic — and recovers
+		// cleanly once reservations are released. No permanent DoS.
+		it('withdrawCollateral under reserved>balance reverts with custom error, never with Panic', async () => {
+			const { core, usdc, usdcAddr, owner } = ctx;
+			const game = await impersonateRegisteredGame();
+			const balance = await usdc.balanceOf(await core.getAddress());
+			// Force reserved > balance via two over-commitments (allowed by fractional-reserve)
+			await core.connect(game).reserveOrRevert(usdcAddr, balance - 1n);
+			await core.connect(game).reserveOrRevert(usdcAddr, balance - 1n);
+			expect(await core.reservedProfitPerCollateral(usdcAddr)).to.be.gt(balance);
+
+			// Try several _amount values in the fractional-reserve state: all must revert
+			// with InsufficientAvailableLiquidity (the documented safety floor), never with a
+			// Panic(0x11) arithmetic-underflow error
+			for (const amt of [0n, 1n, balance / 2n, balance - 1n, balance]) {
+				const call = core.connect(owner).withdrawCollateral(usdcAddr, owner.address, amt);
+				if (amt === 0n) {
+					// _amount = 0 takes the second branch; balance - 0 = balance, still < reserved → custom revert
+					await expect(call).to.be.revertedWithCustomError(core, 'InsufficientAvailableLiquidity');
+				} else {
+					await expect(call).to.be.revertedWithCustomError(core, 'InsufficientAvailableLiquidity');
+				}
+				// Sanity: not a panic — explicit check that the revert is NOT an arithmetic panic.
+				// `revertedWithPanic(0x11)` would match underflow; we assert it does NOT.
+				await expect(call).to.not.be.revertedWithPanic(0x11);
+			}
+		});
+
+		it('withdrawCollateral recovers after reservations release — no permanent DoS', async () => {
+			const { core, usdc, usdcAddr, owner } = ctx;
+			const game = await impersonateRegisteredGame();
+			const balance = await usdc.balanceOf(await core.getAddress());
+			// Lock everything up
+			await core.connect(game).reserveOrRevert(usdcAddr, balance - 1n);
+			await core.connect(game).reserveOrRevert(usdcAddr, balance - 1n);
+			// Withdraw blocked (proven by previous test); release one reservation
+			await core.connect(game).releaseReservation(usdcAddr, balance - 1n);
+			// Now reserved = balance - 1 → max withdraw = 1 wei should succeed
+			await expect(core.connect(owner).withdrawCollateral(usdcAddr, owner.address, 1n)).to.not.be
+				.reverted;
+			// Release the rest → full balance withdrawable
+			await core.connect(game).releaseReservation(usdcAddr, balance - 1n);
+			const remaining = await usdc.balanceOf(await core.getAddress());
+			await expect(core.connect(owner).withdrawCollateral(usdcAddr, owner.address, remaining)).to
+				.not.be.reverted;
+		});
+
 		it('releaseReservation underflow reverts with UnderReservation', async () => {
 			const game = await impersonateRegisteredGame();
 			await expect(

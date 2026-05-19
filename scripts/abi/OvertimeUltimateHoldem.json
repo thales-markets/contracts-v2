@@ -16,11 +16,6 @@
   },
   {
     "inputs": [],
-    "name": "CancelTimeoutNotReached",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidAction",
     "type": "error"
   },
@@ -192,6 +187,25 @@
       }
     ],
     "name": "BetResolved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "residual",
+        "type": "uint256"
+      }
+    ],
+    "name": "CapSpillResidual",
     "type": "event"
   },
   {
@@ -412,6 +426,12 @@
       },
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "user",
         "type": "address"
@@ -433,6 +453,12 @@
         "indexed": true,
         "internalType": "uint256",
         "name": "betId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
         "type": "uint256"
       },
       {
@@ -548,19 +574,6 @@
       }
     ],
     "name": "adminCancelBet",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "betId",
-        "type": "uint256"
-      }
-    ],
-    "name": "cancelBet",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

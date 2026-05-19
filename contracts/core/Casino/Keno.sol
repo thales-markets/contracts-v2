@@ -67,7 +67,6 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
     error BetNotFound();
     error BetNotOwner();
     error InvalidBetStatus();
-    error CancelTimeoutNotReached();
 
     /* ========== STRUCTS ========== */
 
@@ -334,15 +333,6 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         userBetIds[msg.sender].push(betId);
     }
 
-    function cancelBet(uint256 betId) external override nonReentrant {
-        Bet storage b = bets[betId];
-        if (b.status == BetStatus.NONE) revert BetNotFound();
-        if (b.user != msg.sender) revert BetNotOwner();
-        if (b.status != BetStatus.PENDING) revert InvalidBetStatus();
-        if (block.timestamp < b.lastRequestAt + core.cancelTimeout()) revert CancelTimeoutNotReached();
-        _cancelBet(betId, false);
-    }
-
     function adminCancelBet(uint256 betId) external override nonReentrant onlyResolver {
         Bet storage b = bets[betId];
         if (b.status == BetStatus.NONE) revert BetNotFound();
@@ -366,8 +356,8 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
 
     /* ========== VRF CALLBACK ========== */
 
-    /// @dev `nonReentrant` defends against malicious-token transfer hooks calling cancelBet
-    /// mid-payout for a double-spend
+    /// @dev `nonReentrant` defends against malicious-token transfer hooks re-entering any of
+    /// this contract's mutating entries (placeBet / adminCancelBet) mid-payout for a double-spend
     function onVrfFulfilled(uint256 requestId, uint256[] calldata randomWords) external override nonReentrant {
         if (msg.sender != address(core)) revert InvalidSender();
         uint256 betId = requestIdToBetId[requestId];
@@ -392,8 +382,18 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
             b.profitCapRemaining -= profit;
         }
 
-        core.releaseReservation(b.collateral, b.reserved);
+        // CEI: write all bet state before any external call so a hostile re-entry (defense
+        // beyond `nonReentrant`) would see status=RESOLVED and be blocked by the early-return
+        uint256 reserved = b.reserved;
         b.reserved = 0;
+        b.drawnMask = drawnMask;
+        b.hits = hits;
+        b.multiplierE18 = mult;
+        b.payout = payout;
+        b.status = BetStatus.RESOLVED;
+        b.resolvedAt = block.timestamp;
+
+        core.releaseReservation(b.collateral, reserved);
 
         if (payout > 0) {
             core.payOut(b.user, b.collateral, payout, b.isFreeBet, b.amount);
@@ -404,13 +404,6 @@ contract Keno is ICasinoKeno, ICasinoGameCallback, Initializable, ProxyOwned, Pr
         if (payout < b.amount && !b.isFreeBet) {
             core.payReferrer(b.user, b.collateral, b.amount - payout);
         }
-
-        b.drawnMask = drawnMask;
-        b.hits = hits;
-        b.multiplierE18 = mult;
-        b.payout = payout;
-        b.status = BetStatus.RESOLVED;
-        b.resolvedAt = block.timestamp;
 
         emit BetResolved(betId, b.requestId, b.user, drawnMask, hits, mult, payout);
     }

@@ -103,6 +103,12 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
 
     // --- shared risk params ---
     uint public override maxProfitUsd;
+    /// @notice Operational SLA — the soonest the operator commits to admin-cancel a stalled
+    /// VRF bet, in seconds. Not enforced on-chain anywhere (V2 games removed user-callable
+    /// `cancelBet` to close a VRF mempool front-run surface, leaving `adminCancelBet` as the
+    /// only path; admin is trusted, no timeout gate). Retained so FE can surface "max wait
+    /// before refund" and so future user-callable cancel paths could re-enable the gate without
+    /// a storage layout change. Bound by `MIN_CANCEL_TIMEOUT` at config time
     uint public override cancelTimeout;
 
     // --- VRF v2.5 subscription ---
@@ -294,8 +300,9 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     /// ~10⁻⁷⁰ for Keno Pick 10).
     ///
     /// Failure mode if the tail event happens: the unlucky-Nth winning settlement's
-    /// `safeTransfer` reverts → VRF callback reverts → bet stranded in pending → user can
-    /// `cancelBet` after timeout for stake refund (no winnings). Operator must monitor
+    /// `safeTransfer` reverts → VRF callback reverts → bet stranded in pending → resolver
+    /// recovers via `adminCancelBet` (V2 games removed user-callable cancel for VRF-front-run
+    /// reasons; V1 games still allow user cancel after timeout). Operator must monitor
     /// `getAvailableLiquidity` off-chain and top up before bankroll runs dry.
     ///
     /// Reservation accounting is still updated and used by `withdrawCollateral` to block admin
@@ -410,9 +417,16 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
     function recordSettlement(address collateral, uint256 stake, uint256 payout) external override onlyRegisteredGame {
         // Decrement pending-stake counter — clamp to zero so in-flight bets placed before this
         // accounting was introduced can still resolve without underflow (their stakes weren't
-        // tracked at placement). New bets always satisfy `stake ≤ pending` by construction
+        // tracked at placement). New bets always satisfy `stake ≤ pending` by construction.
+        // Emit `PendingStakesClamped` on the underflow path so off-chain monitoring can detect
+        // unexpected drift (would loosen the `withdrawCollateral` over-drain guard)
         uint256 p = pendingStakesPerCollateral[collateral];
-        pendingStakesPerCollateral[collateral] = stake > p ? 0 : p - stake;
+        if (stake > p) {
+            emit PendingStakesClamped(msg.sender, collateral, stake, p);
+            pendingStakesPerCollateral[collateral] = 0;
+        } else {
+            pendingStakesPerCollateral[collateral] = p - stake;
+        }
 
         int256 deltaUsd;
         if (payout >= stake) {
@@ -841,10 +855,6 @@ contract CasinoCoreV2 is ICasinoCoreV2, Initializable, ProxyOwned, ProxyPausable
         if (msg.sender != owner && !manager.isWhitelistedAddress(msg.sender, role)) revert InvalidSender();
     }
 
-    modifier onlyRiskManager() {
-        _requireRole(ISportsAMMV2Manager.Role.RISK_MANAGING);
-        _;
-    }
     modifier onlyPauser() {
         _requireRole(ISportsAMMV2Manager.Role.TICKET_PAUSER);
         _;

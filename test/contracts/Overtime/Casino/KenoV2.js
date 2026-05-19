@@ -421,29 +421,8 @@ describe('CasinoCoreV2 + Keno', () => {
 	});
 
 	describe('cancel paths', () => {
-		it('user cancel before timeout reverts', async () => {
-			const { keno, usdcAddr, player } = ctx;
-			const tx = await keno
-				.connect(player)
-				.placeBet(usdcAddr, MIN_USDC_BET, [1], ethers.ZeroAddress, false);
-			const r = await tx.wait();
-			const placed = r.logs
-				.map((l) => {
-					try {
-						return keno.interface.parseLog(l);
-					} catch {
-						return null;
-					}
-				})
-				.find((e) => e?.name === 'BetPlaced');
-			await expect(keno.connect(player).cancelBet(placed.args.betId)).to.be.revertedWithCustomError(
-				keno,
-				'CancelTimeoutNotReached'
-			);
-		});
-
-		it('user cancel after timeout refunds full stake', async () => {
-			const { keno, usdc, usdcAddr, player } = ctx;
+		it('admin cancel refunds full stake', async () => {
+			const { keno, resolver, usdc, usdcAddr, player } = ctx;
 			const balBefore = await usdc.balanceOf(player.address);
 			const tx = await keno
 				.connect(player)
@@ -458,8 +437,7 @@ describe('CasinoCoreV2 + Keno', () => {
 					}
 				})
 				.find((e) => e?.name === 'BetPlaced');
-			await time.increase(CANCEL_TIMEOUT + 1n);
-			await keno.connect(player).cancelBet(placed.args.betId);
+			await keno.connect(resolver).adminCancelBet(placed.args.betId);
 			const balAfter = await usdc.balanceOf(player.address);
 			expect(balAfter).to.equal(balBefore);
 		});
@@ -585,8 +563,8 @@ describe('CasinoCoreV2 + Keno', () => {
 			expect(await fbh.confirmCalls()).to.equal(0n);
 		});
 
-		it('cancel: stake refunded back to FBH balance (reusable)', async () => {
-			const { keno, fbh, usdc, usdcAddr, player } = ctx;
+		it('admin cancel: stake refunded back to FBH balance (reusable)', async () => {
+			const { keno, resolver, fbh, usdcAddr, player } = ctx;
 			await fundFB(ctx, MIN_USDC_BET);
 			const tx = await keno
 				.connect(player)
@@ -601,8 +579,7 @@ describe('CasinoCoreV2 + Keno', () => {
 					}
 				})
 				.find((e) => e?.name === 'BetPlaced');
-			await time.increase(Number(CANCEL_TIMEOUT) + 1);
-			await keno.connect(player).cancelBet(placed.args.betId);
+			await keno.connect(resolver).adminCancelBet(placed.args.betId);
 			expect(await fbh.balancePerUserAndCollateral(player.address, usdcAddr)).to.equal(
 				MIN_USDC_BET
 			);

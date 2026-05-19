@@ -68,6 +68,13 @@ interface ICasinoCoreV2 {
         uint256 payout,
         int256 newHouseNetUsd
     );
+    /// @notice Emitted when `recordSettlement` would underflow `pendingStakesPerCollateral`
+    /// and clamps to zero instead. Expected during the migration window for in-flight bets
+    /// placed before pending-stake tracking was introduced; outside that window it indicates
+    /// accounting drift in the calling game (settled `stake` exceeds what was pulled). Off-chain
+    /// monitoring should alert if this fires unexpectedly — drift makes `withdrawCollateral`'s
+    /// safety floor (`reserved + pending`) too loose, loosening the over-drain guard
+    event PendingStakesClamped(address indexed game, address indexed collateral, uint256 stake, uint256 pendingBefore);
     event RandomWordsRequested(address indexed game, uint256 indexed requestId, uint32 numWords);
     event RandomWordsFulfilled(address indexed game, uint256 indexed requestId);
 
