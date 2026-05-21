@@ -3508,5 +3508,95 @@
 		"id": 11308,
 		"result_type": 2,
 		"name": "PROP_PLAYER_FACEOFFS_WON"
+	},
+	{
+		"id": 10265,
+		"result_type": 1,
+		"name": "CHILD_BOTH_TEAMS_TO_SCORE_BOTH_HALVES"
+	},
+	{
+		"id": 10266,
+		"result_type": 1,
+		"name": "CHILD_WILL_THERE_BE_A_PENALTY"
+	},
+	{
+		"id": 10267,
+		"result_type": 1,
+		"name": "CHILD_WILL_THERE_BE_AN_OWN_GOAL"
+	},
+	{
+		"id": 10313,
+		"result_type": 1,
+		"name": "CHILD_FIRST_10_MINUTES_MONEYLINE"
+	},
+	{
+		"id": 10314,
+		"result_type": 2,
+		"name": "CHILD_FIRST_10_MINUTES_TOTAL_GOALS"
+	},
+	{
+		"id": 10315,
+		"result_type": 1,
+		"name": "CHILD_FIRST_15_MINUTES_MONEYLINE"
+	},
+	{
+		"id": 10316,
+		"result_type": 1,
+		"name": "CHILD_FIRST_30_MINUTES_MONEYLINE"
+	},
+	{
+		"id": 10317,
+		"result_type": 1,
+		"name": "CHILD_HIGHEST_SCORING_HALF"
+	},
+	{
+		"id": 10318,
+		"result_type": 1,
+		"name": "CHILD_HOME_TEAM_HIGHEST_SCORING_HALF"
+	},
+	{
+		"id": 10319,
+		"result_type": 1,
+		"name": "CHILD_AWAY_TEAM_HIGHEST_SCORING_HALF"
+	},
+	{
+		"id": 10655,
+		"result_type": 2,
+		"name": "CHILD_TOTAL_PASSES"
+	},
+	{
+		"id": 10656,
+		"result_type": 2,
+		"name": "CHILD_HOME_TEAM_TOTAL_PASSING_ATTEMPTS"
+	},
+	{
+		"id": 10657,
+		"result_type": 2,
+		"name": "CHILD_AWAY_TEAM_TOTAL_PASSING_ATTEMPTS"
+	},
+	{
+		"id": 11309,
+		"result_type": 2,
+		"name": "PROP_PLAYER_CLEARANCES"
+	},
+	{
+		"id": 11310,
+		"result_type": 2,
+		"name": "PROP_PLAYER_CROSSES"
+	},
+	{
+		"id": 11311,
+		"result_type": 2,
+		"name": "PROP_PLAYER_DRIBBLE_ATTEMPTS"
+	},
+	{
+		"id": 11312,
+		"result_type": 2,
+		"name": "PROP_PLAYER_PASSES_COMPLETED"
+	},
+	{
+		"id": 11313,
+		"result_type": 2,
+		"name": "PROP_PLAYER_PASSING_ATTEMPTS"
 	}
 ]
