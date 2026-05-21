@@ -1,0 +1,431 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "enum ICasinoDataV2.GameV2",
+        "name": "game",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "betId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFullRecord",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ICasinoDataV2.GameV2",
+        "name": "game",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "betIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getFullRecords",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "game",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "collaterals",
+        "type": "address[]"
+      }
+    ],
+    "name": "getGameStatus",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "game",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "registered",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "autoPaused",
+            "type": "bool"
+          },
+          {
+            "internalType": "int256",
+            "name": "houseNetUsd",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxNetLossUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address[]",
+            "name": "collaterals",
+            "type": "address[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "reservedPerCollateral",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.GameStatus",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ICasinoDataV2.GameV2",
+        "name": "game",
+        "type": "uint8"
+      }
+    ],
+    "name": "getNextBetId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offsetPerGame",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentBetsAllGamesV2",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum ICasinoDataV2.GameV2",
+            "name": "game",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.BetRecord[][]",
+        "name": "",
+        "type": "tuple[][]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ICasinoDataV2.GameV2",
+        "name": "game",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRecentRecords",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "collaterals",
+        "type": "address[]"
+      }
+    ],
+    "name": "getTreasuryOverview",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "core",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "freeBetsHolder",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxProfitUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cancelTimeout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "defaultMaxNetLossPerGameUsd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address[]",
+            "name": "registeredGames",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "collaterals",
+            "type": "address[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "balancePerCollateral",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "reservedPerCollateral",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "availablePerCollateral",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.TreasuryOverview",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserRecentBetsV2",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum ICasinoDataV2.GameV2",
+            "name": "game",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "betId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateral",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "payout",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "placedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "cancelled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "won",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct ICasinoDataV2.BetRecord[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ICasinoDataV2.GameV2",
+        "name": "game",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getUserRecords",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

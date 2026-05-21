@@ -20,12 +20,28 @@ const EXCLUDED_EDGE_TESTS = [
 	'test/contracts/Overtime/Casino/EdgeAudit.js',
 	'test/contracts/Overtime/Casino/SlotsSimulation.js',
 	'test/contracts/Overtime/Casino/BlackjackStrategies.js',
+	'test/contracts/Overtime/Casino/ThreeCardPokerEdgeSim.js',
+	'test/contracts/Overtime/Casino/HiLoEdgeSim.js',
+	'test/contracts/Overtime/Casino/PlinkoEdgeSim.js',
+	'test/contracts/Overtime/Casino/KenoEdgeSim.js',
+	'test/contracts/Overtime/Casino/OvertimeBonusHoldemEdgeSim.js',
+	'test/contracts/Overtime/Casino/CrossValidatePlinko.js',
+	'test/contracts/Overtime/Casino/CrossValidateKeno.js',
+	'test/contracts/Overtime/Casino/CrossValidateHiLo.js',
+	'test/contracts/Overtime/Casino/CrossValidateThreeCardPoker.js',
+	'test/contracts/Overtime/Casino/CrossValidateVideoPoker.js',
+	'test/contracts/Overtime/Casino/CrossValidateUltimateHoldem.js',
+	'test/contracts/Overtime/Casino/CrossValidateBonusHoldem.js',
 ].map((p) => path.resolve(__dirname, p));
 
 task(TASK_TEST_GET_TEST_FILES).setAction(async (args, _hre, runSuper) => {
 	const files = await runSuper(args);
-	// If the user passed explicit test files, respect their selection.
-	if (args.testFiles && args.testFiles.length > 0) return files;
+	// Always filter edge sims out of `hardhat test` and `hardhat coverage`. Edge sims are
+	// 10k–100k-hand simulations that take hours under coverage instrumentation. The previous
+	// "explicit-files-respected" branch was broken: coverage passes a glob-expanded list to
+	// `args.testFiles`, so distinguishing explicit naming from glob expansion isn't possible
+	// from this hook. To run a single edge sim, invoke it via mocha (`npx mocha --require
+	// hardhat/register test/.../EdgeAudit.js`) or temporarily remove it from EXCLUDED_EDGE_TESTS
 	return files.filter((f) => !EXCLUDED_EDGE_TESTS.includes(path.resolve(f)));
 });
 

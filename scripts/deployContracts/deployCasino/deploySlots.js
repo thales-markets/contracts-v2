@@ -23,7 +23,9 @@ async function main() {
 	const overPriceFeedKey = ethers.encodeBytes32String('OVER');
 
 	const maxProfitUsd = ethers.parseEther('1000');
-	const cancelTimeout = 60;
+	// 10 min on prod (matches the post-deploy setRiskParams bump on all V1 prod chains);
+	// 60s on testnet for fast iteration
+	const cancelTimeout = isTestNetwork(Number(networkObj.chainId)) ? 60 : 600;
 	const houseEdge = ethers.parseEther('0.02'); // 2%
 	const maxPayoutMultiplier = ethers.parseEther('50'); // 50x max reserved profit
 
