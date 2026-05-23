@@ -525,29 +525,27 @@ contract SportsAMMV2RiskManager is Initializable, ProxyOwned, ProxyPausable, Pro
     /// @param _marketTradeData trade data with all market info needed for ticket
     /// @return leaf computed merkle leaf
     function _computeMerkleLeaf(ISportsAMMV2.TradeData memory _marketTradeData) private pure returns (bytes32) {
-        bytes memory encodePackedOutput = abi.encodePacked(
-            _marketTradeData.gameId,
-            uint(_marketTradeData.sportId),
-            uint(_marketTradeData.typeId),
-            _marketTradeData.maturity,
-            uint(_marketTradeData.status),
-            int(_marketTradeData.line),
-            uint(_marketTradeData.playerId),
-            _marketTradeData.odds
-        );
-
-        for (uint i; i < _marketTradeData.combinedPositions.length; ++i) {
-            for (uint j; j < _marketTradeData.combinedPositions[i].length; ++j) {
-                encodePackedOutput = abi.encodePacked(
-                    encodePackedOutput,
-                    uint(_marketTradeData.combinedPositions[i][j].typeId),
-                    uint(_marketTradeData.combinedPositions[i][j].position),
-                    int(_marketTradeData.combinedPositions[i][j].line)
-                );
-            }
+        // Combined-position markets are disabled. The previous leaf hash
+        // packed nested combinedPositions without length prefixes, which
+        // allowed re-partitioning of the outer/inner array boundaries
+        // while preserving the keccak. Reject any non-empty inner array.
+        uint cpOuter = _marketTradeData.combinedPositions.length;
+        for (uint i; i < cpOuter; ++i) {
+            require(_marketTradeData.combinedPositions[i].length == 0, "Combined markets disabled");
         }
-
-        return keccak256(encodePackedOutput);
+        return
+            keccak256(
+                abi.encodePacked(
+                    _marketTradeData.gameId,
+                    uint(_marketTradeData.sportId),
+                    uint(_marketTradeData.typeId),
+                    _marketTradeData.maturity,
+                    uint(_marketTradeData.status),
+                    int(_marketTradeData.line),
+                    uint(_marketTradeData.playerId),
+                    _marketTradeData.odds
+                )
+            );
     }
 
     /**
