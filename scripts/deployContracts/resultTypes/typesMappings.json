@@ -170,6 +170,11 @@
 		"name": "CHILD_NINTH_PERIOD_TOTAL"
 	},
 	{
+		"id": 10040,
+		"result_type": 1,
+		"name": "CHILD_HALFTIME_FULLTIME"
+	},
+	{
 		"id": 10041,
 		"result_type": 4,
 		"name": "CHILD_FIRST_PERIOD_SPREAD"
