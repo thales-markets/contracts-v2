@@ -2810,6 +2810,16 @@
 		"name": "CHILD_SERIES_TOTAL"
 	},
 	{
+		"id": 13020,
+		"result_type": 1,
+		"name": "CHILD_STAGE_OF_ELIMINATION"
+	},
+	{
+		"id": 13021,
+		"result_type": 1,
+		"name": "CHILD_STAGE_GOALS_TOTAL"
+	},
+	{
 		"id": 10513,
 		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_ROUND_2_ML"
