@@ -220,6 +220,11 @@
 		"name": "CHILD_NINTH_PERIOD_SPREAD"
 	},
 	{
+		"id": 10050,
+		"result_type": 1,
+		"name": "CHILD_FIRST_PERIOD_MONEYLINE_SECONDARY_3WAY"
+	},
+	{
 		"id": 10051,
 		"result_type": 1,
 		"name": "CHILD_FIRST_PERIOD_MONEYLINE_SECONDARY"
